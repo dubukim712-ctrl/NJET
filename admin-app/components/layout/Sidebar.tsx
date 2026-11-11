@@ -16,6 +16,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Settings,
+  Wrench,
   type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -64,6 +65,12 @@ const ADMIN_NAVIGATION: NavGroup[] = [
         href: '/admin/orders',
         icon: ClipboardList,
         permission: PERMISSIONS.ordersRead,
+      },
+      {
+        name: 'Service appointments',
+        href: '/admin/appointments',
+        icon: Wrench,
+        permission: PERMISSIONS.serviceAppointmentsRead,
       },
     ],
   },

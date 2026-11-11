@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowRight, CircleHelp, Package, ShoppingBag, UserRound } from 'lucide-react';
+import { ArrowRight, CalendarDays, CircleHelp, Package, ShoppingBag, UserRound } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import {
   CustomerProfileQueryError,
@@ -88,6 +88,11 @@ export function StorefrontLandingPage({
           <Package className="h-5 w-5 text-primary" aria-hidden="true" />
           <h2 className="mt-3 font-semibold">Your orders</h2>
           <p className="mt-1 text-sm leading-5 text-muted-foreground">Review orders and their latest status.</p>
+        </Link>
+        <Link href="/dashboard/appointments" className="rounded-xl border bg-card p-5 transition-colors hover:bg-accent">
+          <CalendarDays className="h-5 w-5 text-primary" aria-hidden="true" />
+          <h2 className="mt-3 font-semibold">Service appointments</h2>
+          <p className="mt-1 text-sm leading-5 text-muted-foreground">Book or track an e-bike service.</p>
         </Link>
         <Link href="/dashboard/profile" className="rounded-xl border bg-card p-5 transition-colors hover:bg-accent">
           <UserRound className="h-5 w-5 text-primary" aria-hidden="true" />

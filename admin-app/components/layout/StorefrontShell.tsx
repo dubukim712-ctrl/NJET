@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import {
   Home,
+  CalendarDays,
   LayoutDashboard,
   Package,
   ShoppingBag,
@@ -34,6 +35,7 @@ const NAVIGATION: {
   { name: 'Home', href: '/', icon: Home },
   { name: 'Shop', href: '/shop', icon: ShoppingBag },
   { name: 'Orders', href: '/dashboard/orders', icon: Package },
+  { name: 'Appointments', href: '/dashboard/appointments', icon: CalendarDays },
 ];
 
 export function StorefrontShell({
@@ -62,6 +64,7 @@ export function StorefrontShell({
       ? [
           { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
           NAVIGATION[2],
+          NAVIGATION[3],
         ]
       : []),
     NAVIGATION[1],
@@ -84,7 +87,9 @@ export function StorefrontShell({
               ? pathname === '/dashboard'
               : item.name === 'Shop'
                 ? pathname.startsWith('/shop')
-                : pathname.startsWith('/dashboard/orders');
+                  : item.name === 'Orders'
+                    ? pathname.startsWith('/dashboard/orders')
+                    : pathname.startsWith('/dashboard/appointments');
 
         return (
           <Link

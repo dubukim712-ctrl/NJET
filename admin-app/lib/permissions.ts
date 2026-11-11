@@ -16,6 +16,9 @@ export const PERMISSIONS = {
   deliveryZonesManage: 'delivery_zones.manage',
   ordersRead: 'orders.read',
   ordersManage: 'orders.manage',
+  serviceAppointmentsRead: 'service_appointments.read',
+  serviceAppointmentsManage: 'service_appointments.manage',
+  serviceAppointmentsWork: 'service_appointments.work',
 } as const;
 
 export type PermissionKey = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];

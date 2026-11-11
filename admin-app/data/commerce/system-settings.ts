@@ -29,6 +29,16 @@ export type StorefrontBusinessInfo = Omit<AdminBusinessInfo, 'logoPath'>;
 
 export type AdminSystemSettings = {
   businessInfo: AdminBusinessInfo;
+  branchServiceHours: {
+    branches: { id: string; name: string }[];
+    hours: {
+      branchId: string;
+      dayOfWeek: number;
+      isOpen: boolean;
+      opensAt: string | null;
+      closesAt: string | null;
+    }[];
+  };
   certificateTemplate: {
     templateVersion: string;
     updatedAt: string;
@@ -42,7 +52,13 @@ export async function getAdminSystemSettings(): Promise<{
 }> {
   try {
     const { supabase } = await requireFullAccess('/admin/settings');
-    const [businessResult, templateResult, recipientResult] = await Promise.all([
+    const [
+      businessResult,
+      templateResult,
+      recipientResult,
+      branchesResult,
+      serviceHoursResult,
+    ] = await Promise.all([
       supabase
         .from('business_settings')
         .select('business_name, phone, email, address, business_hours, logo_path')
@@ -59,10 +75,17 @@ export async function getAdminSystemSettings(): Promise<{
         .order('provider')
         .order('created_at')
         .limit(100),
+      supabase.from('branches').select('id, name').order('name').limit(100),
+      supabase
+        .from('branch_service_hours')
+        .select('branch_id, day_of_week, is_open, opens_at, closes_at')
+        .limit(700),
     ]);
     if (businessResult.error) throw businessResult.error;
     if (templateResult.error) throw templateResult.error;
     if (recipientResult.error) throw recipientResult.error;
+    if (branchesResult.error) throw branchesResult.error;
+    if (serviceHoursResult.error) throw serviceHoursResult.error;
     if (!businessResult.data) throw new Error('Business settings are not initialized.');
     const branding = supabase.storage.from('njet-storefront-branding');
 
@@ -78,6 +101,16 @@ export async function getAdminSystemSettings(): Promise<{
           logoUrl: businessResult.data.logo_path
             ? branding.getPublicUrl(businessResult.data.logo_path).data.publicUrl
             : null,
+        },
+        branchServiceHours: {
+          branches: branchesResult.data,
+          hours: serviceHoursResult.data.map((hour) => ({
+            branchId: hour.branch_id,
+            dayOfWeek: hour.day_of_week,
+            isOpen: hour.is_open,
+            opensAt: hour.opens_at,
+            closesAt: hour.closes_at,
+          })),
         },
         certificateTemplate: templateResult.data
           ? {

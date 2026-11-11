@@ -103,18 +103,23 @@ export function UserNav({ user, showHelp = false }: UserNavProps) {
               </DropdownMenuItem>
             )}
             <DropdownMenuItem asChild>
-              <a href="/dashboard/profile" className="flex items-center gap-2">
-                <User className="h-4 w-4" aria-hidden="true" />
-                Profile
-              </a>
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
               <a href="/dashboard/settings" className="flex items-center gap-2">
                 <Settings className="h-4 w-4" aria-hidden="true" />
                 Settings
               </a>
             </DropdownMenuItem>
           </>
+        )}
+        {(canUseAdmin || canUseStorefront) && (
+          <DropdownMenuItem asChild>
+            <a
+              href={canUseAdmin ? '/admin/profile' : '/dashboard/profile'}
+              className="flex items-center gap-2"
+            >
+              <User className="h-4 w-4" aria-hidden="true" />
+              Profile
+            </a>
+          </DropdownMenuItem>
         )}
         {canUseAdmin && (
           <DropdownMenuItem asChild>

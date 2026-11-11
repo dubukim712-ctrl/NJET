@@ -2,14 +2,16 @@
 
 import { useState, type KeyboardEvent } from 'react';
 import { BusinessInfoEditor } from '@/components/admin/settings/BusinessInfoEditor';
+import { BranchServiceHoursSettings } from '@/components/admin/settings/BranchServiceHoursSettings';
 import { OwnershipCertificateTemplateSettings } from '@/components/admin/settings/OwnershipCertificateTemplateSettings';
 import { PaymentRecipientEditor } from '@/components/admin/settings/PaymentRecipientEditor';
 import { PAYMENT_PROVIDER_OPTIONS } from '@/data/commerce/payment-recipients';
 import type { AdminSystemSettings } from '@/data/commerce/system-settings';
 
-type SettingsTab = 'business' | 'payments' | 'certificates';
+type SettingsTab = 'business' | 'service-hours' | 'payments' | 'certificates';
 const SETTINGS_TABS: { id: SettingsTab; label: string }[] = [
   { id: 'business', label: 'Business' },
+  { id: 'service-hours', label: 'Service hours' },
   { id: 'payments', label: 'Payment Accounts' },
   { id: 'certificates', label: 'Certificates' },
 ];
@@ -79,6 +81,19 @@ export function SystemSettingsManager({
         hidden={activeTab !== 'business'}
       >
         <BusinessInfoEditor businessInfo={settings.businessInfo} />
+      </section>
+
+      <section
+        id="settings-service-hours-panel"
+        role="tabpanel"
+        aria-labelledby="settings-service-hours-tab"
+        tabIndex={0}
+        hidden={activeTab !== 'service-hours'}
+      >
+        <BranchServiceHoursSettings
+          branches={settings.branchServiceHours.branches}
+          hours={settings.branchServiceHours.hours}
+        />
       </section>
 
       <section

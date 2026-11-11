@@ -42,6 +42,7 @@ export function WalkInSaleCustomerDetails({
       <div className="grid gap-4 sm:grid-cols-2">
         <Input
           label="Customer name"
+          helperText="Enter the customer's name for the sale record."
           autoComplete="name"
           required
           value={customerName}
@@ -49,6 +50,7 @@ export function WalkInSaleCustomerDetails({
         />
         <Input
           label="Contact number"
+          helperText="Enter a phone number where the customer can be reached."
           type="tel"
           autoComplete="tel"
           required
@@ -76,6 +78,7 @@ export function WalkInSaleCustomerDetails({
         values={address}
         onChange={onAddressChange}
         disabled={disabled}
+        enableLocationAutofill={false}
       />
     </section>
   );

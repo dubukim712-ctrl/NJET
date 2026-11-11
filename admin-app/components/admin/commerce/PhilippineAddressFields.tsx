@@ -32,11 +32,13 @@ export function PhilippineAddressFields({
   onChange,
   disabled,
   required = false,
+  enableLocationAutofill = true,
 }: {
   values: PhilippineAddressValues;
   onChange: (values: PhilippineAddressValues) => void;
   disabled: boolean;
   required?: boolean;
+  enableLocationAutofill?: boolean;
 }) {
   const [provinceCode, setProvinceCode] = useState('');
   const [cityCode, setCityCode] = useState('');
@@ -99,26 +101,29 @@ export function PhilippineAddressFields({
               : 'Add an address if available. Search and select a province, city, and barangay.'}
           </p>
         </div>
-        <PhilippineAddressAutofill
-          provinces={provinces}
-          disabled={disabled || provinceLoading || Boolean(provinceError)}
-          onAddressFound={(location) => {
-            setProvinceCode(location.provinceCode);
-            setCityCode(location.cityCode);
-            setBarangayCode(location.barangayCode);
-            onChange({
-              ...values,
-              province: location.province,
-              city: location.city,
-              barangay: location.barangay,
-              postalCode: location.postalCode,
-            });
-          }}
-        />
+        {enableLocationAutofill && (
+          <PhilippineAddressAutofill
+            provinces={provinces}
+            disabled={disabled || provinceLoading || Boolean(provinceError)}
+            onAddressFound={(location) => {
+              setProvinceCode(location.provinceCode);
+              setCityCode(location.cityCode);
+              setBarangayCode(location.barangayCode);
+              onChange({
+                ...values,
+                province: location.province,
+                city: location.city,
+                barangay: location.barangay,
+                postalCode: location.postalCode,
+              });
+            }}
+          />
+        )}
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <Input
           label="Street address"
+          helperText="Enter the house or building number and street."
           containerClassName="sm:col-span-2"
           required={required}
           value={values.addressLine1}
@@ -129,7 +134,7 @@ export function PhilippineAddressFields({
           value={provinceCode}
           options={provinces}
           disabled={disabled || provinceLoading || Boolean(provinceError)}
-          helperText={provinceLoading ? 'Loading provinces…' : undefined}
+          helperText={provinceLoading ? 'Loading provinces…' : 'Choose the province for this address.'}
           emptyMessage="No matching province."
           required={required}
           onChange={selectedProvince}
@@ -139,7 +144,7 @@ export function PhilippineAddressFields({
           value={cityCode}
           options={cities}
           disabled={disabled || !provinceCode || cityLoading || Boolean(cityError)}
-          helperText={cityLoading ? 'Loading cities and municipalities…' : undefined}
+          helperText={cityLoading ? 'Loading cities and municipalities…' : 'Choose the city or municipality.'}
           emptyMessage="No matching city or municipality."
           required={required}
           onChange={selectedCity}
@@ -149,7 +154,7 @@ export function PhilippineAddressFields({
           value={barangayCode}
           options={barangays}
           disabled={disabled || !cityCode || barangayLoading || Boolean(barangayError)}
-          helperText={barangayLoading ? 'Loading barangays…' : undefined}
+          helperText={barangayLoading ? 'Loading barangays…' : 'Choose the barangay.'}
           emptyMessage="No matching barangay."
           required={required}
           onChange={(code) => {
@@ -160,6 +165,7 @@ export function PhilippineAddressFields({
         />
         <Input
           label="Postal code (optional)"
+          helperText="Enter the postal code if you know it."
           maxLength={20}
           value={values.postalCode}
           onChange={(event) => onChange({ ...values, postalCode: event.target.value })}

@@ -65,6 +65,7 @@ export async function updateProfileAction(formData: FormData): Promise<ActionRes
     }
 
     revalidatePath('/dashboard', 'layout');
+    revalidatePath('/admin', 'layout');
     return { success: true, data: undefined };
   } catch {
     return { success: false, error: 'Something went wrong. Please try again.' };

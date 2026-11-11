@@ -137,7 +137,7 @@ export function BusinessInfoEditor({
           defaultValue={businessInfo.businessHours}
           maxLength={200}
           disabled={busy}
-          helperText="For example: Monday-Saturday, 9 AM-6 PM."
+          helperText="Display-only storefront text. Configure appointment hours in the Service hours tab."
         />
         <div className="space-y-3">
           {businessInfo.logoUrl && (
