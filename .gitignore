@@ -1,0 +1,19 @@
+# Environment and credential files
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Dependencies and generated output
+**/node_modules/
+**/.next/
+**/coverage/
+**/dist/
+**/out/
+*.tsbuildinfo
+
+# Local tooling
+.DS_Store
+.vercel/

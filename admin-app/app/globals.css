@@ -1,0 +1,129 @@
+@import "leaflet/dist/leaflet.css";
+@import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  color-scheme: light;
+  --background: #f4f2ec;
+  --foreground: #202a28;
+  --card: #fffefa;
+  --card-foreground: #202a28;
+  --popover: #fffefa;
+  --popover-foreground: #202a28;
+  --primary: #24583b;
+  --primary-foreground: #fffefa;
+  --secondary: #e8e4d8;
+  --secondary-foreground: #27352e;
+  --muted: #ebe8df;
+  --muted-foreground: #56615b;
+  --accent: #e5ebe3;
+  --accent-foreground: #1f3a2a;
+  --destructive: #b42318;
+  --destructive-foreground: #fffefa;
+  --border: #dedbd1;
+  --input: #d6d3c8;
+  --ring: #24583b;
+  --radius: 0.75rem;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-width: 360px;
+  min-height: 100%;
+  background: var(--background);
+  scroll-behavior: smooth;
+}
+
+body {
+  min-height: 100vh;
+  min-height: 100dvh;
+  margin: 0;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+::selection {
+  background: #d3a86f;
+  color: #202a28;
+}
+
+.scrollbar-hidden {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hidden::-webkit-scrollbar {
+  display: none;
+}
+
+input.number-no-spinner {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+input.number-no-spinner::-webkit-inner-spin-button,
+input.number-no-spinner::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.branch-location-marker {
+  border: 0;
+  background: transparent;
+}
+
+.branch-location-marker__dot {
+  position: relative;
+  display: block;
+  width: 22px;
+  height: 22px;
+  border: 3px solid #fffefa;
+  border-radius: 50% 50% 50% 0;
+  background: #24583b;
+  box-shadow: 0 1px 5px rgb(22 35 31 / 55%);
+  transform: rotate(-45deg);
+}
