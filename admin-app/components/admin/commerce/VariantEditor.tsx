@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { ProductImage } from '@/components/shop/ProductImage';
 import { cleanupCommerceProductImage, uploadCommerceProductImage } from '@/data/commerce/product-images-client';
+import { useInvalidateAdminProductsQuery } from '@/data/commerce/admin-products-client';
 import type { Database } from '@/types/database';
 
 type Variant = Database['public']['Tables']['product_variants']['Row'];
@@ -29,6 +30,7 @@ export function VariantEditor({
   onSaved?: () => void;
 }) {
   const router = useRouter();
+  const invalidateProducts = useInvalidateAdminProductsQuery();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -114,6 +116,7 @@ export function VariantEditor({
         return;
       }
       toast.success(variant ? 'Variant updated.' : 'Variant created.');
+      await invalidateProducts();
       router.refresh();
       onSaved?.();
     } catch (saveError) {

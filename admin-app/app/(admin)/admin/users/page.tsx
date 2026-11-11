@@ -1,5 +1,3 @@
-import { Suspense } from 'react';
-import { AdminDataFallback } from '@/components/admin/AdminDataFallback';
 import { UsersContent, type UsersSearchParams } from '@/components/rbac/UsersContent';
 
 export const metadata = { title: 'Users' };
@@ -20,9 +18,7 @@ export default function UsersPage({ searchParams }: UsersPageProps) {
           Review accounts and their assigned roles.
         </p>
       </div>
-      <Suspense fallback={<AdminDataFallback label="users" />}>
-        <UsersContent searchParams={searchParams} />
-      </Suspense>
+      <UsersContent searchParams={searchParams} />
     </div>
   );
 }

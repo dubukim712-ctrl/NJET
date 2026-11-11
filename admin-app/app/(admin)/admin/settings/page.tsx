@@ -1,10 +1,10 @@
-import { SystemSettingsManager } from '@/components/admin/settings/SystemSettingsManager';
-import { getAdminSystemSettings } from '@/data/commerce/system-settings';
+import { requireFullAccess } from '@/data/auth/guards';
+import { SystemSettingsQuery } from '@/components/admin/settings/SystemSettingsQuery';
 
 export const metadata = { title: 'Settings' };
 
 export default async function SettingsPage() {
-  const result = await getAdminSystemSettings();
+  const { user } = await requireFullAccess('/admin/settings');
 
   return (
     <div className="space-y-6">
@@ -15,14 +15,7 @@ export default async function SettingsPage() {
           Manage business information, payment accounts, and ownership certificates.
         </p>
       </header>
-      {result.error || !result.data ? (
-        <section className="rounded-xl border border-destructive/30 bg-destructive/5 p-5" role="alert">
-          <h2 className="font-semibold">Settings are unavailable</h2>
-          <p className="mt-1 text-sm text-muted-foreground">{result.error}</p>
-        </section>
-      ) : (
-        <SystemSettingsManager settings={result.data} />
-      )}
+      <SystemSettingsQuery userId={user.id} />
     </div>
   );
 }

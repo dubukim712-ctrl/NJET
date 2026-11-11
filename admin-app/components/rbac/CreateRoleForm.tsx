@@ -9,6 +9,8 @@ import { Hash, Tag } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Permission, RoleScope } from '@/types/database';
 import { createRoleAction } from '@/data/actions/roles';
+import { useInvalidateAdminRolesQuery } from '@/data/rbac/admin-roles-client';
+import { useInvalidateAdminUsersQuery } from '@/data/rbac/admin-users-client';
 import {
   createRoleSchema,
   type CreateRoleInput,
@@ -29,6 +31,8 @@ const SCOPE_BASELINE: Record<RoleScope, string> = {
 
 export function CreateRoleForm({ permissions }: CreateRoleFormProps) {
   const router = useRouter();
+  const invalidateRoles = useInvalidateAdminRolesQuery();
+  const invalidateUsers = useInvalidateAdminUsersQuery();
   const [serverError, setServerError] = useState<string | null>(null);
 
   const {
@@ -83,6 +87,7 @@ export function CreateRoleForm({ permissions }: CreateRoleFormProps) {
       const result = await createRoleAction(formData);
 
       if (result.success) {
+        await Promise.all([invalidateRoles(), invalidateUsers()]);
         toast.success('Role created.');
         router.push(`/admin/roles/${result.data.id}`);
         return;

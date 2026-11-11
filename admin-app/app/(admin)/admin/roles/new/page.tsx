@@ -1,7 +1,5 @@
-import { Suspense } from 'react';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
-import { AdminDataFallback } from '@/components/admin/AdminDataFallback';
 import { NewRoleContent } from '@/components/rbac/NewRoleContent';
 
 export const metadata = { title: 'New Role' };
@@ -25,9 +23,7 @@ export default function NewRolePage() {
         </p>
       </div>
 
-      <Suspense fallback={<AdminDataFallback label="permission catalog" />}>
-        <NewRoleContent />
-      </Suspense>
+      <NewRoleContent />
     </div>
   );
 }

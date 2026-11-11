@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { assignUserBranchAction } from '@/data/actions/users';
 import type { UserBranchOption } from '@/data/rbac/branch-options';
-import type { UserProfile } from '@/types/database';
+import { useInvalidateAdminUsersQuery } from '@/data/rbac/admin-users-client';
+import type { ManagedUser } from '@/types/rbac';
 import { Button } from '@/components/ui/Button';
 import { Select } from '@/components/ui/Select';
 
@@ -13,10 +14,11 @@ export function UserBranchForm({
   user,
   branches,
 }: {
-  user: UserProfile;
+  user: ManagedUser;
   branches: UserBranchOption[] | null;
 }) {
   const router = useRouter();
+  const invalidateUsers = useInvalidateAdminUsersQuery();
   const [selected, setSelected] = useState(user.branch_id ?? '');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -43,6 +45,7 @@ export function UserBranchForm({
         return;
       }
       toast.success('Branch assignment updated.');
+      await invalidateUsers();
       router.refresh();
     } catch (assignmentError) {
       console.error('Could not update user branch.', assignmentError);

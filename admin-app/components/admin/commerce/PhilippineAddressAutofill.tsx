@@ -1,13 +1,13 @@
 'use client';
 
 import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { LocateFixed, LoaderCircle } from 'lucide-react';
 import {
-  getPhilippineBarangaysAction,
-  getPhilippineCitiesAction,
-  reverseGeocodePhilippineLocationAction,
-  type PhilippineLocationOption,
-} from '@/data/actions/philippine-locations';
+  philippineBarangaysQueryOptions,
+  philippineCitiesQueryOptions,
+  philippineReverseGeocodeQueryOptions,
+} from '@/data/philippine-locations-client';
 import type { SearchableSelectOption } from '@/components/ui/SearchableSelect';
 
 type AutofilledAddress = {
@@ -18,11 +18,11 @@ type AutofilledAddress = {
   barangayCode: string;
   barangay: string;
   postalCode: string;
-  cities: SearchableSelectOption[];
-  barangays: SearchableSelectOption[];
 };
 
-function toOptions(locations: PhilippineLocationOption[]): SearchableSelectOption[] {
+function toOptions(
+  locations: { code: string; name: string }[]
+): SearchableSelectOption[] {
   return locations.map(({ code, name }) => ({ value: code, label: name }));
 }
 
@@ -78,6 +78,7 @@ export function PhilippineAddressAutofill({
   disabled: boolean;
   onAddressFound: (address: AutofilledAddress) => void;
 }) {
+  const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
   const [feedback, setFeedback] = useState<{
     type: 'error' | 'success';
@@ -104,16 +105,14 @@ export function PhilippineAddressAutofill({
     setFeedback(null);
     try {
       const position = await getCurrentPosition();
-      const lookup = await reverseGeocodePhilippineLocationAction(
-        position.coords.latitude,
-        position.coords.longitude
+      const lookup = await queryClient.fetchQuery(
+        philippineReverseGeocodeQueryOptions(
+          position.coords.latitude,
+          position.coords.longitude
+        )
       );
-      if (!lookup.success) {
-        setFeedback({ type: 'error', message: lookup.error });
-        return;
-      }
 
-      const province = matchOption(provinces, lookup.data.provinceCandidates);
+      const province = matchOption(provinces, lookup.provinceCandidates);
       if (!province) {
         setFeedback({
           type: 'error',
@@ -122,13 +121,12 @@ export function PhilippineAddressAutofill({
         return;
       }
 
-      const cityResult = await getPhilippineCitiesAction(province.value);
-      if (!cityResult.success) {
-        setFeedback({ type: 'error', message: cityResult.error });
-        return;
-      }
-      const cities = toOptions(cityResult.data);
-      const city = matchOption(cities, lookup.data.cityCandidates);
+      const cities = toOptions(
+        await queryClient.fetchQuery(
+          philippineCitiesQueryOptions(province.value)
+        )
+      );
+      const city = matchOption(cities, lookup.cityCandidates);
       if (!city) {
         setFeedback({
           type: 'error',
@@ -137,9 +135,18 @@ export function PhilippineAddressAutofill({
         return;
       }
 
-      const barangayResult = await getPhilippineBarangaysAction(city.value);
-      const barangays = barangayResult.success ? toOptions(barangayResult.data) : [];
-      const barangay = matchOption(barangays, lookup.data.barangayCandidates);
+      let barangays: SearchableSelectOption[] = [];
+      let barangaysFailed = false;
+      try {
+        barangays = toOptions(
+          await queryClient.fetchQuery(
+            philippineBarangaysQueryOptions(city.value)
+          )
+        );
+      } catch {
+        barangaysFailed = true;
+      }
+      const barangay = matchOption(barangays, lookup.barangayCandidates);
       onAddressFound({
         provinceCode: province.value,
         province: province.label,
@@ -147,16 +154,14 @@ export function PhilippineAddressAutofill({
         city: city.label,
         barangayCode: barangay?.value ?? '',
         barangay: barangay?.label ?? '',
-        postalCode: lookup.data.postalCode,
-        cities,
-        barangays,
+        postalCode: lookup.postalCode,
       });
 
       const message = !barangay
-        ? barangayResult.success
-          ? 'Province and city found. Select your barangay and verify the postal code.'
-          : 'Province and city found. Barangays could not be loaded; retry or select one manually.'
-        : !lookup.data.postalCode
+        ? barangaysFailed
+          ? 'Province and city found. Barangays could not be loaded; retry or select one manually.'
+          : 'Province and city found. Select your barangay and verify the postal code.'
+        : !lookup.postalCode
           ? 'Address found. A postal code was not available; enter it manually if known.'
           : 'Address filled. Please verify it before continuing.';
       setFeedback({ type: 'success', message });

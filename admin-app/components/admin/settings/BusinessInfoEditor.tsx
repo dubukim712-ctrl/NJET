@@ -5,6 +5,8 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { saveBusinessSettingsAction } from '@/data/actions/business-settings';
+import { useInvalidateAdminSystemSettingsQuery } from '@/data/commerce/admin-system-settings-client';
+import { useInvalidateStorefrontBusinessInfoQuery } from '@/data/commerce/storefront-business-info-client';
 import {
   cleanupSystemSettingsAsset,
   uploadSystemSettingsAsset,
@@ -19,6 +21,8 @@ export function BusinessInfoEditor({
   businessInfo: AdminBusinessInfo;
 }) {
   const router = useRouter();
+  const invalidateSettings = useInvalidateAdminSystemSettingsQuery();
+  const invalidateStorefrontBusinessInfo = useInvalidateStorefrontBusinessInfoQuery();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -60,6 +64,10 @@ export function BusinessInfoEditor({
       if (logoInput instanceof HTMLInputElement) logoInput.value = '';
       const removeLogoInput = form.elements.namedItem('removeLogo');
       if (removeLogoInput instanceof HTMLInputElement) removeLogoInput.checked = false;
+      await Promise.all([
+        invalidateSettings(),
+        invalidateStorefrontBusinessInfo(),
+      ]);
       toast.success('Business information saved.');
       if (result.data.warning) toast.warning(result.data.warning);
       router.refresh();

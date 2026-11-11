@@ -8,6 +8,7 @@ import { receiveBranchTransferAction } from '@/data/actions/commerce-admin';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import { BranchTransferForm } from '@/components/admin/commerce/BranchTransferForm';
+import { useInvalidateAdminProductsQuery } from '@/data/commerce/admin-products-client';
 import type { Database } from '@/types/database';
 import type { ProductType } from '@/types/commerce-tables';
 
@@ -49,6 +50,7 @@ export function BranchTransferManager({
   onCloseTransfer: () => void;
 }) {
   const router = useRouter();
+  const invalidateProducts = useInvalidateAdminProductsQuery();
   const [receivingId, setReceivingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const branchName = new Map(branches.map((branch) => [branch.id, branch.name]));
@@ -65,6 +67,7 @@ export function BranchTransferManager({
         return;
       }
       toast.success('Branch transfer received.');
+      await invalidateProducts();
       router.refresh();
     } catch (receiveError) {
       console.error('Could not receive branch transfer.', receiveError);

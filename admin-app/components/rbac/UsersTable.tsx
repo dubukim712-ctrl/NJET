@@ -1,4 +1,4 @@
-import type { UserProfile } from '@/types/database';
+import type { ManagedUser, UserListActor } from '@/types/rbac';
 import type { RoleOption } from '@/data/rbac/queries';
 import type { UserBranchOption } from '@/data/rbac/branch-options';
 import { formatRbacDate } from '@/lib/rbac';
@@ -7,14 +7,14 @@ import { UserBranchForm } from '@/components/rbac/UserBranchForm';
 import { UserRoleForm } from '@/components/rbac/UserRoleForm';
 
 interface UsersTableProps {
-  users: UserProfile[];
+  users: ManagedUser[];
   roles: RoleOption[];
   branches: UserBranchOption[] | null;
-  actor: UserProfile;
+  actor: UserListActor;
   canManage: boolean;
 }
 
-function initials(user: UserProfile): string {
+function initials(user: ManagedUser): string {
   const source = user.full_name?.trim() || user.email;
   return source.charAt(0).toUpperCase();
 }

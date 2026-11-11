@@ -1,14 +1,47 @@
+'use client';
+
 import Link from 'next/link';
 import { ArrowRight, CircleHelp, Package, ShoppingBag, UserRound } from 'lucide-react';
-import type { UserProfile } from '@/types/database';
+import { Button } from '@/components/ui/Button';
+import {
+  CustomerProfileQueryError,
+  useCustomerProfileQuery,
+} from '@/data/auth/customer-profile-client';
 
 export function StorefrontLandingPage({
-  profile,
+  userId,
   permissionError,
 }: {
-  profile: UserProfile;
+  userId: string;
   permissionError: boolean;
 }) {
+  const query = useCustomerProfileQuery(userId);
+
+  if (!query.data && query.isPending) {
+    return (
+      <div className="space-y-6" role="status" aria-label="Loading dashboard" aria-busy="true">
+        <div className="h-56 animate-pulse rounded-2xl bg-muted" />
+        <div className="h-40 animate-pulse rounded-xl bg-muted" />
+      </div>
+    );
+  }
+
+  if (!query.data) {
+    return (
+      <section className="space-y-3 rounded-xl border bg-card p-6">
+        <p className="text-sm text-destructive" role="alert">
+          {query.error instanceof CustomerProfileQueryError
+            ? query.error.message
+            : 'Your dashboard could not be loaded. Please try again.'}
+        </p>
+        <Button type="button" variant="outline" onClick={() => { void query.refetch(); }}>
+          Try again
+        </Button>
+      </section>
+    );
+  }
+
+  const profile = query.data;
   const firstName = profile.full_name?.split(' ')[0] || 'there';
 
   return (
@@ -17,6 +50,18 @@ export function StorefrontLandingPage({
         <div className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive" role="alert">
           You don&apos;t have permission to access that page.
         </div>
+      )}
+      {query.isError && (
+        <p className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive" role="alert">
+          Your profile could not be refreshed. Showing the last loaded information.
+          <button
+            type="button"
+            className="ml-2 font-medium underline underline-offset-4"
+            onClick={() => { void query.refetch(); }}
+          >
+            Try again
+          </button>
+        </p>
       )}
 
       <section className="rounded-2xl bg-primary px-5 py-8 text-primary-foreground sm:px-10 sm:py-12">

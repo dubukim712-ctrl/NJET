@@ -8,6 +8,7 @@ import { registerEbikeUnitsAction, saveCommerceInventoryAction } from '@/data/ac
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Button } from '@/components/ui/Button';
+import { useInvalidateAdminProductsQuery } from '@/data/commerce/admin-products-client';
 import type { ProductType } from '@/types/commerce-tables';
 
 type Variant = { id: string; name: string; sku: string; productType: ProductType };
@@ -35,6 +36,7 @@ function BatchStockForm({
   onSaved: () => void;
 }) {
   const router = useRouter();
+  const invalidateProducts = useInvalidateAdminProductsQuery();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -55,6 +57,7 @@ function BatchStockForm({
         return;
       }
       toast.success('Stock quantity saved.');
+      await invalidateProducts();
       router.refresh();
       onSaved();
     } catch (saveError) {
@@ -95,6 +98,7 @@ function EbikeUnitForm({
   onSaved: () => void;
 }) {
   const router = useRouter();
+  const invalidateProducts = useInvalidateAdminProductsQuery();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [unitId, setUnitId] = useState('');
@@ -120,6 +124,7 @@ function EbikeUnitForm({
         return;
       }
       toast.success(unitId ? 'E-bike identifiers saved.' : 'E-bike added to stock.');
+      await invalidateProducts();
       router.refresh();
       onSaved();
     } catch (saveError) {

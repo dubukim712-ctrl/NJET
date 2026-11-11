@@ -3,24 +3,28 @@
 import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import type { UserProfile } from '@/types/database';
+import type { ManagedUser, UserListActor } from '@/types/rbac';
 import type { RoleOption } from '@/data/rbac/queries';
 import {
   getAssignableRoles,
   roleAssignmentBlockedReason,
 } from '@/lib/rbac';
 import { assignUserRoleAction } from '@/data/actions/users';
+import { useInvalidateAdminRolesQuery } from '@/data/rbac/admin-roles-client';
+import { useInvalidateAdminUsersQuery } from '@/data/rbac/admin-users-client';
 import { Button } from '@/components/ui/Button';
 import { Select } from '@/components/ui/Select';
 
 interface UserRoleFormProps {
-  user: UserProfile;
+  user: ManagedUser;
   roles: RoleOption[];
-  actor: UserProfile;
+  actor: UserListActor;
 }
 
 export function UserRoleForm({ user, roles, actor }: UserRoleFormProps) {
   const router = useRouter();
+  const invalidateRoles = useInvalidateAdminRolesQuery();
+  const invalidateUsers = useInvalidateAdminUsersQuery();
   const [selected, setSelected] = useState(user.role_id);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -57,6 +61,7 @@ export function UserRoleForm({ user, roles, actor }: UserRoleFormProps) {
 
       if (result.success) {
         toast.success('Role updated.');
+        await Promise.all([invalidateRoles(), invalidateUsers()]);
         router.refresh();
       } else {
         setError(result.error);

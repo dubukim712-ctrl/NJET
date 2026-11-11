@@ -13,15 +13,16 @@ import {
 import { useAuth } from '@/components/auth/AuthProvider';
 import { UserNav } from '@/components/auth/UserNav';
 import { CartDrawer } from '@/components/cart/CartDrawer';
+import {
+  StorefrontBusinessInfoQueryError,
+  useStorefrontBusinessInfoQuery,
+} from '@/data/commerce/storefront-business-info-client';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 import { cn } from '@/lib/utils';
 import type { UserProfile } from '@/types/database';
-import type { StorefrontBusinessInfo } from '@/data/commerce/system-settings';
 
 interface StorefrontShellProps {
   user: UserProfile | null;
-  businessInfo: StorefrontBusinessInfo | null;
-  businessInfoError: string | null;
   children: React.ReactNode;
 }
 
@@ -37,12 +38,19 @@ const NAVIGATION: {
 
 export function StorefrontShell({
   user,
-  businessInfo,
-  businessInfoError,
   children,
 }: StorefrontShellProps) {
   const pathname = usePathname();
   const { user: clientUser } = useAuth();
+  const businessInfoQuery = useStorefrontBusinessInfoQuery();
+  const businessInfo = businessInfoQuery.data ?? null;
+  const businessInfoError =
+    !businessInfo &&
+    businessInfoQuery.error instanceof StorefrontBusinessInfoQueryError
+      ? businessInfoQuery.error.message
+      : !businessInfo && businessInfoQuery.isError
+        ? 'Business contact information is temporarily unavailable.'
+        : null;
   const displayUser = clientUser ?? user;
   const canAccessStorefront = hasPermission(
     displayUser,
@@ -167,9 +175,11 @@ export function StorefrontShell({
             >
               {businessInfoError
                 ? 'Business contact information is temporarily unavailable.'
-                : businessInfo?.phone || businessInfo?.email || businessInfo?.address || businessInfo?.businessHours
-                  ? 'Get in touch with our team.'
-                  : 'Business contact details have not been added yet.'}
+                : businessInfoQuery.isPending
+                  ? 'Loading business contact information...'
+                  : businessInfo?.phone || businessInfo?.email || businessInfo?.address || businessInfo?.businessHours
+                    ? 'Get in touch with our team.'
+                    : 'Business contact details have not been added yet.'}
             </p>
           </section>
           <address className="space-y-2 text-sm not-italic">

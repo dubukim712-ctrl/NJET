@@ -8,6 +8,7 @@ import { Trash2 } from 'lucide-react';
 import type { AuditLog } from '@/types/database';
 import { formatAuditDate, getAuditFieldChanges, shortAuditId } from '@/lib/audit';
 import { clearAuditLogsAction } from '@/data/actions/audit';
+import { useInvalidateAdminAuditLogsQuery } from '@/data/audit/admin-audit-logs-client';
 import { AuditActionBadge } from '@/components/audit/AuditActionBadge';
 import { Button } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
@@ -26,6 +27,7 @@ export function AuditLogsTable({
   detailBasePath = '/admin/audit-logs',
 }: AuditLogsTableProps) {
   const router = useRouter();
+  const invalidateAuditLogs = useInvalidateAdminAuditLogsQuery();
   const [selection, setSelection] = useState<{ key: string; ids: string[] }>({
     key: '',
     ids: [],
@@ -84,6 +86,7 @@ export function AuditLogsTable({
       }
       setSelection({ key: selectionKey, ids: [] });
       setClearMode(null);
+      await invalidateAuditLogs();
       router.refresh();
     } catch {
       const message = 'Could not clear the audit logs. Please try again.';

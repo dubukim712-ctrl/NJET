@@ -1,8 +1,30 @@
 import type { createClient } from '@/data/supabase/server';
+import type { Database } from '@/types/database';
 
 type SupabaseClient = Awaited<ReturnType<typeof createClient>>;
+type OrderRow = Database['public']['Tables']['orders']['Row'];
+type OrderItemRow = Database['public']['Tables']['order_items']['Row'];
 
-export async function getCustomerOrders(supabase: SupabaseClient, userId: string) {
+export type CustomerOrder = Pick<
+  OrderRow,
+  | 'id' | 'order_number' | 'customer_name' | 'fulfillment' | 'branch_name'
+  | 'delivery_zone_name' | 'payment_method' | 'status' | 'total_minor'
+  | 'reservation_due_minor' | 'balance_due_minor' | 'online_due_minor'
+  | 'home_credit_downpayment_due_minor' | 'created_at'
+> & {
+  items: Pick<
+    OrderItemRow,
+    | 'order_id' | 'product_name' | 'variant_name' | 'product_type'
+    | 'quantity' | 'unit_price_minor'
+  >[];
+  invoiceNo: string | null;
+  certificateUrl: string | null;
+};
+
+export async function getCustomerOrders(
+  supabase: SupabaseClient,
+  userId: string
+): Promise<{ data: CustomerOrder[] | null; error: string | null }> {
   try {
     const { data: orders, error: orderError } = await supabase
       .from('orders')

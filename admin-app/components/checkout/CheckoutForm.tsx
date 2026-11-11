@@ -1,5 +1,6 @@
 'use client';
 
+import { useQueryClient } from '@tanstack/react-query';
 import { useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -7,6 +8,8 @@ import { toast } from 'sonner';
 import { createCommerceOrderAction } from '@/data/actions/commerce-checkout';
 import { useCartVariantsQuery } from '@/data/commerce/catalog-client';
 import { uploadOrderDocuments } from '@/data/commerce/documents-client';
+import { adminOrdersQueryKey } from '@/data/commerce/admin-orders-client';
+import { useInvalidateCustomerOrdersQuery } from '@/data/commerce/customer-orders-client';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useCart } from '@/components/cart/CartProvider';
 import { CheckoutAuthNotice } from '@/components/checkout/CheckoutAuthNotice';
@@ -23,6 +26,8 @@ export function CheckoutForm({
   paymentRecipients,
 }: CheckoutOptions) {
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const invalidateCustomerOrders = useInvalidateCustomerOrdersQuery();
   const { user } = useAuth();
   const { items, error: cartError, clear } = useCart();
   const [fulfillment, setFulfillment] = useState<Fulfillment>('pickup');
@@ -41,6 +46,21 @@ export function CheckoutForm({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [requiresLogin, setRequiresLogin] = useState(false);
+  const activeBranchId = branches.some((branch) => branch.id === branchId)
+    ? branchId
+    : branches[0]?.id ?? '';
+  const activeZoneId = zones.some((zone) => zone.id === zoneId)
+    ? zoneId
+    : zones[0]?.id ?? '';
+  const activeRecipient = paymentRecipients.find(
+    (recipient) =>
+      recipient.id === paymentRecipientId &&
+      recipient.provider === paymentProvider
+  );
+  const activePaymentProvider =
+    activeRecipient?.provider ?? paymentRecipients[0]?.provider ?? paymentProvider;
+  const activePaymentRecipientId =
+    activeRecipient?.id ?? paymentRecipients[0]?.id ?? '';
   const {
     data: variants = [],
     error: queryError,
@@ -73,7 +93,7 @@ export function CheckoutForm({
     0
   );
   const deliveryFee = fulfillment === 'delivery'
-    ? zones.find((zone) => zone.id === zoneId)?.fee_minor ?? 0
+    ? zones.find((zone) => zone.id === activeZoneId)?.fee_minor ?? 0
     : 0;
   const total = subtotal + deliveryFee;
   const onlineAvailable =
@@ -94,13 +114,14 @@ export function CheckoutForm({
   const paymentProofRequired = paymentMethod === 'online' || homeCreditDownpaymentDue > 0;
   const paymentRecipientAvailable = paymentRecipients.some(
     (recipient) =>
-      recipient.id === paymentRecipientId && recipient.provider === paymentProvider
+      recipient.id === activePaymentRecipientId &&
+      recipient.provider === activePaymentProvider
   );
   const paymentAvailable = paymentMethod === 'online'
     ? onlineAvailable && paymentRecipientAvailable
     : homeCreditDownpaymentDue === 0 || paymentRecipientAvailable;
   const pickupAvailable = allVariantsLoaded && cartItems.every((item) =>
-    (item.variant?.stockByBranch.find((stock) => stock.branchId === branchId)?.stock ?? 0) >= item.quantity
+    (item.variant?.stockByBranch.find((stock) => stock.branchId === activeBranchId)?.stock ?? 0) >= item.quantity
   );
   const deliveryAvailable = allVariantsLoaded && branches.some((branch) =>
     cartItems.every((item) =>
@@ -155,16 +176,16 @@ export function CheckoutForm({
         customerName: text('customerName'),
         contactNumber: text('contactNumber'),
         fulfillment,
-        branchId: fulfillment === 'pickup' ? branchId : null,
-        deliveryZoneId: fulfillment === 'delivery' ? zoneId : null,
+        branchId: fulfillment === 'pickup' ? activeBranchId : null,
+        deliveryZoneId: fulfillment === 'delivery' ? activeZoneId : null,
         addressLine1: text('addressLine1') || null,
         barangay: text('barangay') || null,
         city: text('city') || null,
         province: text('province') || null,
         postalCode: text('postalCode') || null,
         paymentMethod,
-        paymentProvider: paymentProofRequired ? paymentProvider : null,
-        paymentRecipientId: paymentProofRequired ? paymentRecipientId : null,
+        paymentProvider: paymentProofRequired ? activePaymentProvider : null,
+        paymentRecipientId: paymentProofRequired ? activePaymentRecipientId : null,
         termsAccepted,
         privacyAccepted,
         items: items.map((item) => ({ variantId: item.variantId, quantity: item.quantity })),
@@ -176,6 +197,10 @@ export function CheckoutForm({
         setBusy(false);
         return;
       }
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: adminOrdersQueryKey }),
+        invalidateCustomerOrders(),
+      ]);
       const clearResult = clear();
       if (!clearResult.success) toast.error('Order placed, but your local cart could not be cleared.');
       router.push(paymentProofRequired
@@ -229,10 +254,10 @@ export function CheckoutForm({
           paymentRecipients={paymentRecipients}
           fulfillment={fulfillment}
           paymentMethod={paymentMethod}
-          paymentProvider={paymentProvider}
-          paymentRecipientId={paymentRecipientId}
-          branchId={branchId}
-          zoneId={zoneId}
+          paymentProvider={activePaymentProvider}
+          paymentRecipientId={activePaymentRecipientId}
+          branchId={activeBranchId}
+          zoneId={activeZoneId}
           onlineAvailable={onlineAvailable}
           cashUnavailable={cashUnavailable}
           homeCreditDownpaymentDue={homeCreditDownpaymentDue}

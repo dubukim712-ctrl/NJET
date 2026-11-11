@@ -46,3 +46,23 @@ export type UserProfile = {
   created_at: string;
   updated_at: string;
 };
+
+export type ManagedUser = Pick<
+  UserProfile,
+  | 'id'
+  | 'email'
+  | 'full_name'
+  | 'role_id'
+  | 'branch_id'
+  | 'branch_name'
+  | 'role_name'
+  | 'scope'
+  | 'is_full_access'
+  | 'permissions'
+  | 'created_at'
+>;
+
+export type UserListActor = Pick<
+  UserProfile,
+  'id' | 'scope' | 'is_full_access' | 'permissions'
+>;

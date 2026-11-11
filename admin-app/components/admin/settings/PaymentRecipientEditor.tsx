@@ -8,6 +8,8 @@ import {
   deletePaymentRecipientAction,
   savePaymentRecipientAction,
 } from '@/data/actions/system-settings';
+import { useInvalidateAdminSystemSettingsQuery } from '@/data/commerce/admin-system-settings-client';
+import { useInvalidateCheckoutOptionsQuery } from '@/data/commerce/checkout-options-client';
 import {
   cleanupSystemSettingsAsset,
   uploadSystemSettingsAsset,
@@ -81,6 +83,8 @@ function PaymentRecipientForm({
   onCancel?: () => void;
 }) {
   const router = useRouter();
+  const invalidateSettings = useInvalidateAdminSystemSettingsQuery();
+  const invalidateCheckoutOptions = useInvalidateCheckoutOptionsQuery();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -116,6 +120,7 @@ function PaymentRecipientForm({
       if (!result.success) throw new Error(result.error);
 
       uploadedPaths.length = 0;
+      await Promise.all([invalidateSettings(), invalidateCheckoutOptions()]);
       toast.success(`${getPaymentProviderLabel(provider)} account saved.`);
       if (result.data.warning) toast.warning(result.data.warning);
       onSaved?.();
@@ -146,6 +151,7 @@ function PaymentRecipientForm({
     try {
       const result = await deletePaymentRecipientAction(recipient.id);
       if (!result.success) throw new Error(result.error);
+      await Promise.all([invalidateSettings(), invalidateCheckoutOptions()]);
       toast.success(`${getPaymentProviderLabel(provider)} account removed.`);
       if (result.data.warning) toast.warning(result.data.warning);
       router.refresh();

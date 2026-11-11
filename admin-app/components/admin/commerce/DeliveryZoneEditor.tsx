@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { MapPinned, PhilippinePeso } from 'lucide-react';
 import { saveDeliveryZoneAction } from '@/data/actions/commerce-admin';
+import { useInvalidateAdminDeliveryZonesQuery } from '@/data/commerce/admin-delivery-zones-client';
+import { useInvalidateCheckoutOptionsQuery } from '@/data/commerce/checkout-options-client';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { formatPhp } from '@/lib/commerce';
@@ -22,6 +24,8 @@ export function DeliveryZoneEditor({
   onSaved: () => void;
 }) {
   const router = useRouter();
+  const invalidateZones = useInvalidateAdminDeliveryZonesQuery();
+  const invalidateCheckoutOptions = useInvalidateCheckoutOptionsQuery();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -52,6 +56,7 @@ export function DeliveryZoneEditor({
         return;
       }
       toast.success(zone ? 'Delivery zone updated.' : 'Delivery zone added.');
+      await Promise.all([invalidateZones(), invalidateCheckoutOptions()]);
       router.refresh();
       onSaved();
     } catch (saveError) {

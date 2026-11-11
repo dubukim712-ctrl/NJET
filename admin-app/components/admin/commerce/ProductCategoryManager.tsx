@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import { saveProductCategoryAction } from '@/data/actions/commerce-admin';
+import { useInvalidateAdminProductsQuery } from '@/data/commerce/admin-products-client';
 import { slugify } from '@/lib/commerce';
 import type { Database } from '@/types/database';
 
@@ -14,6 +15,7 @@ type Category = Database['public']['Tables']['product_categories']['Row'];
 
 function CategoryForm({ category }: { category?: Category }) {
   const router = useRouter();
+  const invalidateProducts = useInvalidateAdminProductsQuery();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [slug, setSlug] = useState(category?.slug ?? '');
@@ -42,6 +44,7 @@ function CategoryForm({ category }: { category?: Category }) {
         return;
       }
       toast.success(category ? 'Main category updated.' : 'Main category added.');
+      await invalidateProducts();
       router.refresh();
     } catch (saveError) {
       console.error('Could not save product category.', saveError);

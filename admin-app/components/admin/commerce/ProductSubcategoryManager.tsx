@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/Input';
 import { Modal } from '@/components/ui/Modal';
 import { Select } from '@/components/ui/Select';
 import { saveProductSubcategoryAction } from '@/data/actions/commerce-admin';
+import { useInvalidateAdminProductsQuery } from '@/data/commerce/admin-products-client';
 import { slugify } from '@/lib/commerce';
 import type { Database } from '@/types/database';
 
@@ -22,6 +23,7 @@ function SubcategoryForm({
   subcategory?: Subcategory;
 }) {
   const router = useRouter();
+  const invalidateProducts = useInvalidateAdminProductsQuery();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [slug, setSlug] = useState(subcategory?.slug ?? '');
@@ -50,6 +52,7 @@ function SubcategoryForm({
         return;
       }
       toast.success(subcategory ? 'Subcategory updated.' : 'Subcategory added.');
+      await invalidateProducts();
       router.refresh();
     } catch (saveError) {
       console.error('Could not save product subcategory.', saveError);

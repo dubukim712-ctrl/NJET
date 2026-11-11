@@ -4,6 +4,29 @@ import { revalidatePath } from 'next/cache';
 import { createClient } from '@/data/supabase/server';
 import { updateProfileSchema, changePasswordSchema } from '@/lib/validations/auth';
 import type { ActionResult } from '@/data/actions/auth';
+import { requireCustomer } from '@/data/auth/guards';
+import type { UserProfile } from '@/types/database';
+
+export type CustomerProfile = Pick<
+  UserProfile,
+  'id' | 'email' | 'full_name' | 'avatar_url' | 'role_name'
+>;
+
+export async function getCustomerProfileAction(): Promise<
+  ActionResult<CustomerProfile>
+> {
+  const { profile } = await requireCustomer('/dashboard/profile');
+  return {
+    success: true,
+    data: {
+      id: profile.id,
+      email: profile.email,
+      full_name: profile.full_name,
+      avatar_url: profile.avatar_url,
+      role_name: profile.role_name,
+    },
+  };
+}
 
 export async function updateProfileAction(formData: FormData): Promise<ActionResult> {
   const supabase = await createClient();

@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 const addressField = z.string().trim().max(200).nullable();
+export const customerOrderIdSchema = z.string().uuid();
 
 export const checkoutSchema = z.object({
   customerName: z.string().trim().min(2).max(100),
@@ -73,13 +74,13 @@ export const checkoutSchema = z.object({
 });
 
 export const paymentProofSubmissionSchema = z.object({
-  orderId: z.string().uuid(),
+  orderId: customerOrderIdSchema,
   objectPath: z.string().trim().min(1).max(160),
   paymentReference: z.string().trim().max(120).nullable(),
 }).strict();
 
 export const customerOrderPaymentDetailsSchema = z.object({
-  order_id: z.string().uuid(),
+  order_id: customerOrderIdSchema,
   order_number: z.string().min(1),
   payment_method: z.enum(['online', 'home_credit']),
   status: z.enum([

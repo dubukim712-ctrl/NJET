@@ -1,18 +1,22 @@
 'use client';
 
+import { useIsFetching, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import {
-  createWalkInSaleAction,
-  getWalkInCatalogAction,
-} from '@/data/actions/walk-in-sales';
+import { createWalkInSaleAction } from '@/data/actions/walk-in-sales';
 import type {
   WalkInBranchOption,
   WalkInCartLine,
   WalkInCatalogItem,
 } from '@/data/commerce/walk-in-sales';
+import {
+  walkInCatalogQueryOptions,
+  WalkInCatalogQueryError,
+} from '@/data/commerce/walk-in-sales-client';
+import { useInvalidateAdminProductsQuery } from '@/data/commerce/admin-products-client';
+import { adminOrdersQueryKey } from '@/data/commerce/admin-orders-client';
 import { Button } from '@/components/ui/Button';
 import { WalkInSaleSections } from '@/components/admin/commerce/WalkInSaleSections';
 import { WalkInSaleCustomerDetails } from '@/components/admin/commerce/WalkInSaleCustomerDetails';
@@ -30,8 +34,17 @@ export function WalkInSaleForm({
   initialCatalog: WalkInCatalogItem[];
 }) {
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const invalidateProducts = useInvalidateAdminProductsQuery();
   const [branchId, setBranchId] = useState(initialBranchId);
-  const [catalog, setCatalog] = useState(initialCatalog);
+  const catalogQuery = useQuery({
+    ...walkInCatalogQueryOptions(branchId),
+    enabled: Boolean(branchId),
+    initialData: branchId === initialBranchId ? initialCatalog : undefined,
+  });
+  const catalog = catalogQuery.data ?? initialCatalog;
+  const catalogBusy =
+    useIsFetching({ queryKey: ['commerce', 'walk-in-catalog'] }) > 0;
   const [cart, setCart] = useState<WalkInCartLine[]>([]);
   const [customerName, setCustomerName] = useState('');
   const [contactNumber, setContactNumber] = useState('');
@@ -52,7 +65,6 @@ export function WalkInSaleForm({
       monthlyPayment: '',
     },
   });
-  const [catalogBusy, setCatalogBusy] = useState(false);
   const [busy, setBusy] = useState(false);
   const [catalogError, setCatalogError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -78,22 +90,18 @@ export function WalkInSaleForm({
 
   const changeBranch = async (nextBranchId: string) => {
     if (!nextBranchId || nextBranchId === branchId) return;
-    setCatalogBusy(true);
     setCatalogError(null);
     setError(null);
     try {
-      const result = await getWalkInCatalogAction(nextBranchId);
-      if (!result.success) {
-        setCatalogError(result.error);
-        return;
-      }
+      await queryClient.fetchQuery(walkInCatalogQueryOptions(nextBranchId));
       setBranchId(nextBranchId);
-      setCatalog(result.data);
     } catch (actionError) {
-      console.error('Could not load walk-in branch stock.', actionError);
-      setCatalogError('Branch stock could not be loaded. Please try again.');
-    } finally {
-      setCatalogBusy(false);
+      if (actionError instanceof WalkInCatalogQueryError) {
+        setCatalogError(actionError.message);
+      } else {
+        console.error('Could not load walk-in branch stock.', actionError);
+        setCatalogError('Branch stock could not be loaded. Please try again.');
+      }
     }
   };
 
@@ -179,6 +187,10 @@ export function WalkInSaleForm({
         toast.error(result.error);
         return;
       }
+      await Promise.all([
+        invalidateProducts(),
+        queryClient.invalidateQueries({ queryKey: adminOrdersQueryKey }),
+      ]);
       toast.success('Walk-in sale completed.');
       router.push('/admin/orders');
     } catch (actionError) {

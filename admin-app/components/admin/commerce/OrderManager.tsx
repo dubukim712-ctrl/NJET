@@ -28,11 +28,13 @@ export function OrderManager({
   branches,
   filters,
   canManage,
+  onDataChanged,
 }: {
   orders: StaffOrder[];
   branches: OrderBranchOption[];
   filters: OrderFilters;
   canManage: boolean;
+  onDataChanged: () => void;
 }) {
   const router = useRouter();
   const [busyOrder, setBusyOrder] = useState<string | null>(null);
@@ -55,6 +57,7 @@ export function OrderManager({
         return;
       }
       toast.success('Order status updated.');
+      onDataChanged();
       router.refresh();
     } catch (actionError) {
       console.error('Could not update order status.', actionError);
@@ -237,6 +240,7 @@ export function OrderManager({
                     isEbikeOrder={order.items.some((item) => item.product_type === 'ebike')}
                     certificate={order.certificate}
                     canManage={canManage}
+                    onDataChanged={onDataChanged}
                   />
                 )}
 
@@ -287,7 +291,10 @@ export function OrderManager({
                       orderId={order.id}
                       totalMinor={order.total_minor}
                       onCancel={() => setCompletingHomeCreditOrderId(null)}
-                      onComplete={() => setCompletingHomeCreditOrderId(null)}
+                      onComplete={() => {
+                        setCompletingHomeCreditOrderId(null);
+                        onDataChanged();
+                      }}
                     />
                   )}
               </div>

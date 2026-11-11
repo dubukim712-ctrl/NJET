@@ -1,11 +1,16 @@
 'use client';
 
+import { useQueryClient } from '@tanstack/react-query';
 import Image from 'next/image';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
-import { useRouter } from 'next/navigation';
 import { FileImage } from 'lucide-react';
 import { toast } from 'sonner';
 import { submitOrderPaymentProofAction } from '@/data/actions/commerce-checkout';
+import { adminOrdersQueryKey } from '@/data/commerce/admin-orders-client';
+import {
+  useInvalidateCustomerOrderPaymentQuery,
+} from '@/data/commerce/customer-order-payment-client';
+import { useInvalidateCustomerOrdersQuery } from '@/data/commerce/customer-orders-client';
 import { uploadOrderDocuments } from '@/data/commerce/documents-client';
 import { getPaymentProviderLabel } from '@/data/commerce/payment-recipients';
 import type { CustomerOrderPayment } from '@/data/commerce/customer-payment';
@@ -16,11 +21,20 @@ import { Button } from '@/components/ui/Button';
 export function OrderPaymentPanel({
   details,
   serverNow,
+  userId,
+  orderId,
 }: {
   details: CustomerOrderPayment;
   serverNow: string;
+  userId: string;
+  orderId: string;
 }) {
-  const router = useRouter();
+  const queryClient = useQueryClient();
+  const invalidateCustomerOrders = useInvalidateCustomerOrdersQuery();
+  const invalidatePaymentDetails = useInvalidateCustomerOrderPaymentQuery(
+    userId,
+    orderId
+  );
   const serverNowMs = Date.parse(serverNow);
   const deadlineMs = details.payment_expires_at
     ? Date.parse(details.payment_expires_at)
@@ -56,9 +70,9 @@ export function OrderPaymentPanel({
   useEffect(() => {
     if (awaitingPayment && secondsLeft === 0 && !refreshedAtExpiry.current) {
       refreshedAtExpiry.current = true;
-      router.refresh();
+      void invalidatePaymentDetails();
     }
-  }, [awaitingPayment, router, secondsLeft]);
+  }, [awaitingPayment, invalidatePaymentDetails, secondsLeft]);
 
   const submitProof = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -97,9 +111,13 @@ export function OrderPaymentPanel({
       setMessage(successMessage);
       if (result.data.warning) toast.warning(result.data.warning);
       else toast.success('Payment proof submitted.');
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: adminOrdersQueryKey }),
+        invalidateCustomerOrders(),
+        invalidatePaymentDetails(),
+      ]);
       setProof(null);
       setFileInputKey((key) => key + 1);
-      router.refresh();
     } catch (submitError) {
       console.error('Could not submit payment proof.', submitError);
       setError('Payment proof could not be submitted. Please try again.');

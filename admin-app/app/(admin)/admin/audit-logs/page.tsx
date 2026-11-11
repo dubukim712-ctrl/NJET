@@ -1,5 +1,3 @@
-import { Suspense } from 'react';
-import { AdminDataFallback } from '@/components/admin/AdminDataFallback';
 import { AuditLogsContent, type AuditLogsSearchParams } from '@/components/audit/AuditLogsContent';
 
 export const metadata = { title: 'Audit Logs' };
@@ -23,9 +21,7 @@ export default function AuditLogsPage({
           or clear all logs. Clear and delete actions are not recorded.
         </p>
       </div>
-      <Suspense fallback={<AdminDataFallback label="audit logs" />}>
-        <AuditLogsContent searchParams={searchParams} />
-      </Suspense>
+      <AuditLogsContent searchParams={searchParams} />
     </div>
   );
 }

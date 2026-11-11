@@ -8,6 +8,8 @@ import { Tag } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Role } from '@/types/database';
 import { updateRoleAction } from '@/data/actions/roles';
+import { useInvalidateAdminRolesQuery } from '@/data/rbac/admin-roles-client';
+import { useInvalidateAdminUsersQuery } from '@/data/rbac/admin-users-client';
 import {
   updateRoleSchema,
   type UpdateRoleInput,
@@ -21,6 +23,8 @@ interface EditRoleFormProps {
 
 export function EditRoleForm({ role }: EditRoleFormProps) {
   const router = useRouter();
+  const invalidateRoles = useInvalidateAdminRolesQuery();
+  const invalidateUsers = useInvalidateAdminUsersQuery();
   const [serverError, setServerError] = useState<string | null>(null);
 
   const {
@@ -59,6 +63,7 @@ export function EditRoleForm({ role }: EditRoleFormProps) {
       const result = await updateRoleAction(role.id, formData);
 
       if (result.success) {
+        await Promise.all([invalidateRoles(), invalidateUsers()]);
         toast.success('Role updated.');
         router.refresh();
         return;

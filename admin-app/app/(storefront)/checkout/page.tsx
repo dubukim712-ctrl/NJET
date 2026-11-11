@@ -1,8 +1,6 @@
-import Link from 'next/link';
 import { CheckoutAuthNotice } from '@/components/checkout/CheckoutAuthNotice';
-import { CheckoutForm } from '@/components/checkout/CheckoutForm';
+import { CheckoutOptionsQuery } from '@/components/checkout/CheckoutOptionsQuery';
 import { getAuthContext } from '@/data/auth/guards';
-import { getCheckoutOptions } from '@/data/commerce/checkout-options';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 
 export const metadata = { title: 'Checkout | NJET' };
@@ -12,7 +10,6 @@ export default async function CheckoutPage() {
   const hasCustomerAccess = Boolean(
     auth && hasPermission(auth.profile, PERMISSIONS.storefrontAccess)
   );
-  const result = hasCustomerAccess ? await getCheckoutOptions() : null;
 
   return (
     <div className="mx-auto max-w-7xl space-y-6">
@@ -24,16 +21,8 @@ export default async function CheckoutPage() {
         <CheckoutAuthNotice needsSignIn />
       ) : !hasCustomerAccess ? (
         <CheckoutAuthNotice needsSignIn={false} />
-      ) : !result || result.error || !result.data ? (
-        <section className="rounded-xl border border-destructive/30 bg-destructive/5 p-5" role="alert">
-          <h2 className="font-semibold">Checkout options are unavailable</h2>
-          <p className="mt-1 text-sm text-muted-foreground">{result?.error}</p>
-          <Link href="/checkout" className="mt-4 inline-flex min-h-10 items-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground">
-            Try again
-          </Link>
-        </section>
       ) : (
-        <CheckoutForm {...result.data} />
+        <CheckoutOptionsQuery userId={auth.user.id} />
       )}
     </div>
   );

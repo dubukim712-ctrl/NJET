@@ -5,7 +5,13 @@ import dynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Link2, MapPin, Store } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 import { saveCommerceBranchAction } from '@/data/actions/commerce-admin';
+import { adminOrdersQueryKey } from '@/data/commerce/admin-orders-client';
+import { useInvalidateAdminBranchesQuery } from '@/data/commerce/admin-branches-client';
+import { useInvalidateAdminProductsQuery } from '@/data/commerce/admin-products-client';
+import { useInvalidateCheckoutOptionsQuery } from '@/data/commerce/checkout-options-client';
+import { useInvalidateAdminUsersQuery } from '@/data/rbac/admin-users-client';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { slugify } from '@/lib/commerce';
@@ -33,6 +39,11 @@ export function BranchEditor({
   onSaved: () => void;
 }) {
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const invalidateBranches = useInvalidateAdminBranchesQuery();
+  const invalidateProducts = useInvalidateAdminProductsQuery();
+  const invalidateCheckoutOptions = useInvalidateCheckoutOptionsQuery();
+  const invalidateUsers = useInvalidateAdminUsersQuery();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [slug, setSlug] = useState(branch?.slug ?? '');
@@ -68,6 +79,13 @@ export function BranchEditor({
         return;
       }
       toast.success(branch ? 'Branch updated.' : 'Branch added.');
+      await Promise.all([
+        invalidateBranches(),
+        invalidateProducts(),
+        invalidateCheckoutOptions(),
+        invalidateUsers(),
+        queryClient.invalidateQueries({ queryKey: adminOrdersQueryKey }),
+      ]);
       router.refresh();
       onSaved();
     } catch (saveError) {

@@ -4,6 +4,7 @@ import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { saveOwnershipCertificateTemplateAction } from '@/data/actions/system-settings';
+import { useInvalidateAdminSystemSettingsQuery } from '@/data/commerce/admin-system-settings-client';
 import { OWNERSHIP_CERTIFICATE_TEMPLATE_FIELDS } from '@/data/commerce/ownership-certificate-template-config';
 import {
   cleanupSystemSettingsAsset,
@@ -21,6 +22,7 @@ export function OwnershipCertificateTemplateSettings({
   } | null;
 }) {
   const router = useRouter();
+  const invalidateSettings = useInvalidateAdminSystemSettingsQuery();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fieldNames = Object.values(OWNERSHIP_CERTIFICATE_TEMPLATE_FIELDS).join(', ');
@@ -58,6 +60,7 @@ export function OwnershipCertificateTemplateSettings({
       }
 
       uploadedPath = null;
+      await invalidateSettings();
       toast.success(`Certificate template saved (${result.data.version}).`);
       if (result.data.warning) toast.warning(result.data.warning);
       router.refresh();

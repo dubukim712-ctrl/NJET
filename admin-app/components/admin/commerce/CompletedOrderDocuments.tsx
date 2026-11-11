@@ -15,12 +15,14 @@ export function CompletedOrderDocuments({
   isEbikeOrder,
   certificate,
   canManage,
+  onDataChanged,
 }: {
   orderId: string;
   invoiceNo: string | null;
   isEbikeOrder: boolean;
   certificate: { url: string | null } | null;
   canManage: boolean;
+  onDataChanged: () => void;
 }) {
   const router = useRouter();
   const [invoiceNumber, setInvoiceNumber] = useState(invoiceNo ?? '');
@@ -41,6 +43,7 @@ export function CompletedOrderDocuments({
       }
       setSavedInvoiceNo(invoiceNumber.trim());
       toast.success('Invoice number saved.');
+      onDataChanged();
       router.refresh();
     } catch (actionError) {
       console.error('Could not save order invoice.', actionError);
@@ -63,6 +66,7 @@ export function CompletedOrderDocuments({
       }
       toast.success('Ownership certificate generated.');
       if (result.data.warning) toast.warning(result.data.warning);
+      onDataChanged();
       router.refresh();
     } catch (actionError) {
       console.error('Could not generate ownership certificate.', actionError);

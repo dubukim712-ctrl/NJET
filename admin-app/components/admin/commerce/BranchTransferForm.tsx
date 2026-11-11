@@ -8,6 +8,7 @@ import { dispatchBranchTransferAction } from '@/data/actions/commerce-admin';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
+import { useInvalidateAdminProductsQuery } from '@/data/commerce/admin-products-client';
 import type { ProductType } from '@/types/commerce-tables';
 
 type Variant = { id: string; sku: string; name: string; productType: ProductType };
@@ -44,6 +45,7 @@ export function BranchTransferForm({
   onSaved: () => void;
 }) {
   const router = useRouter();
+  const invalidateProducts = useInvalidateAdminProductsQuery();
   const activeBranches = branches.filter((branch) => branch.active);
   const sourceBranchId = assignedBranchId
     ?? (activeBranches.some((branch) => branch.id === initialSourceBranchId)
@@ -83,6 +85,7 @@ export function BranchTransferForm({
         return;
       }
       toast.success('Branch transfer dispatched.');
+      await invalidateProducts();
       router.refresh();
       onSaved();
     } catch (dispatchError) {

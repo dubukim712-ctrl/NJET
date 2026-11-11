@@ -2,6 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { createClient } from '@/data/supabase/client';
+import { cartVariantsQueryKey } from '@/data/commerce/catalog-query-keys';
 import {
   StorefrontAvailabilityRowsSchema,
   StorefrontCatalogRowsSchema,
@@ -116,12 +117,13 @@ export function useCartVariantsQuery(variantIds: string[]) {
   const ids = [...new Set(variantIds)].sort();
 
   return useQuery({
-    queryKey: ['commerce', 'cart-variants', ids],
+    queryKey: [...cartVariantsQueryKey, ids],
     queryFn: async () => {
       const result = await getCartVariants(ids);
       if (result.error) throw new Error(result.error);
       return result.data;
     },
     enabled: ids.length > 0,
+    staleTime: 15_000,
   });
 }

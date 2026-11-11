@@ -1,5 +1,3 @@
-import { Suspense } from 'react';
-import { AdminDataFallback } from '@/components/admin/AdminDataFallback';
 import { RolesContent } from '@/components/rbac/RolesContent';
 
 export const metadata = { title: 'Roles' };
@@ -12,9 +10,7 @@ export default function RolesPage() {
         <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Roles</h1>
         <p className="mt-1 text-sm text-muted-foreground">Review roles and their permissions.</p>
       </div>
-      <Suspense fallback={<AdminDataFallback label="roles" />}>
-        <RolesContent />
-      </Suspense>
+      <RolesContent />
     </div>
   );
 }

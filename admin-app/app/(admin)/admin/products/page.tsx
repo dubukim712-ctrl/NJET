@@ -1,5 +1,3 @@
-import { Suspense } from 'react';
-import { AdminDataFallback } from '@/components/admin/AdminDataFallback';
 import { ProductsContent } from '@/components/admin/commerce/ProductsContent';
 
 export const metadata = { title: 'Products & stock' };
@@ -12,9 +10,7 @@ export default function ProductsPage() {
         <h1 className="mt-1 text-3xl font-semibold tracking-tight">Products &amp; stock</h1>
         <p className="mt-2 text-sm text-muted-foreground">Manage product categories and subcategories, images, variants, serial-tracked e-bikes, batch stock, transfers, and movement logs.</p>
       </header>
-      <Suspense fallback={<AdminDataFallback label="product and stock data" />}>
-        <ProductsContent />
-      </Suspense>
+      <ProductsContent />
     </div>
   );
 }

@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import type { Permission, RoleScope } from '@/types/database';
 import { updateRolePermissionsAction } from '@/data/actions/permissions';
+import { useInvalidateAdminRolesQuery } from '@/data/rbac/admin-roles-client';
+import { useInvalidateAdminUsersQuery } from '@/data/rbac/admin-users-client';
 import { PermissionChecklist } from '@/components/rbac/PermissionChecklist';
 import { Button } from '@/components/ui/Button';
 
@@ -28,6 +30,8 @@ export function RolePermissionsForm({
   canManage,
 }: RolePermissionsFormProps) {
   const router = useRouter();
+  const invalidateRoles = useInvalidateAdminRolesQuery();
+  const invalidateUsers = useInvalidateAdminUsersQuery();
   const [keys, setKeys] = useState(initialKeys);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -43,6 +47,7 @@ export function RolePermissionsForm({
       const result = await updateRolePermissionsAction(roleId, keys);
 
       if (result.success) {
+        await Promise.all([invalidateRoles(), invalidateUsers()]);
         toast.success('Permissions updated.');
         router.refresh();
       } else {

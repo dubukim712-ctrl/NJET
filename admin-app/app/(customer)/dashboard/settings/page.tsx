@@ -1,18 +1,10 @@
-import { redirect } from 'next/navigation';
-import { createClient } from '@/data/supabase/server';
+import { requireCustomer } from '@/data/auth/guards';
 import { ChangePasswordForm } from '@/components/auth/ChangePasswordForm';
 
 export const metadata = { title: 'Settings' };
 
 export default async function SettingsPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    redirect('/login');
-  }
+  await requireCustomer('/dashboard/settings');
 
   return (
     <div className="max-w-2xl space-y-6">

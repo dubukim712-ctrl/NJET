@@ -8,13 +8,15 @@ import { Link2, Loader2, UserRound } from 'lucide-react';
 import { toast } from 'sonner';
 import { updateProfileSchema, type UpdateProfileInput } from '@/lib/validations/auth';
 import { updateProfileAction } from '@/data/actions/profile';
+import type { CustomerProfile } from '@/data/actions/profile';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { Input } from '@/components/ui/Input';
-import type { UserProfile } from '@/types/database';
+import { useInvalidateCustomerProfileQuery } from '@/data/auth/customer-profile-client';
 
-export function ProfileForm({ profile }: { profile: UserProfile }) {
+export function ProfileForm({ profile }: { profile: CustomerProfile }) {
   const router = useRouter();
   const { refreshUser } = useAuth();
+  const invalidateProfile = useInvalidateCustomerProfileQuery(profile.id);
   const [serverError, setServerError] = useState<string | null>(null);
 
   const {
@@ -40,7 +42,7 @@ export function ProfileForm({ profile }: { profile: UserProfile }) {
 
     if (result.success) {
       toast.success('Profile updated.');
-      await refreshUser();
+      await Promise.all([refreshUser(), invalidateProfile()]);
       router.refresh();
     } else {
       setServerError(result.error);

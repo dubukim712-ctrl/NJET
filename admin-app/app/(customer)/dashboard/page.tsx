@@ -9,11 +9,11 @@ export default async function DashboardPage({
   searchParams: Promise<{ error?: string }>;
 }) {
   const params = await searchParams;
-  const { profile } = await requireCustomer('/dashboard');
+  const { user } = await requireCustomer('/dashboard');
 
   return (
     <StorefrontLandingPage
-      profile={profile}
+      userId={user.id}
       permissionError={params?.error === 'insufficient_permissions'}
     />
   );

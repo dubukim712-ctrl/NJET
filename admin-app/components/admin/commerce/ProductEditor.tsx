@@ -10,6 +10,7 @@ import { Select } from '@/components/ui/Select';
 import { Button } from '@/components/ui/Button';
 import { ProductImage } from '@/components/shop/ProductImage';
 import { cleanupCommerceProductImage, uploadCommerceProductImage } from '@/data/commerce/product-images-client';
+import { useInvalidateAdminProductsQuery } from '@/data/commerce/admin-products-client';
 import { slugify } from '@/lib/commerce';
 import type { Database } from '@/types/database';
 
@@ -31,6 +32,7 @@ export function ProductEditor({
   onSaved?: () => void;
 }) {
   const router = useRouter();
+  const invalidateProducts = useInvalidateAdminProductsQuery();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [categoryId, setCategoryId] = useState(
@@ -95,6 +97,7 @@ export function ProductEditor({
         return;
       }
       toast.success(product ? 'Product updated.' : 'Product created.');
+      await invalidateProducts();
       router.refresh();
       onSaved?.();
     } catch (saveError) {

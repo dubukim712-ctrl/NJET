@@ -1,16 +1,24 @@
+'use client';
+
 import Link from 'next/link';
 import { ArrowRight, Bike, MapPin, ShieldCheck } from 'lucide-react';
 import { ProductCard } from '@/components/shop/ProductCard';
 import { ProductImage } from '@/components/shop/ProductImage';
-import type { CatalogData } from '@/data/commerce/catalog';
+import { StorefrontCatalogLoading } from '@/components/shop/StorefrontCatalogLoading';
+import {
+  StorefrontCatalogQueryError,
+  useStorefrontCatalogQuery,
+} from '@/data/commerce/storefront-catalog-client';
 
-export function StorefrontHomePage({
-  catalog,
-  error,
-}: {
-  catalog: CatalogData | null;
-  error: string | null;
-}) {
+export function StorefrontHomePage() {
+  const query = useStorefrontCatalogQuery();
+  const catalog = query.data ?? null;
+  const error =
+    !catalog && query.error instanceof StorefrontCatalogQueryError
+      ? query.error.message
+      : !catalog && query.isError
+        ? 'The catalog could not be loaded. Please try again later.'
+        : null;
   const featured = catalog?.products.slice(0, 3) ?? [];
   const heroProduct = featured[0];
 
@@ -101,6 +109,12 @@ export function StorefrontHomePage({
           </Link>
         </div>
 
+        {query.isError && catalog && (
+          <p className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive" role="alert">
+            Could not refresh the collection. Cached products are still shown.
+          </p>
+        )}
+
         {error ? (
           <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-5" role="alert">
             <h3 className="font-semibold">The collection is temporarily unavailable</h3>
@@ -109,6 +123,8 @@ export function StorefrontHomePage({
               Open the shop
             </Link>
           </div>
+        ) : query.isPending ? (
+          <StorefrontCatalogLoading label="featured products" />
         ) : featured.length ? (
           <div
             className="flex snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain pb-4"

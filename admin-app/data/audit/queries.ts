@@ -34,61 +34,80 @@ export async function getAuditLogs({
   page = 1,
   pageSize = AUDIT_PAGE_SIZE,
 }: AuditLogQuery = {}): Promise<AuditLogResult> {
-  const supabase = await createClient();
   const safePage = Math.max(1, page);
   const from = (safePage - 1) * pageSize;
   const to = from + pageSize - 1;
 
-  let query = supabase
-    .from('audit_logs')
-    .select('*', { count: 'exact' })
-    .order('created_at', { ascending: false })
-    .range(from, to);
+  try {
+    const supabase = await createClient();
+    let query = supabase
+      .from('audit_logs')
+      .select('*', { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .range(from, to);
 
-  if (action) {
-    query = query.eq('action', action);
-  }
-  if (table) {
-    query = query.eq('table_name', table);
-  }
+    if (action) {
+      query = query.eq('action', action);
+    }
+    if (table) {
+      query = query.eq('table_name', table);
+    }
 
-  const { data, count, error } = await query;
+    const { data, count, error } = await query;
 
-  if (error) {
-    console.error('Failed to load audit logs:', error.message);
+    if (error) {
+      console.error('Failed to load audit logs:', error.message);
+      return {
+        logs: [],
+        total: 0,
+        page: safePage,
+        pageSize,
+        error: error.code === 'PGRST205' ? 'missing_table' : 'unknown',
+      };
+    }
+
+    return {
+      logs: data ?? [],
+      total: count ?? 0,
+      page: safePage,
+      pageSize,
+      error: null,
+    };
+  } catch (error) {
+    console.error('Failed to load audit logs:', error);
     return {
       logs: [],
       total: 0,
       page: safePage,
       pageSize,
-      error: error.code === 'PGRST205' ? 'missing_table' : 'unknown',
+      error: 'unknown',
     };
   }
-
-  return {
-    logs: data ?? [],
-    total: count ?? 0,
-    page: safePage,
-    pageSize,
-    error: null,
-  };
 }
 
 export async function getAuditLog(id: string): Promise<AuditLogDetailResult> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
-    .from('audit_logs')
-    .select('*')
-    .eq('id', id)
-    .single();
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from('audit_logs')
+      .select('*')
+      .eq('id', id)
+      .single();
 
-  if (error) {
-    console.error('Failed to load audit log:', error.message);
+    if (error) {
+      console.error('Failed to load audit log:', error.message);
+      return {
+        log: null,
+        error: error.code === 'PGRST205' ? 'missing_table' : 'unknown',
+      };
+    }
+
+    return { log: data, error: null };
+  } catch (error) {
+    console.error('Failed to load audit log:', error);
     return {
       log: null,
-      error: error.code === 'PGRST205' ? 'missing_table' : 'unknown',
+      error: 'unknown',
     };
   }
-
-  return { log: data, error: null };
 }
