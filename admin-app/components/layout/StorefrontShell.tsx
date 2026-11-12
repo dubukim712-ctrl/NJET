@@ -67,10 +67,10 @@ export function StorefrontShell({
   );
   const navigationItems = [
     NAVIGATION[0],
+    NAVIGATION[1],
     ...(canAccessStorefront
       ? [NAVIGATION[2], NAVIGATION[3]]
       : []),
-    NAVIGATION[1],
   ];
 
   const navigation = (mobile = false) => (
