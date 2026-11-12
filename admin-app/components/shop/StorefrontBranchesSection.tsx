@@ -72,8 +72,8 @@ export function StorefrontBranchesSection() {
           </Button>
         </div>
       ) : (
-        <div className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr] lg:gap-8">
-          <div className="rounded-2xl border bg-card p-5 sm:p-7">
+        <div className="grid min-w-0 gap-5 lg:grid-cols-[0.9fr_1.1fr] lg:gap-8">
+          <div className="min-w-0 rounded-2xl border bg-card p-5 sm:p-7">
             <div className="flex items-center justify-between gap-3">
               <h3 className="text-xl font-semibold">Available branches</h3>
               <span className="shrink-0 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
@@ -81,27 +81,30 @@ export function StorefrontBranchesSection() {
               </span>
             </div>
             {branches.length ? (
-              <ul className="mt-5 space-y-3">
+              <ul className="mt-5 flex w-full min-w-0 snap-x snap-mandatory gap-2 overflow-x-auto overscroll-x-contain pb-2 lg:block lg:space-y-3 lg:overflow-visible lg:pb-0 lg:snap-none">
                 {branches.map((branch) => {
                   const isSelected = branch.id === selectedBranch?.id;
                   return (
-                    <li key={branch.id}>
+                    <li
+                      key={branch.id}
+                      className="w-max max-w-[80vw] flex-none snap-start lg:w-auto lg:max-w-none"
+                    >
                       <button
                         type="button"
                         aria-pressed={isSelected}
                         onClick={() => setSelectedBranchId(branch.id)}
-                        className={`flex min-h-20 w-full items-start gap-3 rounded-xl border p-4 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                        className={`flex min-h-11 w-full min-w-0 items-center gap-2 rounded-full border px-3 py-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:min-h-20 lg:items-start lg:gap-3 lg:rounded-xl lg:p-4 ${
                           isSelected
                             ? 'border-primary bg-primary/5'
                             : 'border-transparent bg-muted/40 hover:border-primary/30 hover:bg-muted/70'
                         }`}
                       >
-                        <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
-                          <Store className="size-5" aria-hidden="true" />
+                        <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary lg:size-10">
+                          <Store className="size-4 lg:size-5" aria-hidden="true" />
                         </span>
                         <span className="min-w-0">
-                          <span className="block font-semibold">{branch.name}</span>
-                          <span className="mt-1 flex items-start gap-1.5 text-sm leading-5 text-muted-foreground">
+                          <span className="block truncate font-semibold">{branch.name}</span>
+                          <span className="mt-1 hidden items-start gap-1.5 text-sm leading-5 text-muted-foreground lg:flex">
                             <MapPin className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
                             <span className="break-words">
                               {branch.address || 'Address not provided'}
@@ -120,7 +123,7 @@ export function StorefrontBranchesSection() {
             )}
           </div>
 
-          <div className="relative isolate z-0 min-h-72 overflow-hidden rounded-2xl border bg-muted sm:min-h-96">
+          <div className="relative isolate z-0 min-h-72 min-w-0 overflow-hidden rounded-2xl border bg-muted sm:min-h-96">
             {locationQuery ? (
               <GoogleMapsEmbed
                 key={selectedBranch?.id}
