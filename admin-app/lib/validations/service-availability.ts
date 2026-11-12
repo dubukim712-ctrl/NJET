@@ -37,7 +37,7 @@ export const customerServiceAvailabilitySchema = z.object({
   }, 'Choose a time at the start of a 30-minute slot.'),
 }).strict();
 
-export const customerServiceAppointmentSlotsSchema = z.object({
+export const serviceAppointmentSlotsSchema = z.object({
   branchId: z.string().uuid(),
   date: z.iso.date(),
 }).strict();

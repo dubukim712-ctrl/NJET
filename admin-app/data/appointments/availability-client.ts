@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import {
   getCustomerServiceAppointmentAvailabilityAction,
   getCustomerServiceAppointmentSlotsAction,
+  getStaffServiceAppointmentSlotsAction,
 } from '@/data/actions/service-availability';
 import { ServiceAppointmentsQueryError } from '@/data/appointments/client';
 import { customerServiceAvailabilityQueryKey } from '@/data/appointments/query-keys';
@@ -23,6 +24,31 @@ export function useCustomerServiceAppointmentSlotsQuery(
     ],
     queryFn: async () => {
       const result = await getCustomerServiceAppointmentSlotsAction({ branchId, date });
+      if (!result.success) throw new ServiceAppointmentsQueryError(result.error);
+      return result.data;
+    },
+    enabled: Boolean(userId && branchId && date),
+    retry: false,
+    staleTime: 15_000,
+    refetchInterval: 30_000,
+  });
+}
+
+export function useStaffServiceAppointmentSlotsQuery(
+  userId: string,
+  branchId: string,
+  date: string
+) {
+  return useQuery({
+    queryKey: [
+      ...customerServiceAvailabilityQueryKey,
+      'staff-slots',
+      userId,
+      branchId,
+      date,
+    ],
+    queryFn: async () => {
+      const result = await getStaffServiceAppointmentSlotsAction({ branchId, date });
       if (!result.success) throw new ServiceAppointmentsQueryError(result.error);
       return result.data;
     },

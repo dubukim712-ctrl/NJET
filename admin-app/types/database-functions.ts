@@ -276,6 +276,24 @@ export type DatabaseFunctions = {
       created_at: string;
     }[];
   };
+  customer_service_appointment_cancellation_requests: {
+    Args: Record<PropertyKey, never>;
+    Returns: {
+      appointment_id: string;
+      subject: string;
+      reason: string;
+      status: 'pending' | 'approved' | 'rejected';
+      created_at: string;
+    }[];
+  };
+  request_service_appointment_cancellation: {
+    Args: { p_appointment_id: string; p_subject: string; p_reason: string };
+    Returns: string;
+  };
+  review_service_appointment_cancellation: {
+    Args: { p_request_id: string; p_decision: string };
+    Returns: undefined;
+  };
   save_branch_service_hours: {
     Args: { p_branch_id: string; p_hours: Json };
     Returns: undefined;
@@ -298,6 +316,13 @@ export type DatabaseFunctions = {
       hours_configured: boolean;
       branch_open: boolean;
       slot_time: string | null;
+    }[];
+  };
+  customer_service_appointment_closures: {
+    Args: { p_branch_id: string; p_date: string };
+    Returns: {
+      starts_at: string;
+      ends_at: string;
     }[];
   };
   service_appointment_branch_options: {

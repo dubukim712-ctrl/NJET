@@ -36,15 +36,54 @@ export type StaffServiceAppointment = Pick<
 > & {
   internal_note: string;
   assigned_technician_name: string | null;
+  cancellation_request: {
+    id: string;
+    subject: string;
+    reason: string;
+    created_at: string;
+  } | null;
 };
 
 export async function getCustomerServiceAppointments(
   supabase: SupabaseClient
-): Promise<{ data: CustomerAppointment[] | null; error: string | null }> {
+): Promise<{
+  data: (CustomerAppointment & {
+    cancellation_request: {
+      subject: string;
+      reason: string;
+      status: 'pending' | 'approved' | 'rejected';
+      created_at: string;
+    } | null;
+  })[] | null;
+  error: string | null;
+}> {
   try {
-    const { data, error } = await supabase.rpc('customer_service_appointments');
-    if (error) throw error;
-    return { data, error: null };
+    const [appointmentsResult, requestsResult] = await Promise.all([
+      supabase.rpc('customer_service_appointments'),
+      supabase.rpc('customer_service_appointment_cancellation_requests'),
+    ]);
+    if (appointmentsResult.error) throw appointmentsResult.error;
+    if (requestsResult.error) throw requestsResult.error;
+    const requestsByAppointment = new Map(
+      requestsResult.data.map((request) => [request.appointment_id, request])
+    );
+    return {
+      data: appointmentsResult.data.map((appointment) => {
+        const request = requestsByAppointment.get(appointment.id);
+        return {
+          ...appointment,
+          cancellation_request: request
+            ? {
+                subject: request.subject,
+                reason: request.reason,
+                status: request.status,
+                created_at: request.created_at,
+              }
+            : null,
+        };
+      }),
+      error: null,
+    };
   } catch (error) {
     console.error('Could not load customer service appointments.', error);
     return {
@@ -56,7 +95,8 @@ export async function getCustomerServiceAppointments(
 
 export async function getStaffServiceAppointments(
   supabase: SupabaseClient,
-  filters: ServiceAppointmentFilters
+  filters: ServiceAppointmentFilters,
+  canManage: boolean
 ): Promise<{ data: StaffServiceAppointment[] | null; error: string | null }> {
   try {
     let query = supabase
@@ -74,6 +114,12 @@ export async function getStaffServiceAppointments(
 
     if (filters.status) query = query.eq('status', filters.status);
     if (filters.branchId) query = query.eq('branch_id', filters.branchId);
+    const searchTerm = filters.search.replace(/[%,()_"\\]/g, ' ').trim();
+    if (searchTerm) {
+      query = query.or(
+        `appointment_number.ilike.%${searchTerm}%,customer_name.ilike.%${searchTerm}%,contact_number.ilike.%${searchTerm}%,bike_make.ilike.%${searchTerm}%,bike_model.ilike.%${searchTerm}%,bike_serial_number.ilike.%${searchTerm}%,branch_name.ilike.%${searchTerm}%`
+      );
+    }
     if (filters.date) {
       const start = new Date(`${filters.date}T00:00:00+08:00`);
       const end = new Date(start.getTime() + 24 * 60 * 60 * 1000);
@@ -96,7 +142,7 @@ export async function getStaffServiceAppointments(
         )
       ),
     ];
-    const [notesResult, techniciansResult] = await Promise.all([
+    const [notesResult, techniciansResult, cancellationRequestsResult] = await Promise.all([
       supabase
         .from('service_appointment_internal_notes')
         .select('appointment_id, note')
@@ -106,9 +152,17 @@ export async function getStaffServiceAppointments(
             p_technician_ids: technicianIds,
           })
         : Promise.resolve({ data: [], error: null }),
+      canManage
+        ? supabase
+            .from('service_appointment_cancellation_requests')
+            .select('id, appointment_id, subject, reason, created_at')
+            .eq('status', 'pending')
+            .in('appointment_id', ids)
+        : Promise.resolve({ data: [], error: null }),
     ]);
     if (notesResult.error) throw notesResult.error;
     if (techniciansResult.error) throw techniciansResult.error;
+    if (cancellationRequestsResult.error) throw cancellationRequestsResult.error;
 
     const noteById = new Map(
       notesResult.data.map((entry) => [entry.appointment_id, entry.note])
@@ -119,6 +173,12 @@ export async function getStaffServiceAppointments(
         technician.name,
       ])
     );
+    const cancellationRequestByAppointment = new Map(
+      cancellationRequestsResult.data.map((request) => [
+        request.appointment_id,
+        request,
+      ])
+    );
     return {
       data: appointments.map((appointment) => ({
         ...appointment,
@@ -126,6 +186,8 @@ export async function getStaffServiceAppointments(
         assigned_technician_name: appointment.assigned_technician_id
           ? nameById.get(appointment.assigned_technician_id) ?? null
           : null,
+        cancellation_request:
+          cancellationRequestByAppointment.get(appointment.id) ?? null,
       })),
       error: null,
     };

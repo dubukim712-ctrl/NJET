@@ -19,6 +19,10 @@ export type ServiceAppointmentStatus =
   | 'no_show';
 export type ServiceAppointmentMode = 'branch_visit' | 'home_service';
 export type ServiceAppointmentType = 'maintenance' | 'repair' | 'inspection' | 'other';
+export type ServiceAppointmentCancellationRequestStatus =
+  | 'pending'
+  | 'approved'
+  | 'rejected';
 
 type Table<Row> = {
   Row: Row;
@@ -319,6 +323,18 @@ type ServiceAppointmentInternalNote = {
   updated_at: string;
 };
 
+type ServiceAppointmentCancellationRequest = {
+  id: string;
+  appointment_id: string;
+  customer_id: string;
+  subject: string;
+  reason: string;
+  status: ServiceAppointmentCancellationRequestStatus;
+  created_at: string;
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+};
+
 type BranchServiceHour = {
   branch_id: string;
   day_of_week: number;
@@ -362,6 +378,7 @@ export type CommerceTables = {
   ownership_certificate_templates: Table<OwnershipCertificateTemplate>;
   business_settings: Table<BusinessSettings>;
   service_appointments: Table<ServiceAppointment>;
+  service_appointment_cancellation_requests: Table<ServiceAppointmentCancellationRequest>;
   service_appointment_internal_notes: Table<ServiceAppointmentInternalNote>;
   branch_service_hours: Table<BranchServiceHour>;
   service_appointment_closures: Table<ServiceAppointmentClosure>;

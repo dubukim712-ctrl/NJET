@@ -87,7 +87,7 @@ export function ProductCatalogTab({
                 onOpenChange={setSubcategoryManagerOpen}
               />
               <Button type="button" size="sm" onClick={onCreateProduct}>
-                <Plus className="mr-2 size-4" aria-hidden="true" />
+                <Plus className="mr-1 size-4" aria-hidden="true" />
                 Create product
               </Button>
             </div>
@@ -200,10 +200,10 @@ export function ProductCatalogTab({
                               aria-hidden="true"
                             />
                           </summary>
-                          <div className="absolute right-0 top-full z-20 mt-2 w-48 rounded-lg border bg-card p-1 shadow-lg">
+                          <div className="absolute right-0 top-full z-20 mt-2 w-35 p-1 text-sm rounded-lg border bg-card shadow-lg">
                             <button
                               type="button"
-                              className="flex min-h-9 w-full items-center gap-2 rounded-md px-3 text-left text-sm hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                              className="flex min-h-7 w-full items-center gap-2 rounded-md px-3 text-left hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                               onClick={(event) => {
                                 event.currentTarget
                                   .closest("details")
@@ -211,7 +211,7 @@ export function ProductCatalogTab({
                                 setModal({ kind: "product", product });
                               }}
                             >
-                              <Pencil className="size-4" aria-hidden="true" />
+                              <Pencil className="size-3.5" aria-hidden="true" />
                               Edit product
                             </button>
                           </div>

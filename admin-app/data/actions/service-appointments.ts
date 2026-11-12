@@ -77,13 +77,17 @@ export async function requestServiceAppointmentAction(
 export async function getStaffServiceAppointmentsAction(
   payload: unknown
 ): Promise<ActionResult<NonNullable<Awaited<ReturnType<typeof getStaffServiceAppointments>>['data']>>> {
-  const { supabase } = await requirePermission(
+  const { supabase, profile } = await requirePermission(
     PERMISSIONS.serviceAppointmentsRead,
     '/admin/appointments'
   );
   const parsed = serviceAppointmentFiltersSchema.safeParse(payload);
   if (!parsed.success) return { success: false, error: 'Appointment filters are invalid.' };
-  const result = await getStaffServiceAppointments(supabase, parsed.data);
+  const result = await getStaffServiceAppointments(
+    supabase,
+    parsed.data,
+    hasPermission(profile, PERMISSIONS.serviceAppointmentsManage)
+  );
   if (!result.data) {
     return { success: false, error: result.error ?? 'Appointment data is unavailable.' };
   }
@@ -209,7 +213,7 @@ export async function updateStaffServiceAppointmentAction(
   if (!parsed.success) {
     return {
       success: false,
-      error: 'Please correct the appointment update.',
+      error: parsed.error.issues[0]?.message ?? 'Please correct the appointment update.',
       fieldErrors: parsed.error.flatten().fieldErrors,
     };
   }

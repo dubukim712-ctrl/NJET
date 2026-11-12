@@ -133,12 +133,34 @@ export const staffServiceAppointmentUpdateSchema = z.object({
   assignedTechnicianId: z.string().uuid().nullable(),
   estimateMinor: z.number().int().min(0).nullable(),
   finalTotalMinor: z.number().int().min(0).nullable(),
-}).strict();
+}).strict().superRefine((value, context) => {
+  if (
+    value.status === 'requested' &&
+    (value.scheduledAt !== null || value.assignedTechnicianId !== null)
+  ) {
+    context.addIssue({
+      code: 'custom',
+      path: ['status'],
+      message: 'A requested appointment cannot have a scheduled time or assigned technician.',
+    });
+  } else if (
+    value.status !== 'requested' &&
+    value.status !== 'cancelled' &&
+    (!value.scheduledAt || !value.assignedTechnicianId)
+  ) {
+    context.addIssue({
+      code: 'custom',
+      path: ['assignedTechnicianId'],
+      message: 'Choose a scheduled time and technician before confirming this appointment.',
+    });
+  }
+});
 
 export const serviceAppointmentFiltersSchema = z.object({
   status: z.union([z.enum(SERVICE_APPOINTMENT_STATUSES), z.literal('')]).catch(''),
   branchId: z.union([z.string().uuid(), z.literal('')]).catch(''),
   date: z.union([z.iso.date(), z.literal('')]).catch(''),
+  search: z.string().trim().max(100).catch(''),
 }).strict();
 export type ServiceAppointmentFilters = z.infer<
   typeof serviceAppointmentFiltersSchema
@@ -154,4 +176,15 @@ export const assignedServiceAppointmentStatusSchema = z.object({
 export const serviceAppointmentNoteSchema = z.object({
   appointmentId: z.string().uuid(),
   note: z.string().trim().max(4000),
+}).strict();
+
+export const serviceAppointmentCancellationRequestSchema = z.object({
+  appointmentId: z.string().uuid(),
+  subject: z.string().trim().min(3).max(120),
+  reason: z.string().trim().min(10).max(1500),
+}).strict();
+
+export const serviceAppointmentCancellationReviewSchema = z.object({
+  requestId: z.string().uuid(),
+  decision: z.enum(['approve', 'reject']),
 }).strict();

@@ -1,7 +1,10 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { CalendarDays } from 'lucide-react';
+import { ServiceAppointmentStatusBadge } from '@/components/appointments/ServiceAppointmentStatusBadge';
+import { CustomerCancellationRequestForm } from '@/components/dashboard/CustomerCancellationRequestForm';
 import { Button } from '@/components/ui/Button';
 import {
   ServiceAppointmentsQueryError,
@@ -11,7 +14,14 @@ import { formatPhp } from '@/lib/commerce';
 import type { Database } from '@/types/database';
 
 type CustomerAppointment =
-  Database['public']['Functions']['customer_service_appointments']['Returns'][number];
+  Database['public']['Functions']['customer_service_appointments']['Returns'][number] & {
+    cancellation_request: {
+      subject: string;
+      reason: string;
+      status: 'pending' | 'approved' | 'rejected';
+      created_at: string;
+    } | null;
+  };
 
 function formatAppointmentDate(value: string | null) {
   if (!value) return 'Awaiting confirmation';
@@ -23,12 +33,16 @@ function formatAppointmentDate(value: string | null) {
 }
 
 function AppointmentCard({ appointment }: { appointment: CustomerAppointment }) {
+  const [showCancellationForm, setShowCancellationForm] = useState(false);
   const address = [
     appointment.address_line1,
     appointment.barangay,
     appointment.city,
     appointment.province,
   ].filter(Boolean).join(', ');
+  const canRequestCancellation =
+    ['requested', 'confirmed'].includes(appointment.status) &&
+    appointment.cancellation_request?.status !== 'pending';
 
   return (
     <li className="rounded-xl border bg-card p-5 sm:p-6">
@@ -39,9 +53,7 @@ function AppointmentCard({ appointment }: { appointment: CustomerAppointment }) 
             {appointment.branch_name} · {appointment.service_mode.replaceAll('_', ' ')}
           </p>
         </div>
-        <span className="rounded-full bg-secondary px-3 py-1 text-xs font-medium capitalize">
-          {appointment.status.replaceAll('_', ' ')}
-        </span>
+        <ServiceAppointmentStatusBadge status={appointment.status} />
       </div>
       <div className="mt-4 grid gap-3 border-t pt-4 text-sm sm:grid-cols-2">
         <p><span className="text-muted-foreground">Service:</span> {appointment.service_type}</p>
@@ -63,6 +75,46 @@ function AppointmentCard({ appointment }: { appointment: CustomerAppointment }) 
         {address && <p className="sm:col-span-2"><span className="text-muted-foreground">Home service address:</span> {address}</p>}
       </div>
       <p className="mt-4 border-t pt-4 text-sm leading-6">{appointment.issue_description}</p>
+      {appointment.status === 'requested' && (
+        <p className="mt-3 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-sm leading-6">
+          Your selected date is tentative and may change based on technician availability. Staff will confirm the appointment date and time.
+        </p>
+      )}
+      {appointment.cancellation_request && (
+        <div className="mt-4 rounded-lg border p-3 text-sm">
+          <p className="font-medium">
+            Cancellation request: {appointment.cancellation_request.status}
+          </p>
+          <p className="mt-1">{appointment.cancellation_request.subject}</p>
+          <p className="mt-1 whitespace-pre-wrap text-muted-foreground">
+            {appointment.cancellation_request.reason}
+          </p>
+          {appointment.cancellation_request.status === 'pending' && (
+            <p className="mt-2 text-muted-foreground">Waiting for staff review. Your appointment remains active.</p>
+          )}
+        </div>
+      )}
+      {canRequestCancellation && (
+        <div className="mt-4">
+          <Button
+            type="button"
+            variant="outline"
+            aria-expanded={showCancellationForm}
+            aria-controls={`cancellation-form-${appointment.id}`}
+            onClick={() => setShowCancellationForm((show) => !show)}
+          >
+            {showCancellationForm ? 'Keep appointment' : 'Cancel appointment'}
+          </Button>
+          {showCancellationForm && (
+            <div id={`cancellation-form-${appointment.id}`}>
+              <CustomerCancellationRequestForm
+                appointmentId={appointment.id}
+                onSubmitted={() => setShowCancellationForm(false)}
+              />
+            </div>
+          )}
+        </div>
+      )}
     </li>
   );
 }

@@ -28,6 +28,7 @@ export function CustomerAppointmentDateTimeFields({
   onRetry: () => void;
   dateError?: string;
 }) {
+  const closures = slots?.closures ?? [];
   const helperText = !branchId || !date
     ? 'Choose a branch and date to see service times.'
     : loading
@@ -59,6 +60,24 @@ export function CustomerAppointmentDateTimeFields({
         }
         dateError={dateError}
       />
+      {branchId && date && closures.length > 0 && (
+        <div
+          className="space-y-1 rounded-lg border border-amber-700/30 bg-amber-50 p-3 text-sm text-amber-950 sm:col-span-2"
+          role="status"
+        >
+          <p className="font-semibold">
+            This branch is unavailable for appointments during:
+          </p>
+          <ul className="list-inside list-disc">
+            {closures.map((closure) => (
+              <li key={`${closure.startsAt}-${closure.endsAt}`}>
+                {formatClosureRange(closure.startsAt, closure.endsAt)}
+              </li>
+            ))}
+          </ul>
+          <p>Choose an available time outside these closure periods.</p>
+        </div>
+      )}
       {branchId && date && error && (
         <div className="sm:col-span-2">
           <p className="text-sm text-destructive" role="alert">
@@ -73,4 +92,13 @@ export function CustomerAppointmentDateTimeFields({
       )}
     </>
   );
+}
+
+function formatClosureRange(startsAt: string, endsAt: string) {
+  const formatter = new Intl.DateTimeFormat('en-PH', {
+    timeZone: 'Asia/Manila',
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  });
+  return `${formatter.format(new Date(startsAt))} – ${formatter.format(new Date(endsAt))}`;
 }

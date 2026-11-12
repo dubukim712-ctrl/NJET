@@ -1,13 +1,15 @@
-'use client';
+"use client";
 
-import { useState, type FormEvent } from 'react';
-import { useRouter } from 'next/navigation';
-import { toast } from 'sonner';
+import { useState, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import {
   generateOrderCertificateAction,
   saveOrderInvoiceAction,
-} from '@/data/actions/order-documents';
-import { Button } from '@/components/ui/Button';
+} from "@/data/actions/order-documents";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Download } from "lucide-react";
 
 export function CompletedOrderDocuments({
   orderId,
@@ -25,37 +27,40 @@ export function CompletedOrderDocuments({
   onDataChanged: () => void;
 }) {
   const router = useRouter();
-  const [invoiceNumber, setInvoiceNumber] = useState(invoiceNo ?? '');
-  const [savedInvoiceNo, setSavedInvoiceNo] = useState(invoiceNo ?? '');
-  const [busy, setBusy] = useState<'invoice' | 'certificate' | null>(null);
+  const [invoiceNumber, setInvoiceNumber] = useState(invoiceNo ?? "");
+  const [savedInvoiceNo, setSavedInvoiceNo] = useState(invoiceNo ?? "");
+  const [busy, setBusy] = useState<"invoice" | "certificate" | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const saveInvoice = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setBusy('invoice');
+    setBusy("invoice");
     setError(null);
     try {
-      const result = await saveOrderInvoiceAction({ orderId, invoiceNo: invoiceNumber });
+      const result = await saveOrderInvoiceAction({
+        orderId,
+        invoiceNo: invoiceNumber,
+      });
       if (!result.success) {
         setError(result.error);
         toast.error(result.error);
         return;
       }
       setSavedInvoiceNo(invoiceNumber.trim());
-      toast.success('Invoice number saved.');
+      toast.success("Invoice number saved.");
       onDataChanged();
       router.refresh();
     } catch (actionError) {
-      console.error('Could not save order invoice.', actionError);
-      setError('Could not save the invoice number. Please try again.');
-      toast.error('Could not save the invoice number. Please try again.');
+      console.error("Could not save order invoice.", actionError);
+      setError("Could not save the invoice number. Please try again.");
+      toast.error("Could not save the invoice number. Please try again.");
     } finally {
       setBusy(null);
     }
   };
 
   const generateCertificate = async () => {
-    setBusy('certificate');
+    setBusy("certificate");
     setError(null);
     try {
       const result = await generateOrderCertificateAction({ orderId });
@@ -64,14 +69,14 @@ export function CompletedOrderDocuments({
         toast.error(result.error);
         return;
       }
-      toast.success('Ownership certificate generated.');
+      toast.success("Ownership certificate generated.");
       if (result.data.warning) toast.warning(result.data.warning);
       onDataChanged();
       router.refresh();
     } catch (actionError) {
-      console.error('Could not generate ownership certificate.', actionError);
-      setError('Could not generate the certificate. Please try again.');
-      toast.error('Could not generate the certificate. Please try again.');
+      console.error("Could not generate ownership certificate.", actionError);
+      setError("Could not generate the certificate. Please try again.");
+      toast.error("Could not generate the certificate. Please try again.");
     } finally {
       setBusy(null);
     }
@@ -83,10 +88,13 @@ export function CompletedOrderDocuments({
     <section className="space-y-3 border-t pt-4">
       <h3 className="text-sm font-semibold">Completed order documents</h3>
       {canManage ? (
-        <form onSubmit={saveInvoice} className="flex flex-col gap-2 sm:flex-row sm:items-end">
+        <form
+          onSubmit={saveInvoice}
+          className="flex flex-col gap-2 sm:flex-row sm:items-end"
+        >
           <label className="w-full space-y-1 text-sm sm:max-w-xs">
             <span>Invoice number</span>
-            <input
+            <Input
               value={invoiceNumber}
               onChange={(event) => setInvoiceNumber(event.target.value)}
               maxLength={80}
@@ -97,8 +105,8 @@ export function CompletedOrderDocuments({
           </label>
           <Button
             type="submit"
-            size="sm"
-            loading={busy === 'invoice'}
+            size="default"
+            loading={busy === "invoice"}
             disabled={
               busy !== null ||
               !invoiceNumber.trim() ||
@@ -110,7 +118,8 @@ export function CompletedOrderDocuments({
         </form>
       ) : invoiceNo ? (
         <p className="text-sm">
-          <span className="text-muted-foreground">Invoice number:</span> {invoiceNo}
+          <span className="text-muted-foreground">Invoice number:</span>{" "}
+          {invoiceNo}
         </p>
       ) : null}
 
@@ -119,13 +128,13 @@ export function CompletedOrderDocuments({
           {canManage && (
             <Button
               type="button"
-              size="sm"
-              variant="secondary"
-              loading={busy === 'certificate'}
+              size="default"
+              variant={certificate ? "secondary" : "default"}
+              loading={busy === "certificate"}
               disabled={busy !== null}
               onClick={generateCertificate}
             >
-              {certificate ? 'Regenerate certificate' : 'Generate certificate'}
+              {certificate ? "Regenerate certificate" : "Generate certificate"}
             </Button>
           )}
           {certificate?.url ? (
@@ -133,9 +142,10 @@ export function CompletedOrderDocuments({
               href={certificate.url}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex min-h-10 items-center rounded-md border px-3 text-sm font-medium hover:bg-accent"
+              className="inline-flex gap-2 min-h-10 items-center rounded-md border px-4 text-sm font-medium hover:bg-accent"
             >
-              Download ownership certificate
+              <Download className="h-4 w-4" />
+              Download certificate
             </a>
           ) : certificate ? (
             <span className="text-sm text-destructive">
@@ -148,7 +158,11 @@ export function CompletedOrderDocuments({
           ) : null}
         </div>
       )}
-      {error && <p className="text-sm text-destructive" role="alert">{error}</p>}
+      {error && (
+        <p className="text-sm text-destructive" role="alert">
+          {error}
+        </p>
+      )}
     </section>
   );
 }

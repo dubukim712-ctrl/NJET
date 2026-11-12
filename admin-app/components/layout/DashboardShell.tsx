@@ -1,21 +1,18 @@
-'use client';
+"use client";
 
-import { useState, type ReactNode } from 'react';
-import Link from 'next/link';
-import { Menu, X } from 'lucide-react';
-import { UserNav } from '@/components/auth/UserNav';
-import { Sidebar } from '@/components/layout/Sidebar';
-import type { UserProfile } from '@/types/database';
+import { useState, type ReactNode } from "react";
+import Link from "next/link";
+import { Menu, X } from "lucide-react";
+import { UserNav } from "@/components/auth/UserNav";
+import { Sidebar } from "@/components/layout/Sidebar";
+import type { UserProfile } from "@/types/database";
 
 interface DashboardShellProps {
   user: UserProfile | null;
   children: ReactNode;
 }
 
-export function DashboardShell({
-  user,
-  children,
-}: DashboardShellProps) {
+export function DashboardShell({ user, children }: DashboardShellProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
@@ -33,7 +30,7 @@ export function DashboardShell({
           </button>
 
           <Link href="/admin" className="text-lg font-bold">
-            Admin App
+            Admin Portal
           </Link>
 
           <div className="ml-auto flex items-center gap-3">

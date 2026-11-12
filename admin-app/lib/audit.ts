@@ -1,4 +1,5 @@
 import type { Json } from '@/types/database';
+import { formatPhp } from '@/lib/commerce';
 
 export const AUDIT_ACTIONS = ['insert', 'update', 'delete', 'clear'] as const;
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];
@@ -50,6 +51,8 @@ const FIELD_LABELS: Record<string, string> = {
   sort_order: 'Sort order',
   deleted_count: 'Entries cleared',
   clear_scope: 'Clear scope',
+  estimate_minor: 'Estimate',
+  final_total_minor: 'Final total',
 };
 
 const DATE_FORMATTER = new Intl.DateTimeFormat('en-US', {
@@ -132,10 +135,11 @@ export function getAuditFieldChanges(
     .sort((a, b) => a.label.localeCompare(b.label));
 }
 
-export function formatAuditValue(value: Json | undefined): string {
+export function formatAuditValue(value: Json | undefined, key?: string): string {
   if (value === null || value === undefined) return '—';
   if (typeof value === 'boolean') return value ? 'Yes' : 'No';
   if (typeof value === 'string') return value === '' ? '—' : value;
+  if (typeof value === 'number' && key?.endsWith('_minor')) return formatPhp(value);
   if (typeof value === 'number') return String(value);
   return JSON.stringify(value, null, 2);
 }

@@ -2,18 +2,25 @@
 
 import { revalidatePath } from 'next/cache';
 import type { ActionResult } from '@/data/actions/auth';
-import { requireCustomer, requireFullAccess } from '@/data/auth/guards';
+import { requireCustomer, requireFullAccess, requirePermission } from '@/data/auth/guards';
+import { PERMISSIONS } from '@/lib/permissions';
 import {
   branchServiceHoursSchema,
-  customerServiceAppointmentSlotsSchema,
   customerServiceAvailabilitySchema,
+  serviceAppointmentSlotsSchema,
 } from '@/lib/validations/service-availability';
 
 export type CustomerServiceAppointmentSlots = {
   hoursConfigured: boolean;
   branchOpen: boolean;
   times: string[];
+  closures: { startsAt: string; endsAt: string }[];
 };
+
+export type StaffServiceAppointmentSlots = Omit<
+  CustomerServiceAppointmentSlots,
+  'closures'
+>;
 
 export type CustomerServiceAvailability = {
   branchName: string;
@@ -27,7 +34,55 @@ export async function getCustomerServiceAppointmentSlotsAction(
   payload: unknown
 ): Promise<ActionResult<CustomerServiceAppointmentSlots>> {
   const { supabase } = await requireCustomer('/dashboard/appointments/new');
-  const parsed = customerServiceAppointmentSlotsSchema.safeParse(payload);
+  const parsed = serviceAppointmentSlotsSchema.safeParse(payload);
+  if (!parsed.success) {
+    return { success: false, error: 'Choose a valid branch and service date.' };
+  }
+
+  try {
+    const [slotsResult, closuresResult] = await Promise.all([
+      supabase.rpc('customer_service_appointment_slots', {
+        p_branch_id: parsed.data.branchId,
+        p_date: parsed.data.date,
+      }),
+      supabase.rpc('customer_service_appointment_closures', {
+        p_branch_id: parsed.data.branchId,
+        p_date: parsed.data.date,
+      }),
+    ]);
+    if (slotsResult.error) throw slotsResult.error;
+    if (closuresResult.error) throw closuresResult.error;
+    const rows = slotsResult.data ?? [];
+    if (!rows.length) {
+      return { success: false, error: 'Service times are unavailable for this branch.' };
+    }
+
+    return {
+      success: true,
+      data: {
+        hoursConfigured: rows[0].hours_configured,
+        branchOpen: rows[0].branch_open,
+        times: rows.flatMap((row) => row.slot_time ? [row.slot_time] : []),
+        closures: (closuresResult.data ?? []).map((closure) => ({
+          startsAt: closure.starts_at,
+          endsAt: closure.ends_at,
+        })),
+      },
+    };
+  } catch (error) {
+    console.error('Could not load customer service times.', error);
+    return { success: false, error: 'Service times could not be loaded.' };
+  }
+}
+
+export async function getStaffServiceAppointmentSlotsAction(
+  payload: unknown
+): Promise<ActionResult<StaffServiceAppointmentSlots>> {
+  const { supabase } = await requirePermission(
+    PERMISSIONS.serviceAppointmentsManage,
+    '/admin/appointments'
+  );
+  const parsed = serviceAppointmentSlotsSchema.safeParse(payload);
   if (!parsed.success) {
     return { success: false, error: 'Choose a valid branch and service date.' };
   }
@@ -52,7 +107,7 @@ export async function getCustomerServiceAppointmentSlotsAction(
       },
     };
   } catch (error) {
-    console.error('Could not load customer service times.', error);
+    console.error('Could not load staff service times.', error);
     return { success: false, error: 'Service times could not be loaded.' };
   }
 }

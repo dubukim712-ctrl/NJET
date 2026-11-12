@@ -118,8 +118,8 @@ export function AppointmentClosureCalendar({
   }
 
   return (
-    <details className="rounded-xl border bg-card p-5 sm:p-6">
-      <summary className="cursor-pointer font-semibold">Manage branch closure times</summary>
+    <section className="rounded-xl border bg-card p-5 sm:p-6">
+      <h2 className="font-semibold">Manage branch closure times</h2>
       <div className="mt-5 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,0.9fr)]">
         <form className="space-y-4" onSubmit={submit}>
           <p className="text-sm leading-6 text-muted-foreground">
@@ -247,6 +247,6 @@ export function AppointmentClosureCalendar({
           )}
         </section>
       </div>
-    </details>
+    </section>
   );
 }

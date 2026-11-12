@@ -37,18 +37,18 @@ export function AuditChanges({ action, oldData, newData }: AuditChangesProps) {
                 <>
                   <p className="whitespace-pre-wrap break-words text-muted-foreground">
                     <span className="mr-1 font-mono text-destructive">−</span>
-                    {formatAuditValue(change.oldValue)}
+                    {formatAuditValue(change.oldValue, change.key)}
                   </p>
                   <p className="whitespace-pre-wrap break-words">
                     <span className="mr-1 font-mono text-emerald-600 dark:text-emerald-400">
                       +
                     </span>
-                    {formatAuditValue(change.newValue)}
+                    {formatAuditValue(change.newValue, change.key)}
                   </p>
                 </>
               ) : (
                 <p className="whitespace-pre-wrap break-words">
-                  {formatAuditValue(value)}
+                  {formatAuditValue(value, change.key)}
                 </p>
               )}
             </dd>
