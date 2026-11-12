@@ -6,7 +6,6 @@ import { usePathname, useRouter } from 'next/navigation';
 import {
   Home,
   CalendarDays,
-  LayoutDashboard,
   Package,
   ShoppingBag,
   Clock3,
@@ -69,11 +68,7 @@ export function StorefrontShell({
   const navigationItems = [
     NAVIGATION[0],
     ...(canAccessStorefront
-      ? [
-          { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-          NAVIGATION[2],
-          NAVIGATION[3],
-        ]
+      ? [NAVIGATION[2], NAVIGATION[3]]
       : []),
     NAVIGATION[1],
   ];
@@ -91,13 +86,11 @@ export function StorefrontShell({
         const active =
           item.name === 'Home'
             ? pathname === '/'
-            : item.name === 'Dashboard'
-              ? pathname === '/dashboard'
-              : item.name === 'Shop'
-                ? pathname.startsWith('/shop')
-                  : item.name === 'Orders'
-                    ? pathname.startsWith('/dashboard/orders')
-                    : pathname.startsWith('/dashboard/appointments');
+            : item.name === 'Shop'
+              ? pathname.startsWith('/shop')
+              : item.name === 'Orders'
+                  ? pathname.startsWith('/dashboard/orders')
+                  : pathname.startsWith('/dashboard/appointments');
 
         return (
           <Link
