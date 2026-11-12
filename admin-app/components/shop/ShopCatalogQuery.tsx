@@ -1,7 +1,7 @@
 'use client';
 
 import { ShopProductBrowser } from '@/components/shop/ShopProductBrowser';
-import { StorefrontCatalogLoading } from '@/components/shop/StorefrontCatalogLoading';
+import { ShopCatalogSkeleton } from '@/components/shop/ShopCatalogSkeleton';
 import { Button } from '@/components/ui/Button';
 import {
   StorefrontCatalogQueryError,
@@ -12,7 +12,7 @@ export function ShopCatalogQuery() {
   const query = useStorefrontCatalogQuery();
 
   if (!query.data && query.isPending) {
-    return <StorefrontCatalogLoading label="products" />;
+    return <ShopCatalogSkeleton showHero={false} />;
   }
 
   if (!query.data) {

@@ -9,6 +9,7 @@ import {
   CustomerProfileQueryError,
   useCustomerProfileQuery,
 } from '@/data/auth/customer-profile-client';
+import { StorefrontLandingSkeleton } from '@/components/dashboard/StorefrontLandingSkeleton';
 
 export function StorefrontLandingPage() {
   const { user } = useAuth();
@@ -32,12 +33,7 @@ export function StorefrontLandingPage() {
   }
 
   if (!query.data && query.isPending) {
-    return (
-      <div className="space-y-6" role="status" aria-label="Loading dashboard" aria-busy="true">
-        <div className="h-56 animate-pulse rounded-2xl bg-muted" />
-        <div className="h-40 animate-pulse rounded-xl bg-muted" />
-      </div>
-    );
+    return <StorefrontLandingSkeleton />;
   }
 
   if (!query.data) {
@@ -95,7 +91,7 @@ export function StorefrontLandingPage() {
         </Link>
       </section>
 
-      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <section className="grid gap-4 sm:grid-cols-2">
         <Link
           href="/shop"
           prefetch={false}

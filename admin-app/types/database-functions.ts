@@ -225,6 +225,16 @@ export type DatabaseFunctions = {
     Args: Record<PropertyKey, never>;
     Returns: { id: string; name: string }[];
   };
+  storefront_branch_locations: {
+    Args: Record<PropertyKey, never>;
+    Returns: {
+      id: string;
+      name: string;
+      address: string;
+      latitude: number | null;
+      longitude: number | null;
+    }[];
+  };
   storefront_variant_availability: {
     Args: { p_variant_ids: string[] };
     Returns: {

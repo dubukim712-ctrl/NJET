@@ -54,9 +54,14 @@ export function canPreviewStorefront(profile: PermissionProfile): boolean {
   return hasPermission(profile, PERMISSIONS.storefrontAccess);
 }
 
-export function surfaceHome(profile: PermissionProfile): string {
+export function surfaceHome(
+  profile: Pick<UserProfile, 'scope' | 'permissions'> | null | undefined
+): string {
   if (hasPermission(profile, PERMISSIONS.adminAccess)) {
     return '/admin';
+  }
+  if (isCustomer(profile)) {
+    return '/';
   }
   if (hasPermission(profile, PERMISSIONS.storefrontAccess)) {
     return '/dashboard';

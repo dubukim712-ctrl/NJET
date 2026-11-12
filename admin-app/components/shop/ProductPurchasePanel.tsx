@@ -1,18 +1,20 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { AddToCartButton } from '@/components/cart/AddToCartButton';
 import { Select } from '@/components/ui/Select';
+import { getAvailableQuantityLimit } from '@/data/cart';
 import type { CatalogProduct } from '@/data/commerce/catalog';
 import { formatPhp } from '@/lib/commerce';
-import { ProductImage } from '@/components/shop/ProductImage';
 
 export function ProductPurchasePanel({
   product,
   branches,
+  onImagePathChange,
 }: {
   product: CatalogProduct;
   branches: { id: string; name: string }[];
+  onImagePathChange: (path: string | null) => void;
 }) {
   const [branchId, setBranchId] = useState(branches[0]?.id ?? '');
   const [variantId, setVariantId] = useState('');
@@ -34,6 +36,10 @@ export function ProductPurchasePanel({
     branchVariants.find((variant) => variant.available) ??
     branchVariants[0];
 
+  useEffect(() => {
+    onImagePathChange(selectedVariant?.image_path ?? product.image_path);
+  }, [onImagePathChange, product.image_path, selectedVariant?.image_path]);
+
   const changeBranch = (nextBranchId: string) => {
     setBranchId(nextBranchId);
     setVariantId('');
@@ -41,11 +47,6 @@ export function ProductPurchasePanel({
 
   return (
     <section className="space-y-5 rounded-xl border bg-card p-5 sm:p-6" aria-label="Choose a store and variant">
-      <ProductImage
-        path={selectedVariant?.image_path ?? product.image_path}
-        alt={selectedVariant ? `${product.name} - ${selectedVariant.name}` : product.name}
-        className="rounded-lg"
-      />
       <Select
         label="Store branch"
         value={branchId}
@@ -110,7 +111,10 @@ export function ProductPurchasePanel({
         </div>
       )}
       {selectedVariant?.available ? (
-        <AddToCartButton variantId={selectedVariant.id} />
+        <AddToCartButton
+          variantId={selectedVariant.id}
+          maxQuantity={getAvailableQuantityLimit(selectedVariant.stockByBranch)}
+        />
       ) : (
         <button
           type="button"

@@ -12,7 +12,6 @@ export default function ShopPage() {
           Browse e-bikes, spare parts, and accessories. Choose a branch to check local availability.
         </p>
       </header>
-
       <ShopCatalogQuery />
     </div>
   );

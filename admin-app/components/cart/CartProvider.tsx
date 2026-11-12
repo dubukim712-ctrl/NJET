@@ -26,8 +26,12 @@ interface CartContextValue {
   items: CartItem[];
   itemCount: number;
   error: string | null;
-  addItem: (variantId: string) => CartResult;
-  setQuantity: (variantId: string, quantity: number) => CartResult;
+  addItem: (variantId: string, maxQuantity?: number | null) => CartResult;
+  setQuantity: (
+    variantId: string,
+    quantity: number,
+    maxQuantity?: number | null
+  ) => CartResult;
   removeItem: (variantId: string) => CartResult;
   clear: () => CartResult;
 }
@@ -55,13 +59,20 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const addItem = (variantId: string): CartResult => {
-    const result = addCartItem(items, variantId);
+  const addItem = (
+    variantId: string,
+    maxQuantity?: number | null
+  ): CartResult => {
+    const result = addCartItem(items, variantId, maxQuantity);
     return result.success ? commit(result.items) : result;
   };
 
-  const setQuantity = (variantId: string, quantity: number): CartResult => {
-    const result = setCartItemQuantity(items, variantId, quantity);
+  const setQuantity = (
+    variantId: string,
+    quantity: number,
+    maxQuantity?: number | null
+  ): CartResult => {
+    const result = setCartItemQuantity(items, variantId, quantity, maxQuantity);
     return result.success ? commit(result.items) : result;
   };
 

@@ -6,6 +6,7 @@ import { CalendarDays } from 'lucide-react';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { ServiceAppointmentStatusBadge } from '@/components/appointments/ServiceAppointmentStatusBadge';
 import { CustomerCancellationRequestForm } from '@/components/dashboard/CustomerCancellationRequestForm';
+import { CustomerServiceAppointmentsSkeleton } from '@/components/dashboard/CustomerServiceAppointmentsSkeleton';
 import { RealtimeStatus } from '@/components/realtime/RealtimeStatus';
 import { Button } from '@/components/ui/Button';
 import {
@@ -142,14 +143,7 @@ export function CustomerServiceAppointments() {
   }
 
   if (!query.data && query.isPending) {
-    return (
-      <div className="space-y-4">
-        <div className="flex justify-end">
-          <RealtimeStatus state={realtimeState} />
-        </div>
-        <div className="h-40 animate-pulse rounded-xl border bg-card" role="status" aria-label="Loading appointments" />
-      </div>
-    );
+    return <CustomerServiceAppointmentsSkeleton realtimeState={realtimeState} />;
   }
   if (!query.data) {
     return (

@@ -13,15 +13,10 @@ import { Textarea } from '@/components/ui/Textarea';
 import { AppointmentContactNumberInput } from '@/components/appointments/AppointmentContactNumberInput';
 import { CustomerAppointmentAvailabilityPanel } from '@/components/dashboard/CustomerAppointmentAvailabilityPanel';
 import { CustomerAppointmentDateTimeFields } from '@/components/dashboard/CustomerAppointmentDateTimeFields';
-import {
-  PhilippineAddressFields,
-  type PhilippineAddressValues,
-} from '@/components/admin/commerce/PhilippineAddressFields';
-import {
-  ServiceAppointmentsQueryError,
-  useCustomerServiceAppointmentBranchesQuery,
-  useInvalidateServiceAppointmentsQuery,
-} from '@/data/appointments/client';
+import { CustomerServiceAppointmentFormSkeleton } from '@/components/dashboard/CustomerServiceAppointmentFormSkeleton';
+import { PhilippineAddressFields, type PhilippineAddressValues } from '@/components/admin/commerce/PhilippineAddressFields';
+import { ServiceAppointmentsQueryError, useCustomerServiceAppointmentBranchesQuery,
+  useInvalidateServiceAppointmentsQuery } from '@/data/appointments/client';
 import { useCustomerServiceAppointmentSlotsQuery } from '@/data/appointments/availability-client';
 import { customerServiceAvailabilityQueryKey } from '@/data/appointments/query-keys';
 import { requestServiceAppointmentAction } from '@/data/actions/service-appointments';
@@ -137,7 +132,7 @@ export function CustomerServiceAppointmentForm() {
   }
 
   if (branchesQuery.isPending) {
-    return <div className="h-40 animate-pulse rounded-xl border bg-card" role="status" aria-label="Loading service branches" />;
+    return <CustomerServiceAppointmentFormSkeleton />;
   }
   if (!branchesQuery.data) {
     return (

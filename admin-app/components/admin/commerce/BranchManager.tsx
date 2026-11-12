@@ -1,9 +1,9 @@
 'use client';
 
-import dynamic from 'next/dynamic';
 import { useState } from 'react';
 import { MapPin, Pencil, Plus, Store } from 'lucide-react';
 import { BranchEditor } from '@/components/admin/commerce/BranchEditor';
+import { GoogleMapsEmbed } from '@/components/maps/GoogleMapsEmbed';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import type { Database } from '@/types/database';
@@ -14,16 +14,6 @@ type BranchModal =
   | { type: 'add' }
   | { type: 'view'; branch: Branch }
   | { type: 'edit'; branch: Branch };
-
-const BranchLocationMap = dynamic(
-  () => import('@/components/admin/commerce/BranchLocationMap'),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="h-72 animate-pulse rounded-lg border bg-muted sm:h-96" />
-    ),
-  }
-);
 
 export function BranchManager({
   branches,
@@ -40,6 +30,13 @@ export function BranchManager({
     modal?.type === 'view' &&
     modal.branch.latitude !== null &&
     modal.branch.longitude !== null;
+  const viewMapQuery =
+    modal?.type === 'view'
+      ? viewHasCoordinates
+        ? `${modal.branch.latitude},${modal.branch.longitude}`
+        : modal.branch.address.trim()
+      : '';
+  const viewHasMapLocation = Boolean(viewMapQuery);
 
   return (
     <div className="space-y-5">
@@ -97,7 +94,7 @@ export function BranchManager({
               ? 'Edit branch'
               : 'Branch details'
         }
-        size={isEditor || viewHasCoordinates ? 'wide' : 'default'}
+        size={isEditor || viewHasMapLocation ? 'wide' : 'default'}
         onClose={() => setModal(null)}
       >
         {modal?.type === 'add' && canCreateBranch && (
@@ -148,14 +145,17 @@ export function BranchManager({
                 </div>
               )}
             </dl>
-            {modal.branch.latitude !== null && modal.branch.longitude !== null ? (
-              <BranchLocationMap
-                position={[modal.branch.latitude, modal.branch.longitude]}
-                interactive={false}
-              />
+            {viewMapQuery ? (
+              <div className="h-72 overflow-hidden rounded-lg border sm:h-96">
+                <GoogleMapsEmbed
+                  query={viewMapQuery}
+                  title={`Google Map for ${modal.branch.name}`}
+                  className="h-full w-full border-0"
+                />
+              </div>
             ) : (
               <p className="rounded-lg border bg-background p-4 text-sm text-muted-foreground">
-                No map location has been pinned for this branch.
+                No map location is available for this branch.
               </p>
             )}
             <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">

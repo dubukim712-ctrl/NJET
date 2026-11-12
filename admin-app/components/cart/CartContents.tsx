@@ -9,6 +9,7 @@ import { useCart } from '@/components/cart/CartProvider';
 import { Button } from '@/components/ui/Button';
 import { useCartVariantsQuery } from '@/data/commerce/catalog-client';
 import { ProductImage } from '@/components/shop/ProductImage';
+import { getAvailableQuantityLimit } from '@/data/cart';
 import { formatPhp } from '@/lib/commerce';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 
@@ -36,6 +37,11 @@ export function CartContents({
   const cartItems = items.map((item) => ({
     ...item,
     variant: variantById.get(item.variantId) ?? null,
+    maxQuantity: variantById.has(item.variantId)
+      ? getAvailableQuantityLimit(
+          variantById.get(item.variantId)?.stockByBranch ?? []
+        )
+      : null,
   }));
   const subtotal = cartItems.reduce(
     (sum, item) => sum + (item.variant?.price_minor ?? 0) * item.quantity,
@@ -43,8 +49,12 @@ export function CartContents({
   );
   const unavailable = cartItems.some((item) => !item.variant);
 
-  const changeQuantity = (variantId: string, quantity: number) => {
-    const result = setQuantity(variantId, quantity);
+  const changeQuantity = (
+    variantId: string,
+    quantity: number,
+    maxQuantity: number | null
+  ) => {
+    const result = setQuantity(variantId, quantity, maxQuantity);
     if (!result.success) toast.error(result.error);
   };
   const deleteItem = (variantId: string) => {
@@ -123,15 +133,65 @@ export function CartContents({
                     </button>
                   </div>
                   {item.variant ? (
-                    <div className="mt-2 flex w-fit items-center rounded-md border">
-                      <Button type="button" variant="ghost" size="icon" aria-label="Decrease quantity" disabled={item.quantity <= 1} onClick={() => changeQuantity(item.variantId, item.quantity - 1)}>
-                        <Minus className="h-4 w-4" aria-hidden="true" />
-                      </Button>
-                      <span className="min-w-8 text-center text-sm" aria-live="polite">{item.quantity}</span>
-                      <Button type="button" variant="ghost" size="icon" aria-label="Increase quantity" disabled={item.quantity >= 99} onClick={() => changeQuantity(item.variantId, item.quantity + 1)}>
-                        <Plus className="h-4 w-4" aria-hidden="true" />
-                      </Button>
-                    </div>
+                    <>
+                      <div className="mt-2 flex w-fit items-center rounded-md border">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          aria-label="Decrease quantity"
+                          disabled={item.quantity <= 1}
+                          onClick={() => changeQuantity(
+                            item.variantId,
+                            item.quantity - 1,
+                            item.maxQuantity
+                          )}
+                        >
+                          <Minus className="h-4 w-4" aria-hidden="true" />
+                        </Button>
+                        <span className="min-w-8 text-center text-sm" aria-live="polite">
+                          {item.quantity}
+                        </span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          aria-label="Increase quantity"
+                          disabled={
+                            item.quantity >= (item.maxQuantity ?? 99) ||
+                            item.quantity >= 99
+                          }
+                          onClick={() => changeQuantity(
+                            item.variantId,
+                            item.quantity + 1,
+                            item.maxQuantity
+                          )}
+                        >
+                          <Plus className="h-4 w-4" aria-hidden="true" />
+                        </Button>
+                      </div>
+                      {item.maxQuantity !== null &&
+                        item.quantity >= item.maxQuantity && (
+                          <p
+                            className={`mt-1 text-xs ${
+                              item.quantity > item.maxQuantity
+                                ? 'text-destructive'
+                                : 'text-muted-foreground'
+                            }`}
+                            role={
+                              item.quantity > item.maxQuantity
+                                ? 'alert'
+                                : undefined
+                            }
+                          >
+                            {item.maxQuantity === 0
+                              ? 'Currently out of stock. Remove this item or wait for restock.'
+                              : item.quantity > item.maxQuantity
+                                ? `Only ${item.maxQuantity} can be ordered from a single branch. Reduce the quantity to continue.`
+                                : 'Maximum available from a single branch.'}
+                          </p>
+                        )}
+                    </>
                   ) : (
                     <p className="mt-2 text-xs text-destructive">Remove this item to continue.</p>
                   )}

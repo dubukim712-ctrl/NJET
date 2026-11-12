@@ -6,7 +6,7 @@ export const metadata = { title: "Orders | NJET" };
 
 export default function OrdersPage() {
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
+    <div className="space-y-6">
       <Link
         href="/dashboard"
         className="inline-flex min-h-10 items-center gap-2 text-sm font-medium text-primary hover:underline"

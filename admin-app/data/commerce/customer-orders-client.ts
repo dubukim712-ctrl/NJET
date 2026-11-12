@@ -18,7 +18,7 @@ export function useCustomerOrdersQuery(userId: string) {
     enabled: Boolean(userId),
     retry: false,
     staleTime: 15_000,
-    gcTime: 30 * 60_000,
+    gcTime: Infinity,
   });
 }
 

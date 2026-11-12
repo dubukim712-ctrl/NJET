@@ -3,6 +3,11 @@ export interface CartItem {
   quantity: number;
 }
 
+export type BranchStockAvailability = {
+  available: boolean;
+  stock: number | null;
+};
+
 export type CartMutation =
   | { success: true; items: CartItem[] }
   | { success: false; error: string };
@@ -14,6 +19,24 @@ const MAX_QUANTITY = 99;
 const MAX_CART_ITEMS = 30;
 const VARIANT_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const cartListeners = new Set<() => void>();
+
+export function getAvailableQuantityLimit(
+  stockByBranch: readonly BranchStockAvailability[]
+) {
+  const availableBranches = stockByBranch.filter((branch) => branch.available);
+  if (availableBranches.some((branch) => branch.stock === null)) return null;
+
+  return availableBranches.reduce(
+    (max, branch) => Math.max(max, branch.stock ?? 0),
+    0
+  );
+}
+
+function stockLimitError(maxQuantity: number) {
+  return maxQuantity === 0
+    ? 'This item is currently out of stock.'
+    : `Only ${maxQuantity} can be ordered from a single branch.`;
+}
 
 export function subscribeToCart(listener: () => void) {
   if (typeof window === 'undefined') return () => {};
@@ -85,12 +108,23 @@ export function parseCartSnapshot(snapshot: string) {
   return { items, error: null };
 }
 
-export function addCartItem(items: CartItem[], variantId: string): CartMutation {
+export function addCartItem(
+  items: CartItem[],
+  variantId: string,
+  maxQuantity?: number | null
+): CartMutation {
   if (!VARIANT_ID.test(variantId)) {
     return { success: false, error: 'This product variant is invalid.' };
   }
 
   const existing = items.find((item) => item.variantId === variantId);
+  if (
+    maxQuantity !== undefined &&
+    maxQuantity !== null &&
+    (existing?.quantity ?? 0) >= maxQuantity
+  ) {
+    return { success: false, error: stockLimitError(maxQuantity) };
+  }
   if (existing?.quantity === MAX_QUANTITY) {
     return {
       success: false,
@@ -116,7 +150,8 @@ export function addCartItem(items: CartItem[], variantId: string): CartMutation 
 export function setCartItemQuantity(
   items: CartItem[],
   variantId: string,
-  quantity: number
+  quantity: number,
+  maxQuantity?: number | null
 ): CartMutation {
   if (!Number.isInteger(quantity) || quantity < 1 || quantity > MAX_QUANTITY) {
     return {
@@ -124,8 +159,17 @@ export function setCartItemQuantity(
       error: `Quantity must be between 1 and ${MAX_QUANTITY}.`,
     };
   }
-  if (!items.some((item) => item.variantId === variantId)) {
+  const existing = items.find((item) => item.variantId === variantId);
+  if (!existing) {
     return { success: false, error: 'This item is not in your cart.' };
+  }
+  if (
+    maxQuantity !== undefined &&
+    maxQuantity !== null &&
+    quantity > existing.quantity &&
+    quantity > maxQuantity
+  ) {
+    return { success: false, error: stockLimitError(maxQuantity) };
   }
 
   return {

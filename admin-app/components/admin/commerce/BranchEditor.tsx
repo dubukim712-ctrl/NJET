@@ -125,6 +125,7 @@ export function BranchEditor({
         />
       </div>
       <BranchLocationPicker
+        address={address}
         latitude={latitude}
         longitude={longitude}
         onChange={(nextLatitude, nextLongitude) => {

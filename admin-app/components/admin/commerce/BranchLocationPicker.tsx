@@ -8,6 +8,7 @@ import {
   searchBranchLocations,
   type LocationSearchResult,
 } from '@/data/location-search';
+import { GoogleMapsEmbed } from '@/components/maps/GoogleMapsEmbed';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import BranchCoordinateFields from '@/components/admin/commerce/BranchCoordinateFields';
@@ -43,6 +44,7 @@ function waitForNominatimSlot(
 }
 
 export default function BranchLocationPicker({
+  address,
   latitude,
   longitude,
   onChange,
@@ -52,6 +54,7 @@ export default function BranchLocationPicker({
   latitude: number | null;
   longitude: number | null;
   onChange: (latitude: number | null, longitude: number | null) => void;
+  address: string;
   onAddressChange: (address: string) => void;
   onAddressResolvingChange: (resolving: boolean) => void;
 }) {
@@ -69,6 +72,10 @@ export default function BranchLocationPicker({
     () => latitude !== null && longitude !== null ? [latitude, longitude] : null,
     [latitude, longitude]
   );
+  const [showPinEditor, setShowPinEditor] = useState(position === null);
+  const mapQuery = position
+    ? `${position[0]},${position[1]}`
+    : address.trim();
 
   useEffect(
     () => () => {
@@ -261,7 +268,37 @@ export default function BranchLocationPicker({
         </ul>
       )}
 
-      <BranchLocationMap position={position} onPick={placePin} />
+      {mapQuery ? (
+        <div className="h-72 overflow-hidden rounded-lg border sm:h-96">
+          <GoogleMapsEmbed
+            query={mapQuery}
+            title="Google Map preview for branch location"
+            className="h-full w-full border-0"
+          />
+        </div>
+      ) : (
+        <div className="flex h-72 items-center justify-center rounded-lg border bg-muted/40 p-6 text-center sm:h-96">
+          <p className="max-w-sm text-sm text-muted-foreground">
+            Search for a branch address or pin its location to preview it on Google Maps.
+          </p>
+        </div>
+      )}
+      <Button
+        type="button"
+        variant="outline"
+        aria-expanded={showPinEditor}
+        onClick={() => setShowPinEditor((showing) => !showing)}
+      >
+        {showPinEditor ? 'Hide pin editor' : 'Adjust map pin'}
+      </Button>
+      {showPinEditor && (
+        <div className="space-y-2">
+          <BranchLocationMap position={position} onPick={placePin} />
+          <p className="text-xs text-muted-foreground">
+            Click the map to place or move the branch pin.
+          </p>
+        </div>
+      )}
       <BranchCoordinateFields
         latitude={latitude}
         longitude={longitude}
@@ -269,7 +306,7 @@ export default function BranchLocationPicker({
       />
       {position ? (
         <p className="text-xs text-muted-foreground" role="status">
-          Pinned location: {position[0].toFixed(6)}, {position[1].toFixed(6)}. Click the map to move the pin.
+          Pinned location: {position[0].toFixed(6)}, {position[1].toFixed(6)}.
         </p>
       ) : (
         <p className="text-xs text-muted-foreground">

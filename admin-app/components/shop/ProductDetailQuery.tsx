@@ -3,21 +3,24 @@
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { ProductPurchasePanel } from '@/components/shop/ProductPurchasePanel';
-import { StorefrontCatalogLoading } from '@/components/shop/StorefrontCatalogLoading';
+import { ProductDetailSkeleton } from '@/components/shop/ProductDetailSkeleton';
 import { Button } from '@/components/ui/Button';
+import { ProductImage } from '@/components/shop/ProductImage';
+import type { CatalogProduct } from '@/data/commerce/catalog';
 import {
   StorefrontCatalogQueryError,
   useStorefrontCatalogQuery,
 } from '@/data/commerce/storefront-catalog-client';
+import { useState } from 'react';
 
 export function ProductDetailQuery({ slug }: { slug: string }) {
   const query = useStorefrontCatalogQuery(slug);
 
   if (!query.data && query.isPending) {
     return (
-      <div className="space-y-6">
+      <div className="mx-auto max-w-6xl space-y-6">
         <BackLink />
-        <StorefrontCatalogLoading label="product details" />
+        <ProductDetailSkeleton />
       </div>
     );
   }
@@ -59,16 +62,44 @@ export function ProductDetailQuery({ slug }: { slug: string }) {
   }
 
   return (
+    <ProductDetailContent
+      key={product.id}
+      product={product}
+      branches={query.data.branches}
+      isRefreshingError={query.isError}
+    />
+  );
+}
+
+function ProductDetailContent({
+  product,
+  branches,
+  isRefreshingError,
+}: {
+  product: CatalogProduct;
+  branches: { id: string; name: string }[];
+  isRefreshingError: boolean;
+}) {
+  const [imagePath, setImagePath] = useState(product.image_path);
+
+  return (
     <div className="mx-auto max-w-6xl space-y-6">
       <BackLink />
-      {query.isError && (
+      {isRefreshingError && (
         <p className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive" role="alert">
           Could not refresh product availability. Cached details are still shown.
         </p>
       )}
-      <div className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr]">
+      <div className="grid items-start gap-8 lg:grid-cols-2">
+        <div className="rounded-xl border bg-card p-3">
+          <ProductImage
+            path={imagePath ?? product.image_path}
+            alt={product.name}
+            className="rounded-lg"
+          />
+        </div>
         <div className="space-y-5">
-          <div>
+          <header>
             <p className="text-sm font-semibold uppercase tracking-[0.14em] text-primary">
               {product.categoryName ?? 'Uncategorized'}
               {product.subcategoryName && ` · ${product.subcategoryName}`}
@@ -78,12 +109,11 @@ export function ProductDetailQuery({ slug }: { slug: string }) {
             <p className="mt-4 whitespace-pre-line text-sm leading-6 text-muted-foreground">
               {product.description || 'Contact our team for additional product information.'}
             </p>
-          </div>
-        </div>
-        <div className="lg:sticky lg:top-6 lg:self-start">
+          </header>
           <ProductPurchasePanel
             product={product}
-            branches={query.data.branches}
+            branches={branches}
+            onImagePathChange={setImagePath}
           />
           <p className="text-xs leading-5 text-muted-foreground">
             Availability can change until staff confirms your order. Stock is not reserved when an order is submitted.

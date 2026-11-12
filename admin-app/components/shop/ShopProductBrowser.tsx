@@ -127,9 +127,14 @@ export function ShopProductBrowser({ products }: { products: CatalogProduct[] })
           </p>
         </div>
         {filteredProducts.length ? (
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-4 min-[321px]:max-[768px]:grid-cols-2 min-[321px]:max-[768px]:gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {filteredProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
+              <ProductCard
+                key={product.id}
+                product={product}
+                compactOnNarrow
+                stackFooterOnNarrow
+              />
             ))}
           </div>
         ) : (

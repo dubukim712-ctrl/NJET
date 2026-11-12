@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { OrderPaymentPanel } from '@/components/checkout/OrderPaymentPanel';
+import { CustomerOrderPaymentSkeleton } from '@/components/checkout/CustomerOrderPaymentSkeleton';
 import { RealtimeStatus } from '@/components/realtime/RealtimeStatus';
 import { useRealtimeChanges } from '@/components/realtime/useRealtimeChanges';
 import {
@@ -43,17 +44,7 @@ export function CustomerOrderPaymentQuery({
   );
 
   if (!query.data && query.isPending) {
-    return (
-      <div className="space-y-5">
-        <div className="flex justify-end">
-          <RealtimeStatus state={realtimeState} />
-        </div>
-        <div role="status" aria-label="Loading payment details" aria-busy="true">
-          <div className="h-24 animate-pulse rounded-xl bg-muted" />
-          <div className="mt-5 h-64 animate-pulse rounded-xl bg-muted" />
-        </div>
-      </div>
-    );
+    return <CustomerOrderPaymentSkeleton realtimeState={realtimeState} />;
   }
 
   if (!query.data) {

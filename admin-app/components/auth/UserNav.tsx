@@ -77,7 +77,12 @@ export function UserNav({ user, showHelp = false }: UserNavProps) {
           </Avatar>
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56" align="end" forceMount>
+      <DropdownMenuContent
+        className="w-48 sm:w-56"
+        align="end"
+        sideOffset={12}
+        forceMount
+      >
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
             <p className="truncate text-sm font-medium leading-none">
