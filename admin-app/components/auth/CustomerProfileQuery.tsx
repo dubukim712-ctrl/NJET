@@ -1,14 +1,31 @@
 'use client';
 
 import { ProfileForm } from '@/components/auth/ProfileForm';
+import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
+import { useAuth } from '@/components/auth/AuthProvider';
 import {
   CustomerProfileQueryError,
   useCustomerProfileQuery,
 } from '@/data/auth/customer-profile-client';
 
-export function CustomerProfileQuery({ userId }: { userId: string }) {
+export function CustomerProfileQuery() {
+  const { user } = useAuth();
+  const userId = user?.id ?? '';
   const query = useCustomerProfileQuery(userId);
+
+  if (!user) {
+    return (
+      <section className="rounded-xl border bg-card p-6">
+        <p className="text-sm text-muted-foreground" role="alert">
+          Your session has ended. Sign in to view your profile.
+        </p>
+        <Button asChild className="mt-4">
+          <Link href="/login">Sign in</Link>
+        </Button>
+      </section>
+    );
+  }
 
   if (!query.data && query.isPending) {
     return (

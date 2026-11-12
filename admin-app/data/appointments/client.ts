@@ -26,6 +26,7 @@ export function useCustomerServiceAppointmentBranchesQuery(userId: string) {
       if (!result.success) throw new ServiceAppointmentsQueryError(result.error);
       return result.data.branches;
     },
+    enabled: Boolean(userId),
     retry: false,
     staleTime: 60_000,
     gcTime: Infinity,
@@ -40,6 +41,7 @@ export function useCustomerServiceAppointmentsQuery(userId: string) {
       if (!result.success) throw new ServiceAppointmentsQueryError(result.error);
       return result.data;
     },
+    enabled: Boolean(userId),
     retry: false,
     staleTime: 15_000,
     gcTime: Infinity,

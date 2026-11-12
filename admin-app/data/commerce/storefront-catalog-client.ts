@@ -16,6 +16,7 @@ export function useStorefrontCatalogQuery(slug?: string) {
     },
     retry: false,
     staleTime: 15_000,
+    gcTime: 30 * 60_000,
   });
 }
 

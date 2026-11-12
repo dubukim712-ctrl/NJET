@@ -2,7 +2,9 @@
 
 import { useCallback } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { Package } from 'lucide-react';
+import { useAuth } from '@/components/auth/AuthProvider';
 import { Button } from '@/components/ui/Button';
 import { RealtimeStatus } from '@/components/realtime/RealtimeStatus';
 import {
@@ -22,13 +24,10 @@ const CUSTOMER_ORDER_REALTIME_TABLES: readonly RealtimeTable[] = [
   'order_certificates',
 ];
 
-export function CustomerOrdersQuery({
-  userId,
-  placedOrderId,
-}: {
-  userId: string;
-  placedOrderId?: string;
-}) {
+export function CustomerOrdersQuery() {
+  const { user } = useAuth();
+  const userId = user?.id ?? '';
+  const placedOrderId = useSearchParams().get('placed') ?? undefined;
   const query = useCustomerOrdersQuery(userId);
   const invalidateOrders = useInvalidateCustomerOrdersQuery();
   const refreshOrders = useCallback(() => {
@@ -36,9 +35,17 @@ export function CustomerOrdersQuery({
   }, [invalidateOrders]);
   const realtimeState = useRealtimeChanges(
     `customer-orders-${userId}`,
-    CUSTOMER_ORDER_REALTIME_TABLES,
+    user ? CUSTOMER_ORDER_REALTIME_TABLES : [],
     refreshOrders
   );
+
+  if (!user) {
+    return (
+      <p className="rounded-lg border bg-card p-4 text-sm text-muted-foreground" role="alert">
+        Your session has ended. Sign in to view your orders.
+      </p>
+    );
+  }
 
   if (!query.data && query.isPending) {
     return (

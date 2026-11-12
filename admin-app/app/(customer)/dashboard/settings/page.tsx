@@ -1,11 +1,8 @@
-import { requireCustomer } from '@/data/auth/guards';
 import { ChangePasswordForm } from '@/components/auth/ChangePasswordForm';
 
 export const metadata = { title: 'Settings' };
 
-export default async function SettingsPage() {
-  await requireCustomer('/dashboard/settings');
-
+export default function SettingsPage() {
   return (
     <div className="max-w-2xl space-y-6">
       <div>

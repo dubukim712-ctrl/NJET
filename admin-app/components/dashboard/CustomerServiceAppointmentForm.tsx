@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useCallback, useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/components/auth/AuthProvider';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { RealtimeStatus } from '@/components/realtime/RealtimeStatus';
@@ -42,7 +43,9 @@ function fieldError(errors: Record<string, string[] | undefined>, name: string) 
   return errors[name]?.[0];
 }
 
-export function CustomerServiceAppointmentForm({ userId }: { userId: string }) {
+export function CustomerServiceAppointmentForm() {
+  const { user } = useAuth();
+  const userId = user?.id ?? '';
   const router = useRouter();
   const queryClient = useQueryClient();
   const branchesQuery = useCustomerServiceAppointmentBranchesQuery(userId);
@@ -123,6 +126,14 @@ export function CustomerServiceAppointmentForm({ userId }: { userId: string }) {
     } finally {
       setSubmitting(false);
     }
+  }
+
+  if (!user) {
+    return (
+      <p className="rounded-lg border bg-card p-4 text-sm text-muted-foreground" role="alert">
+        Your session has ended. Sign in to book a service appointment.
+      </p>
+    );
   }
 
   if (branchesQuery.isPending) {

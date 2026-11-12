@@ -15,8 +15,10 @@ export function useCustomerOrdersQuery(userId: string) {
       if (!result.success) throw new CustomerOrdersQueryError(result.error);
       return result.data;
     },
+    enabled: Boolean(userId),
     retry: false,
     staleTime: 15_000,
+    gcTime: 30 * 60_000,
   });
 }
 

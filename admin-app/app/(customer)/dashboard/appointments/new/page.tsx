@@ -1,13 +1,10 @@
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { CustomerServiceAppointmentForm } from '@/components/dashboard/CustomerServiceAppointmentForm';
-import { requireCustomer } from '@/data/auth/guards';
 
 export const metadata = { title: 'Book a service appointment' };
 
-export default async function NewCustomerAppointmentPage() {
-  const { user } = await requireCustomer('/dashboard/appointments/new');
-
+export default function NewCustomerAppointmentPage() {
   return (
     <div className="space-y-6">
       <Link href="/dashboard/appointments" className="inline-flex min-h-10 items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground">
@@ -20,7 +17,7 @@ export default async function NewCustomerAppointmentPage() {
           Choose a branch visit or request a home service. A staff member will confirm your appointment.
         </p>
       </header>
-      <CustomerServiceAppointmentForm userId={user.id} />
+      <CustomerServiceAppointmentForm />
     </div>
   );
 }

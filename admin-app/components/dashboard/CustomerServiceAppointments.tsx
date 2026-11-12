@@ -3,6 +3,7 @@
 import { useCallback, useState } from 'react';
 import Link from 'next/link';
 import { CalendarDays } from 'lucide-react';
+import { useAuth } from '@/components/auth/AuthProvider';
 import { ServiceAppointmentStatusBadge } from '@/components/appointments/ServiceAppointmentStatusBadge';
 import { CustomerCancellationRequestForm } from '@/components/dashboard/CustomerCancellationRequestForm';
 import { RealtimeStatus } from '@/components/realtime/RealtimeStatus';
@@ -122,13 +123,23 @@ function AppointmentCard({ appointment }: { appointment: CustomerAppointment }) 
   );
 }
 
-export function CustomerServiceAppointments({ userId }: { userId: string }) {
+export function CustomerServiceAppointments() {
+  const { user } = useAuth();
+  const userId = user?.id ?? '';
   const query = useCustomerServiceAppointmentsQuery(userId);
   const invalidateAppointments = useInvalidateServiceAppointmentsQuery();
   const refreshAppointments = useCallback(() => {
     void invalidateAppointments();
   }, [invalidateAppointments]);
   const realtimeState = useCustomerServiceAppointmentsRealtime(userId, refreshAppointments);
+
+  if (!user) {
+    return (
+      <p className="rounded-lg border bg-card p-4 text-sm text-muted-foreground" role="alert">
+        Your session has ended. Sign in to view your appointments.
+      </p>
+    );
+  }
 
   if (!query.data && query.isPending) {
     return (

@@ -22,6 +22,7 @@ export function useStorefrontBusinessInfoQuery() {
     },
     retry: false,
     staleTime: 30_000,
+    gcTime: Infinity,
   });
 }
 

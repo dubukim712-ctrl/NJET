@@ -1,11 +1,8 @@
-import { requireCustomer } from '@/data/auth/guards';
 import { CustomerProfileQuery } from '@/components/auth/CustomerProfileQuery';
 
 export const metadata = { title: 'Profile' };
 
-export default async function ProfilePage() {
-  const { user } = await requireCustomer('/dashboard/profile');
-
+export default function ProfilePage() {
   return (
     <div className="max-w-2xl space-y-6">
       <div>
@@ -15,7 +12,7 @@ export default async function ProfilePage() {
         </p>
       </div>
 
-      <CustomerProfileQuery userId={user.id} />
+      <CustomerProfileQuery />
     </div>
   );
 }

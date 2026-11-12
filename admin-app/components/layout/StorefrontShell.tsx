@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   Home,
   CalendarDays,
@@ -43,6 +43,7 @@ export function StorefrontShell({
   children,
 }: StorefrontShellProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const { user: clientUser } = useAuth();
   const businessInfoQuery = useStorefrontBusinessInfoQuery();
   const businessInfo = businessInfoQuery.data ?? null;
@@ -95,6 +96,9 @@ export function StorefrontShell({
           <Link
             key={item.name}
             href={href}
+            prefetch={false}
+            onPointerEnter={() => router.prefetch(href)}
+            onFocus={() => router.prefetch(href)}
             aria-current={active ? 'page' : undefined}
             className={cn(
               mobile

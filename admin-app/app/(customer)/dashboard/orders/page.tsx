@@ -1,20 +1,10 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { CustomerOrdersQuery } from "@/components/dashboard/CustomerOrdersQuery";
-import { requireCustomer } from "@/data/auth/guards";
 
 export const metadata = { title: "Orders | NJET" };
 
-export default async function OrdersPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ placed?: string }>;
-}) {
-  const [params, { user }] = await Promise.all([
-    searchParams,
-    requireCustomer("/dashboard/orders"),
-  ]);
-
+export default function OrdersPage() {
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <Link
@@ -33,7 +23,7 @@ export default async function OrdersPage({
         </p>
       </header>
 
-      <CustomerOrdersQuery userId={user.id} placedOrderId={params.placed} />
+      <CustomerOrdersQuery />
     </div>
   );
 }

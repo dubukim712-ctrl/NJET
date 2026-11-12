@@ -1,21 +1,35 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowRight, CalendarDays, CircleHelp, Package, ShoppingBag, UserRound } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { useAuth } from '@/components/auth/AuthProvider';
 import {
   CustomerProfileQueryError,
   useCustomerProfileQuery,
 } from '@/data/auth/customer-profile-client';
 
-export function StorefrontLandingPage({
-  userId,
-  permissionError,
-}: {
-  userId: string;
-  permissionError: boolean;
-}) {
+export function StorefrontLandingPage() {
+  const { user } = useAuth();
+  const router = useRouter();
+  const userId = user?.id ?? '';
+  const permissionError =
+    useSearchParams().get('error') === 'insufficient_permissions';
   const query = useCustomerProfileQuery(userId);
+
+  if (!user) {
+    return (
+      <section className="rounded-xl border bg-card p-6">
+        <p className="text-sm text-muted-foreground" role="alert">
+          Your session has ended. Sign in to view your dashboard.
+        </p>
+        <Button asChild className="mt-4">
+          <Link href="/login">Sign in</Link>
+        </Button>
+      </section>
+    );
+  }
 
   if (!query.data && query.isPending) {
     return (
@@ -72,6 +86,9 @@ export function StorefrontLandingPage({
         </p>
         <Link
           href="/shop"
+          prefetch={false}
+          onPointerEnter={() => router.prefetch('/shop')}
+          onFocus={() => router.prefetch('/shop')}
           className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-md bg-background px-5 text-sm font-semibold text-foreground transition-colors hover:bg-background/90"
         >
           Browse products <ArrowRight className="h-4 w-4" aria-hidden="true" />
@@ -79,22 +96,46 @@ export function StorefrontLandingPage({
       </section>
 
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <Link href="/shop" className="rounded-xl border bg-card p-5 transition-colors hover:bg-accent">
+        <Link
+          href="/shop"
+          prefetch={false}
+          onPointerEnter={() => router.prefetch('/shop')}
+          onFocus={() => router.prefetch('/shop')}
+          className="rounded-xl border bg-card p-5 transition-colors hover:bg-accent"
+        >
           <ShoppingBag className="h-5 w-5 text-primary" aria-hidden="true" />
           <h2 className="mt-3 font-semibold">Shop the catalog</h2>
           <p className="mt-1 text-sm leading-5 text-muted-foreground">Browse e-bikes, spare parts, and accessories.</p>
         </Link>
-        <Link href="/dashboard/orders" className="rounded-xl border bg-card p-5 transition-colors hover:bg-accent">
+        <Link
+          href="/dashboard/orders"
+          prefetch={false}
+          onPointerEnter={() => router.prefetch('/dashboard/orders')}
+          onFocus={() => router.prefetch('/dashboard/orders')}
+          className="rounded-xl border bg-card p-5 transition-colors hover:bg-accent"
+        >
           <Package className="h-5 w-5 text-primary" aria-hidden="true" />
           <h2 className="mt-3 font-semibold">Your orders</h2>
           <p className="mt-1 text-sm leading-5 text-muted-foreground">Review orders and their latest status.</p>
         </Link>
-        <Link href="/dashboard/appointments" className="rounded-xl border bg-card p-5 transition-colors hover:bg-accent">
+        <Link
+          href="/dashboard/appointments"
+          prefetch={false}
+          onPointerEnter={() => router.prefetch('/dashboard/appointments')}
+          onFocus={() => router.prefetch('/dashboard/appointments')}
+          className="rounded-xl border bg-card p-5 transition-colors hover:bg-accent"
+        >
           <CalendarDays className="h-5 w-5 text-primary" aria-hidden="true" />
           <h2 className="mt-3 font-semibold">Service appointments</h2>
           <p className="mt-1 text-sm leading-5 text-muted-foreground">Book or track an e-bike service.</p>
         </Link>
-        <Link href="/dashboard/profile" className="rounded-xl border bg-card p-5 transition-colors hover:bg-accent">
+        <Link
+          href="/dashboard/profile"
+          prefetch={false}
+          onPointerEnter={() => router.prefetch('/dashboard/profile')}
+          onFocus={() => router.prefetch('/dashboard/profile')}
+          className="rounded-xl border bg-card p-5 transition-colors hover:bg-accent"
+        >
           <UserRound className="h-5 w-5 text-primary" aria-hidden="true" />
           <h2 className="mt-3 font-semibold">Your account</h2>
           <p className="mt-1 text-sm leading-5 text-muted-foreground">{profile.email}</p>
@@ -106,7 +147,13 @@ export function StorefrontLandingPage({
           <h2 className="font-semibold">Need help?</h2>
           <p className="mt-1 text-sm text-muted-foreground">Our team can help with products, orders, and store pickup.</p>
         </div>
-        <Link href="/dashboard/help" className="mt-4 inline-flex min-h-10 items-center gap-2 rounded-md border px-3 text-sm font-medium hover:bg-accent sm:mt-0">
+        <Link
+          href="/dashboard/help"
+          prefetch={false}
+          onPointerEnter={() => router.prefetch('/dashboard/help')}
+          onFocus={() => router.prefetch('/dashboard/help')}
+          className="mt-4 inline-flex min-h-10 items-center gap-2 rounded-md border px-3 text-sm font-medium hover:bg-accent sm:mt-0"
+        >
           <CircleHelp className="h-4 w-4" aria-hidden="true" /> Contact support
         </Link>
       </div>

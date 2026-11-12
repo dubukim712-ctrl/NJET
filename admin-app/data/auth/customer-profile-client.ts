@@ -14,8 +14,10 @@ export function useCustomerProfileQuery(userId: string) {
       if (!result.success) throw new CustomerProfileQueryError(result.error);
       return result.data;
     },
+    enabled: Boolean(userId),
     retry: false,
     staleTime: 30_000,
+    gcTime: Infinity,
   });
 }
 

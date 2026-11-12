@@ -125,5 +125,6 @@ export function useCartVariantsQuery(variantIds: string[]) {
     },
     enabled: ids.length > 0,
     staleTime: 15_000,
+    gcTime: 15 * 60_000,
   });
 }
