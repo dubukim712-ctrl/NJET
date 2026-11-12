@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, type FormEvent } from 'react';
-import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -14,7 +13,6 @@ import type { Database } from '@/types/database';
 type Category = Database['public']['Tables']['product_categories']['Row'];
 
 function CategoryForm({ category }: { category?: Category }) {
-  const router = useRouter();
   const invalidateProducts = useInvalidateAdminProductsQuery();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -44,8 +42,7 @@ function CategoryForm({ category }: { category?: Category }) {
         return;
       }
       toast.success(category ? 'Main category updated.' : 'Main category added.');
-      await invalidateProducts();
-      router.refresh();
+      void invalidateProducts();
     } catch (saveError) {
       console.error('Could not save product category.', saveError);
       const message = 'Could not save this main category. Please try again.';

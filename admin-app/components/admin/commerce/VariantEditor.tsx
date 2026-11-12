@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useRef, useState, type FormEvent } from 'react';
-import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Barcode, Plus, PhilippinePeso, Trash2 } from 'lucide-react';
 import { saveCommerceVariantAction } from '@/data/actions/commerce-variants-admin';
@@ -29,7 +28,6 @@ export function VariantEditor({
   onCancel?: () => void;
   onSaved?: () => void;
 }) {
-  const router = useRouter();
   const invalidateProducts = useInvalidateAdminProductsQuery();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -116,8 +114,7 @@ export function VariantEditor({
         return;
       }
       toast.success(variant ? 'Variant updated.' : 'Variant created.');
-      await invalidateProducts();
-      router.refresh();
+      void invalidateProducts();
       onSaved?.();
     } catch (saveError) {
       console.error('Could not save product variant.', saveError);

@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, type FormEvent } from 'react';
-import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Plus, Trash2 } from 'lucide-react';
 import { dispatchBranchTransferAction } from '@/data/actions/commerce-admin';
@@ -44,7 +43,6 @@ export function BranchTransferForm({
   onCancel: () => void;
   onSaved: () => void;
 }) {
-  const router = useRouter();
   const invalidateProducts = useInvalidateAdminProductsQuery();
   const activeBranches = branches.filter((branch) => branch.active);
   const sourceBranchId = assignedBranchId
@@ -85,8 +83,7 @@ export function BranchTransferForm({
         return;
       }
       toast.success('Branch transfer dispatched.');
-      await invalidateProducts();
-      router.refresh();
+      void invalidateProducts();
       onSaved();
     } catch (dispatchError) {
       console.error('Could not dispatch branch transfer.', dispatchError);

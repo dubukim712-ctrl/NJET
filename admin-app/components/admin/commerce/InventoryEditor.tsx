@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, type FormEvent } from 'react';
-import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Barcode, Boxes, Cog } from 'lucide-react';
 import { registerEbikeUnitsAction, saveCommerceInventoryAction } from '@/data/actions/commerce-admin';
@@ -35,7 +34,6 @@ function BatchStockForm({
   onCancel: () => void;
   onSaved: () => void;
 }) {
-  const router = useRouter();
   const invalidateProducts = useInvalidateAdminProductsQuery();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -57,8 +55,7 @@ function BatchStockForm({
         return;
       }
       toast.success('Stock quantity saved.');
-      await invalidateProducts();
-      router.refresh();
+      void invalidateProducts();
       onSaved();
     } catch (saveError) {
       console.error('Could not update batch stock.', saveError);
@@ -97,7 +94,6 @@ function EbikeUnitForm({
   onCancel: () => void;
   onSaved: () => void;
 }) {
-  const router = useRouter();
   const invalidateProducts = useInvalidateAdminProductsQuery();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -124,8 +120,7 @@ function EbikeUnitForm({
         return;
       }
       toast.success(unitId ? 'E-bike identifiers saved.' : 'E-bike added to stock.');
-      await invalidateProducts();
-      router.refresh();
+      void invalidateProducts();
       onSaved();
     } catch (saveError) {
       console.error('Could not save e-bike identifiers.', saveError);

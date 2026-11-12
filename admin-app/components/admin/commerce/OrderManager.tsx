@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { ChevronDown, Download } from "lucide-react";
 import {
@@ -36,7 +35,6 @@ export function OrderManager({
   canManage: boolean;
   onDataChanged: () => void;
 }) {
-  const router = useRouter();
   const [busyOrder, setBusyOrder] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
@@ -59,7 +57,6 @@ export function OrderManager({
       }
       toast.success("Order status updated.");
       onDataChanged();
-      router.refresh();
     } catch (actionError) {
       console.error("Could not update order status.", actionError);
       const message = "Could not update this order. Please try again.";

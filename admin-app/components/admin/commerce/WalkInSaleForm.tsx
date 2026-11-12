@@ -187,10 +187,8 @@ export function WalkInSaleForm({
         toast.error(result.error);
         return;
       }
-      await Promise.all([
-        invalidateProducts(),
-        queryClient.invalidateQueries({ queryKey: adminOrdersQueryKey }),
-      ]);
+      void invalidateProducts();
+      void queryClient.invalidateQueries({ queryKey: adminOrdersQueryKey });
       toast.success('Walk-in sale completed.');
       router.push('/admin/orders');
     } catch (actionError) {

@@ -89,22 +89,20 @@ async function loadOrders(
       confirmedQuery.eq('branch_id', branchId);
       recentQuery.eq('branch_id', branchId);
     }
-    const [todayResult, awaitingResult, confirmedResult, recentResult] = await Promise.all([
-      todayQuery,
-      awaitingQuery,
-      confirmedQuery,
-      recentQuery,
-    ]);
     const weekDays = manilaWeekDays();
-    const weekResults = await Promise.all(weekDays.map(({ start: dayStart, end: dayEnd }) => {
-      const query = supabase
+    const [baseResults, weekResults] = await Promise.all([
+      Promise.all([todayQuery, awaitingQuery, confirmedQuery, recentQuery]),
+      Promise.all(weekDays.map(({ start: dayStart, end: dayEnd }) => {
+        const query = supabase
           .from('orders')
           .select('id', { count: 'exact', head: true })
           .gte('created_at', dayStart)
           .lt('created_at', dayEnd);
-      if (branchId) query.eq('branch_id', branchId);
-      return query;
-    }));
+        if (branchId) query.eq('branch_id', branchId);
+        return query;
+      })),
+    ]);
+    const [todayResult, awaitingResult, confirmedResult, recentResult] = baseResults;
     const error =
       todayResult.error ??
       awaitingResult.error ??

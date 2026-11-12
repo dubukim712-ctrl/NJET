@@ -8,17 +8,10 @@ export async function loadDashboardTeamMembers(
   branchId: string | null
 ): Promise<DashboardSection<number>> {
   try {
-    const { data: staffRoles, error: roleError } = await supabase
-      .from('roles')
-      .select('id')
-      .eq('scope', 'staff')
-      .limit(100);
-    if (roleError) throw roleError;
-    if (!staffRoles.length) return { data: 0, error: null };
     let usersQuery = supabase
       .from('users')
-      .select('id', { count: 'exact', head: true })
-      .in('role_id', staffRoles.map((role) => role.id));
+      .select('id, roles!users_role_id_fkey!inner(scope)', { count: 'exact', head: true })
+      .eq('roles.scope', 'staff');
     if (branchId) usersQuery = usersQuery.eq('branch_id', branchId);
     const { count, error } = await usersQuery;
     if (error) throw error;

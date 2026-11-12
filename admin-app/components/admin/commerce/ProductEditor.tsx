@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useRef, useState, type FormEvent } from 'react';
-import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Link2, Tag } from 'lucide-react';
 import { saveCommerceProductAction } from '@/data/actions/commerce-admin';
@@ -31,7 +30,6 @@ export function ProductEditor({
   onCancel?: () => void;
   onSaved?: () => void;
 }) {
-  const router = useRouter();
   const invalidateProducts = useInvalidateAdminProductsQuery();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -97,8 +95,7 @@ export function ProductEditor({
         return;
       }
       toast.success(product ? 'Product updated.' : 'Product created.');
-      await invalidateProducts();
-      router.refresh();
+      void invalidateProducts();
       onSaved?.();
     } catch (saveError) {
       console.error('Could not save product.', saveError);

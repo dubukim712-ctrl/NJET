@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { ArrowDownToLine } from 'lucide-react';
 import { receiveBranchTransferAction } from '@/data/actions/commerce-admin';
@@ -49,7 +48,6 @@ export function BranchTransferManager({
   transferRequest: { sourceBranchId: string; variantId: string } | null;
   onCloseTransfer: () => void;
 }) {
-  const router = useRouter();
   const invalidateProducts = useInvalidateAdminProductsQuery();
   const [receivingId, setReceivingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -67,8 +65,7 @@ export function BranchTransferManager({
         return;
       }
       toast.success('Branch transfer received.');
-      await invalidateProducts();
-      router.refresh();
+      void invalidateProducts();
     } catch (receiveError) {
       console.error('Could not receive branch transfer.', receiveError);
       const message = 'Could not receive this transfer. Please try again.';

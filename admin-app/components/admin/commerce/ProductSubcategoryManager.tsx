@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, type FormEvent } from 'react';
-import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -22,7 +21,6 @@ function SubcategoryForm({
   categories: Category[];
   subcategory?: Subcategory;
 }) {
-  const router = useRouter();
   const invalidateProducts = useInvalidateAdminProductsQuery();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -52,8 +50,7 @@ function SubcategoryForm({
         return;
       }
       toast.success(subcategory ? 'Subcategory updated.' : 'Subcategory added.');
-      await invalidateProducts();
-      router.refresh();
+      void invalidateProducts();
     } catch (saveError) {
       console.error('Could not save product subcategory.', saveError);
       const message = 'Could not save this subcategory. Please try again.';
