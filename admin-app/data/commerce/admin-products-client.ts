@@ -33,6 +33,7 @@ export function useCommerceManagementQuery(
     },
     retry: false,
     staleTime: 30_000,
+    gcTime: Infinity,
   });
 }
 

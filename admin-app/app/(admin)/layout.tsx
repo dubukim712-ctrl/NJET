@@ -1,5 +1,6 @@
 import { requireStaff } from '@/data/auth/guards';
 import { DashboardShell } from '@/components/layout/DashboardShell';
+import { AdminProvider } from '@/components/providers/AdminProvider';
 
 export default async function AdminLayout({
   children,
@@ -9,8 +10,10 @@ export default async function AdminLayout({
   const { profile } = await requireStaff('/admin');
 
   return (
-    <DashboardShell user={profile}>
-      {children}
-    </DashboardShell>
+    <AdminProvider profile={profile}>
+      <DashboardShell user={profile}>
+        {children}
+      </DashboardShell>
+    </AdminProvider>
   );
 }

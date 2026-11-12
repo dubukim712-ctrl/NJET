@@ -96,7 +96,6 @@ export async function updateSession(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const isProtected = matches(pathname, PROTECTED_PATHS);
   const isAuthPage = matches(pathname, AUTH_PATHS);
-  const isAdminPage = matches(pathname, ADMIN_PATHS);
   const isStorefrontPage = matches(pathname, STOREFRONT_PATHS);
 
   if (isProtected && !user) {
@@ -105,7 +104,7 @@ export async function updateSession(request: NextRequest) {
     return redirectWithCookies(url, supabaseResponse);
   }
 
-  if (!user || (!isAdminPage && !isStorefrontPage && !isAuthPage)) {
+  if (!user || (!isStorefrontPage && !isAuthPage)) {
     return supabaseResponse;
   }
 
@@ -118,15 +117,6 @@ export async function updateSession(request: NextRequest) {
   if (isAuthPage) {
     return redirectWithCookies(
       new URL(surfaceHome(profile), request.url),
-      supabaseResponse
-    );
-  }
-
-  if (isAdminPage && !hasPermission(profile, PERMISSIONS.adminAccess)) {
-    return insufficientRedirect(
-      pathname,
-      profile,
-      request,
       supabaseResponse
     );
   }

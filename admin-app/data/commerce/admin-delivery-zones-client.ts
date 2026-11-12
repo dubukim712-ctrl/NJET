@@ -23,6 +23,7 @@ export function useAdminDeliveryZonesQuery(
     },
     retry: false,
     staleTime: 30_000,
+    gcTime: Infinity,
   });
 }
 

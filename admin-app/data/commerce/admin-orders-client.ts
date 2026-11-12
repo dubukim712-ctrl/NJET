@@ -25,6 +25,7 @@ export function useCommerceOrdersQuery(
     },
     retry: false,
     staleTime: 15_000,
+    gcTime: 30 * 60_000,
   });
   const invalidate = useCallback(
     async () => {

@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useState } from 'react';
 import {
   Users,
@@ -140,6 +140,7 @@ export function Sidebar({
   onNavigate,
 }: SidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
 
   const isCollapsible = !onNavigate;
@@ -162,6 +163,9 @@ export function Sidebar({
       <li key={item.name}>
         <Link
           href={item.href}
+          prefetch={false}
+          onPointerEnter={() => router.prefetch(item.href)}
+          onFocus={() => router.prefetch(item.href)}
           onClick={onNavigate}
           aria-current={active ? 'page' : undefined}
           className={cn(

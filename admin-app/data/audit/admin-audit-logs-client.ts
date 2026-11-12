@@ -34,6 +34,7 @@ export function useAdminAuditLogsQuery(
     },
     retry: false,
     staleTime: 15_000,
+    gcTime: 30 * 60_000,
   });
 }
 
@@ -47,6 +48,7 @@ export function useAdminAuditLogQuery(userId: string, id: string) {
     },
     retry: false,
     staleTime: 30_000,
+    gcTime: 30 * 60_000,
   });
 }
 

@@ -25,6 +25,9 @@ function AccessQueryCacheSync() {
     id: string;
     roleId: string;
     branchId: string | null;
+    scope: string;
+    isFullAccess: boolean;
+    permissionSignature: string;
   } | null>(null);
   const queryClient = useQueryClient();
 
@@ -39,13 +42,19 @@ function AccessQueryCacheSync() {
       id: user.id,
       roleId: user.role_id,
       branchId: user.branch_id,
+      scope: user.scope,
+      isFullAccess: user.is_full_access,
+      permissionSignature: JSON.stringify(user.permissions),
     };
     const current = previous.current;
     if (
       current &&
       (current.id !== next.id ||
         current.roleId !== next.roleId ||
-        current.branchId !== next.branchId)
+        current.branchId !== next.branchId ||
+        current.scope !== next.scope ||
+        current.isFullAccess !== next.isFullAccess ||
+        current.permissionSignature !== next.permissionSignature)
     ) {
       queryClient.clear();
     }

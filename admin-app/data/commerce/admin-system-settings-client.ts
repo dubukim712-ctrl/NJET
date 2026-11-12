@@ -20,6 +20,7 @@ export function useAdminSystemSettingsQuery(userId: string) {
     },
     retry: false,
     staleTime: 30_000,
+    gcTime: Infinity,
   });
 }
 

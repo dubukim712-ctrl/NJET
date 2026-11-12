@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { redirect } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
 import { createClient } from '@/data/supabase/server';
@@ -10,7 +11,7 @@ export interface AuthContext {
   profile: UserProfile | null;
 }
 
-export async function getAuthContext(): Promise<AuthContext | null> {
+export const getAuthContext = cache(async (): Promise<AuthContext | null> => {
   try {
     const supabase = await createClient();
     const {
@@ -32,7 +33,7 @@ export async function getAuthContext(): Promise<AuthContext | null> {
   } catch {
     return null;
   }
-}
+});
 
 function insufficientPermissionRedirect(
   profile: UserProfile | null

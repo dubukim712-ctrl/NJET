@@ -21,6 +21,7 @@ export function useAdminRolesQuery(userId: string, canManage: boolean) {
     },
     retry: false,
     staleTime: 30_000,
+    gcTime: Infinity,
   });
 }
 
@@ -38,6 +39,7 @@ export function useAdminRoleDetailQuery(
     },
     retry: false,
     staleTime: 30_000,
+    gcTime: Infinity,
   });
 }
 
@@ -51,6 +53,7 @@ export function useAdminRoleCreationDataQuery(userId: string) {
     },
     retry: false,
     staleTime: 5 * 60_000,
+    gcTime: Infinity,
   });
 }
 

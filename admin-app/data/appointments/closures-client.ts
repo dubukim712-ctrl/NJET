@@ -24,6 +24,7 @@ export function useServiceAppointmentClosuresQuery(
     enabled: Boolean(userId && branchId),
     retry: false,
     staleTime: 15_000,
+    gcTime: Infinity,
   });
 }
 

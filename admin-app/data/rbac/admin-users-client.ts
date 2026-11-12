@@ -23,6 +23,7 @@ export function useAdminUsersQuery(
     },
     retry: false,
     staleTime: 30_000,
+    gcTime: 30 * 60_000,
   });
 }
 

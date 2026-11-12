@@ -28,6 +28,7 @@ export function useCustomerServiceAppointmentBranchesQuery(userId: string) {
     },
     retry: false,
     staleTime: 60_000,
+    gcTime: Infinity,
   });
 }
 
@@ -41,6 +42,7 @@ export function useCustomerServiceAppointmentsQuery(userId: string) {
     },
     retry: false,
     staleTime: 15_000,
+    gcTime: Infinity,
   });
 }
 
@@ -57,6 +59,7 @@ export function useStaffServiceAppointmentsQuery(
     },
     retry: false,
     staleTime: 15_000,
+    gcTime: 30 * 60_000,
   });
 }
 
@@ -70,6 +73,7 @@ export function useStaffServiceAppointmentOptionsQuery(userId: string) {
     },
     retry: false,
     staleTime: 60_000,
+    gcTime: Infinity,
   });
 }
 
@@ -87,6 +91,7 @@ export function useServiceTechnicianOptionsQuery(
     enabled: Boolean(userId && branchId),
     retry: false,
     staleTime: 60_000,
+    gcTime: Infinity,
   });
 }
 

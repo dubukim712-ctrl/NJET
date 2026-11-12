@@ -28,6 +28,7 @@ export function useAdminBranchesQuery(
     },
     retry: false,
     staleTime: 30_000,
+    gcTime: Infinity,
   });
 }
 
