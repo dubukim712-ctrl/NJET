@@ -8,9 +8,7 @@ const LABELS: Record<RealtimeConnectionState, string> = {
 };
 
 export function RealtimeStatus({ state }: { state: RealtimeConnectionState }) {
-  if (state === 'connected' && process.env.NODE_ENV !== 'development') {
-    return null;
-  }
+  if (process.env.NODE_ENV === 'production') return null;
 
   return (
     <span
