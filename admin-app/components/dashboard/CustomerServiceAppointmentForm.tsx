@@ -1,10 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, type FormEvent } from 'react';
+import { useCallback, useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { RealtimeStatus } from '@/components/realtime/RealtimeStatus';
+import { useServiceAvailabilityRealtime } from '@/components/realtime/useServiceAvailabilityRealtime';
 import { Select } from '@/components/ui/Select';
 import { Textarea } from '@/components/ui/Textarea';
 import { AppointmentContactNumberInput } from '@/components/appointments/AppointmentContactNumberInput';
@@ -20,11 +22,13 @@ import {
   useInvalidateServiceAppointmentsQuery,
 } from '@/data/appointments/client';
 import { useCustomerServiceAppointmentSlotsQuery } from '@/data/appointments/availability-client';
+import { customerServiceAvailabilityQueryKey } from '@/data/appointments/query-keys';
 import { requestServiceAppointmentAction } from '@/data/actions/service-appointments';
 import {
   customerServiceAppointmentRequestSchema,
   SERVICE_APPOINTMENT_TYPES,
 } from '@/lib/validations/service-appointments';
+import { useQueryClient } from '@tanstack/react-query';
 
 const EMPTY_ADDRESS: PhilippineAddressValues = {
   addressLine1: '',
@@ -40,6 +44,7 @@ function fieldError(errors: Record<string, string[] | undefined>, name: string) 
 
 export function CustomerServiceAppointmentForm({ userId }: { userId: string }) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const branchesQuery = useCustomerServiceAppointmentBranchesQuery(userId);
   const invalidate = useInvalidateServiceAppointmentsQuery();
   const [serviceMode, setServiceMode] = useState<'branch_visit' | 'home_service'>('branch_visit');
@@ -55,6 +60,10 @@ export function CustomerServiceAppointmentForm({ userId }: { userId: string }) {
     branchId,
     appointmentDate
   );
+  const invalidateAvailability = useCallback(() => {
+    void queryClient.invalidateQueries({ queryKey: customerServiceAvailabilityQueryKey });
+  }, [queryClient]);
+  const realtimeState = useServiceAvailabilityRealtime(branchId, invalidateAvailability);
   const selectedAppointmentTime = slotsQuery.data?.times.includes(appointmentTime)
     ? appointmentTime
     : '';
@@ -139,6 +148,11 @@ export function CustomerServiceAppointmentForm({ userId }: { userId: string }) {
         <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive" role="alert">
           <p>{error}</p>
           {validationMessages.length > 0 && <ul className="mt-2 list-inside list-disc">{validationMessages.map((message) => <li key={message}>{message}</li>)}</ul>}
+        </div>
+      )}
+      {branchId && (
+        <div className="flex justify-end">
+          <RealtimeStatus state={realtimeState} />
         </div>
       )}
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">

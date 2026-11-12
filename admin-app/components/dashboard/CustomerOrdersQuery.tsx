@@ -1,13 +1,26 @@
 'use client';
 
+import { useCallback } from 'react';
 import Link from 'next/link';
 import { Package } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { RealtimeStatus } from '@/components/realtime/RealtimeStatus';
 import {
   CustomerOrdersQueryError,
+  useInvalidateCustomerOrdersQuery,
   useCustomerOrdersQuery,
 } from '@/data/commerce/customer-orders-client';
+import { useRealtimeChanges } from '@/components/realtime/useRealtimeChanges';
 import { formatPhp } from '@/lib/commerce';
+import type { RealtimeTable } from '@/types/realtime';
+
+const CUSTOMER_ORDER_REALTIME_TABLES: readonly RealtimeTable[] = [
+  'orders',
+  'order_items',
+  'order_documents',
+  'order_invoices',
+  'order_certificates',
+];
 
 export function CustomerOrdersQuery({
   userId,
@@ -17,12 +30,26 @@ export function CustomerOrdersQuery({
   placedOrderId?: string;
 }) {
   const query = useCustomerOrdersQuery(userId);
+  const invalidateOrders = useInvalidateCustomerOrdersQuery();
+  const refreshOrders = useCallback(() => {
+    void invalidateOrders();
+  }, [invalidateOrders]);
+  const realtimeState = useRealtimeChanges(
+    `customer-orders-${userId}`,
+    CUSTOMER_ORDER_REALTIME_TABLES,
+    refreshOrders
+  );
 
   if (!query.data && query.isPending) {
     return (
-      <div className="space-y-4" role="status" aria-label="Loading orders" aria-busy="true">
-        <div className="h-36 animate-pulse rounded-xl border bg-card" />
-        <div className="h-36 animate-pulse rounded-xl border bg-card" />
+      <div className="space-y-4">
+        <div className="flex justify-end">
+          <RealtimeStatus state={realtimeState} />
+        </div>
+        <div role="status" aria-label="Loading orders" aria-busy="true">
+          <div className="h-36 animate-pulse rounded-xl border bg-card" />
+          <div className="mt-4 h-36 animate-pulse rounded-xl border bg-card" />
+        </div>
       </div>
     );
   }
@@ -33,6 +60,9 @@ export function CustomerOrdersQuery({
       : 'Order history could not be loaded. Please try again later.';
     return (
       <div className="space-y-3">
+        <div className="flex justify-end">
+          <RealtimeStatus state={realtimeState} />
+        </div>
         <p
           className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive"
           role="alert"
@@ -53,6 +83,9 @@ export function CustomerOrdersQuery({
 
   return (
     <div className="space-y-4">
+      <div className="flex justify-end">
+        <RealtimeStatus state={realtimeState} />
+      </div>
       {query.isError && (
         <div className="space-y-2" role="alert">
           <p className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">

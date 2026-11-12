@@ -1,17 +1,26 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import Link from 'next/link';
 import { CalendarDays } from 'lucide-react';
 import { ServiceAppointmentStatusBadge } from '@/components/appointments/ServiceAppointmentStatusBadge';
 import { CustomerCancellationRequestForm } from '@/components/dashboard/CustomerCancellationRequestForm';
+import { RealtimeStatus } from '@/components/realtime/RealtimeStatus';
 import { Button } from '@/components/ui/Button';
 import {
   ServiceAppointmentsQueryError,
   useCustomerServiceAppointmentsQuery,
+  useInvalidateServiceAppointmentsQuery,
 } from '@/data/appointments/client';
+import { useRealtimeChanges } from '@/components/realtime/useRealtimeChanges';
 import { formatPhp } from '@/lib/commerce';
 import type { Database } from '@/types/database';
+import type { RealtimeTable } from '@/types/realtime';
+
+const CUSTOMER_APPOINTMENT_REALTIME_TABLES: readonly RealtimeTable[] = [
+  'service_appointments',
+  'service_appointment_cancellation_requests',
+];
 
 type CustomerAppointment =
   Database['public']['Functions']['customer_service_appointments']['Returns'][number] & {
@@ -121,13 +130,32 @@ function AppointmentCard({ appointment }: { appointment: CustomerAppointment }) 
 
 export function CustomerServiceAppointments({ userId }: { userId: string }) {
   const query = useCustomerServiceAppointmentsQuery(userId);
+  const invalidateAppointments = useInvalidateServiceAppointmentsQuery();
+  const refreshAppointments = useCallback(() => {
+    void invalidateAppointments();
+  }, [invalidateAppointments]);
+  const realtimeState = useRealtimeChanges(
+    `customer-service-appointments-${userId}`,
+    CUSTOMER_APPOINTMENT_REALTIME_TABLES,
+    refreshAppointments
+  );
 
   if (!query.data && query.isPending) {
-    return <div className="h-40 animate-pulse rounded-xl border bg-card" role="status" aria-label="Loading appointments" />;
+    return (
+      <div className="space-y-4">
+        <div className="flex justify-end">
+          <RealtimeStatus state={realtimeState} />
+        </div>
+        <div className="h-40 animate-pulse rounded-xl border bg-card" role="status" aria-label="Loading appointments" />
+      </div>
+    );
   }
   if (!query.data) {
     return (
       <div className="space-y-3">
+        <div className="flex justify-end">
+          <RealtimeStatus state={realtimeState} />
+        </div>
         <p className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive" role="alert">
           {query.error instanceof ServiceAppointmentsQueryError ? query.error.message : 'Appointments could not be loaded.'}
         </p>
@@ -138,6 +166,9 @@ export function CustomerServiceAppointments({ userId }: { userId: string }) {
 
   return (
     <div className="space-y-4">
+      <div className="flex justify-end">
+        <RealtimeStatus state={realtimeState} />
+      </div>
       {query.isError && (
         <div className="space-y-2" role="alert">
           <p className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">

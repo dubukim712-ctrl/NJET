@@ -8,6 +8,8 @@ const LABELS: Record<RealtimeConnectionState, string> = {
 };
 
 export function RealtimeStatus({ state }: { state: RealtimeConnectionState }) {
+  if (process.env.NODE_ENV !== 'development') return null;
+
   return (
     <span
       role="status"

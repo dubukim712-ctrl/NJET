@@ -1,5 +1,6 @@
 'use client';
 
+import { useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getCustomerOrdersAction } from '@/data/actions/customer-orders';
 import { customerOrdersQueryKey } from '@/data/commerce/customer-query-keys';
@@ -21,6 +22,8 @@ export function useCustomerOrdersQuery(userId: string) {
 
 export function useInvalidateCustomerOrdersQuery() {
   const queryClient = useQueryClient();
-  return () =>
-    queryClient.invalidateQueries({ queryKey: customerOrdersQueryKey });
+  return useCallback(
+    () => queryClient.invalidateQueries({ queryKey: customerOrdersQueryKey }),
+    [queryClient]
+  );
 }
