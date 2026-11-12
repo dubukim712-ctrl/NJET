@@ -1,0 +1,31 @@
+export type RealtimeTable =
+  | 'orders'
+  | 'order_items'
+  | 'order_home_credit_details'
+  | 'order_documents'
+  | 'order_invoices'
+  | 'order_certificates'
+  | 'payment_recipients'
+  | 'service_appointments'
+  | 'branch_inventory'
+  | 'product_variants'
+  | 'products'
+  | 'users'
+  | 'roles'
+  | 'branches'
+  | 'service_appointment_internal_notes'
+  | 'service_appointment_cancellation_requests'
+  | 'service_appointment_closures'
+  | 'product_categories'
+  | 'product_subcategories'
+  | 'ebike_units'
+  | 'inventory_movements'
+  | 'branch_transfers'
+  | 'branch_transfer_items'
+  | 'branch_transfer_units';
+
+export type RealtimeConnectionState =
+  | 'connecting'
+  | 'connected'
+  | 'disconnected'
+  | 'idle';

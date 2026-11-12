@@ -1,12 +1,31 @@
 'use client';
 
+import { useCallback } from 'react';
 import { AdminDataFallback } from '@/components/admin/AdminDataFallback';
 import { ProductManager } from '@/components/admin/commerce/ProductManager';
+import { RealtimeStatus } from '@/components/realtime/RealtimeStatus';
+import { useRealtimeChanges } from '@/components/realtime/useRealtimeChanges';
 import { Button } from '@/components/ui/Button';
 import {
   AdminProductsQueryError,
   useCommerceManagementQuery,
+  useInvalidateAdminProductsQuery,
 } from '@/data/commerce/admin-products-client';
+import type { RealtimeTable } from '@/types/realtime';
+
+const INVENTORY_REALTIME_TABLES: readonly RealtimeTable[] = [
+  'products',
+  'product_variants',
+  'branch_inventory',
+  'branches',
+  'product_categories',
+  'product_subcategories',
+  'ebike_units',
+  'inventory_movements',
+  'branch_transfers',
+  'branch_transfer_items',
+  'branch_transfer_units',
+];
 
 export function ProductsQuery({
   userId,
@@ -25,9 +44,25 @@ export function ProductsQuery({
     isBranchScopedStaff,
     assignedBranchId
   );
+  const invalidateProducts = useInvalidateAdminProductsQuery();
+  const refreshProducts = useCallback(() => {
+    void invalidateProducts();
+  }, [invalidateProducts]);
+  const realtimeState = useRealtimeChanges(
+    `admin-products-${userId}`,
+    INVENTORY_REALTIME_TABLES,
+    refreshProducts
+  );
 
   if (!query.data && query.isPending) {
-    return <AdminDataFallback label="product and stock data" />;
+    return (
+      <div className="space-y-4">
+        <div className="flex justify-end">
+          <RealtimeStatus state={realtimeState} />
+        </div>
+        <AdminDataFallback label="product and stock data" />
+      </div>
+    );
   }
 
   if (!query.data) {
@@ -36,6 +71,9 @@ export function ProductsQuery({
       : 'Catalog and stock data could not be loaded.';
     return (
       <div className="space-y-3">
+        <div className="flex justify-end">
+          <RealtimeStatus state={realtimeState} />
+        </div>
         <p
           className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive"
           role="alert"
@@ -51,6 +89,9 @@ export function ProductsQuery({
 
   return (
     <div className="space-y-4">
+      <div className="flex justify-end">
+        <RealtimeStatus state={realtimeState} />
+      </div>
       {query.isError && (
         <div className="space-y-2" role="alert">
           <p className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">

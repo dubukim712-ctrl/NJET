@@ -60,7 +60,7 @@ function metricList(
       note: 'Branch inventory records',
     });
   }
-  if (isAdmin && data.teamMembers?.data != null) {
+  if (profile.scope === 'staff' && data.teamMembers?.data != null) {
     metrics.push({ label: 'Team members', value: data.teamMembers.data, note: 'Staff accounts' });
   }
   if (!metrics.length) {
@@ -99,9 +99,14 @@ export function DashboardMetrics({
   data: StaffDashboardData;
   selectedBranchName: string | null;
 }) {
+  const metrics = metricList(profile, data, selectedBranchName);
+
   return (
-    <section aria-label="Overview metrics" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-      {metricList(profile, data, selectedBranchName).map((metric, index) => (
+    <section
+      aria-label="Overview metrics"
+      className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,16rem),1fr))] gap-3"
+    >
+      {metrics.map((metric, index) => (
         <article key={metric.label} className="rounded-lg border border-border bg-card p-5 shadow-sm shadow-foreground/[0.03]">
           <p className="text-sm font-medium text-muted-foreground">{metric.label}</p>
           <div className="mt-4 flex items-end justify-between gap-3">

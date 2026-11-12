@@ -1,5 +1,6 @@
 'use client';
 
+import { useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getCommerceManagementDataAction } from '@/data/actions/commerce-management';
 import {
@@ -37,11 +38,14 @@ export function useCommerceManagementQuery(
 
 export function useInvalidateAdminProductsQuery() {
   const queryClient = useQueryClient();
-  return async () => {
-    await Promise.all([
-      queryClient.invalidateQueries({ queryKey: adminProductsQueryKey }),
-      queryClient.invalidateQueries({ queryKey: storefrontCatalogQueryKey }),
-      queryClient.invalidateQueries({ queryKey: cartVariantsQueryKey }),
-    ]);
-  };
+  return useCallback(
+    async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: adminProductsQueryKey }),
+        queryClient.invalidateQueries({ queryKey: storefrontCatalogQueryKey }),
+        queryClient.invalidateQueries({ queryKey: cartVariantsQueryKey }),
+      ]);
+    },
+    [queryClient]
+  );
 }
