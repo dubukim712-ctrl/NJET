@@ -12,15 +12,9 @@ import {
   useCustomerServiceAppointmentsQuery,
   useInvalidateServiceAppointmentsQuery,
 } from '@/data/appointments/client';
-import { useRealtimeChanges } from '@/components/realtime/useRealtimeChanges';
+import { useCustomerServiceAppointmentsRealtime } from '@/components/realtime/useCustomerServiceAppointmentsRealtime';
 import { formatPhp } from '@/lib/commerce';
 import type { Database } from '@/types/database';
-import type { RealtimeTable } from '@/types/realtime';
-
-const CUSTOMER_APPOINTMENT_REALTIME_TABLES: readonly RealtimeTable[] = [
-  'service_appointments',
-  'service_appointment_cancellation_requests',
-];
 
 type CustomerAppointment =
   Database['public']['Functions']['customer_service_appointments']['Returns'][number] & {
@@ -134,11 +128,7 @@ export function CustomerServiceAppointments({ userId }: { userId: string }) {
   const refreshAppointments = useCallback(() => {
     void invalidateAppointments();
   }, [invalidateAppointments]);
-  const realtimeState = useRealtimeChanges(
-    `customer-service-appointments-${userId}`,
-    CUSTOMER_APPOINTMENT_REALTIME_TABLES,
-    refreshAppointments
-  );
+  const realtimeState = useCustomerServiceAppointmentsRealtime(userId, refreshAppointments);
 
   if (!query.data && query.isPending) {
     return (
