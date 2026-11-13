@@ -1,14 +1,25 @@
-import { createServerClient } from '@supabase/ssr';
-import { NextResponse, type NextRequest } from 'next/server';
-import { hasPermission, PERMISSIONS, surfaceHome } from '@/lib/permissions';
+import { createServerClient } from "@supabase/ssr";
+import { NextResponse, type NextRequest } from "next/server";
+import { hasPermission, PERMISSIONS, surfaceHome } from "@/lib/permissions";
 
-const PROTECTED_PATHS = ['/dashboard', '/admin', '/settings', '/profile', '/checkout'];
-const AUTH_PATHS = ['/login', '/register', '/forgot-password', '/reset-password'];
-const ADMIN_PATHS = ['/admin'];
-const STOREFRONT_PATHS = ['/dashboard', '/checkout'];
+const PROTECTED_PATHS = [
+  "/dashboard",
+  "/admin",
+  "/settings",
+  "/profile",
+  "/checkout",
+];
+const AUTH_PATHS = [
+  "/login",
+  "/register",
+  "/forgot-password",
+  "/reset-password",
+];
+const ADMIN_PATHS = ["/admin"];
+const STOREFRONT_PATHS = ["/dashboard", "/checkout"];
 
 type SurfaceProfile = {
-  scope: 'staff' | 'customer';
+  scope: "staff" | "customer";
   is_full_access: boolean;
   permissions: string[];
 };
@@ -20,7 +31,7 @@ function getSupabaseConfig() {
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
   if (!url || !key) {
-    throw new Error('Missing Supabase environment variables.');
+    throw new Error("Missing Supabase environment variables.");
   }
 
   return { url, key };
@@ -36,7 +47,7 @@ function redirectWithCookies(url: URL, source: NextResponse) {
 
 function matches(pathname: string, paths: string[]) {
   return paths.some(
-    (path) => pathname === path || pathname.startsWith(`${path}/`)
+    (path) => pathname === path || pathname.startsWith(`${path}/`),
   );
 }
 
@@ -44,27 +55,27 @@ function insufficientRedirect(
   pathname: string,
   profile: SurfaceProfile | null,
   request: NextRequest,
-  source: NextResponse
+  source: NextResponse,
 ) {
   if (!profile) {
-    return redirectWithCookies(new URL('/no-access', request.url), source);
+    return redirectWithCookies(new URL("/no-access", request.url), source);
   }
 
   const isAdminPage = matches(pathname, ADMIN_PATHS);
 
   if (isAdminPage && hasPermission(profile, PERMISSIONS.storefrontAccess)) {
-    const url = new URL('/dashboard', request.url);
-    url.searchParams.set('error', 'insufficient_permissions');
+    const url = new URL("/", request.url);
+    url.searchParams.set("error", "insufficient_permissions");
     return redirectWithCookies(url, source);
   }
 
   if (!isAdminPage && hasPermission(profile, PERMISSIONS.adminAccess)) {
-    const url = new URL('/admin', request.url);
-    url.searchParams.set('error', 'insufficient_permissions');
+    const url = new URL("/admin", request.url);
+    url.searchParams.set("error", "insufficient_permissions");
     return redirectWithCookies(url, source);
   }
 
-  return redirectWithCookies(new URL('/no-access', request.url), source);
+  return redirectWithCookies(new URL("/no-access", request.url), source);
 }
 
 export async function updateSession(request: NextRequest) {
@@ -78,11 +89,11 @@ export async function updateSession(request: NextRequest) {
       },
       setAll(cookiesToSet) {
         cookiesToSet.forEach(({ name, value }) =>
-          request.cookies.set(name, value)
+          request.cookies.set(name, value),
         );
         supabaseResponse = NextResponse.next({ request });
         cookiesToSet.forEach(({ name, value, options }) =>
-          supabaseResponse.cookies.set(name, value, options)
+          supabaseResponse.cookies.set(name, value, options),
         );
       },
     },
@@ -99,8 +110,8 @@ export async function updateSession(request: NextRequest) {
   const isStorefrontPage = matches(pathname, STOREFRONT_PATHS);
 
   if (isProtected && !user) {
-    const url = new URL('/login', request.url);
-    url.searchParams.set('redirect', pathname);
+    const url = new URL("/login", request.url);
+    url.searchParams.set("redirect", pathname);
     return redirectWithCookies(url, supabaseResponse);
   }
 
@@ -109,15 +120,15 @@ export async function updateSession(request: NextRequest) {
   }
 
   const { data: profile } = await supabase
-    .from('user_profiles')
-    .select('scope, is_full_access, permissions')
-    .eq('id', user.id)
+    .from("user_profiles")
+    .select("scope, is_full_access, permissions")
+    .eq("id", user.id)
     .single<SurfaceProfile>();
 
   if (isAuthPage) {
     return redirectWithCookies(
       new URL(surfaceHome(profile), request.url),
-      supabaseResponse
+      supabaseResponse,
     );
   }
 
@@ -125,12 +136,7 @@ export async function updateSession(request: NextRequest) {
     isStorefrontPage &&
     !hasPermission(profile, PERMISSIONS.storefrontAccess)
   ) {
-    return insufficientRedirect(
-      pathname,
-      profile,
-      request,
-      supabaseResponse
-    );
+    return insufficientRedirect(pathname, profile, request, supabaseResponse);
   }
 
   return supabaseResponse;

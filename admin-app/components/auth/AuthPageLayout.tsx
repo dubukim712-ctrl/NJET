@@ -17,6 +17,7 @@ export function AuthPageLayout({ children }: { children: React.ReactNode }) {
           priority
           sizes="(min-width: 1024px) 55vw, 0vw"
           className="object-cover"
+          loading="eager"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-[#10251f]/95 via-[#10251f]/55 to-[#10251f]/30" />
         <div className="relative z-10 flex min-h-dvh flex-col justify-between p-10 text-white xl:p-14">
