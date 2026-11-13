@@ -68,7 +68,7 @@ export function OtpCodeInput({
       <legend className="text-sm font-medium">
         {SIGNUP_OTP_LENGTH}-digit verification code
       </legend>
-      <div className="grid grid-cols-8 gap-1 sm:gap-2">
+      <div className="grid grid-cols-6 gap-2 sm:gap-3">
         {Array.from({ length: SIGNUP_OTP_LENGTH }, (_, index) => (
           <input
             key={index}
