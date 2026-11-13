@@ -30,7 +30,7 @@ export const registerSchema = z
 
 export type RegisterInput = z.infer<typeof registerSchema>;
 
-export const SIGNUP_OTP_LENGTH = 8;
+export const SIGNUP_OTP_LENGTH = 6;
 
 export const verifySignupOtpSchema = z.object({
   email: z.string().trim().email('Invalid email address'),
