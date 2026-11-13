@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import { useEffect, useMemo, useState } from 'react';
-import { AddToCartButton } from '@/components/cart/AddToCartButton';
-import { Select } from '@/components/ui/Select';
-import { getAvailableQuantityLimit } from '@/data/cart';
-import type { CatalogProduct } from '@/data/commerce/catalog';
-import { formatPhp } from '@/lib/commerce';
+import { useEffect, useMemo, useState } from "react";
+import { AddToCartButton } from "@/components/cart/AddToCartButton";
+import { Select } from "@/components/ui/Select";
+import { getAvailableQuantityLimit } from "@/data/cart";
+import type { CatalogProduct } from "@/data/commerce/catalog";
+import { formatPhp } from "@/lib/commerce";
 
 export function ProductPurchasePanel({
   product,
@@ -16,20 +16,21 @@ export function ProductPurchasePanel({
   branches: { id: string; name: string }[];
   onImagePathChange: (path: string | null) => void;
 }) {
-  const [branchId, setBranchId] = useState(branches[0]?.id ?? '');
-  const [variantId, setVariantId] = useState('');
+  const [branchId, setBranchId] = useState(branches[0]?.id ?? "");
+  const [variantId, setVariantId] = useState("");
   const branchVariants = useMemo(
-    () => product.variants.map((variant) => {
-      const branchStock = variant.stockByBranch.find(
-        (entry) => entry.branchId === branchId
-      );
-      return {
-        ...variant,
-        branchStock,
-        available: branchStock?.available ?? false,
-      };
-    }),
-    [branchId, product.variants]
+    () =>
+      product.variants.map((variant) => {
+        const branchStock = variant.stockByBranch.find(
+          (entry) => entry.branchId === branchId,
+        );
+        return {
+          ...variant,
+          branchStock,
+          available: branchStock?.available ?? false,
+        };
+      }),
+    [branchId, product.variants],
   );
   const selectedVariant =
     branchVariants.find((variant) => variant.id === variantId) ??
@@ -42,11 +43,31 @@ export function ProductPurchasePanel({
 
   const changeBranch = (nextBranchId: string) => {
     setBranchId(nextBranchId);
-    setVariantId('');
+    setVariantId("");
   };
 
+  const stockColor = {
+    "out-of-stock": "text-destructive",
+    "low-stock": "text-yellow-600",
+    "in-stock": "text-green-500",
+  };
+
+  const s = selectedVariant?.branchStock?.stock;
+
+  const stockAlert =
+    s == null
+      ? stockColor["out-of-stock"]
+      : s === 0
+        ? stockColor["out-of-stock"]
+        : s < 3
+          ? stockColor["low-stock"]
+          : stockColor["in-stock"];
+
   return (
-    <section className="space-y-5 rounded-xl border bg-card p-5 sm:p-6" aria-label="Choose a store and variant">
+    <section
+      className="space-y-5 rounded-xl border bg-card p-5 sm:p-6"
+      aria-label="Choose a store and variant"
+    >
       <Select
         label="Store branch"
         value={branchId}
@@ -55,57 +76,76 @@ export function ProductPurchasePanel({
       >
         {!branches.length && <option value="">No active branches</option>}
         {branches.map((branch) => (
-          <option key={branch.id} value={branch.id}>{branch.name}</option>
+          <option key={branch.id} value={branch.id}>
+            {branch.name}
+          </option>
         ))}
       </Select>
       <Select
         label="Variant"
-        value={selectedVariant?.id ?? ''}
+        value={selectedVariant?.id ?? ""}
         onChange={(event) => setVariantId(event.target.value)}
         disabled={!branchId || !branchVariants.length}
       >
         {!branchVariants.length && <option value="">No variants listed</option>}
         {branchVariants.map((variant) => (
-          <option key={variant.id} value={variant.id} disabled={!variant.available}>
-            {variant.name} - {variant.available
+          <option
+            key={variant.id}
+            value={variant.id}
+            disabled={!variant.available}
+          >
+            {variant.name} -{" "}
+            {variant.available
               ? variant.branchStock?.stock === null
-                ? 'Available'
+                ? "Available"
                 : `${variant.branchStock?.stock ?? 0} in stock`
-              : 'Out of stock'}
+              : "Out of stock"}
           </option>
         ))}
       </Select>
       {selectedVariant && (
         <div className="rounded-lg bg-secondary/60 p-4">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <p className="font-semibold">{formatPhp(selectedVariant.price_minor)}</p>
-            <p className="text-sm text-muted-foreground">
+            <p className="font-semibold">
+              {formatPhp(selectedVariant.price_minor)}
+            </p>
+            <p className={`text-sm ${stockAlert} font-bold`}>
               {selectedVariant.available
                 ? selectedVariant.branchStock?.stock === null
-                  ? 'Available at this branch'
-                  : `${selectedVariant.branchStock?.stock ?? 0} available at this branch`
-                : 'Currently out of stock at this branch'}
+                  ? "Available at this branch"
+                  : `${selectedVariant.branchStock?.stock ?? 0} available`
+                : "Out of stock"}
             </p>
           </div>
-          <p className="mt-1 text-xs text-muted-foreground">SKU: {selectedVariant.sku}</p>
-          {selectedVariant.specifications && Object.keys(selectedVariant.specifications).length > 0 && (
-            <dl className="mt-3 grid gap-x-4 gap-y-2 border-t pt-3 text-sm sm:grid-cols-2">
-              {Object.entries(selectedVariant.specifications).map(([name, value]) => (
-                <div key={name}>
-                  <dt className="text-xs font-medium text-muted-foreground">{name}</dt>
-                  <dd>{value}</dd>
-                </div>
-              ))}
-            </dl>
-          )}
-          {product.product_type === 'ebike' && (
+          <p className="mt-1 text-xs text-muted-foreground">
+            SKU: {selectedVariant.sku}
+          </p>
+          {selectedVariant.specifications &&
+            Object.keys(selectedVariant.specifications).length > 0 && (
+              <dl className="mt-3 grid gap-x-4 gap-y-2 border-t pt-3 text-sm min-[321px]:grid-cols-2">
+                {Object.entries(selectedVariant.specifications).map(
+                  ([name, value]) => (
+                    <div key={name}>
+                      <dt className="text-xs font-medium text-muted-foreground">
+                        {name}
+                      </dt>
+                      <dd>{value}</dd>
+                    </div>
+                  ),
+                )}
+              </dl>
+            )}
+          {product.product_type === "ebike" && (
             <p className="mt-2 text-sm text-muted-foreground">
-              Pickup reservation: {formatPhp(selectedVariant.reservation_minor)} per unit
+              Pickup reservation:{" "}
+              <b>{formatPhp(selectedVariant.reservation_minor)}</b> per unit
             </p>
           )}
           {selectedVariant.home_credit_downpayment_minor > 0 && (
             <p className="mt-1 text-sm text-muted-foreground">
-              Home Credit downpayment: {formatPhp(selectedVariant.home_credit_downpayment_minor)} per unit
+              Home Credit downpayment:{" "}
+              <b>{formatPhp(selectedVariant.home_credit_downpayment_minor)}</b>{" "}
+              per unit
             </p>
           )}
         </div>
