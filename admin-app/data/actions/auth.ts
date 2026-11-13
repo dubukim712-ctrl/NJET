@@ -123,7 +123,7 @@ export async function registerAction(
   const { email, password, fullName } = validation.data;
 
   try {
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -131,8 +131,22 @@ export async function registerAction(
       },
     });
 
+    if (
+      error?.code === "email_exists" ||
+      error?.code === "user_already_exists" ||
+      data.user?.identities?.length === 0
+    ) {
+      return {
+        success: false,
+        error: "An account with this email already exists. Sign in or reset your password.",
+      };
+    }
+
     if (error) {
-      return { success: false, error: error.message };
+      return {
+        success: false,
+        error: "Unable to create your account. Please try again.",
+      };
     }
 
     return { success: true, data: undefined };
