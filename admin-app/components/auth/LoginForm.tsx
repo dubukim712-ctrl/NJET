@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { AlertCircle, Loader2, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { loginSchema, type LoginInput } from "@/lib/validations/auth";
@@ -11,9 +11,11 @@ import { loginAction } from "@/data/actions/auth";
 import { Input } from "@/components/ui/Input";
 import { PasswordInput } from "@/components/auth/PasswordInput";
 import { AuthOptions } from "@/components/auth/AuthOptions";
+import { rememberVerificationEmail } from "@/data/auth/verification-email";
 import Link from "next/link";
 
 export function LoginForm() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const requestedRedirect = searchParams.get("redirect");
   const safeRedirect =
@@ -49,6 +51,10 @@ export function LoginForm() {
     if (result.success) {
       toast.success("Welcome back!");
       window.location.assign(result.data.redirectTo);
+    } else if (result.verificationRequired) {
+      rememberVerificationEmail(data.email);
+      toast.info("Verify your email to finish signing in.");
+      router.push("/verify-email");
     } else {
       setServerError(result.error);
       toast.error(result.error);

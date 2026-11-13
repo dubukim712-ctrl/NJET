@@ -58,7 +58,9 @@ export async function GET(request: NextRequest) {
       const home = surfaceHome(profile);
       let destination = home;
 
-      if (requestedNext) {
+      if (requestedNext === '/reset-password') {
+        destination = requestedNext;
+      } else if (requestedNext) {
         if (
           home === '/admin' &&
           (requestedNext.startsWith('/admin') ||

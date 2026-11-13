@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/Input";
 import { PasswordInput } from "@/components/auth/PasswordInput";
 import { PasswordStrength } from "@/components/auth/PasswordStrength";
 import { AuthOptions } from "@/components/auth/AuthOptions";
+import { rememberVerificationEmail } from "@/data/auth/verification-email";
 import Link from "next/link";
 
 export function RegisterForm() {
@@ -49,10 +50,9 @@ export function RegisterForm() {
     const result = await registerAction(formData);
 
     if (result.success) {
-      toast.success(
-        "Account created! Check your email to verify your address.",
-      );
-      router.push("/login");
+      rememberVerificationEmail(data.email);
+      toast.success("Check your email for your 6-digit verification code.");
+      router.push("/verify-email");
     } else {
       setServerError(result.error);
       toast.error(result.error);

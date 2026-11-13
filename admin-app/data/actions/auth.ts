@@ -13,7 +13,12 @@ import {
 
 export type ActionResult<T = undefined> =
   | { success: true; data: T }
-  | { success: false; error: string; fieldErrors?: Record<string, string[]> };
+  | {
+      success: false;
+      error: string;
+      fieldErrors?: Record<string, string[]>;
+      verificationRequired?: boolean;
+    };
 
 export async function loginAction(
   formData: FormData,
@@ -40,6 +45,13 @@ export async function loginAction(
     });
 
     if (error) {
+      if (error.code === "email_not_confirmed") {
+        return {
+          success: false,
+          error: "Verify your email before signing in.",
+          verificationRequired: true,
+        };
+      }
       return { success: false, error: "Invalid email or password." };
     }
 
@@ -116,7 +128,6 @@ export async function registerAction(
       password,
       options: {
         data: { full_name: fullName ?? null },
-        emailRedirectTo: `${getSiteUrl()}/auth/confirm`,
       },
     });
 

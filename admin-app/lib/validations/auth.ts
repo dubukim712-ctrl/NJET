@@ -30,6 +30,15 @@ export const registerSchema = z
 
 export type RegisterInput = z.infer<typeof registerSchema>;
 
+export const verifySignupOtpSchema = z.object({
+  email: z.string().trim().email('Invalid email address'),
+  token: z.string().regex(/^\d{6}$/, 'Enter the 6-digit code'),
+});
+
+export const resendSignupOtpSchema = z.object({
+  email: z.string().trim().email('Invalid email address'),
+});
+
 // Forgot password schema
 export const forgotPasswordSchema = z.object({
   email: z.string().min(1, 'Email is required').email('Invalid email address'),

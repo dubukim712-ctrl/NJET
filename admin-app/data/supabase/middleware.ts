@@ -12,6 +12,7 @@ const PROTECTED_PATHS = [
 const AUTH_PATHS = [
   "/login",
   "/register",
+  "/verify-email",
   "/forgot-password",
   "/reset-password",
 ];
