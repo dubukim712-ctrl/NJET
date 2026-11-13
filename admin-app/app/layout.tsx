@@ -21,7 +21,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: {
     default: "NJET | Noel & Jane E-bike Trading",
-    template: "%s | NJET",
+    template: "%s | Noel & Jane E-bike Trading",
   },
   description: "Explore e-bikes, spare parts, and accessories from NJET.",
 };

@@ -1,4 +1,8 @@
-import { ProductDetailQuery } from '@/components/shop/ProductDetailQuery';
+import { ProductDetailQuery } from "@/components/shop/ProductDetailQuery";
+
+export const metadata = {
+  title: "Product Details",
+};
 
 export default async function ViewProductPage({
   params,

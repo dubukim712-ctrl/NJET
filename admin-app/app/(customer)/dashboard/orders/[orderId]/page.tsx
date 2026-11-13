@@ -3,7 +3,7 @@ import { requireCustomer } from '@/data/auth/guards';
 import { CustomerOrderPaymentQuery } from '@/components/checkout/CustomerOrderPaymentQuery';
 import { customerOrderIdSchema } from '@/lib/validations/commerce';
 
-export const metadata = { title: 'Order payment | NJET' };
+export const metadata = { title: 'Order payment' };
 
 export default async function OrderPaymentPage({
   params,

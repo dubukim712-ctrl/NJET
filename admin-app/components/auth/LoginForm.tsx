@@ -1,28 +1,28 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useSearchParams } from 'next/navigation';
-import { AlertCircle, Loader2, Mail } from 'lucide-react';
-import { toast } from 'sonner';
-import { loginSchema, type LoginInput } from '@/lib/validations/auth';
-import { loginAction } from '@/data/actions/auth';
-import { Input } from '@/components/ui/Input';
-import { PasswordInput } from '@/components/auth/PasswordInput';
-import { AuthOptions } from '@/components/auth/AuthOptions';
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useSearchParams } from "next/navigation";
+import { AlertCircle, Loader2, Mail } from "lucide-react";
+import { toast } from "sonner";
+import { loginSchema, type LoginInput } from "@/lib/validations/auth";
+import { loginAction } from "@/data/actions/auth";
+import { Input } from "@/components/ui/Input";
+import { PasswordInput } from "@/components/auth/PasswordInput";
+import { AuthOptions } from "@/components/auth/AuthOptions";
 
 export function LoginForm() {
   const searchParams = useSearchParams();
-  const requestedRedirect = searchParams.get('redirect');
+  const requestedRedirect = searchParams.get("redirect");
   const safeRedirect =
     requestedRedirect &&
-    requestedRedirect.startsWith('/') &&
-    !requestedRedirect.startsWith('//') &&
-    !requestedRedirect.startsWith('/\\')
+    requestedRedirect.startsWith("/") &&
+    !requestedRedirect.startsWith("//") &&
+    !requestedRedirect.startsWith("/\\")
       ? requestedRedirect
       : null;
-  const queryError = searchParams.get('error');
+  const queryError = searchParams.get("error");
   const [showPassword, setShowPassword] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
 
@@ -32,21 +32,21 @@ export function LoginForm() {
     formState: { errors, isSubmitting },
   } = useForm<LoginInput>({
     resolver: zodResolver(loginSchema),
-    defaultValues: { email: '', password: '' },
+    defaultValues: { email: "", password: "" },
   });
 
   const onSubmit = async (data: LoginInput) => {
     setServerError(null);
 
     const formData = new FormData();
-    formData.set('email', data.email);
-    formData.set('password', data.password);
-    if (safeRedirect) formData.set('redirectTo', safeRedirect);
+    formData.set("email", data.email);
+    formData.set("password", data.password);
+    if (safeRedirect) formData.set("redirectTo", safeRedirect);
 
     const result = await loginAction(formData);
 
     if (result.success) {
-      toast.success('Welcome back!');
+      toast.success("Welcome back!");
       window.location.assign(result.data.redirectTo);
     } else {
       setServerError(result.error);
@@ -56,17 +56,19 @@ export function LoginForm() {
 
   const queryErrorMessages: Record<string, string> = {
     auth_callback_failed: "We couldn't complete sign in. Please try again.",
-    recovery_link_expired: 'That reset link has expired. Request a new one.',
+    recovery_link_expired: "That reset link has expired. Request a new one.",
   };
   const initialError = queryError
-    ? queryErrorMessages[queryError] ?? 'Sign in failed. Please try again.'
+    ? (queryErrorMessages[queryError] ?? "Sign in failed. Please try again.")
     : null;
   const errorMessage = serverError ?? initialError;
 
   return (
     <div className="w-full">
       <div className="mb-8 text-center">
-        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Sign in</h1>
+        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
+          Sign in
+        </h1>
         <p className="mt-2 text-sm text-muted-foreground">
           Enter your email and password to access your account
         </p>
@@ -81,11 +83,13 @@ export function LoginForm() {
           placeholder="you@example.com"
           leadingIcon={<Mail className="h-4 w-4" />}
           trailingIcon={
-            errors.email ? <AlertCircle className="h-4 w-4 text-destructive" /> : undefined
+            errors.email ? (
+              <AlertCircle className="h-4 w-4 text-destructive" />
+            ) : undefined
           }
           error={errors.email?.message}
           disabled={isSubmitting}
-          {...register('email')}
+          {...register("email")}
         />
 
         <div className="space-y-2">
@@ -108,7 +112,7 @@ export function LoginForm() {
             show={showPassword}
             onToggle={() => setShowPassword((value) => !value)}
             disabled={isSubmitting}
-            {...register('password')}
+            {...register("password")}
           />
         </div>
 
@@ -128,11 +132,14 @@ export function LoginForm() {
         >
           {isSubmitting ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+              <Loader2
+                className="mr-2 h-4 w-4 animate-spin"
+                aria-hidden="true"
+              />
               Signing in...
             </>
           ) : (
-            'Sign in'
+            "Sign in"
           )}
         </button>
       </form>
@@ -149,8 +156,11 @@ export function LoginForm() {
       <AuthOptions disabled={isSubmitting} />
 
       <p className="mt-6 text-center text-sm text-muted-foreground">
-        Don&apos;t have an account?{' '}
-        <a href="/register" className="font-medium text-primary hover:underline">
+        Don&apos;t have an account?{" "}
+        <a
+          href="/register"
+          className="font-medium text-primary hover:underline"
+        >
           Sign up
         </a>
       </p>

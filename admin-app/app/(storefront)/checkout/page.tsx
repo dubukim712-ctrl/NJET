@@ -3,7 +3,7 @@ import { CheckoutOptionsQuery } from '@/components/checkout/CheckoutOptionsQuery
 import { getAuthContext } from '@/data/auth/guards';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 
-export const metadata = { title: 'Checkout | NJET' };
+export const metadata = { title: 'Checkout' };
 
 export default async function CheckoutPage() {
   const auth = await getAuthContext();

@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useRouter } from 'next/navigation';
-import { CircleHelp, LogOut, User, Settings, Shield } from 'lucide-react';
-import { toast } from 'sonner';
-import { useAuth } from '@/components/auth/AuthProvider';
+import { useRouter } from "next/navigation";
+import { CircleHelp, LogOut, User, Settings, Shield } from "lucide-react";
+import { toast } from "sonner";
+import { useAuth } from "@/components/auth/AuthProvider";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,10 +11,10 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/DropdownMenu';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/Avatar';
-import { hasPermission, PERMISSIONS } from '@/lib/permissions';
-import type { UserProfile } from '@/types/database';
+} from "@/components/ui/DropdownMenu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/Avatar";
+import { hasPermission, PERMISSIONS } from "@/lib/permissions";
+import type { UserProfile } from "@/types/database";
 
 interface UserNavProps {
   user: UserProfile | null;
@@ -29,22 +29,22 @@ export function UserNav({ user, showHelp = false }: UserNavProps) {
 
   const initials =
     displayUser?.full_name
-      ?.split(' ')
+      ?.split(" ")
       .map((name) => name[0])
-      .join('')
+      .join("")
       .toUpperCase()
       .slice(0, 2) ||
     displayUser?.email?.[0]?.toUpperCase() ||
-    'U';
+    "U";
 
   const handleLogout = async () => {
     try {
       await signOut();
-      toast.success('Signed out.');
-      router.push('/login');
+      toast.success("Signed out.");
+      router.push("/login");
       router.refresh();
     } catch {
-      toast.error('Could not sign out. Please try again.');
+      toast.error("Could not sign out. Please try again.");
     }
   };
 
@@ -55,7 +55,7 @@ export function UserNav({ user, showHelp = false }: UserNavProps) {
   const canUseAdmin = hasPermission(displayUser, PERMISSIONS.adminAccess);
   const canUseStorefront = hasPermission(
     displayUser,
-    PERMISSIONS.storefrontAccess
+    PERMISSIONS.storefrontAccess,
   );
 
   return (
@@ -66,10 +66,10 @@ export function UserNav({ user, showHelp = false }: UserNavProps) {
           className="flex items-center gap-2 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring"
           aria-label="Open user menu"
         >
-          <Avatar className="h-9 w-9">
+          <Avatar className="h-9 w-9 border">
             <AvatarImage
               src={displayUser.avatar_url || undefined}
-              alt={displayUser.full_name || 'User avatar'}
+              alt={displayUser.full_name || "User avatar"}
             />
             <AvatarFallback className="text-xs font-medium">
               {initials}
@@ -86,7 +86,7 @@ export function UserNav({ user, showHelp = false }: UserNavProps) {
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
             <p className="truncate text-sm font-medium leading-none">
-              {displayUser.full_name || 'User'}
+              {displayUser.full_name || "User"}
             </p>
             <p className="truncate text-xs leading-none text-muted-foreground">
               {displayUser.email}
@@ -118,7 +118,7 @@ export function UserNav({ user, showHelp = false }: UserNavProps) {
         {(canUseAdmin || canUseStorefront) && (
           <DropdownMenuItem asChild>
             <a
-              href={canUseAdmin ? '/admin/profile' : '/dashboard/profile'}
+              href={canUseAdmin ? "/admin/profile" : "/dashboard/profile"}
               className="flex items-center gap-2"
             >
               <User className="h-4 w-4" aria-hidden="true" />

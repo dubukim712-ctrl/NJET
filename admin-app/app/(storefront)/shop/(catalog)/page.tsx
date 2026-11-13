@@ -1,6 +1,6 @@
 import { ShopCatalogQuery } from '@/components/shop/ShopCatalogQuery';
 
-export const metadata = { title: 'Shop | NJET' };
+export const metadata = { title: 'Shop' };
 
 export default function ShopPage() {
   return (

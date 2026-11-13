@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { CustomerOrdersQuery } from "@/components/dashboard/CustomerOrdersQuery";
 
-export const metadata = { title: "Orders | NJET" };
+export const metadata = { title: "Orders" };
 
 export default function OrdersPage() {
   return (
