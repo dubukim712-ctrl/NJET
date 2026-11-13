@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, type ClipboardEvent, type KeyboardEvent } from 'react';
+import { SIGNUP_OTP_LENGTH } from '@/lib/validations/auth';
 
 export function OtpCodeInput({
   value,
@@ -17,14 +18,18 @@ export function OtpCodeInput({
 
   const enterDigits = (index: number, digits: string) => {
     const next = [...value];
-    const accepted = digits.replace(/\D/g, '').slice(0, 6 - index);
+    const accepted = digits
+      .replace(/\D/g, '')
+      .slice(0, SIGNUP_OTP_LENGTH - index);
     accepted.split('').forEach((digit, offset) => {
       next[index + offset] = digit;
     });
     onChange(next);
 
     if (accepted) {
-      inputs.current[Math.min(index + accepted.length, 5)]?.focus();
+      inputs.current[
+        Math.min(index + accepted.length, SIGNUP_OTP_LENGTH - 1)
+      ]?.focus();
     }
   };
 
@@ -35,7 +40,7 @@ export function OtpCodeInput({
     if (event.key === 'ArrowLeft' && index > 0) {
       event.preventDefault();
       inputs.current[index - 1]?.focus();
-    } else if (event.key === 'ArrowRight' && index < 5) {
+    } else if (event.key === 'ArrowRight' && index < SIGNUP_OTP_LENGTH - 1) {
       event.preventDefault();
       inputs.current[index + 1]?.focus();
     } else if (
@@ -60,22 +65,24 @@ export function OtpCodeInput({
 
   return (
     <fieldset className="space-y-2" disabled={disabled}>
-      <legend className="text-sm font-medium">6-digit verification code</legend>
-      <div className="grid grid-cols-6 gap-2 sm:gap-3">
-        {Array.from({ length: 6 }, (_, index) => (
+      <legend className="text-sm font-medium">
+        {SIGNUP_OTP_LENGTH}-digit verification code
+      </legend>
+      <div className="grid grid-cols-8 gap-1 sm:gap-2">
+        {Array.from({ length: SIGNUP_OTP_LENGTH }, (_, index) => (
           <input
             key={index}
             ref={(element) => {
               inputs.current[index] = element;
             }}
-            aria-label={`Digit ${index + 1} of 6`}
+            aria-label={`Digit ${index + 1} of ${SIGNUP_OTP_LENGTH}`}
             aria-invalid={Boolean(error)}
             aria-describedby={error ? 'verification-code-error' : undefined}
             autoComplete={index === 0 ? 'one-time-code' : 'off'}
             inputMode="numeric"
             pattern="[0-9]*"
             type="text"
-            maxLength={index === 0 ? 6 : 1}
+            maxLength={index === 0 ? SIGNUP_OTP_LENGTH : 1}
             value={value[index] ?? ''}
             onChange={(event) => {
               if (!event.currentTarget.value) {

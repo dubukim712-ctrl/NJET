@@ -5,6 +5,7 @@ import { createClient } from '@/data/supabase/server';
 import { surfaceHome } from '@/lib/permissions';
 import {
   resendSignupOtpSchema,
+  SIGNUP_OTP_LENGTH,
   verifySignupOtpSchema,
 } from '@/lib/validations/auth';
 import type { ActionResult } from '@/data/actions/auth';
@@ -20,7 +21,7 @@ export async function verifySignupOtpAction(
   if (!validation.success) {
     return {
       success: false,
-      error: 'Enter a valid email address and 6-digit code.',
+      error: `Enter a valid email address and ${SIGNUP_OTP_LENGTH}-digit code.`,
       fieldErrors: validation.error.flatten().fieldErrors,
     };
   }

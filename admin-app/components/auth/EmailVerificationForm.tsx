@@ -14,10 +14,11 @@ import {
   resendSignupOtpAction,
   verifySignupOtpAction,
 } from '@/data/actions/email-verification';
+import { SIGNUP_OTP_LENGTH } from '@/lib/validations/auth';
 
 export function EmailVerificationForm() {
   const emailInput = useRef<HTMLInputElement>(null);
-  const [code, setCode] = useState<string[]>(Array(6).fill(''));
+  const [code, setCode] = useState<string[]>(Array(SIGNUP_OTP_LENGTH).fill(''));
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
@@ -89,7 +90,7 @@ export function EmailVerificationForm() {
           Verify your email
         </h1>
         <p className="mt-2 text-sm leading-6 text-muted-foreground">
-          Enter the 6-digit code sent to your email address.
+          Enter the {SIGNUP_OTP_LENGTH}-digit code sent to your email address.
         </p>
       </div>
 
@@ -129,7 +130,11 @@ export function EmailVerificationForm() {
 
         <button
           type="submit"
-          disabled={isVerifying || isResending || code.join('').length !== 6}
+          disabled={
+            isVerifying ||
+            isResending ||
+            code.join('').length !== SIGNUP_OTP_LENGTH
+          }
           className="flex h-11 w-full items-center justify-center rounded-md bg-primary px-8 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
         >
           {isVerifying ? (
