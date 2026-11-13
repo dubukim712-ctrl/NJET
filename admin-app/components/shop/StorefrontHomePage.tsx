@@ -10,6 +10,7 @@ import {
   StorefrontCatalogQueryError,
   useStorefrontCatalogQuery,
 } from "@/data/commerce/storefront-catalog-client";
+import { useSearchParams } from "next/dist/client/components/navigation";
 
 export function StorefrontHomePage() {
   const query = useStorefrontCatalogQuery();
@@ -22,9 +23,19 @@ export function StorefrontHomePage() {
         : null;
   const featured = catalog?.products.slice(0, 3) ?? [];
   const heroProduct = featured[0];
+  const permissionError =
+    useSearchParams().get("error") === "insufficient_permissions";
 
   return (
     <div className="space-y-12 sm:space-y-16">
+      {permissionError && (
+        <div
+          className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive mb-6"
+          role="alert"
+        >
+          You don&apos;t have permission to access that page.
+        </div>
+      )}
       <section className="overflow-hidden rounded-2xl bg-primary text-primary-foreground">
         <div className="grid gap-8 p-5 sm:p-8 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-12 lg:p-12">
           <div className="space-y-6">

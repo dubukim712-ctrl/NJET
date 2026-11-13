@@ -64,7 +64,7 @@ function insufficientRedirect(
   const isAdminPage = matches(pathname, ADMIN_PATHS);
 
   if (isAdminPage && hasPermission(profile, PERMISSIONS.storefrontAccess)) {
-    const url = new URL("/", request.url);
+    const url = new URL("/dashboard", request.url);
     url.searchParams.set("error", "insufficient_permissions");
     return redirectWithCookies(url, source);
   }

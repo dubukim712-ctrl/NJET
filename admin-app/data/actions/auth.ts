@@ -1,34 +1,34 @@
-'use server';
+"use server";
 
-import { revalidatePath } from 'next/cache';
-import { createClient } from '@/data/supabase/server';
-import { getSiteUrl } from '@/lib/site-url';
-import { surfaceHome } from '@/lib/permissions';
+import { revalidatePath } from "next/cache";
+import { createClient } from "@/data/supabase/server";
+import { getSiteUrl } from "@/lib/site-url";
+import { surfaceHome } from "@/lib/permissions";
 import {
   loginSchema,
   registerSchema,
   forgotPasswordSchema,
   resetPasswordSchema,
-} from '@/lib/validations/auth';
+} from "@/lib/validations/auth";
 
 export type ActionResult<T = undefined> =
   | { success: true; data: T }
   | { success: false; error: string; fieldErrors?: Record<string, string[]> };
 
 export async function loginAction(
-  formData: FormData
+  formData: FormData,
 ): Promise<ActionResult<{ redirectTo: string }>> {
   const supabase = await createClient();
 
   const validation = loginSchema.safeParse({
-    email: formData.get('email'),
-    password: formData.get('password'),
+    email: formData.get("email"),
+    password: formData.get("password"),
   });
 
   if (!validation.success) {
     return {
       success: false,
-      error: 'Please fix the highlighted fields.',
+      error: "Please fix the highlighted fields.",
       fieldErrors: validation.error.flatten().fieldErrors,
     };
   }
@@ -40,22 +40,22 @@ export async function loginAction(
     });
 
     if (error) {
-      return { success: false, error: 'Invalid email or password.' };
+      return { success: false, error: "Invalid email or password." };
     }
 
     const { data: profile } = await supabase
-      .from('user_profiles')
-      .select('scope, is_full_access, permissions')
-      .eq('id', data.user.id)
+      .from("user_profiles")
+      .select("scope, is_full_access, permissions")
+      .eq("id", data.user.id)
       .single();
 
     const home = surfaceHome(profile);
-    const requested = formData.get('redirectTo');
+    const requested = formData.get("redirectTo");
     const safeRequested =
-      typeof requested === 'string' &&
-      requested.startsWith('/') &&
-      !requested.startsWith('//') &&
-      !requested.startsWith('/\\')
+      typeof requested === "string" &&
+      requested.startsWith("/") &&
+      !requested.startsWith("//") &&
+      !requested.startsWith("/\\")
         ? requested
         : null;
 
@@ -63,45 +63,47 @@ export async function loginAction(
 
     if (safeRequested) {
       if (
-        home === '/admin' &&
-        (safeRequested.startsWith('/admin') ||
-          safeRequested.startsWith('/dashboard'))
+        home === "/admin" &&
+        (safeRequested.startsWith("/admin") ||
+          safeRequested.startsWith("/dashboard"))
       ) {
         redirectTo = safeRequested;
       } else if (
-        home === '/dashboard' &&
-        (safeRequested.startsWith('/dashboard') ||
-          safeRequested === '/checkout')
+        (home === "/" || home === "/dashboard") &&
+        (safeRequested.startsWith("/dashboard") ||
+          safeRequested.startsWith("/checkout"))
       ) {
         redirectTo = safeRequested;
       }
     }
 
-    if (home === '/no-access') {
-      redirectTo = '/no-access';
+    if (home === "/no-access") {
+      redirectTo = "/no-access";
     }
 
-    revalidatePath('/', 'layout');
+    revalidatePath("/", "layout");
     return { success: true, data: { redirectTo } };
   } catch {
-    return { success: false, error: 'Something went wrong. Please try again.' };
+    return { success: false, error: "Something went wrong. Please try again." };
   }
 }
 
-export async function registerAction(formData: FormData): Promise<ActionResult> {
+export async function registerAction(
+  formData: FormData,
+): Promise<ActionResult> {
   const supabase = await createClient();
 
   const validation = registerSchema.safeParse({
-    email: formData.get('email'),
-    password: formData.get('password'),
-    confirmPassword: formData.get('confirmPassword'),
-    fullName: formData.get('fullName') || undefined,
+    email: formData.get("email"),
+    password: formData.get("password"),
+    confirmPassword: formData.get("confirmPassword"),
+    fullName: formData.get("fullName") || undefined,
   });
 
   if (!validation.success) {
     return {
       success: false,
-      error: 'Please fix the highlighted fields.',
+      error: "Please fix the highlighted fields.",
       fieldErrors: validation.error.flatten().fieldErrors,
     };
   }
@@ -124,7 +126,7 @@ export async function registerAction(formData: FormData): Promise<ActionResult> 
 
     return { success: true, data: undefined };
   } catch {
-    return { success: false, error: 'Something went wrong. Please try again.' };
+    return { success: false, error: "Something went wrong. Please try again." };
   }
 }
 
@@ -136,24 +138,26 @@ export async function logoutAction(): Promise<ActionResult> {
     if (error) {
       return { success: false, error: error.message };
     }
-    revalidatePath('/', 'layout');
+    revalidatePath("/", "layout");
     return { success: true, data: undefined };
   } catch {
-    return { success: false, error: 'Something went wrong. Please try again.' };
+    return { success: false, error: "Something went wrong. Please try again." };
   }
 }
 
-export async function forgotPasswordAction(formData: FormData): Promise<ActionResult> {
+export async function forgotPasswordAction(
+  formData: FormData,
+): Promise<ActionResult> {
   const supabase = await createClient();
 
   const validation = forgotPasswordSchema.safeParse({
-    email: formData.get('email'),
+    email: formData.get("email"),
   });
 
   if (!validation.success) {
     return {
       success: false,
-      error: 'Please enter a valid email address.',
+      error: "Please enter a valid email address.",
       fieldErrors: validation.error.flatten().fieldErrors,
     };
   }
@@ -163,7 +167,7 @@ export async function forgotPasswordAction(formData: FormData): Promise<ActionRe
       validation.data.email,
       {
         redirectTo: `${getSiteUrl()}/auth/confirm?next=/reset-password`,
-      }
+      },
     );
 
     if (error) {
@@ -172,22 +176,24 @@ export async function forgotPasswordAction(formData: FormData): Promise<ActionRe
 
     return { success: true, data: undefined };
   } catch {
-    return { success: false, error: 'Something went wrong. Please try again.' };
+    return { success: false, error: "Something went wrong. Please try again." };
   }
 }
 
-export async function resetPasswordAction(formData: FormData): Promise<ActionResult> {
+export async function resetPasswordAction(
+  formData: FormData,
+): Promise<ActionResult> {
   const supabase = await createClient();
 
   const validation = resetPasswordSchema.safeParse({
-    password: formData.get('password'),
-    confirmPassword: formData.get('confirmPassword'),
+    password: formData.get("password"),
+    confirmPassword: formData.get("confirmPassword"),
   });
 
   if (!validation.success) {
     return {
       success: false,
-      error: 'Please fix the highlighted fields.',
+      error: "Please fix the highlighted fields.",
       fieldErrors: validation.error.flatten().fieldErrors,
     };
   }
@@ -201,9 +207,9 @@ export async function resetPasswordAction(formData: FormData): Promise<ActionRes
       return { success: false, error: error.message };
     }
 
-    revalidatePath('/', 'layout');
+    revalidatePath("/", "layout");
     return { success: true, data: undefined };
   } catch {
-    return { success: false, error: 'Something went wrong. Please try again.' };
+    return { success: false, error: "Something went wrong. Please try again." };
   }
 }

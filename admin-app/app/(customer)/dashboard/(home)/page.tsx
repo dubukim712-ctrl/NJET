@@ -1,7 +1,7 @@
-import { StorefrontLandingPage } from '@/components/dashboard/StorefrontLandingPage';
+import { StorefrontHomePage } from "@/components/shop/StorefrontHomePage";
 
-export const metadata = { title: 'Storefront' };
+export const metadata = { title: "Storefront" };
 
 export default function DashboardPage() {
-  return <StorefrontLandingPage />;
+  return <StorefrontHomePage />;
 }
