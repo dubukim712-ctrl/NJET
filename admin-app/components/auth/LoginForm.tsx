@@ -11,6 +11,7 @@ import { loginAction } from "@/data/actions/auth";
 import { Input } from "@/components/ui/Input";
 import { PasswordInput } from "@/components/auth/PasswordInput";
 import { AuthOptions } from "@/components/auth/AuthOptions";
+import Link from "next/link";
 
 export function LoginForm() {
   const searchParams = useSearchParams();
@@ -157,12 +158,12 @@ export function LoginForm() {
 
       <p className="mt-6 text-center text-sm text-muted-foreground">
         Don&apos;t have an account?{" "}
-        <a
+        <Link
           href="/register"
           className="font-medium text-primary hover:underline"
         >
           Sign up
-        </a>
+        </Link>
       </p>
     </div>
   );

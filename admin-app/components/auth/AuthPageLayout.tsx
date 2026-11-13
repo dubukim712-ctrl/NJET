@@ -1,7 +1,12 @@
-import Image from 'next/image';
-import Link from 'next/link';
+"use client";
+
+import Image from "next/image";
+import Link from "next/link";
+import { useStorefrontBusinessInfoQuery } from "@/data/commerce/storefront-business-info-client";
 
 export function AuthPageLayout({ children }: { children: React.ReactNode }) {
+  const { data: businessInfo } = useStorefrontBusinessInfoQuery();
+  const businessName = businessInfo?.businessName || "";
   return (
     <div className="flex min-h-dvh flex-col bg-background p-4 lg:grid lg:grid-cols-[1.05fr_0.95fr] lg:p-0">
       <aside className="relative hidden min-h-dvh overflow-hidden lg:block">
@@ -16,7 +21,7 @@ export function AuthPageLayout({ children }: { children: React.ReactNode }) {
         <div className="absolute inset-0 bg-gradient-to-t from-[#10251f]/95 via-[#10251f]/55 to-[#10251f]/30" />
         <div className="relative z-10 flex min-h-dvh flex-col justify-between p-10 text-white xl:p-14">
           <Link href="/" className="text-sm font-semibold tracking-[0.18em]">
-            NOEL &amp; JANE <span className="text-[#e7c489]">·</span> NJET
+            <h1 className="text-2xl font-bold">{businessName}</h1>
           </Link>
           <div className="max-w-xl pb-8">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#e7c489]">

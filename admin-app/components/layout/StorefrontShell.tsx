@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import Link from 'next/link';
-import Image from 'next/image';
-import { usePathname, useRouter } from 'next/navigation';
+import Link from "next/link";
+import Image from "next/image";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Home,
   CalendarDays,
@@ -13,17 +13,17 @@ import {
   MapPin,
   Phone,
   type LucideIcon,
-} from 'lucide-react';
-import { useAuth } from '@/components/auth/AuthProvider';
-import { UserNav } from '@/components/auth/UserNav';
-import { CartDrawer } from '@/components/cart/CartDrawer';
+} from "lucide-react";
+import { useAuth } from "@/components/auth/AuthProvider";
+import { UserNav } from "@/components/auth/UserNav";
+import { CartDrawer } from "@/components/cart/CartDrawer";
 import {
   StorefrontBusinessInfoQueryError,
   useStorefrontBusinessInfoQuery,
-} from '@/data/commerce/storefront-business-info-client';
-import { hasPermission, PERMISSIONS } from '@/lib/permissions';
-import { cn } from '@/lib/utils';
-import type { UserProfile } from '@/types/database';
+} from "@/data/commerce/storefront-business-info-client";
+import { hasPermission, PERMISSIONS } from "@/lib/permissions";
+import { cn } from "@/lib/utils";
+import type { UserProfile } from "@/types/database";
 
 interface StorefrontShellProps {
   user: UserProfile | null;
@@ -35,16 +35,13 @@ const NAVIGATION: {
   href: string;
   icon: LucideIcon;
 }[] = [
-  { name: 'Home', href: '/', icon: Home },
-  { name: 'Shop', href: '/shop', icon: ShoppingBag },
-  { name: 'Orders', href: '/dashboard/orders', icon: Package },
-  { name: 'Appointments', href: '/dashboard/appointments', icon: CalendarDays },
+  { name: "Home", href: "/", icon: Home },
+  { name: "Shop", href: "/shop", icon: ShoppingBag },
+  { name: "Orders", href: "/dashboard/orders", icon: Package },
+  { name: "Appointments", href: "/dashboard/appointments", icon: CalendarDays },
 ];
 
-export function StorefrontShell({
-  user,
-  children,
-}: StorefrontShellProps) {
+export function StorefrontShell({ user, children }: StorefrontShellProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { user: clientUser } = useAuth();
@@ -55,42 +52,40 @@ export function StorefrontShell({
     businessInfoQuery.error instanceof StorefrontBusinessInfoQueryError
       ? businessInfoQuery.error.message
       : !businessInfo && businessInfoQuery.isError
-        ? 'Business contact information is temporarily unavailable.'
+        ? "Business contact information is temporarily unavailable."
         : null;
   const hasBusinessContact = Boolean(
-    businessInfo?.phone || businessInfo?.email || businessInfo?.address
+    businessInfo?.phone || businessInfo?.email || businessInfo?.address,
   );
   const displayUser = clientUser ?? user;
   const canAccessStorefront = hasPermission(
     displayUser,
-    PERMISSIONS.storefrontAccess
+    PERMISSIONS.storefrontAccess,
   );
   const navigationItems = [
     NAVIGATION[0],
     NAVIGATION[1],
-    ...(canAccessStorefront
-      ? [NAVIGATION[2], NAVIGATION[3]]
-      : []),
+    ...(canAccessStorefront ? [NAVIGATION[2], NAVIGATION[3]] : []),
   ];
 
   const navigation = (mobile = false) => (
     <nav
       aria-label="Storefront navigation"
       className={cn(
-        'flex items-center',
-        mobile ? 'w-full justify-around' : 'gap-1'
+        "flex items-center",
+        mobile ? "w-full justify-around" : "gap-1",
       )}
     >
       {navigationItems.map((item) => {
         const href = item.href;
         const active =
-          item.name === 'Home'
-            ? pathname === '/'
-            : item.name === 'Shop'
-              ? pathname.startsWith('/shop')
-              : item.name === 'Orders'
-                  ? pathname.startsWith('/dashboard/orders')
-                  : pathname.startsWith('/dashboard/appointments');
+          item.name === "Home"
+            ? pathname === "/"
+            : item.name === "Shop"
+              ? pathname.startsWith("/shop")
+              : item.name === "Orders"
+                ? pathname.startsWith("/dashboard/orders")
+                : pathname.startsWith("/dashboard/appointments");
 
         return (
           <Link
@@ -113,22 +108,22 @@ export function StorefrontShell({
               }
 
               event.preventDefault();
-              window.scrollTo({ top: 0, behavior: 'smooth' });
+              window.scrollTo({ top: 0, behavior: "smooth" });
             }}
-            aria-current={active ? 'page' : undefined}
+            aria-current={active ? "page" : undefined}
             className={cn(
               mobile
-                ? 'flex min-h-16 flex-1 flex-col items-center justify-center gap-1 text-xs font-medium'
-                : 'inline-flex min-h-10 items-center justify-center gap-2 rounded-full px-3 text-sm font-medium transition-colors sm:px-4',
+                ? "flex min-h-16 flex-1 flex-col items-center justify-center gap-1 text-xs font-medium"
+                : "inline-flex min-h-10 items-center justify-center gap-2 rounded-full px-3 text-sm font-medium transition-colors sm:px-4",
               active
-                ? 'text-primary'
-                : 'text-muted-foreground hover:text-accent-foreground',
-              !mobile && active && 'bg-primary/10',
-              mobile && active && 'bg-primary/5'
+                ? "text-primary"
+                : "text-muted-foreground hover:text-accent-foreground",
+              !mobile && active && "bg-primary/10",
+              mobile && active && "bg-primary/5",
             )}
           >
             <item.icon
-              className={mobile ? 'h-5 w-5' : 'h-4 w-4'}
+              className={mobile ? "h-5 w-5" : "h-4 w-4"}
               aria-hidden="true"
             />
             {item.name}
@@ -156,7 +151,9 @@ export function StorefrontShell({
                 className="size-9 rounded-md object-contain"
               />
             )}
-            <span className="truncate">{businessInfo?.businessName || 'NJET'}</span>
+            <span className="truncate">
+              {businessInfo?.businessName || "NJET"}
+            </span>
           </Link>
 
           <div className="hidden lg:block">{navigation()}</div>
@@ -195,19 +192,19 @@ export function StorefrontShell({
                 Thanks for riding with us
               </p>
               <h2 className="mt-3 text-2xl font-semibold tracking-tight">
-                {businessInfo?.businessName || 'NJET'}
+                {businessInfo?.businessName || "NJET"}
               </h2>
               <p
                 className="mt-3 text-sm leading-6 text-primary-foreground/80"
-                role={businessInfoError ? 'status' : undefined}
+                role={businessInfoError ? "status" : undefined}
               >
                 {businessInfoError
-                  ? 'Business contact information is temporarily unavailable.'
+                  ? "Business contact information is temporarily unavailable."
                   : businessInfoQuery.isPending
-                    ? 'Loading business contact information...'
+                    ? "Loading business contact information..."
                     : hasBusinessContact || businessInfo?.businessHours
-                      ? 'Get in touch with our team. We are here to help you find your next ride.'
-                      : 'Business contact details have not been added yet.'}
+                      ? "Get in touch with our team. We are here to help you find your next ride."
+                      : "Business contact details have not been added yet."}
               </p>
             </section>
 
@@ -221,12 +218,19 @@ export function StorefrontShell({
                     {businessInfo?.phone && (
                       <a
                         className="flex items-start gap-3 text-sm transition-colors hover:text-white"
-                        href={`tel:${businessInfo.phone.replace(/[^+0-9]/g, '')}`}
+                        href={`tel:${businessInfo.phone.replace(/[^+0-9]/g, "")}`}
                       >
-                        <Phone className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+                        <Phone
+                          className="mt-0.5 size-4 shrink-0"
+                          aria-hidden="true"
+                        />
                         <span className="min-w-0">
-                          <span className="block text-xs text-primary-foreground/70">Call</span>
-                          <span className="break-words">{businessInfo.phone}</span>
+                          <span className="block text-xs text-primary-foreground/70">
+                            Call
+                          </span>
+                          <span className="break-words">
+                            {businessInfo.phone}
+                          </span>
                         </span>
                       </a>
                     )}
@@ -235,19 +239,33 @@ export function StorefrontShell({
                         className="flex items-start gap-3 text-sm transition-colors hover:text-white"
                         href={`mailto:${businessInfo.email}`}
                       >
-                        <Mail className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+                        <Mail
+                          className="mt-0.5 size-4 shrink-0"
+                          aria-hidden="true"
+                        />
                         <span className="min-w-0">
-                          <span className="block text-xs text-primary-foreground/70">Email</span>
-                          <span className="break-all">{businessInfo.email}</span>
+                          <span className="block text-xs text-primary-foreground/70">
+                            Email
+                          </span>
+                          <span className="break-all">
+                            {businessInfo.email}
+                          </span>
                         </span>
                       </a>
                     )}
                     {businessInfo?.address && (
                       <div className="flex items-start gap-3 text-sm">
-                        <MapPin className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+                        <MapPin
+                          className="mt-0.5 size-4 shrink-0"
+                          aria-hidden="true"
+                        />
                         <span className="min-w-0">
-                          <span className="block text-xs text-primary-foreground/70">Address</span>
-                          <span className="break-words">{businessInfo.address}</span>
+                          <span className="block text-xs text-primary-foreground/70">
+                            Address
+                          </span>
+                          <span className="break-words">
+                            {businessInfo.address}
+                          </span>
                         </span>
                       </div>
                     )}
@@ -265,7 +283,10 @@ export function StorefrontShell({
                 </h3>
                 {businessInfo?.businessHours ? (
                   <div className="mt-4 flex items-start gap-3">
-                    <Clock3 className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+                    <Clock3
+                      className="mt-0.5 size-4 shrink-0"
+                      aria-hidden="true"
+                    />
                     <p className="whitespace-pre-line text-sm leading-6">
                       {businessInfo.businessHours}
                     </p>
@@ -280,7 +301,7 @@ export function StorefrontShell({
           </div>
 
           <div className="mt-8 border-t border-primary-foreground/15 pt-4 text-xs text-primary-foreground/70">
-            © 2026 {businessInfo?.businessName || 'NJET'}. All rights reserved.
+            © 2026 {businessInfo?.businessName || "NJET"}. All rights reserved.
           </div>
         </div>
       </footer>

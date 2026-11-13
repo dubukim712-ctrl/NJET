@@ -1,17 +1,18 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useForm, useWatch } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useRouter } from 'next/navigation';
-import { AlertCircle, Loader2, Mail, UserRound } from 'lucide-react';
-import { toast } from 'sonner';
-import { registerSchema, type RegisterInput } from '@/lib/validations/auth';
-import { registerAction } from '@/data/actions/auth';
-import { Input } from '@/components/ui/Input';
-import { PasswordInput } from '@/components/auth/PasswordInput';
-import { PasswordStrength } from '@/components/auth/PasswordStrength';
-import { AuthOptions } from '@/components/auth/AuthOptions';
+import { useState } from "react";
+import { useForm, useWatch } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
+import { AlertCircle, Loader2, Mail, UserRound } from "lucide-react";
+import { toast } from "sonner";
+import { registerSchema, type RegisterInput } from "@/lib/validations/auth";
+import { registerAction } from "@/data/actions/auth";
+import { Input } from "@/components/ui/Input";
+import { PasswordInput } from "@/components/auth/PasswordInput";
+import { PasswordStrength } from "@/components/auth/PasswordStrength";
+import { AuthOptions } from "@/components/auth/AuthOptions";
+import Link from "next/link";
 
 export function RegisterForm() {
   const router = useRouter();
@@ -27,29 +28,31 @@ export function RegisterForm() {
   } = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      email: '',
-      password: '',
-      confirmPassword: '',
-      fullName: '',
+      email: "",
+      password: "",
+      confirmPassword: "",
+      fullName: "",
     },
   });
 
-  const password = useWatch({ control, name: 'password' }) ?? '';
+  const password = useWatch({ control, name: "password" }) ?? "";
 
   const onSubmit = async (data: RegisterInput) => {
     setServerError(null);
 
     const formData = new FormData();
-    formData.set('email', data.email);
-    formData.set('password', data.password);
-    formData.set('confirmPassword', data.confirmPassword);
-    if (data.fullName) formData.set('fullName', data.fullName);
+    formData.set("email", data.email);
+    formData.set("password", data.password);
+    formData.set("confirmPassword", data.confirmPassword);
+    if (data.fullName) formData.set("fullName", data.fullName);
 
     const result = await registerAction(formData);
 
     if (result.success) {
-      toast.success('Account created! Check your email to verify your address.');
-      router.push('/login');
+      toast.success(
+        "Account created! Check your email to verify your address.",
+      );
+      router.push("/login");
     } else {
       setServerError(result.error);
       toast.error(result.error);
@@ -70,17 +73,24 @@ export function RegisterForm() {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
         <Input
           id="fullName"
-          label={<>Full name <span className="text-muted-foreground">(optional)</span></>}
+          label={
+            <>
+              Full name{" "}
+              <span className="text-muted-foreground">(optional)</span>
+            </>
+          }
           type="text"
           autoComplete="name"
           placeholder="Jane Doe"
           leadingIcon={<UserRound className="h-4 w-4" />}
           trailingIcon={
-            errors.fullName ? <AlertCircle className="h-4 w-4 text-destructive" /> : undefined
+            errors.fullName ? (
+              <AlertCircle className="h-4 w-4 text-destructive" />
+            ) : undefined
           }
           error={errors.fullName?.message}
           disabled={isSubmitting}
-          {...register('fullName')}
+          {...register("fullName")}
         />
 
         <Input
@@ -91,11 +101,13 @@ export function RegisterForm() {
           placeholder="you@example.com"
           leadingIcon={<Mail className="h-4 w-4" />}
           trailingIcon={
-            errors.email ? <AlertCircle className="h-4 w-4 text-destructive" /> : undefined
+            errors.email ? (
+              <AlertCircle className="h-4 w-4 text-destructive" />
+            ) : undefined
           }
           error={errors.email?.message}
           disabled={isSubmitting}
-          {...register('email')}
+          {...register("email")}
         />
 
         <div className="space-y-2">
@@ -111,7 +123,7 @@ export function RegisterForm() {
             onToggle={() => setShowPassword((value) => !value)}
             aria-describedby="password-requirements"
             disabled={isSubmitting}
-            {...register('password')}
+            {...register("password")}
           />
           <div id="password-requirements">
             <PasswordStrength password={password} />
@@ -130,7 +142,7 @@ export function RegisterForm() {
             show={showConfirmPassword}
             onToggle={() => setShowConfirmPassword((value) => !value)}
             disabled={isSubmitting}
-            {...register('confirmPassword')}
+            {...register("confirmPassword")}
           />
         </div>
 
@@ -150,11 +162,14 @@ export function RegisterForm() {
         >
           {isSubmitting ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+              <Loader2
+                className="mr-2 h-4 w-4 animate-spin"
+                aria-hidden="true"
+              />
               Creating account...
             </>
           ) : (
-            'Create account'
+            "Create account"
           )}
         </button>
       </form>
@@ -171,10 +186,13 @@ export function RegisterForm() {
       <AuthOptions disabled={isSubmitting} />
 
       <p className="mt-6 text-center text-sm text-muted-foreground">
-        Already have an account?{' '}
-        <a href="/login" className="font-medium text-primary hover:underline">
+        Already have an account?{" "}
+        <Link
+          href="/login"
+          className="font-medium text-primary hover:underline"
+        >
           Sign in
-        </a>
+        </Link>
       </p>
     </div>
   );
