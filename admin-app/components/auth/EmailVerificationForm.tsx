@@ -16,6 +16,8 @@ import {
 } from '@/data/actions/email-verification';
 import { SIGNUP_OTP_LENGTH } from '@/lib/validations/auth';
 
+const RESEND_COOLDOWN_SECONDS = 60;
+
 export function EmailVerificationForm() {
   const emailInput = useRef<HTMLInputElement>(null);
   const [code, setCode] = useState<string[]>(Array(SIGNUP_OTP_LENGTH).fill(''));
@@ -23,12 +25,32 @@ export function EmailVerificationForm() {
   const [notice, setNotice] = useState<string | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
   const [isResending, setIsResending] = useState(false);
+  const [resendAvailableAt, setResendAvailableAt] = useState<number | null>(null);
+  const [clockNow, setClockNow] = useState(0);
+  const resendCooldownSeconds =
+    resendAvailableAt === null
+      ? 0
+      : Math.max(0, Math.ceil((resendAvailableAt - clockNow) / 1000));
 
   useEffect(() => {
     if (emailInput.current) {
       emailInput.current.value = getRememberedVerificationEmail();
     }
   }, []);
+
+  useEffect(() => {
+    if (resendAvailableAt === null) return;
+
+    const interval = window.setInterval(() => {
+      const now = Date.now();
+      setClockNow(now);
+      if (now >= resendAvailableAt) {
+        window.clearInterval(interval);
+      }
+    }, 1000);
+
+    return () => window.clearInterval(interval);
+  }, [resendAvailableAt]);
 
   const handleVerify = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -76,6 +98,9 @@ export function EmailVerificationForm() {
         return;
       }
       setNotice(result.data.message);
+      const now = Date.now();
+      setClockNow(now);
+      setResendAvailableAt(now + RESEND_COOLDOWN_SECONDS * 1000);
     } catch {
       setError('Could not send a code right now. Please try again later.');
     } finally {
@@ -152,13 +177,21 @@ export function EmailVerificationForm() {
       <div className="mt-5 flex flex-wrap items-center justify-between gap-3 text-sm">
         <button
           type="button"
-          disabled={isVerifying || isResending}
+          disabled={
+            isVerifying || isResending || resendCooldownSeconds > 0
+          }
           onClick={() => {
             void handleResend();
           }}
           className="inline-flex min-h-10 items-center font-medium text-primary hover:underline disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {isResending ? 'Sending code...' : 'Resend code'}
+          {isResending
+            ? 'Sending code...'
+            : resendCooldownSeconds > 0
+              ? `Resend in ${Math.floor(resendCooldownSeconds / 60)}:${String(
+                  resendCooldownSeconds % 60
+                ).padStart(2, '0')}`
+              : 'Resend code'}
         </button>
         <Link href="/login" className="inline-flex min-h-10 items-center text-muted-foreground hover:text-foreground">
           Back to sign in
