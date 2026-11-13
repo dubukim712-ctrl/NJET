@@ -49,17 +49,19 @@ export function ProductPurchasePanel({
   const stockColor = {
     "out-of-stock": "text-destructive",
     "low-stock": "text-yellow-600",
-    "in-stock": "text-green-500",
+    "in-stock": "text-green-700",
+    default: "text-muted-foreground",
   };
 
-  const s = selectedVariant?.branchStock?.stock;
+  const stock = selectedVariant?.branchStock?.stock;
 
-  const stockAlert =
-    s == null
-      ? stockColor["out-of-stock"]
-      : s === 0
+  const stockAlert = !selectedVariant?.available
+    ? stockColor["out-of-stock"] // Red when available === false
+    : stock == null
+      ? stockColor["in-stock"] // Green when available === true and stock is null
+      : stock === 0
         ? stockColor["out-of-stock"]
-        : s < 3
+        : stock < 3
           ? stockColor["low-stock"]
           : stockColor["in-stock"];
 
