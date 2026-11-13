@@ -17,13 +17,17 @@ export async function getCommerceManagementData(supabase: SupabaseClient) {
       transfersResult,
     ] = await Promise.all([
       supabase.from('products').select('*').order('name').limit(200),
-      supabase.from('product_variants').select('*').order('name').limit(500),
+      supabase.rpc('admin_product_variants'),
       supabase.from('branch_inventory').select('*').limit(2000),
       supabase.from('branches').select('*').order('name').limit(100),
       supabase.rpc('transfer_branch_options'),
       supabase.from('product_categories').select('*').order('name').limit(300),
       supabase.from('product_subcategories').select('*').order('category_id').order('name').limit(300),
-      supabase.from('ebike_units').select('*').in('status', ['needs_identification', 'in_stock', 'in_transit']).order('created_at').limit(2000),
+      supabase.from('ebike_units')
+        .select('id, variant_id, branch_id, serial_number, motor_number, status, order_item_id, transfer_id, created_at')
+        .in('status', ['needs_identification', 'in_stock', 'in_transit'])
+        .order('created_at')
+        .limit(2000),
       supabase.from('inventory_movements').select('*').order('created_at', { ascending: false }).limit(200),
       supabase.from('branch_transfers').select('*').order('dispatched_at', { ascending: false }).limit(50),
     ]);

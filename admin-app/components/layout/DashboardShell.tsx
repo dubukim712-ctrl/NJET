@@ -17,7 +17,7 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
 
   return (
     <div className="min-h-dvh bg-background">
-      <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 print:hidden">
         <div className="flex h-16 items-center gap-3 px-4 sm:px-6">
           <button
             type="button"
@@ -42,11 +42,11 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
       <div className="flex">
         <Sidebar
           user={user}
-          className="sticky top-16 hidden h-[calc(100vh-4rem)] lg:flex"
+          className="sticky top-16 hidden h-[calc(100vh-4rem)] lg:flex print:hidden"
         />
 
         {mobileOpen && (
-          <div className="fixed inset-0 z-50 lg:hidden">
+          <div className="fixed inset-0 z-50 lg:hidden print:hidden">
             <button
               type="button"
               className="absolute inset-0 bg-black/50"
@@ -74,7 +74,7 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
           </div>
         )}
 
-        <main className="min-w-0 flex-1 p-4 pb-16 sm:p-6 sm:pb-6 lg:p-8 lg:pb-8">
+        <main className="min-w-0 flex-1 p-4 pb-16 sm:p-6 sm:pb-6 lg:p-8 lg:pb-8 print:p-0">
           {children}
         </main>
       </div>

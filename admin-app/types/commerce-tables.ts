@@ -2,6 +2,8 @@ export type ProductType = 'ebike' | 'part' | 'accessory';
 export type Fulfillment = 'pickup' | 'delivery';
 export type PaymentMethod = 'cash' | 'online' | 'home_credit';
 export type PaymentProvider = 'gcash' | 'bank_transfer' | 'card';
+export type OrderPaymentMethod = PaymentMethod | 'other';
+export type OrderPaymentTransactionType = 'collection' | 'refund' | 'financing';
 export type OrderStatus =
   | 'awaiting_payment'
   | 'awaiting_confirmation'
@@ -68,13 +70,14 @@ type ProductCategory = {
   updated_at: string;
 };
 
-type ProductVariant = {
+export type ProductVariant = {
   id: string;
   product_id: string;
   sku: string;
   name: string;
   specifications: Record<string, string> | null;
   price_minor: number;
+  cost_minor: number | null;
   reservation_minor: number;
   home_credit_downpayment_minor: number;
   image_path: string | null;
@@ -120,7 +123,7 @@ type InventoryMovement = {
   quantity_delta: number;
   movement_type: 'opening_balance' | 'adjustment' | 'order_confirmed'
     | 'order_cancelled' | 'serial_identified' | 'serial_stock_received'
-    | 'transfer_dispatched' | 'transfer_received';
+    | 'stock_received' | 'transfer_dispatched' | 'transfer_received';
   reference_id: string | null;
   note: string | null;
   actor_id: string | null;
@@ -192,10 +195,12 @@ type Order = {
   privacy_version: string | null;
   terms_accepted_at: string | null;
   privacy_accepted_at: string | null;
+  sales_agent_id: string | null;
   confirmed_by: string | null;
   confirmed_at: string | null;
   cancelled_by: string | null;
   cancelled_at: string | null;
+  completed_at: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -210,7 +215,24 @@ type OrderItem = {
   sku: string;
   quantity: number;
   unit_price_minor: number;
+  unit_cost_minor: number | null;
+  cost_total_minor: number | null;
   reservation_unit_minor: number;
+  created_at: string;
+};
+
+type OrderPaymentTransaction = {
+  id: string;
+  order_id: string;
+  transaction_type: OrderPaymentTransactionType;
+  payment_method: OrderPaymentMethod;
+  payment_provider: PaymentProvider | null;
+  amount_minor: number;
+  is_downpayment: boolean;
+  reference: string | null;
+  note: string | null;
+  source_event: string | null;
+  recorded_by: string | null;
   created_at: string;
 };
 
@@ -370,6 +392,7 @@ export type CommerceTables = {
   delivery_zones: Table<DeliveryZone>;
   orders: Table<Order>;
   order_items: Table<OrderItem>;
+  order_payment_transactions: Table<OrderPaymentTransaction>;
   order_documents: Table<OrderDocument>;
   order_invoices: Table<OrderInvoice>;
   order_certificates: Table<OrderCertificate>;

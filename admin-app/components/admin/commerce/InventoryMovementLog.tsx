@@ -9,6 +9,7 @@ const LABELS: Record<Movement["movement_type"], string> = {
   order_cancelled: "Order cancelled",
   serial_identified: "E-bike identified",
   serial_stock_received: "E-bike received",
+  stock_received: "Stock received",
   transfer_dispatched: "Transfer dispatched",
   transfer_received: "Transfer received",
 };

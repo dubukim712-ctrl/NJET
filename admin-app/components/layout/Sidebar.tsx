@@ -63,9 +63,21 @@ const ADMIN_NAVIGATION: NavGroup[] = [
         permission: PERMISSIONS.productsRead,
       },
       {
+        name: "Inventory valuation",
+        href: "/admin/inventory",
+        icon: Package,
+        permission: PERMISSIONS.productsManage,
+      },
+      {
         name: "Orders",
         href: "/admin/orders",
         icon: ClipboardList,
+        permission: PERMISSIONS.ordersRead,
+      },
+      {
+        name: "Sales report",
+        href: "/admin/reports",
+        icon: ChartNoAxesColumnIncreasing,
         permission: PERMISSIONS.ordersRead,
       },
       {

@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Users } from 'lucide-react';
 import { EmptyState } from '@/components/layout/EmptyState';
-import { AdminDataFallback } from '@/components/admin/AdminDataFallback';
+import { UsersLoadingSkeleton } from '@/components/rbac/UsersLoadingSkeleton';
 import { UsersFilters } from '@/components/rbac/UsersFilters';
 import { UsersTable } from '@/components/rbac/UsersTable';
 import { TablePagination } from '@/components/ui/TablePagination';
@@ -44,7 +44,12 @@ export function UsersQuery({
   }, [outOfRange, page, roleId, router, search, totalPages]);
 
   if (!query.data && query.isPending) {
-    return <AdminDataFallback label="users" />;
+    return (
+      <UsersLoadingSkeleton
+        canManage={canManage}
+        hasFilters={Boolean(search || roleId)}
+      />
+    );
   }
 
   if (!query.data) {
@@ -66,7 +71,14 @@ export function UsersQuery({
     );
   }
 
-  if (outOfRange) return <AdminDataFallback label="users" />;
+  if (outOfRange) {
+    return (
+      <UsersLoadingSkeleton
+        canManage={canManage}
+        hasFilters={Boolean(search || roleId)}
+      />
+    );
+  }
 
   const { users, roles, branches, actor, errors, total, pageSize } = query.data;
 

@@ -15,6 +15,7 @@ import {
 import { RealtimeStatus } from "@/components/realtime/RealtimeStatus";
 import { useRealtimeChanges } from "@/components/realtime/useRealtimeChanges";
 import { StaffServiceAppointmentCard } from "@/components/admin/appointments/StaffServiceAppointmentCard";
+import { StaffServiceAppointmentsSkeleton } from "@/components/admin/appointments/StaffServiceAppointmentsSkeleton";
 import { StaffServiceAppointmentManagementTabs } from "@/components/admin/appointments/StaffServiceAppointmentManagementTabs";
 import {
   StaffServiceAppointmentTabList,
@@ -72,6 +73,10 @@ export function StaffServiceAppointments({
   );
   const branches = optionsQuery.data?.branches ?? [];
   const selectedTab = canManage ? activeTab : "appointments";
+  const isInitialAppointmentsLoad =
+    selectedTab === "appointments" &&
+    !appointmentsQuery.data &&
+    appointmentsQuery.isPending;
 
   function updateFilter(field: keyof ServiceAppointmentFilters, value: string) {
     setOpenAppointmentId(null);
@@ -102,7 +107,9 @@ export function StaffServiceAppointments({
             Review customer requests, confirm schedules, and track service work.
           </p>
         </div>
-        <RealtimeStatus state={realtimeState} />
+        {!isInitialAppointmentsLoad && (
+          <RealtimeStatus state={realtimeState} />
+        )}
       </header>
 
       <StaffServiceAppointmentTabList
@@ -190,17 +197,7 @@ export function StaffServiceAppointments({
               </Button>
             </div>
           )}
-          {!appointmentsQuery.data && appointmentsQuery.isPending && (
-            <div
-              className="space-y-3"
-              role="status"
-              aria-label="Loading appointments"
-              aria-busy="true"
-            >
-              <div className="h-48 animate-pulse rounded-xl border bg-card" />
-              <div className="h-48 animate-pulse rounded-xl border bg-card" />
-            </div>
-          )}
+          {isInitialAppointmentsLoad && <StaffServiceAppointmentsSkeleton />}
           {!appointmentsQuery.data && appointmentsQuery.isError && (
             <div className="space-y-3">
               <p

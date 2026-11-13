@@ -189,6 +189,14 @@ export function StaffLandingPage() {
         profile={profile}
         branchName={branchContext.selectedBranchName}
         quickActions={quickActionsSection}
+        sections={{
+          orders: showOrders,
+          jobs: showJobs,
+          inventory: showInventory,
+          team: showTeam,
+          isSales,
+          isTechnician,
+        }}
         data={query.data?.data}
         isPending={query.isPending}
         isError={query.isError}

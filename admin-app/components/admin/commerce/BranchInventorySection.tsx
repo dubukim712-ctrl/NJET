@@ -41,7 +41,7 @@ export function BranchInventorySection({
   const productById = new Map(products.map((product) => [product.id, product]));
   const stockVariants = variants.flatMap((variant) => {
     const product = productById.get(variant.product_id);
-    return product
+    return product && product.active && variant.active
       ? [{
           id: variant.id,
           name: variant.name,

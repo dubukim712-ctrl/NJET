@@ -2,6 +2,27 @@ import { z } from 'zod';
 
 const slug = z.string().trim().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/).max(100);
 
+export const completeOrderWithPaymentSchema = z.object({
+  orderId: z.string().uuid(),
+  amountMinor: z.number().int().min(0).max(2147483647),
+  paymentMethod: z.enum(['cash', 'online', 'other']).nullable(),
+  paymentProvider: z.enum(['gcash', 'bank_transfer', 'card']).nullable(),
+  reference: z.string().trim().max(120).nullable(),
+}).strict().superRefine(({ amountMinor, paymentMethod, paymentProvider, reference }, context) => {
+  if (amountMinor === 0 && (paymentMethod !== null || paymentProvider !== null || reference !== null)) {
+    context.addIssue({ code: 'custom', message: 'Payment details must be empty when no amount was collected.' });
+  }
+  if (amountMinor > 0 && paymentMethod === null) {
+    context.addIssue({ code: 'custom', path: ['paymentMethod'], message: 'Choose a payment method.' });
+  }
+  if (paymentMethod === 'online' && paymentProvider === null) {
+    context.addIssue({ code: 'custom', path: ['paymentProvider'], message: 'Choose an online payment provider.' });
+  }
+  if (paymentMethod !== 'online' && paymentProvider !== null) {
+    context.addIssue({ code: 'custom', path: ['paymentProvider'], message: 'A provider is only valid for online payments.' });
+  }
+});
+
 export const productAdminSchema = z.object({
   id: z.string().uuid().nullable(),
   slug,
@@ -65,10 +86,37 @@ export const ebikeInventoryAdminSchema = z.object({
   branchId: z.string().uuid(),
   variantId: z.string().uuid(),
   units: z.array(z.object({
-    unitId: z.string().uuid().nullable(),
+    unitId: z.string().uuid(),
     serialNumber,
     motorNumber: serialNumber,
   })).min(1).max(50),
+});
+
+export const inventoryReceiptAdminSchema = z.object({
+  branchId: z.string().uuid(),
+  supplierName: z.string().trim().min(2).max(120)
+    .refine((value) => !/[\u0000-\u001f\u007f]/.test(value)),
+  documentReference: z.string().trim().max(120).nullable(),
+  receivedAt: z.string().datetime(),
+  sharedCostMinor: z.number().int().min(0).max(2147483647),
+  items: z.array(z.object({
+    variantId: z.string().uuid(),
+    quantity: z.number().int().min(1).max(1000000),
+    unitSupplierCostMinor: z.number().int().min(0).max(2147483647),
+    units: z.array(z.object({
+      serialNumber,
+      motorNumber: serialNumber,
+    }).strict()).max(50),
+  }).strict()).min(1).max(30),
+}).strict().superRefine(({ items }, context) => {
+  if (new Set(items.map((item) => item.variantId)).size !== items.length) {
+    context.addIssue({ code: 'custom', path: ['items'], message: 'Each variant can appear only once.' });
+  }
+  const serials = items.flatMap((item) => item.units.map((unit) => unit.serialNumber.toUpperCase()));
+  const motors = items.flatMap((item) => item.units.map((unit) => unit.motorNumber.toUpperCase()));
+  if (new Set(serials).size !== serials.length || new Set(motors).size !== motors.length) {
+    context.addIssue({ code: 'custom', path: ['items'], message: 'Serial and motor numbers must be unique.' });
+  }
 });
 
 export const subcategoryAdminSchema = z.object({

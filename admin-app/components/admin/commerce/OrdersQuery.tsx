@@ -1,8 +1,9 @@
 'use client';
 
 import { useCallback } from 'react';
-import { AdminDataFallback } from '@/components/admin/AdminDataFallback';
+import Link from 'next/link';
 import { OrderManager } from '@/components/admin/commerce/OrderManager';
+import { OrdersLoadingSkeleton } from '@/components/admin/commerce/OrdersLoadingSkeleton';
 import { RealtimeStatus } from '@/components/realtime/RealtimeStatus';
 import { Button } from '@/components/ui/Button';
 import {
@@ -28,6 +29,26 @@ const MANAGER_REALTIME_TABLES: RealtimeTable[] = [
   'order_home_credit_details',
 ];
 
+function OrdersHeaderAction({
+  canManage,
+  realtimeState,
+}: {
+  canManage: boolean;
+  realtimeState: ReturnType<typeof useRealtimeChanges>;
+}) {
+  return (
+    <div className="flex justify-end">
+      {canManage ? (
+        <Button type="button" asChild>
+          <Link href="/admin/orders/new">Create walk-in sale</Link>
+        </Button>
+      ) : (
+        <RealtimeStatus state={realtimeState} />
+      )}
+    </div>
+  );
+}
+
 export function OrdersQuery({
   filters,
   canManage,
@@ -51,10 +72,10 @@ export function OrdersQuery({
 
   if (!query.data && query.isPending) {
     return (
-      <div className="space-y-3">
-        <div className="flex justify-end"><RealtimeStatus state={realtimeState} /></div>
-        <AdminDataFallback label="orders" />
-      </div>
+      <OrdersLoadingSkeleton
+        canManage={canManage}
+        hasFilters={Boolean(filters.q || filters.status || filters.branch)}
+      />
     );
   }
 
@@ -64,7 +85,7 @@ export function OrdersQuery({
       : 'Orders could not be loaded. Please try again later.';
     return (
       <div className="space-y-3">
-        <div className="flex justify-end"><RealtimeStatus state={realtimeState} /></div>
+        <OrdersHeaderAction canManage={canManage} realtimeState={realtimeState} />
         <p className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive" role="alert">
           {message}
         </p>
@@ -77,7 +98,9 @@ export function OrdersQuery({
 
   return (
     <>
-      <div className="mb-3 flex justify-end"><RealtimeStatus state={realtimeState} /></div>
+      <div className="mb-3">
+        <OrdersHeaderAction canManage={canManage} realtimeState={realtimeState} />
+      </div>
       {query.isError && (
         <p className="mb-4 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive" role="alert">
           {query.error instanceof AdminOrdersQueryError

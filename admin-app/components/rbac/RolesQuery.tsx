@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { Plus, ShieldCheck } from 'lucide-react';
 import { EmptyState } from '@/components/layout/EmptyState';
-import { AdminDataFallback } from '@/components/admin/AdminDataFallback';
+import { RolesLoadingSkeleton } from '@/components/rbac/RolesLoadingSkeleton';
 import { RolesTable } from '@/components/rbac/RolesTable';
 import { Button } from '@/components/ui/Button';
 import {
@@ -21,7 +21,7 @@ export function RolesQuery({
   const query = useAdminRolesQuery(userId, canManage);
 
   if (!query.data && query.isPending) {
-    return <AdminDataFallback label="roles" />;
+    return <RolesLoadingSkeleton canManage={canManage} />;
   }
 
   if (!query.data) {

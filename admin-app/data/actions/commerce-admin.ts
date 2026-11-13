@@ -12,6 +12,7 @@ import {
   deliveryZoneAdminSchema,
   ebikeInventoryAdminSchema,
   inventoryAdminSchema,
+  inventoryReceiptAdminSchema,
   productCategoryAdminSchema,
   productAdminSchema,
   subcategoryAdminSchema,
@@ -28,7 +29,7 @@ const productImagePathSchema = z.string().regex(/^images\/[0-9a-f]{8}-[0-9a-f]{4
 
 async function updateCommerceOrderStatus(
   payload: unknown,
-  rpc: 'confirm_commerce_order' | 'cancel_commerce_order' | 'complete_commerce_order'
+  rpc: 'confirm_commerce_order' | 'cancel_commerce_order'
 ): Promise<ActionResult> {
   const { supabase } = await requirePermission(PERMISSIONS.ordersManage, '/admin/orders');
   const parsed = orderIdSchema.safeParse(payload);
@@ -50,10 +51,6 @@ export async function confirmCommerceOrderAction(payload: unknown) {
 
 export async function cancelCommerceOrderAction(payload: unknown) {
   return updateCommerceOrderStatus(payload, 'cancel_commerce_order');
-}
-
-export async function completeCommerceOrderAction(payload: unknown) {
-  return updateCommerceOrderStatus(payload, 'complete_commerce_order');
 }
 
 export async function completeHomeCreditCommerceOrderAction(
@@ -134,6 +131,44 @@ export async function saveCommerceInventoryAction(payload: unknown): Promise<Act
     return { success: true, data: undefined };
   } catch (error) {
     return failure(error, 'Could not update stock.');
+  }
+}
+
+export async function createInventoryReceiptAction(payload: unknown): Promise<ActionResult> {
+  const { supabase } = await requirePermission(PERMISSIONS.productsManage, '/admin/products');
+  const parsed = inventoryReceiptAdminSchema.safeParse(payload);
+  if (!parsed.success) {
+    return {
+      success: false,
+      error: 'Check the supplier, date, and received product details.',
+      fieldErrors: parsed.error.flatten().fieldErrors,
+    };
+  }
+  try {
+    const { error } = await supabase.rpc('create_inventory_receipt', {
+      p_branch_id: parsed.data.branchId,
+      p_supplier_name: parsed.data.supplierName,
+      p_document_reference: parsed.data.documentReference,
+      p_received_at: parsed.data.receivedAt,
+      p_shared_cost_minor: parsed.data.sharedCostMinor,
+      p_items: parsed.data.items.map((item) => ({
+        variant_id: item.variantId,
+        quantity: item.quantity,
+        unit_supplier_cost_minor: item.unitSupplierCostMinor,
+        units: item.units.map((unit) => ({
+          serial_number: unit.serialNumber,
+          motor_number: unit.motorNumber,
+        })),
+      })),
+    });
+    if (error) return failure(error, error.message);
+    revalidatePath('/admin/products');
+    revalidatePath('/admin/inventory');
+    revalidatePath('/shop');
+    revalidatePath('/shop/view-product/[slug]', 'page');
+    return { success: true, data: undefined };
+  } catch (error) {
+    return failure(error, 'Could not record this inventory receipt.');
   }
 }
 

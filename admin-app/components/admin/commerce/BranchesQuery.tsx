@@ -1,7 +1,7 @@
 'use client';
 
-import { AdminDataFallback } from '@/components/admin/AdminDataFallback';
 import { BranchManager } from '@/components/admin/commerce/BranchManager';
+import { BranchesLoadingSkeleton } from '@/components/admin/commerce/BranchesLoadingSkeleton';
 import { Button } from '@/components/ui/Button';
 import {
   AdminBranchesQueryError,
@@ -27,7 +27,11 @@ export function BranchesQuery({
   );
 
   if (!query.data && query.isPending) {
-    return <AdminDataFallback label="branch data" />;
+    return (
+      <BranchesLoadingSkeleton
+        canCreateBranch={canManage && !isBranchScopedStaff}
+      />
+    );
   }
 
   if (!query.data) {

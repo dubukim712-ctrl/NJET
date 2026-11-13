@@ -1,7 +1,7 @@
 'use client';
 
-import { AdminDataFallback } from '@/components/admin/AdminDataFallback';
 import { DeliveryZoneManager } from '@/components/admin/commerce/DeliveryZoneManager';
+import { DeliveryZonesLoadingSkeleton } from '@/components/admin/commerce/DeliveryZonesLoadingSkeleton';
 import { Button } from '@/components/ui/Button';
 import {
   AdminDeliveryZonesQueryError,
@@ -18,7 +18,7 @@ export function DeliveryZonesQuery({
   const query = useAdminDeliveryZonesQuery(userId, canManage);
 
   if (!query.data && query.isPending) {
-    return <AdminDataFallback label="delivery zones" />;
+    return <DeliveryZonesLoadingSkeleton canManage={canManage} />;
   }
 
   if (!query.data) {

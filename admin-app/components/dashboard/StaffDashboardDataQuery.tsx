@@ -1,18 +1,19 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { AdminDataFallback } from '@/components/admin/AdminDataFallback';
 import { Button } from '@/components/ui/Button';
 import type { StaffDashboardData } from '@/data/dashboard/queries';
 import type { UserProfile } from '@/types/database';
 import { StaffDashboardActivity } from './StaffDashboardActivity';
 import { StaffDashboardOperations } from './StaffDashboardOperations';
 import { DashboardMetrics } from './StaffDashboardWidgets';
+import { StaffDashboardSkeleton } from './StaffDashboardSkeleton';
 
 export function StaffDashboardDataQuery({
   profile,
   branchName,
   quickActions,
+  sections,
   data,
   isPending,
   isError,
@@ -22,6 +23,14 @@ export function StaffDashboardDataQuery({
   profile: UserProfile;
   branchName: string | null;
   quickActions: ReactNode;
+  sections: {
+    orders: boolean;
+    jobs: boolean;
+    inventory: boolean;
+    team: boolean;
+    isSales: boolean;
+    isTechnician: boolean;
+  };
   data: StaffDashboardData | undefined;
   isPending: boolean;
   isError: boolean;
@@ -29,12 +38,7 @@ export function StaffDashboardDataQuery({
   onRetry: () => void;
 }) {
   if (!data && isPending) {
-    return (
-      <>
-        {quickActions}
-        <AdminDataFallback label="dashboard overview" />
-      </>
-    );
+    return <StaffDashboardSkeleton quickActions={quickActions} sections={sections} />;
   }
 
   if (!data) {

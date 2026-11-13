@@ -1,8 +1,8 @@
 'use client';
 
 import { useCallback } from 'react';
-import { AdminDataFallback } from '@/components/admin/AdminDataFallback';
 import { ProductManager } from '@/components/admin/commerce/ProductManager';
+import { ProductsLoadingSkeleton } from '@/components/admin/commerce/ProductsLoadingSkeleton';
 import { RealtimeStatus } from '@/components/realtime/RealtimeStatus';
 import { useRealtimeChanges } from '@/components/realtime/useRealtimeChanges';
 import { Button } from '@/components/ui/Button';
@@ -55,14 +55,7 @@ export function ProductsQuery({
   );
 
   if (!query.data && query.isPending) {
-    return (
-      <div className="space-y-4">
-        <div className="flex justify-end">
-          <RealtimeStatus state={realtimeState} />
-        </div>
-        <AdminDataFallback label="product and stock data" />
-      </div>
-    );
+    return <ProductsLoadingSkeleton canManageProducts={canManageProducts} />;
   }
 
   if (!query.data) {

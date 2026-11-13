@@ -56,7 +56,7 @@ export function VariantEditor({
         !Number.isFinite(reservation) ||
         !Number.isFinite(homeCreditDownpayment)
       ) {
-        const message = 'Enter valid prices in PHP.';
+        const message = 'Enter valid selling and payment amounts in PHP.';
         setError(message);
         toast.error(message);
         return;

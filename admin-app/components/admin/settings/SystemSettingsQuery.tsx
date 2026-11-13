@@ -1,7 +1,7 @@
 'use client';
 
-import { AdminDataFallback } from '@/components/admin/AdminDataFallback';
 import { SystemSettingsManager } from '@/components/admin/settings/SystemSettingsManager';
+import { SystemSettingsLoadingSkeleton } from '@/components/admin/settings/SystemSettingsLoadingSkeleton';
 import { Button } from '@/components/ui/Button';
 import {
   AdminSystemSettingsQueryError,
@@ -12,7 +12,7 @@ export function SystemSettingsQuery({ userId }: { userId: string }) {
   const query = useAdminSystemSettingsQuery(userId);
 
   if (!query.data && query.isPending) {
-    return <AdminDataFallback label="settings" />;
+    return <SystemSettingsLoadingSkeleton />;
   }
 
   if (!query.data) {

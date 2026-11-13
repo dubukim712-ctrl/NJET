@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ScrollText } from 'lucide-react';
-import { AdminDataFallback } from '@/components/admin/AdminDataFallback';
+import { AuditLogsLoadingSkeleton } from '@/components/audit/AuditLogsLoadingSkeleton';
 import { AuditLogFilters } from '@/components/audit/AuditLogFilters';
 import { AuditLogsTable } from '@/components/audit/AuditLogsTable';
 import { AuditPagination } from '@/components/audit/AuditPagination';
@@ -51,7 +51,12 @@ export function AuditLogsQuery({
   }, [action, outOfRange, page, router, table, totalPages]);
 
   if (!query.data && query.isPending) {
-    return <AdminDataFallback label="audit logs" />;
+    return (
+      <AuditLogsLoadingSkeleton
+        canClear={canClear}
+        hasFilters={Boolean(action || table)}
+      />
+    );
   }
 
   if (!query.data) {
@@ -70,7 +75,14 @@ export function AuditLogsQuery({
     );
   }
 
-  if (outOfRange) return <AdminDataFallback label="audit logs" />;
+  if (outOfRange) {
+    return (
+      <AuditLogsLoadingSkeleton
+        canClear={canClear}
+        hasFilters={Boolean(action || table)}
+      />
+    );
+  }
 
   const { logs, total, pageSize, error, canClear: canClearFromServer } =
     query.data;
