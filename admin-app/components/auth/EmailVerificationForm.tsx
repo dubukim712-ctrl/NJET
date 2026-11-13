@@ -97,6 +97,7 @@ export function EmailVerificationForm() {
       <form onSubmit={handleVerify} className="space-y-5">
         <Input
           id="verification-email"
+          name="email"
           label="Email"
           type="email"
           autoComplete="email"
