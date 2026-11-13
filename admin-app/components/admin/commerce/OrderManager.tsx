@@ -16,7 +16,7 @@ import type {
 import { CompletedOrderDocuments } from "@/components/admin/commerce/CompletedOrderDocuments";
 import { HomeCreditOrderSummary } from "@/components/admin/commerce/HomeCreditOrderSummary";
 import { HomeCreditOrderCompletionForm } from "@/components/admin/commerce/HomeCreditOrderCompletionForm";
-import { OrderStatusBadge } from "@/components/admin/commerce/OrderStatusBadge";
+import { OrderStatusBadge } from "@/components/commerce/OrderStatusBadge";
 import { OrdersFilters } from "@/components/admin/commerce/OrdersFilters";
 import { Button } from "@/components/ui/Button";
 import { formatPhp } from "@/lib/commerce";

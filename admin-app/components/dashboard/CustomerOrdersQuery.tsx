@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Package } from 'lucide-react';
 import { useAuth } from '@/components/auth/AuthProvider';
+import { OrderStatusBadge } from '@/components/commerce/OrderStatusBadge';
 import { Button } from '@/components/ui/Button';
 import { RealtimeStatus } from '@/components/realtime/RealtimeStatus';
 import {
@@ -141,9 +142,7 @@ export function CustomerOrdersQuery() {
                     </p>
                   </div>
                 </div>
-                <span className="rounded-full bg-secondary px-3 py-1 text-xs font-medium capitalize">
-                  {order.status.replaceAll('_', ' ')}
-                </span>
+                <OrderStatusBadge status={order.status} />
                 {(order.status === 'awaiting_payment' ||
                   ((order.payment_method === 'online' ||
                     (order.payment_method === 'home_credit' &&
