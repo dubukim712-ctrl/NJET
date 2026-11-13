@@ -114,8 +114,8 @@ export function ProductPurchasePanel({
             <p className={`text-sm ${stockAlert} font-bold`}>
               {selectedVariant.available
                 ? selectedVariant.branchStock?.stock === null
-                  ? "Available at this branch"
-                  : `${selectedVariant.branchStock?.stock ?? 0} available`
+                  ? "Available"
+                  : `${selectedVariant.branchStock?.stock ?? 0} stock(s) left`
                 : "Out of stock"}
             </p>
           </div>
