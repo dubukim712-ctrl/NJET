@@ -64,6 +64,8 @@ export function LoginForm() {
   const queryErrorMessages: Record<string, string> = {
     auth_callback_failed: "We couldn't complete sign in. Please try again.",
     recovery_link_expired: "That reset link has expired. Request a new one.",
+    oauth_password_signin_required:
+      "This email uses password sign-in. Please sign in with your email and password.",
   };
   const initialError = queryError
     ? (queryErrorMessages[queryError] ?? "Sign in failed. Please try again.")

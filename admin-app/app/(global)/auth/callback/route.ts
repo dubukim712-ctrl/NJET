@@ -18,6 +18,7 @@ export async function GET(request: NextRequest) {
   const tokenHash = searchParams.get('token_hash');
   const type = searchParams.get('type') as EmailOtpType | null;
   const requestedNext = safeNext(searchParams.get('next'));
+  const isOAuthCallback = Boolean(code) && requestedNext !== '/reset-password';
 
   const supabase = await createClient();
 
@@ -39,6 +40,26 @@ export async function GET(request: NextRequest) {
       const {
         data: { user },
       } = await supabase.auth.getUser();
+
+      const emailIdentity = user?.identities?.find(
+        (identity) => identity.provider === 'email'
+      );
+      const googleIdentity = user?.identities?.find(
+        (identity) => identity.provider === 'google'
+      );
+
+      if (isOAuthCallback && emailIdentity && googleIdentity) {
+        try {
+          await supabase.auth.unlinkIdentity(googleIdentity);
+        } finally {
+          const { error } = await supabase.auth.signOut({ scope: 'local' });
+          if (error) throw error;
+        }
+
+        const loginUrl = new URL('/login', origin);
+        loginUrl.searchParams.set('error', 'oauth_password_signin_required');
+        return NextResponse.redirect(loginUrl);
+      }
 
       let profile: {
         scope: 'staff' | 'customer';
