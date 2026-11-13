@@ -142,7 +142,7 @@ export function StorefrontHomePage() {
             text: "Your order is checked by our team.",
           },
         ].map((item) => (
-          <div key={item.title} className="flex gap-3">
+          <div key={item.title} className="flex md:justify-center gap-3">
             <item.icon
               className="mt-0.5 h-5 w-5 shrink-0 text-primary"
               aria-hidden="true"
