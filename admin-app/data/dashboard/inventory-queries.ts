@@ -1,11 +1,13 @@
 import type { createClient } from '@/data/supabase/server';
+import type { DashboardBranchOption } from './branch-context';
 import type { DashboardSection, InventoryOverview } from './types';
 
 type SupabaseClient = Awaited<ReturnType<typeof createClient>>;
 
 export async function loadDashboardInventory(
   supabase: SupabaseClient,
-  branchId: string | null
+  branchId: string | null,
+  branches: DashboardBranchOption[]
 ): Promise<DashboardSection<InventoryOverview>> {
   try {
     let outOfStockQuery = supabase
@@ -48,6 +50,7 @@ export async function loadDashboardInventory(
 
     const variantById = new Map(variants.map((variant) => [variant.id, variant]));
     const productNameById = new Map(products.map((product) => [product.id, product.name]));
+    const branchNameById = new Map(branches.map((branch) => [branch.id, branch.name]));
     return {
       data: {
         outOfStockCount: outOfStockResult.count ?? 0,
@@ -60,6 +63,7 @@ export async function loadDashboardInventory(
             name: productName ? `${productName} · ${variant.name}` : variant.name,
             sku: variant.sku,
             stock: item.stock,
+            branchName: branchNameById.get(item.branch_id) ?? null,
           }];
         }),
       },

@@ -12,9 +12,17 @@ const ORDER_STATUS_COLORS: Record<OrderStatus, string> = {
     'bg-green-100 text-green-900 dark:bg-green-900/30 dark:text-green-200',
 };
 
-export function OrderStatusBadge({ status }: { status: OrderStatus }) {
+function isOrderStatus(status: string): status is OrderStatus {
+  return Object.prototype.hasOwnProperty.call(ORDER_STATUS_COLORS, status);
+}
+
+export function OrderStatusBadge({ status }: { status: string }) {
+  const colorClass = isOrderStatus(status)
+    ? ORDER_STATUS_COLORS[status]
+    : 'bg-secondary text-secondary-foreground';
+
   return (
-    <span className={`rounded-full px-3 py-1 text-xs font-medium capitalize ${ORDER_STATUS_COLORS[status]}`}>
+    <span className={`rounded-full px-3 py-1 text-xs font-medium capitalize ${colorClass}`}>
       {status.replaceAll('_', ' ')}
     </span>
   );

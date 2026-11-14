@@ -2,6 +2,7 @@ import type { createClient } from '@/data/supabase/server';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 import type { UserProfile } from '@/types/database';
 import type { ServiceAppointmentStatus } from '@/types/commerce-tables';
+import type { DashboardBranchOption } from './branch-context';
 import type {
   AppointmentsOverview,
   DashboardSection,
@@ -220,7 +221,8 @@ async function loadAppointments(
 export async function getStaffDashboardData(
   supabase: SupabaseClient,
   profile: UserProfile,
-  selectedBranchId: string | null
+  selectedBranchId: string | null,
+  branches: DashboardBranchOption[]
 ): Promise<StaffDashboardData> {
   const isBranchScopedStaff = profile.scope === 'staff' && !profile.is_full_access;
   const branchId = isBranchScopedStaff ? profile.branch_id : selectedBranchId;
@@ -235,7 +237,7 @@ export async function getStaffDashboardData(
     canLoadBranchData &&
     (hasPermission(profile, PERMISSIONS.productsRead) ||
       hasPermission(profile, PERMISSIONS.productsManage))
-      ? loadDashboardInventory(supabase, branchId)
+      ? loadDashboardInventory(supabase, branchId, branches)
       : Promise.resolve(null),
     canLoadBranchData && hasPermission(profile, PERMISSIONS.usersRead)
       ? loadDashboardTeamMembers(supabase, branchId)

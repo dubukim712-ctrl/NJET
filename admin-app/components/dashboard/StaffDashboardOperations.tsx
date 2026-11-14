@@ -1,9 +1,17 @@
 import { Boxes, ShoppingBag, Wrench } from 'lucide-react';
+import { ServiceAppointmentStatusBadge } from '@/components/appointments/ServiceAppointmentStatusBadge';
 import { formatPhp } from '@/lib/commerce';
+import { OrderStatusBadge } from '@/components/commerce/OrderStatusBadge';
 import { formatDashboardDate, EmptyState, LoadError, PanelHeader } from './StaffDashboardWidgets';
 import type { StaffDashboardData } from '@/data/dashboard/queries';
 
-export function StaffDashboardOperations({ data }: { data: StaffDashboardData }) {
+export function StaffDashboardOperations({
+  data,
+  showInventoryBranch,
+}: {
+  data: StaffDashboardData;
+  showInventoryBranch: boolean;
+}) {
   return (
     <div className="space-y-5">
       {data.orders && (
@@ -19,9 +27,7 @@ export function StaffDashboardOperations({ data }: { data: StaffDashboardData })
                       {order.order_number} · {formatPhp(order.total_minor)}
                     </p>
                   </div>
-                  <span className="rounded-full bg-secondary px-2.5 py-1 text-xs font-medium capitalize text-secondary-foreground">
-                    {order.status.replaceAll('_', ' ')}
-                  </span>
+                  <OrderStatusBadge status={order.status} />
                 </div>
               )) : <EmptyState>No recent orders.</EmptyState>}
             </div>
@@ -44,9 +50,7 @@ export function StaffDashboardOperations({ data }: { data: StaffDashboardData })
                         : `Requested · ${formatDashboardDate(job.preferred_start_at)}`}
                     </p>
                   </div>
-                  <span className="rounded-full bg-accent px-2.5 py-1 text-xs font-medium capitalize text-accent-foreground">
-                    {job.status.replaceAll('_', ' ')}
-                  </span>
+                  <ServiceAppointmentStatusBadge status={job.status} />
                 </div>
               )) : <EmptyState>No open service appointments.</EmptyState>}
             </div>
@@ -63,9 +67,16 @@ export function StaffDashboardOperations({ data }: { data: StaffDashboardData })
                 <div key={item.id} className="bg-card p-4">
                   <p className="text-sm font-medium">{item.name}</p>
                   <p className="mt-2 text-sm text-muted-foreground">{item.sku}</p>
-                  <p className="mt-1 text-xs font-medium text-primary">
+                  {showInventoryBranch && item.branchName && (
+                    <p className="mt-1 text-xs text-muted-foreground">{item.branchName}</p>
+                  )}
+                  <span className={`mt-2 inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${
+                    item.stock === 0
+                      ? 'bg-red-100 text-red-900 dark:bg-red-900/30 dark:text-red-200'
+                      : 'bg-yellow-100 text-yellow-900 dark:bg-yellow-900/30 dark:text-yellow-200'
+                  }`}>
                     {item.stock === 0 ? 'Out of stock' : `${item.stock} in stock`}
-                  </p>
+                  </span>
                 </div>
               )) : <EmptyState>No branch inventory records found.</EmptyState>}
             </div>

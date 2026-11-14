@@ -43,7 +43,9 @@ export function StaffAppointmentManageForm({
   userId: string;
   statusOptions: ServiceAppointmentStatus[];
 }) {
-  const initialDateTime = localDateTimeParts(appointment.scheduled_at);
+  const initialDateTime = localDateTimeParts(
+    appointment.scheduled_at ?? appointment.preferred_start_at,
+  );
   const [date, setDate] = useState(initialDateTime.date);
   const [time, setTime] = useState(initialDateTime.time);
   const [status, setStatus] = useState(appointment.status);
@@ -165,7 +167,11 @@ export function StaffAppointmentManageForm({
         onTimeChange={setTime}
         dateLabel="Scheduled date (Philippine time)"
         timeLabel="Scheduled time"
-        dateHelperText="Update the confirmed service date."
+        dateHelperText={
+          appointment.status === "requested" && !appointment.scheduled_at
+            ? "Prefilled from the customer’s preferred date; adjust if needed."
+            : "Update the confirmed service date."
+        }
         timeHelperText={timeHelperText}
         timeOptions={timeOptions}
         timeDisabled={

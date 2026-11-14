@@ -28,7 +28,8 @@ export async function getStaffDashboardDataAction(
     const data = await getStaffDashboardData(
       supabase,
       profile,
-      branchContext.selectedBranchId
+      branchContext.selectedBranchId,
+      branchContext.branches
     );
     return { success: true, data: { branchContext, data } };
   } catch (error) {

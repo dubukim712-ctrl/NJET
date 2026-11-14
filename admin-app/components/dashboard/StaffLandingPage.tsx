@@ -188,6 +188,7 @@ export function StaffLandingPage() {
       <StaffDashboardDataQuery
         profile={profile}
         branchName={branchContext.selectedBranchName}
+        showInventoryBranch={branchContext.selectedBranchId === null}
         quickActions={quickActionsSection}
         sections={{
           orders: showOrders,

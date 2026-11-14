@@ -12,6 +12,7 @@ import { StaffDashboardSkeleton } from './StaffDashboardSkeleton';
 export function StaffDashboardDataQuery({
   profile,
   branchName,
+  showInventoryBranch,
   quickActions,
   sections,
   data,
@@ -22,6 +23,7 @@ export function StaffDashboardDataQuery({
 }: {
   profile: UserProfile;
   branchName: string | null;
+  showInventoryBranch: boolean;
   quickActions: ReactNode;
   sections: {
     orders: boolean;
@@ -78,7 +80,10 @@ export function StaffDashboardDataQuery({
         </p>
       )}
       <div className="grid gap-5 xl:grid-cols-[1.4fr_1fr]">
-        <StaffDashboardOperations data={data} />
+        <StaffDashboardOperations
+          data={data}
+          showInventoryBranch={showInventoryBranch}
+        />
         <StaffDashboardActivity data={data} />
       </div>
     </>

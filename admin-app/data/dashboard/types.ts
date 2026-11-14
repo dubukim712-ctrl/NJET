@@ -29,6 +29,7 @@ export type DashboardInventoryItem = {
   name: string;
   sku: string;
   stock: number;
+  branchName: string | null;
 };
 
 export type DashboardActivityDay = {
