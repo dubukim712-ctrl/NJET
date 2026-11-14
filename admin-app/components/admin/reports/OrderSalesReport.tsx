@@ -126,7 +126,7 @@ export function OrderSalesReport({
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5" aria-busy={reportQuery.isFetching}>
       {reportQuery.isError && (
         <p className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive" role="alert">
           The report could not be refreshed. Showing the last loaded data.
@@ -163,6 +163,9 @@ export function OrderSalesReport({
         onExport={() => { void exportCsv(); }}
         onPrint={() => window.print()}
       />
+      {reportQuery.isFetching && (
+        <p className="text-sm text-muted-foreground" role="status">Updating report…</p>
+      )}
       {optionsQuery.isError && (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm">
           <p className="text-destructive" role="alert">Branch and agent filters could not be loaded.</p>

@@ -123,7 +123,7 @@ export function CustomerOrdersQuery() {
 
       {placedOrder?.status === "awaiting_confirmation" && (
         <p
-          className="rounded-lg border border-primary/20 bg-primary/5 p-4 text-sm"
+          className="rounded-lg border border-primary/20 bg-primary text-primary-foreground p-4 text-sm"
           role="status"
         >
           Order {placedOrder.order_number} was placed. Staff will review it

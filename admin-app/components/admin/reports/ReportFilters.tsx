@@ -2,6 +2,8 @@
 
 import { Download, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { DatePicker } from '@/components/ui/DatePicker';
+import { Select } from '@/components/ui/Select';
 import type { OrderSalesDatePreset } from '@/lib/reports/order-sales-dates';
 import type { OrderSalesReportOptions } from '@/lib/validations/order-sales-report';
 
@@ -11,9 +13,6 @@ const PRESETS: { id: OrderSalesDatePreset; label: string }[] = [
   { id: 'this_month', label: 'This month' },
   { id: 'year_to_date', label: 'Year to date' },
 ];
-
-const selectClass =
-  'min-h-11 w-full rounded-md border border-border bg-background px-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30';
 
 export function ReportFilters({
   startDate,
@@ -80,65 +79,50 @@ export function ReportFilters({
         ))}
       </div>
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-        <label className="space-y-1.5 text-sm font-medium">
-          <span>Start date</span>
-          <input
-            className={selectClass}
-            type="date"
-            value={startDate}
-            max={endDate}
-            onChange={(event) => onStartDate(event.target.value)}
-          />
-        </label>
-        <label className="space-y-1.5 text-sm font-medium">
-          <span>End date</span>
-          <input
-            className={selectClass}
-            type="date"
-            value={endDate}
-            min={startDate}
-            onChange={(event) => onEndDate(event.target.value)}
-          />
-        </label>
-        <label className="space-y-1.5 text-sm font-medium">
-          <span>Compare with</span>
-          <select
-            className={selectClass}
-            value={compareMode}
-            onChange={(event) => onCompareMode(event.target.value as 'previous_period' | 'last_year')}
-          >
-            <option value="previous_period">Previous period</option>
-            <option value="last_year">Same period last year</option>
-          </select>
-        </label>
-        <label className="space-y-1.5 text-sm font-medium">
-          <span>Branch</span>
-          <select
-            className={selectClass}
-            value={branchId ?? ''}
-            disabled={!options}
-            onChange={(event) => onBranch(event.target.value || null)}
-          >
-            <option value="">All accessible branches</option>
-            {options?.branches.map((branch) => (
-              <option key={branch.id} value={branch.id}>{branch.name}</option>
-            ))}
-          </select>
-        </label>
-        <label className="space-y-1.5 text-sm font-medium">
-          <span>Sales agent</span>
-          <select
-            className={selectClass}
-            value={agentId ?? ''}
-            disabled={!options}
-            onChange={(event) => onAgent(event.target.value || null)}
-          >
-            <option value="">All agents</option>
-            {options?.agents.map((agent) => (
-              <option key={agent.id} value={agent.id}>{agent.name}</option>
-            ))}
-          </select>
-        </label>
+        <DatePicker
+          label="Start date"
+          name="reportStartDate"
+          value={startDate}
+          max={endDate}
+          onChange={onStartDate}
+        />
+        <DatePicker
+          label="End date"
+          name="reportEndDate"
+          value={endDate}
+          min={startDate}
+          onChange={onEndDate}
+        />
+        <Select
+          label="Compare with"
+          value={compareMode}
+          onChange={(event) => onCompareMode(event.target.value as 'previous_period' | 'last_year')}
+        >
+          <option value="previous_period">Previous period</option>
+          <option value="last_year">Same period last year</option>
+        </Select>
+        <Select
+          label="Branch"
+          value={branchId ?? ''}
+          disabled={!options}
+          onChange={(event) => onBranch(event.target.value || null)}
+        >
+          <option value="">All accessible branches</option>
+          {options?.branches.map((branch) => (
+            <option key={branch.id} value={branch.id}>{branch.name}</option>
+          ))}
+        </Select>
+        <Select
+          label="Sales agent"
+          value={agentId ?? ''}
+          disabled={!options}
+          onChange={(event) => onAgent(event.target.value || null)}
+        >
+          <option value="">All agents</option>
+          {options?.agents.map((agent) => (
+            <option key={agent.id} value={agent.id}>{agent.name}</option>
+          ))}
+        </Select>
       </div>
     </section>
   );

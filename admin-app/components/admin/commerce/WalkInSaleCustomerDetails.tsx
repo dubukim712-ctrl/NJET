@@ -1,12 +1,12 @@
-'use client';
+"use client";
 
-import { Input } from '@/components/ui/Input';
-import { Select } from '@/components/ui/Select';
+import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
 import {
   PhilippineAddressFields,
   type PhilippineAddressValues,
-} from '@/components/admin/commerce/PhilippineAddressFields';
-import type { WalkInBranchOption } from '@/data/commerce/walk-in-sales';
+} from "@/components/admin/commerce/PhilippineAddressFields";
+import type { WalkInBranchOption } from "@/data/commerce/walk-in-sales";
 
 export function WalkInSaleCustomerDetails({
   branches,
@@ -36,7 +36,8 @@ export function WalkInSaleCustomerDetails({
       <header>
         <h2 className="text-lg font-semibold">Customer and sale information</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Enter the customer&apos;s contact details and select the branch fulfilling this sale.
+          Enter the customer&apos;s contact details and select the branch
+          fulfilling this sale.
         </p>
       </header>
       <div className="grid gap-4 sm:grid-cols-2">
@@ -53,9 +54,16 @@ export function WalkInSaleCustomerDetails({
           helperText="Enter a phone number where the customer can be reached."
           type="tel"
           autoComplete="tel"
+          pattern="[0-9]{7,11}"
+          minLength={7}
+          maxLength={11}
           required
           value={contactNumber}
-          onChange={(event) => onContactNumberChange(event.target.value)}
+          onChange={(event) =>
+            onContactNumberChange(
+              event.target.value.replace(/[^0-9]/g, "").slice(0, 11),
+            )
+          }
         />
         {branches.length > 1 ? (
           <Select
@@ -65,12 +73,17 @@ export function WalkInSaleCustomerDetails({
             onChange={(event) => onBranchChange(event.target.value)}
           >
             {branches.map((branch) => (
-              <option key={branch.id} value={branch.id}>{branch.name}</option>
+              <option key={branch.id} value={branch.id}>
+                {branch.name}
+              </option>
             ))}
           </Select>
         ) : (
           <p className="self-end pb-2 text-sm text-muted-foreground">
-            Branch: <span className="font-medium text-foreground">{branches[0]?.name}</span>
+            Branch:{" "}
+            <span className="font-medium text-foreground">
+              {branches[0]?.name}
+            </span>
           </p>
         )}
       </div>

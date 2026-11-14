@@ -4,7 +4,10 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { ChevronDown } from "lucide-react";
 import type { OrderBranchOption, StaffOrder } from "@/data/commerce/admin-orders";
-import { OrderDetailsPanel } from "@/components/admin/commerce/OrderDetailsPanel";
+import {
+  OrderDetailsPanel,
+  type OrderMutationAction,
+} from "@/components/admin/commerce/OrderDetailsPanel";
 import { OrderStatusBadge } from "@/components/commerce/OrderStatusBadge";
 import { OrdersFilters } from "@/components/admin/commerce/OrdersFilters";
 import { Button } from "@/components/ui/Button";
@@ -26,12 +29,19 @@ export function OrderManager({
   canManage: boolean;
   onDataChanged: () => void;
 }) {
-  const [busyOrder, setBusyOrder] = useState<string | null>(null);
+  const [pendingAction, setPendingAction] = useState<{
+    orderId: string;
+    mutation: OrderMutationAction;
+  } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
 
-  const updateOrder = async (orderId: string, action: OrderAction) => {
-    setBusyOrder(orderId);
+  const updateOrder = async (
+    orderId: string,
+    action: OrderAction,
+    mutation: OrderMutationAction,
+  ) => {
+    setPendingAction({ orderId, mutation });
     setError(null);
     try {
       const result = await action({ orderId });
@@ -49,7 +59,7 @@ export function OrderManager({
       setError(message);
       toast.error(message);
     } finally {
-      setBusyOrder(null);
+      setPendingAction(null);
     }
   };
 
@@ -110,9 +120,9 @@ export function OrderManager({
                 order={order}
                 storeDue={storeDue}
                 canManage={canManage}
-                isBusy={busyOrder === order.id}
-                isAnyOrderBusy={busyOrder !== null}
-                onUpdateOrder={(action) => { void updateOrder(order.id, action); }}
+                busyAction={pendingAction?.orderId === order.id ? pendingAction.mutation : null}
+                isAnyOrderBusy={pendingAction !== null}
+                onUpdateOrder={(action, mutation) => { void updateOrder(order.id, action, mutation); }}
                 onDataChanged={onDataChanged}
               />
             )}

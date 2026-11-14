@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
+import { Select } from '@/components/ui/Select';
 import { formatPhp } from '@/lib/commerce';
 import {
   formatReportDateTime,
@@ -89,18 +90,15 @@ export function ReportLedger({
             placeholder="Receipt, customer, model, or SKU"
             maxLength={120}
           />
-          <label className="space-y-1.5 text-sm font-medium">
-            <span>Rows</span>
-            <select
-              className="min-h-11 w-full rounded-md border border-border bg-background px-3 text-sm"
-              value={pageSize}
-              onChange={(event) => onPageSize(Number(event.target.value) as 25 | 50 | 100)}
-            >
-              <option value={25}>25</option>
-              <option value={50}>50</option>
-              <option value={100}>100</option>
-            </select>
-          </label>
+          <Select
+            label="Rows"
+            value={pageSize}
+            onChange={(event) => onPageSize(Number(event.target.value) as 25 | 50 | 100)}
+          >
+            <option value={25}>25</option>
+            <option value={50}>50</option>
+            <option value={100}>100</option>
+          </Select>
         </div>
       </div>
 

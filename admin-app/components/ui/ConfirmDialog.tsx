@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useEffect, useId, useRef } from 'react';
-import { Button } from '@/components/ui/Button';
+import { useEffect, useId, useRef } from "react";
+import { Button } from "@/components/ui/Button";
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -9,6 +9,7 @@ interface ConfirmDialogProps {
   title: string;
   description: string;
   confirmLabel: string;
+  cancelLabel?: string;
   onConfirm: () => void;
   loading?: boolean;
   error?: string | null;
@@ -21,6 +22,7 @@ export function ConfirmDialog({
   title,
   description,
   confirmLabel,
+  cancelLabel = "Cancel",
   onConfirm,
   loading = false,
   error = null,
@@ -60,10 +62,7 @@ export function ConfirmDialog({
         <h2 id={titleId} className="text-lg font-semibold">
           {title}
         </h2>
-        <p
-          id={descriptionId}
-          className="mt-2 text-sm text-muted-foreground"
-        >
+        <p id={descriptionId} className="mt-2 text-sm text-muted-foreground">
           {description}
         </p>
 
@@ -83,11 +82,11 @@ export function ConfirmDialog({
             onClick={() => onOpenChange(false)}
             disabled={loading}
           >
-            Cancel
+            {cancelLabel}
           </Button>
           <Button
             type="button"
-            variant={destructive ? 'destructive' : 'default'}
+            variant={destructive ? "destructive" : "default"}
             onClick={onConfirm}
             loading={loading}
           >

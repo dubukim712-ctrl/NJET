@@ -24,6 +24,7 @@ export function useOrderSalesReportQuery(
     },
     retry: false,
     staleTime: 15_000,
+    placeholderData: (previousData) => previousData,
   });
 }
 

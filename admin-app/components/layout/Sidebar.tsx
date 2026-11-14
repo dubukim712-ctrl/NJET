@@ -18,6 +18,7 @@ import {
   Settings,
   Wrench,
   type LucideIcon,
+  LayoutDashboard,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { hasPermission, PERMISSIONS } from "@/lib/permissions";
@@ -48,7 +49,7 @@ const ADMIN_NAVIGATION: NavGroup[] = [
       {
         name: "Dashboard",
         href: "/admin",
-        icon: ChartNoAxesColumnIncreasing,
+        icon: LayoutDashboard,
         permission: PERMISSIONS.adminAccess,
       },
     ],

@@ -264,7 +264,7 @@ export function CartContents({
               Final stock, delivery fees, and payment due are confirmed at
               checkout.
             </p>
-            {unavailable || loadError || out ? (
+            {(unavailable && out) || loadError ? (
               <Button type="button" className="mt-4 w-full" disabled>
                 Remove unavailable items to continue
               </Button>
