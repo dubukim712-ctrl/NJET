@@ -96,7 +96,8 @@ export async function getCustomerServiceAppointments(
 export async function getStaffServiceAppointments(
   supabase: SupabaseClient,
   filters: ServiceAppointmentFilters,
-  canManage: boolean
+  canManage: boolean,
+  assignedTechnicianId: string | null = null
 ): Promise<{ data: StaffServiceAppointment[] | null; error: string | null }> {
   try {
     let query = supabase
@@ -110,8 +111,16 @@ export async function getStaffServiceAppointments(
       `)
       .order('scheduled_at', { ascending: true, nullsFirst: true })
       .order('created_at', { ascending: false })
-      .limit(100);
+      .limit(100); // shortcut: My Tasks searches this bounded slice; add pagination if task volume exceeds it.
 
+    if (assignedTechnicianId) {
+      const recentCompletedSince = new Date(
+        Date.now() - 30 * 24 * 60 * 60 * 1000
+      ).toISOString();
+      query = query
+        .eq('assigned_technician_id', assignedTechnicianId)
+        .or(`status.in.(requested,confirmed,in_service,ready_for_pickup),and(status.eq.completed,updated_at.gte.${recentCompletedSince})`);
+    }
     if (filters.status) query = query.eq('status', filters.status);
     if (filters.branchId) query = query.eq('branch_id', filters.branchId);
     const searchTerm = filters.search.replace(/[%,()_"\\]/g, ' ').trim();

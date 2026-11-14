@@ -218,7 +218,11 @@ export function StorefrontHomePage() {
                 key={product.id}
                 className="w-[72vw] max-w-md shrink-0 snap-start sm:w-80"
               >
-                <ProductCard product={product} compactOnNarrow />
+                <ProductCard
+                  product={product}
+                  compactOnNarrow
+                  loading={product.id === heroProduct?.id ? "eager" : undefined}
+                />
               </div>
             ))}
           </div>

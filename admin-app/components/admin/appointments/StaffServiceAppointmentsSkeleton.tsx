@@ -1,6 +1,10 @@
-export function StaffServiceAppointmentsSkeleton() {
+export function StaffServiceAppointmentsSkeleton({
+  className = 'space-y-4',
+}: {
+  className?: string;
+}) {
   return (
-    <div className="space-y-4" aria-busy="true">
+    <div className={className} aria-busy="true">
       <p className="sr-only" role="status">Loading appointments</p>
       {[0, 1, 2].map((item) => (
         <article

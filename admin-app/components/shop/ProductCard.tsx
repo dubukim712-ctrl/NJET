@@ -8,10 +8,12 @@ export function ProductCard({
   product,
   compactOnNarrow = false,
   stackFooterOnNarrow = false,
+  loading,
 }: {
   product: CatalogProduct;
   compactOnNarrow?: boolean;
   stackFooterOnNarrow?: boolean;
+  loading?: 'eager' | 'lazy';
 }) {
   const startingPrice = product.variants.length
     ? Math.min(...product.variants.map((variant) => variant.price_minor))
@@ -26,7 +28,11 @@ export function ProductCard({
       }`}
     >
       <article>
-        <ProductImage path={product.image_path} alt={product.name} />
+        <ProductImage
+          path={product.image_path}
+          alt={product.name}
+          loading={loading}
+        />
         <div
           className={`space-y-3 p-4 sm:p-5 ${
             compactOnNarrow

@@ -1,3 +1,4 @@
+import { redirect } from 'next/navigation';
 import { StaffServiceAppointments } from '@/components/admin/appointments/StaffServiceAppointments';
 import { requirePermission } from '@/data/auth/guards';
 import { PERMISSIONS, hasPermission } from '@/lib/permissions';
@@ -9,6 +10,7 @@ export default async function StaffAppointmentsPage() {
     PERMISSIONS.serviceAppointmentsRead,
     '/admin/appointments'
   );
+  if (profile.role === 'technician') redirect('/admin/my-tasks');
 
   return (
     <StaffServiceAppointments

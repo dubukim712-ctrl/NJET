@@ -7,6 +7,10 @@ export const staffServiceAppointmentsQueryKey = [
   ...serviceAppointmentsQueryKey,
   'staff',
 ] as const;
+export const myAssignedServiceAppointmentsQueryKey = [
+  ...staffServiceAppointmentsQueryKey,
+  'my-tasks',
+] as const;
 export const customerServiceAvailabilityQueryKey = [
   ...customerServiceAppointmentsQueryKey,
   'availability',

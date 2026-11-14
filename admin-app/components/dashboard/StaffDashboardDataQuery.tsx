@@ -83,6 +83,7 @@ export function StaffDashboardDataQuery({
         <StaffDashboardOperations
           data={data}
           showInventoryBranch={showInventoryBranch}
+          isTechnician={sections.isTechnician}
         />
         <StaffDashboardActivity data={data} />
       </div>

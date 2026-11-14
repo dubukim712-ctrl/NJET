@@ -35,7 +35,10 @@ interface NavItem {
   href: string;
   icon: LucideIcon;
   permission?: string;
+  additionalPermissions?: string[];
   fullAccessOnly?: boolean;
+  role?: string;
+  excludedRole?: string;
 }
 
 interface NavGroup {
@@ -86,6 +89,15 @@ const ADMIN_NAVIGATION: NavGroup[] = [
         href: "/admin/appointments",
         icon: Wrench,
         permission: PERMISSIONS.serviceAppointmentsRead,
+        excludedRole: "technician",
+      },
+      {
+        name: "My tasks",
+        href: "/admin/my-tasks",
+        icon: ClipboardList,
+        permission: PERMISSIONS.serviceAppointmentsRead,
+        additionalPermissions: [PERMISSIONS.serviceAppointmentsWork],
+        role: "technician",
       },
     ],
   },
@@ -164,7 +176,11 @@ export function Sidebar({ user, className, onNavigate }: SidebarProps) {
     items: group.items.filter(
       (item) =>
         (!item.permission || hasPermission(user, item.permission)) &&
-        (!item.fullAccessOnly || user?.is_full_access === true),
+        (!item.additionalPermissions ||
+          item.additionalPermissions.every((permission) => hasPermission(user, permission))) &&
+        (!item.fullAccessOnly || user?.is_full_access === true) &&
+        (!item.role || user?.role === item.role) &&
+        (!item.excludedRole || user?.role !== item.excludedRole),
     ),
   })).filter((group) => group.items.length > 0);
 

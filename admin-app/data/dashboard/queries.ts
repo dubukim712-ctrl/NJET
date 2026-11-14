@@ -132,7 +132,8 @@ async function loadOrders(
 
 async function loadAppointments(
   supabase: SupabaseClient,
-  branchId: string | null
+  branchId: string | null,
+  assignedTechnicianId: string | null = null
 ): Promise<DashboardSection<AppointmentsOverview>> {
   try {
     const { start, end } = manilaDayRange();
@@ -177,6 +178,14 @@ async function loadAppointments(
       queueQuery.eq('branch_id', branchId);
       todayScheduleQuery.eq('branch_id', branchId);
       recentQuery.eq('branch_id', branchId);
+    }
+    if (assignedTechnicianId) {
+      openQuery.eq('assigned_technician_id', assignedTechnicianId);
+      todayQuery.eq('assigned_technician_id', assignedTechnicianId);
+      inProgressQuery.eq('assigned_technician_id', assignedTechnicianId);
+      queueQuery.eq('assigned_technician_id', assignedTechnicianId);
+      todayScheduleQuery.eq('assigned_technician_id', assignedTechnicianId);
+      recentQuery.eq('assigned_technician_id', assignedTechnicianId);
     }
     const [
       openResult,
@@ -226,13 +235,18 @@ export async function getStaffDashboardData(
 ): Promise<StaffDashboardData> {
   const isBranchScopedStaff = profile.scope === 'staff' && !profile.is_full_access;
   const branchId = isBranchScopedStaff ? profile.branch_id : selectedBranchId;
+  const assignedTechnicianId = profile.role === 'technician' ? profile.id : null;
   const canLoadBranchData = !isBranchScopedStaff || Boolean(profile.branch_id);
+  const canLoadAppointments =
+    hasPermission(profile, PERMISSIONS.serviceAppointmentsRead) &&
+    (profile.role !== 'technician' ||
+      hasPermission(profile, PERMISSIONS.serviceAppointmentsWork));
   const [orders, appointments, inventory, teamMembers] = await Promise.all([
     canLoadBranchData && hasPermission(profile, PERMISSIONS.ordersRead)
       ? loadOrders(supabase, branchId)
       : Promise.resolve(null),
-    canLoadBranchData && hasPermission(profile, PERMISSIONS.serviceAppointmentsRead)
-      ? loadAppointments(supabase, branchId)
+    canLoadBranchData && canLoadAppointments
+      ? loadAppointments(supabase, branchId, assignedTechnicianId)
       : Promise.resolve(null),
     canLoadBranchData &&
     (hasPermission(profile, PERMISSIONS.productsRead) ||

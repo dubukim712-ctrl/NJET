@@ -8,9 +8,11 @@ import type { StaffDashboardData } from '@/data/dashboard/queries';
 export function StaffDashboardOperations({
   data,
   showInventoryBranch,
+  isTechnician,
 }: {
   data: StaffDashboardData;
   showInventoryBranch: boolean;
+  isTechnician: boolean;
 }) {
   return (
     <div className="space-y-5">
@@ -37,7 +39,12 @@ export function StaffDashboardOperations({
 
       {data.appointments && (
         <section id="jobs" aria-labelledby="jobs-heading" className="rounded-lg border border-border bg-card">
-          <PanelHeader icon={Wrench} eyebrow="Service" title="Technician job board" id="jobs-heading" />
+          <PanelHeader
+            icon={Wrench}
+            eyebrow="Service"
+            title={isTechnician ? "My tasks" : "Technician job board"}
+            id="jobs-heading"
+          />
           {data.appointments.error ? <LoadError message={data.appointments.error} href="/admin/appointments" /> : (
             <div className="divide-y divide-border">
               {data.appointments.data?.queue.length ? data.appointments.data.queue.map((job) => (
@@ -52,7 +59,7 @@ export function StaffDashboardOperations({
                   </div>
                   <ServiceAppointmentStatusBadge status={job.status} />
                 </div>
-              )) : <EmptyState>No open service appointments.</EmptyState>}
+              )) : <EmptyState>{isTechnician ? "No assigned tasks." : "No open service appointments."}</EmptyState>}
             </div>
           )}
         </section>

@@ -170,7 +170,7 @@ export const serviceAppointmentIdSchema = z.string().uuid();
 
 export const assignedServiceAppointmentStatusSchema = z.object({
   appointmentId: z.string().uuid(),
-  status: z.enum(['in_service', 'ready_for_pickup', 'completed']),
+  status: z.enum(['in_service', 'ready_for_pickup', 'completed', 'no_show']),
 }).strict();
 
 export const serviceAppointmentNoteSchema = z.object({

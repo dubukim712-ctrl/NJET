@@ -5,14 +5,11 @@ import { ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { ServiceAppointmentStatusBadge } from '@/components/appointments/ServiceAppointmentStatusBadge';
 import { Button } from '@/components/ui/Button';
-import { Select } from '@/components/ui/Select';
 import { Textarea } from '@/components/ui/Textarea';
 import { StaffAppointmentManageForm } from '@/components/admin/appointments/StaffAppointmentManageForm';
+import { AssignedServiceAppointmentWorkActions } from '@/components/admin/appointments/AssignedServiceAppointmentWorkActions';
+import { useInvalidateServiceAppointmentsQuery } from '@/data/appointments/client';
 import {
-  useInvalidateServiceAppointmentsQuery,
-} from '@/data/appointments/client';
-import {
-  updateAssignedServiceAppointmentStatusAction,
   updateServiceAppointmentNoteAction,
 } from '@/data/actions/service-appointments';
 import { reviewServiceAppointmentCancellationAction } from '@/data/actions/service-appointment-cancellations';
@@ -47,6 +44,8 @@ export function StaffServiceAppointmentCard({
   canWork,
   cardOpen,
   onCardOpenChange,
+  hideSummary = false,
+  hideWorkActions = false,
 }: {
   appointment: StaffServiceAppointment;
   userId: string;
@@ -54,50 +53,21 @@ export function StaffServiceAppointmentCard({
   canWork: boolean;
   cardOpen: boolean;
   onCardOpenChange: (open: boolean) => void;
+  hideSummary?: boolean;
+  hideWorkActions?: boolean;
 }) {
   const [error, setError] = useState('');
-  const [saving, setSaving] = useState(false);
+  const [savingNote, setSavingNote] = useState(false);
+  const [savingCancellation, setSavingCancellation] = useState<'approve' | 'reject' | null>(null);
   const [noteSaved, setNoteSaved] = useState(false);
   const invalidate = useInvalidateServiceAppointmentsQuery();
-  const workTransitions = nextStatuses[appointment.status].filter((status) =>
-    status === 'in_service' ||
-    status === 'completed' ||
-    (status === 'ready_for_pickup' && appointment.service_mode === 'branch_visit')
-  );
-  const canUpdateWorkStatus = canWork &&
-    appointment.assigned_technician_id === userId &&
-    workTransitions.length > 0;
-
-  async function updateWorkStatus(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setError('');
-    setSaving(true);
-    try {
-      const status = new FormData(event.currentTarget).get('workStatus');
-      if (typeof status !== 'string') return;
-      const result = await updateAssignedServiceAppointmentStatusAction({
-        appointmentId: appointment.id,
-        status,
-      });
-      if (!result.success) {
-        setError(result.error);
-        return;
-      }
-      await invalidate();
-    } catch (statusError) {
-      console.error('Could not update service appointment status.', statusError);
-      setError('Appointment status could not be updated. Please try again.');
-    } finally {
-      setSaving(false);
-    }
-  }
 
   async function saveNote(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError('');
     const note = new FormData(event.currentTarget).get('note');
     if (typeof note !== 'string') return;
-    setSaving(true);
+    setSavingNote(true);
     try {
       const result = await updateServiceAppointmentNoteAction({
         appointmentId: appointment.id,
@@ -114,13 +84,13 @@ export function StaffServiceAppointmentCard({
       console.error('Could not save appointment note.', saveError);
       setError('The note could not be saved. Please try again.');
     } finally {
-      setSaving(false);
+      setSavingNote(false);
     }
   }
 
   async function reviewCancellation(decision: 'approve' | 'reject') {
     setError('');
-    setSaving(true);
+    setSavingCancellation(decision);
     try {
       const request = appointment.cancellation_request;
       if (!request) return;
@@ -142,7 +112,7 @@ export function StaffServiceAppointmentCard({
       console.error('Could not review appointment cancellation request.', reviewError);
       setError('The cancellation request could not be reviewed. Please try again.');
     } finally {
-      setSaving(false);
+      setSavingCancellation(null);
     }
   }
 
@@ -154,30 +124,22 @@ export function StaffServiceAppointmentCard({
     appointment.postal_code,
   ].filter(Boolean).join(', ');
 
-  return (
-    <details
-      className="group rounded-xl border bg-card p-5 sm:p-6"
-      open={cardOpen}
-      onToggle={(event) => {
-        if (event.currentTarget.open !== cardOpen) {
-          onCardOpenChange(event.currentTarget.open);
-        }
-      }}
-    >
-      <summary className="flex cursor-pointer list-none flex-wrap items-start justify-between gap-3 [&::-webkit-details-marker]:hidden">
-        <div>
-          <h2 className="font-semibold">{appointment.appointment_number} · {appointment.customer_name}</h2>
-        </div>
-        <div className="flex items-center gap-3">
-          <ServiceAppointmentStatusBadge status={appointment.status} />
-          <ChevronDown
-            className="h-5 w-5 shrink-0 text-muted-foreground transition-transform group-open:rotate-180"
-            aria-hidden="true"
-          />
-        </div>
-      </summary>
-
-      <div className="mt-4 border-t pt-4">
+  const cardSummary = (
+    <summary className="flex cursor-pointer list-none flex-wrap items-start justify-between gap-3 [&::-webkit-details-marker]:hidden">
+      <div>
+        <h2 className="font-semibold">{appointment.appointment_number} · {appointment.customer_name}</h2>
+      </div>
+      <div className="flex items-center gap-3">
+        <ServiceAppointmentStatusBadge status={appointment.status} />
+        <ChevronDown
+          className="h-5 w-5 shrink-0 text-muted-foreground transition-transform group-open:rotate-180"
+          aria-hidden="true"
+        />
+      </div>
+    </summary>
+  );
+  const cardContent = (
+    <div className={hideSummary ? 'space-y-4' : 'mt-4 border-t pt-4'}>
         <dl className="grid gap-2 text-sm sm:grid-cols-2">
           <div><dt className="inline text-muted-foreground">Contact: </dt><dd className="inline">{appointment.contact_number}</dd></div>
           <div><dt className="inline text-muted-foreground">Branch: </dt><dd className="inline">{appointment.branch_name}</dd></div>
@@ -218,7 +180,8 @@ export function StaffServiceAppointmentCard({
             <Button
               type="button"
               variant="destructive"
-              loading={saving}
+              loading={savingCancellation === 'approve'}
+              disabled={savingCancellation !== null}
               onClick={() => { void reviewCancellation('approve'); }}
             >
               Approve cancellation
@@ -226,7 +189,8 @@ export function StaffServiceAppointmentCard({
             <Button
               type="button"
               variant="outline"
-              loading={saving}
+              loading={savingCancellation === 'reject'}
+              disabled={savingCancellation !== null}
               onClick={() => { void reviewCancellation('reject'); }}
             >
               Reject request
@@ -235,18 +199,12 @@ export function StaffServiceAppointmentCard({
         </section>
         )}
 
-        {canUpdateWorkStatus && (
-        <form onSubmit={updateWorkStatus} className="mt-4 flex flex-wrap items-end gap-3">
-          <Select
-            name="workStatus"
-            label="Update work status"
-            helperText="Choose the next work state for this assigned job."
-            containerClassName="min-w-52"
-          >
-            {workTransitions.map((status) => <option key={status} value={status}>{status.replaceAll('_', ' ')}</option>)}
-          </Select>
-          <Button type="submit" variant="outline" loading={saving}>Update status</Button>
-        </form>
+        {!hideWorkActions && (
+          <AssignedServiceAppointmentWorkActions
+            appointment={appointment}
+            userId={userId}
+            canWork={canWork}
+          />
         )}
 
         {(canManage || canWork) && (
@@ -261,13 +219,28 @@ export function StaffServiceAppointmentCard({
             rows={3}
           />
           <div className="flex items-center gap-3">
-            <Button type="submit" variant="outline" loading={saving}>Save note</Button>
+            <Button type="submit" variant="outline" loading={savingNote}>Save note</Button>
             {noteSaved && <span className="text-sm text-muted-foreground" role="status">Saved</span>}
           </div>
         </form>
         )}
         {error && <p className="mt-3 text-sm text-destructive" role="alert">{error}</p>}
       </div>
+  );
+  if (hideSummary) return cardContent;
+
+  return (
+    <details
+      className="group rounded-xl border bg-card p-5 sm:p-6"
+      open={cardOpen}
+      onToggle={(event) => {
+        if (event.currentTarget.open !== cardOpen) {
+          onCardOpenChange(event.currentTarget.open);
+        }
+      }}
+    >
+      {cardSummary}
+      {cardContent}
     </details>
   );
 }

@@ -94,6 +94,26 @@ export async function getStaffServiceAppointmentsAction(
   return { success: true, data: result.data };
 }
 
+export async function getMyAssignedServiceAppointmentsAction(): Promise<
+  ActionResult<NonNullable<Awaited<ReturnType<typeof getStaffServiceAppointments>>['data']>>
+> {
+  const { supabase, profile } = await requirePermission(
+    PERMISSIONS.serviceAppointmentsRead,
+    '/admin/my-tasks'
+  );
+  await requirePermission(PERMISSIONS.serviceAppointmentsWork, '/admin/my-tasks');
+  const result = await getStaffServiceAppointments(
+    supabase,
+    { status: '', branchId: '', date: '', search: '' },
+    false,
+    profile.id
+  );
+  if (!result.data) {
+    return { success: false, error: result.error ?? 'Assigned tasks are unavailable.' };
+  }
+  return { success: true, data: result.data };
+}
+
 export async function getStaffServiceAppointmentOptionsAction(): Promise<
   ActionResult<{
     branches: { id: string; name: string }[];

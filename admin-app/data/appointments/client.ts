@@ -5,12 +5,14 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   getCustomerServiceAppointmentBranchesAction,
   getCustomerServiceAppointmentsAction,
+  getMyAssignedServiceAppointmentsAction,
   getStaffServiceAppointmentOptionsAction,
   getStaffServiceAppointmentsAction,
   getTechnicianOptionsAction,
 } from '@/data/actions/service-appointments';
 import {
   customerServiceAppointmentsQueryKey,
+  myAssignedServiceAppointmentsQueryKey,
   serviceAppointmentsQueryKey,
   staffServiceAppointmentsQueryKey,
 } from '@/data/appointments/query-keys';
@@ -59,6 +61,21 @@ export function useStaffServiceAppointmentsQuery(
       if (!result.success) throw new ServiceAppointmentsQueryError(result.error);
       return result.data;
     },
+    retry: false,
+    staleTime: 15_000,
+    gcTime: 30 * 60_000,
+  });
+}
+
+export function useMyAssignedServiceAppointmentsQuery(userId: string) {
+  return useQuery({
+    queryKey: [...myAssignedServiceAppointmentsQueryKey, userId],
+    queryFn: async () => {
+      const result = await getMyAssignedServiceAppointmentsAction();
+      if (!result.success) throw new ServiceAppointmentsQueryError(result.error);
+      return result.data;
+    },
+    enabled: Boolean(userId),
     retry: false,
     staleTime: 15_000,
     gcTime: 30 * 60_000,

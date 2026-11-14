@@ -56,7 +56,8 @@ export function StaffLandingPage() {
     canLoadBranchData && hasPermission(profile, PERMISSIONS.ordersRead);
   const showJobs =
     canLoadBranchData &&
-    hasPermission(profile, PERMISSIONS.serviceAppointmentsRead);
+    hasPermission(profile, PERMISSIONS.serviceAppointmentsRead) &&
+    (!isTechnician || hasPermission(profile, PERMISSIONS.serviceAppointmentsWork));
   const showInventory =
     canLoadBranchData &&
     (hasPermission(profile, PERMISSIONS.productsRead) ||
@@ -69,7 +70,11 @@ export function StaffLandingPage() {
       ? [{ href: "/admin/orders", label: "Sales orders", icon: ShoppingBag }]
       : []),
     ...(showJobs
-      ? [{ href: "/admin/appointments", label: "Service queue", icon: Wrench }]
+      ? [{
+          href: isTechnician ? "/admin/my-tasks" : "/admin/appointments",
+          label: isTechnician ? "My tasks" : "Service queue",
+          icon: Wrench,
+        }]
       : []),
     ...(showInventory
       ? [{ href: "/admin/products", label: "Inventory", icon: Boxes }]
