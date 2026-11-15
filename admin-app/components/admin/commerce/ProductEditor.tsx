@@ -126,8 +126,8 @@ export function ProductEditor({
           setSlug(event.target.value);
           setSlugEdited(true);
         }} required helperText="Generated from the product name; edit to customize." leadingIcon={<Link2 className="h-4 w-4" />} />
-        <Select name="categoryId" label="Main category" value={categoryId} onChange={(event) => {
-          setCategoryId(event.target.value);
+        <Select name="categoryId" label="Main category" value={categoryId} onValueChange={(value) => {
+          setCategoryId(value);
           setSubcategoryId('');
         }} required disabled={!categories.length}>
           <option value="" disabled>Select a main category</option>
@@ -139,7 +139,7 @@ export function ProductEditor({
           name="subcategoryId"
           label="Subcategory"
           value={subcategoryId}
-          onChange={(event) => setSubcategoryId(event.target.value)}
+          onValueChange={(value) => setSubcategoryId(value)}
           required={categoriesForProduct.length > 0}
         >
           <option value="">{categoriesForProduct.length ? 'Select a subcategory' : 'No subcategories configured'}</option>

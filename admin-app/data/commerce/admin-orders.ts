@@ -46,7 +46,8 @@ export type OrderBranchOption = Pick<
 export async function getCommerceOrders(
   supabase: SupabaseClient,
   filters: OrderFilters,
-  canManage: boolean
+  canManage: boolean,
+  branchScope: string | null = null
 ): Promise<{
   data: StaffOrder[] | null;
   branches: OrderBranchOption[];
@@ -71,22 +72,29 @@ export async function getCommerceOrders(
       );
     }
     if (filters.status) orderQuery = orderQuery.eq('status', filters.status);
-    if (filters.branch) orderQuery = orderQuery.eq('branch_id', filters.branch);
+    const branchId = branchScope ?? filters.branch;
+    if (branchId) orderQuery = orderQuery.eq('branch_id', branchId);
 
+    let branchesQuery = supabase.from('branches').select('id, name');
+    if (branchScope) branchesQuery = branchesQuery.eq('id', branchScope);
     const [orderResult, branchResult] = await Promise.all([
       orderQuery.order('created_at', { ascending: false }).limit(50),
-      supabase.from('branches').select('id, name').order('name').limit(200),
+      branchesQuery.order('name').limit(200),
     ]);
     if (orderResult.error) throw orderResult.error;
     if (branchResult.error) throw branchResult.error;
 
     let branches = branchResult.data.map(({ id, name }) => ({ id, name }));
     if (!branches.length) {
-      // shortcut: fallback options cover the newest 500 visible orders; use a scoped branch-options query if needed.
-      const { data: visibleOrders, error } = await supabase
+      // shortcut: fallback branch options cover the newest 500 visible orders.
+      let visibleOrdersQuery = supabase
         .from('orders')
         .select('branch_id, branch_name')
-        .not('branch_id', 'is', null)
+        .not('branch_id', 'is', null);
+      if (branchScope) {
+        visibleOrdersQuery = visibleOrdersQuery.eq('branch_id', branchScope);
+      }
+      const { data: visibleOrders, error } = await visibleOrdersQuery
         .order('created_at', { ascending: false })
         .limit(500);
       if (error) throw error;

@@ -141,10 +141,10 @@ export function StaffServiceAppointments({
               label="Status"
               helperText="Show appointments in a specific status."
               value={filters.status}
-              onChange={(event) => {
+              onValueChange={(value) => {
                 const status =
                   SERVICE_APPOINTMENT_STATUSES.find(
-                    (item) => item === event.currentTarget.value,
+                    (item) => item === value,
                   ) ?? "";
                 updateFilter("status", status);
               }}
@@ -160,8 +160,8 @@ export function StaffServiceAppointments({
               label="Branch"
               helperText="Limit results to a branch you can access."
               value={filters.branchId}
-              onChange={(event) =>
-                updateFilter("branchId", event.currentTarget.value)
+              onValueChange={(value) =>
+                updateFilter("branchId", value)
               }
             >
               <option value="">All accessible branches</option>

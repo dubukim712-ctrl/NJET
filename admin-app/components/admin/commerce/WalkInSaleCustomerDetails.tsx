@@ -11,6 +11,7 @@ import type { WalkInBranchOption } from "@/data/commerce/walk-in-sales";
 export function WalkInSaleCustomerDetails({
   branches,
   branchId,
+  canChooseBranch,
   customerName,
   contactNumber,
   address,
@@ -22,6 +23,7 @@ export function WalkInSaleCustomerDetails({
 }: {
   branches: WalkInBranchOption[];
   branchId: string;
+  canChooseBranch: boolean;
   customerName: string;
   contactNumber: string;
   address: PhilippineAddressValues;
@@ -65,13 +67,17 @@ export function WalkInSaleCustomerDetails({
             )
           }
         />
-        {branches.length > 1 ? (
+        {canChooseBranch ? (
           <Select
             label="Selling branch"
             value={branchId}
             disabled={disabled}
-            onChange={(event) => onBranchChange(event.target.value)}
+            required
+            onValueChange={(value) => onBranchChange(value)}
           >
+            <option value="" disabled>
+              Select a branch
+            </option>
             {branches.map((branch) => (
               <option key={branch.id} value={branch.id}>
                 {branch.name}

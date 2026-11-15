@@ -147,7 +147,7 @@ export function ProductCatalogTab({
             <Select
               label="Category"
               value={categoryFilter}
-              onChange={(event) => setCategoryFilter(event.target.value)}
+              onValueChange={(value) => setCategoryFilter(value)}
             >
               <option value="all">All categories</option>
               {categories.map((category) => (

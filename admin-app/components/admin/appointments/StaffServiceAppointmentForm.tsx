@@ -123,7 +123,7 @@ export function StaffServiceAppointmentForm({
         </div>
       )}
       <div className="grid gap-4 sm:grid-cols-2">
-        <Select name="branchId" label="Service branch" helperText="This branch is used for service routing and technician assignment." value={selectedBranchId} onChange={(event) => setBranchId(event.currentTarget.value)} required>
+        <Select name="branchId" label="Service branch" helperText="This branch is used for service routing and technician assignment." value={selectedBranchId} onValueChange={(value) => setBranchId(value)} required>
             {branches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name}</option>)}
         </Select>
         <div className="space-y-2">
@@ -144,8 +144,8 @@ export function StaffServiceAppointmentForm({
           label="Service mode"
           helperText="Home service requires a complete Philippine address."
           value={serviceMode}
-          onChange={(event) => {
-            const mode = event.currentTarget.value === 'home_service' ? 'home_service' : 'branch_visit';
+          onValueChange={(value) => {
+            const mode = value === 'home_service' ? 'home_service' : 'branch_visit';
             setServiceMode(mode);
             if (mode === 'branch_visit') setAddress(EMPTY_ADDRESS);
           }}

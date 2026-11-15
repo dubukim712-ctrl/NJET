@@ -25,7 +25,10 @@ export async function OrdersContent({
     branch: firstSearchParam(params.branch),
   });
   const { profile } = await requirePermission(PERMISSIONS.ordersRead, '/admin/orders');
-  if (profile.scope === 'staff' && !profile.is_full_access && !profile.branch_id) {
+  const branchLocked =
+    profile.scope === 'staff' && !profile.is_full_access;
+  const assignedBranchId = branchLocked ? profile.branch_id : null;
+  if (branchLocked && !assignedBranchId) {
     return (
       <p className="rounded-lg border bg-card p-4 text-sm text-muted-foreground" role="status">
         No branch is assigned to your account. Contact an administrator to access orders.
@@ -33,11 +36,15 @@ export async function OrdersContent({
     );
   }
   const canManage = hasPermission(profile, PERMISSIONS.ordersManage);
+  const scopedFilters = assignedBranchId
+    ? { ...filters, branch: assignedBranchId }
+    : filters;
   return (
     <OrdersQuery
-      filters={filters}
+      filters={scopedFilters}
       canManage={canManage}
       userId={profile.id}
+      branchLocked={branchLocked}
     />
   );
 }

@@ -65,7 +65,7 @@ export function AppointmentDateTimeFields({
         label={timeLabel}
         name="appointmentTime"
         value={time}
-        onChange={(event) => onTimeChange(event.currentTarget.value)}
+        onValueChange={(value) => onTimeChange(value)}
         required={required}
         disabled={timeDisabled}
         helperText={timeHelperText}

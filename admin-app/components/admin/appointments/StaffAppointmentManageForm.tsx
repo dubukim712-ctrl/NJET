@@ -144,9 +144,9 @@ export function StaffAppointmentManageForm({
         label="Status"
         helperText="Choose an allowed next step for this appointment."
         value={status}
-        onChange={(event) => {
+        onValueChange={(value) => {
           const next = statusOptions.find(
-            (option) => option === event.currentTarget.value,
+            (option) => option === value,
           );
           if (next) setStatus(next);
         }}
@@ -203,7 +203,7 @@ export function StaffAppointmentManageForm({
         label="Technician"
         helperText="Assign an eligible technician at this branch, or unassign them."
         value={assignedTechnicianId}
-        onChange={(event) => setAssignedTechnicianId(event.currentTarget.value)}
+        onValueChange={(value) => setAssignedTechnicianId(value)}
       >
         <option value="">Unassigned</option>
         {appointment.assigned_technician_id &&

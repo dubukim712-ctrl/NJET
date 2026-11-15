@@ -18,16 +18,20 @@ const FILTER_DEBOUNCE_MS = 300;
 export function OrdersFilters({
   branches,
   filters,
+  branchLocked = false,
 }: {
   branches: OrderBranchOption[];
   filters: OrderFilters;
+  branchLocked?: boolean;
 }) {
   const router = useRouter();
   const [searchValue, setSearchValue] = useState(filters.q);
   const [statusValue, setStatusValue] = useState(filters.status);
   const [branchValue, setBranchValue] = useState(filters.branch);
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const hasFilters = Boolean(searchValue || statusValue || branchValue);
+  const hasFilters = Boolean(
+    searchValue || statusValue || (!branchLocked && branchValue),
+  );
 
   useEffect(
     () => () => {
@@ -96,8 +100,8 @@ export function OrdersFilters({
         name="status"
         label="Status"
         value={statusValue}
-        onChange={(event) => {
-          const nextStatus = event.target.value as OrderFilters['status'];
+        onValueChange={(value) => {
+          const nextStatus = value as OrderFilters['status'];
           setStatusValue(nextStatus);
           applySelection(nextStatus, branchValue);
         }}
@@ -115,13 +119,14 @@ export function OrdersFilters({
         name="branch"
         label="Branch"
         value={branchValue}
-        onChange={(event) => {
-          const nextBranch = event.target.value;
+        disabled={branchLocked}
+        onValueChange={(value) => {
+          const nextBranch = value;
           setBranchValue(nextBranch);
           applySelection(statusValue, nextBranch);
         }}
       >
-        <option value="">All branches</option>
+        {!branchLocked && <option value="">All branches</option>}
         {branches.map((branch) => (
           <option key={branch.id} value={branch.id}>
             {branch.name}

@@ -179,7 +179,7 @@ export function InventoryReceiptForm({
         <Select
           label="Receiving branch"
           value={branchId}
-          onChange={(event) => setBranchId(event.target.value)}
+          onValueChange={(value) => setBranchId(value)}
           required
         >
           <option value="">Select a branch</option>
@@ -260,8 +260,8 @@ export function InventoryReceiptForm({
                 <Select
                   label="Product variant"
                   value={line.variantId}
-                  onChange={(event) =>
-                    updateLine(line.key, { variantId: event.target.value })
+                  onValueChange={(value) =>
+                    updateLine(line.key, { variantId: value })
                   }
                   required
                 >

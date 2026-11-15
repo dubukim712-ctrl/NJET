@@ -24,10 +24,7 @@ export default async function NewWalkInSalePage() {
     );
   }
   const branches = branchResult.data;
-  const initialBranch =
-    branches.find((branch) => branch.id === profile.branch_id) ?? branches[0];
-
-  if (!initialBranch) {
+  if (!branches.length) {
     return (
       <p className="rounded-lg border bg-card p-4 text-sm text-muted-foreground" role="status">
         No active branch is available to your account. Contact an administrator.
@@ -35,8 +32,24 @@ export default async function NewWalkInSalePage() {
     );
   }
 
-  const catalogResult = await getWalkInCatalog(supabase, initialBranch.id);
-  if (catalogResult.error || !catalogResult.data) {
+  const isBranchScopedStaff =
+    profile.scope === 'staff' && !profile.is_full_access;
+  const initialBranch = isBranchScopedStaff
+    ? branches.find((branch) => branch.id === profile.branch_id)
+    : undefined;
+  if (isBranchScopedStaff && !initialBranch) {
+    return (
+      <p className="rounded-lg border bg-card p-4 text-sm text-muted-foreground" role="status">
+        No active branch is available to your account. Contact an administrator.
+      </p>
+    );
+  }
+
+  const initialBranchId = initialBranch?.id ?? '';
+  const catalogResult = initialBranchId
+    ? await getWalkInCatalog(supabase, initialBranchId)
+    : null;
+  if (catalogResult && (catalogResult.error || !catalogResult.data)) {
     return (
       <p className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive" role="alert">
         {catalogResult.error ?? 'The product catalog is unavailable.'}
@@ -64,8 +77,9 @@ export default async function NewWalkInSalePage() {
       </header>
       <WalkInSaleForm
         branches={branches}
-        initialBranchId={initialBranch.id}
-        initialCatalog={catalogResult.data}
+        initialBranchId={initialBranchId}
+        initialCatalog={catalogResult?.data ?? []}
+        canChooseBranch={!isBranchScopedStaff}
       />
     </div>
   );

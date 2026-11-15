@@ -28,10 +28,12 @@ export function WalkInSaleForm({
   branches,
   initialBranchId,
   initialCatalog,
+  canChooseBranch,
 }: {
   branches: WalkInBranchOption[];
   initialBranchId: string;
   initialCatalog: WalkInCatalogItem[];
+  canChooseBranch: boolean;
 }) {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -138,6 +140,7 @@ export function WalkInSaleForm({
     event.preventDefault();
     if (busy) return;
     setError(null);
+    if (!branchId) return setError('Select a selling branch before completing the sale.');
     if (!cart.length) return setError('Add at least one product to the sale.');
     if (catalogBusy) return setError('Wait for branch stock to finish loading.');
     if (hasUnavailableItems) {
@@ -210,6 +213,7 @@ export function WalkInSaleForm({
       <WalkInSaleCustomerDetails
         branches={branches}
         branchId={branchId}
+        canChooseBranch={canChooseBranch}
         customerName={customerName}
         contactNumber={contactNumber}
         address={{
@@ -238,30 +242,32 @@ export function WalkInSaleForm({
           {error}
         </p>
       )}
-      {catalogBusy && (
-        <p className="text-sm text-muted-foreground" role="status">
-          Loading stock for the selected branch…
+      {branchId ? (
+        <WalkInSaleSections
+          products={catalog}
+          cart={cart}
+          cartQuantities={cartQuantities}
+          totalMinor={totalMinor}
+          catalogBusy={catalogBusy}
+          busy={busy}
+          onAdd={addToCart}
+          onQuantityChange={updateQuantity}
+          onRemove={(variantId) =>
+            setCart((current) => current.filter((line) => line.variantId !== variantId))
+          }
+          payment={payment}
+          onPaymentChange={setPayment}
+          cashTenderedMinor={cashTenderedMinor}
+          cashIsShort={cashIsShort}
+          changeMinor={changeMinor}
+        />
+      ) : (
+        <p className="rounded-xl border bg-card p-4 text-sm text-muted-foreground" role="status">
+          {catalogBusy
+            ? 'Loading stock for the selected branch…'
+            : 'Select a selling branch to load its stock and begin the sale.'}
         </p>
       )}
-
-      <WalkInSaleSections
-        products={catalog}
-        cart={cart}
-        cartQuantities={cartQuantities}
-        totalMinor={totalMinor}
-        catalogBusy={catalogBusy}
-        busy={busy}
-        onAdd={addToCart}
-        onQuantityChange={updateQuantity}
-        onRemove={(variantId) =>
-          setCart((current) => current.filter((line) => line.variantId !== variantId))
-        }
-        payment={payment}
-        onPaymentChange={setPayment}
-        cashTenderedMinor={cashTenderedMinor}
-        cashIsShort={cashIsShort}
-        changeMinor={changeMinor}
-      />
 
       <footer className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
         <Button type="button" variant="outline" asChild disabled={busy}>
@@ -272,6 +278,7 @@ export function WalkInSaleForm({
           loading={busy}
           disabled={
             !cart.length ||
+            !branchId ||
             catalogBusy ||
             hasUnavailableItems ||
             cashIsShort

@@ -281,7 +281,7 @@ export function OrderDetailsDialog({
                   name="method"
                   label="Method"
                   value={paymentMethod}
-                  onChange={(event) => setPaymentMethod(event.target.value)}
+                  onValueChange={(value) => setPaymentMethod(value)}
                   required
                 >
                   <option value="cash">Cash</option>

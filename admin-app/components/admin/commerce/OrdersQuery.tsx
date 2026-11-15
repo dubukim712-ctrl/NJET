@@ -53,10 +53,12 @@ export function OrdersQuery({
   filters,
   canManage,
   userId,
+  branchLocked,
 }: {
   filters: OrderFilters;
   canManage: boolean;
   userId: string;
+  branchLocked: boolean;
 }) {
   const query = useCommerceOrdersQuery(userId, canManage, filters);
   const invalidateQuery = query.invalidate;
@@ -74,7 +76,9 @@ export function OrdersQuery({
     return (
       <OrdersLoadingSkeleton
         canManage={canManage}
-        hasFilters={Boolean(filters.q || filters.status || filters.branch)}
+        hasFilters={Boolean(
+          filters.q || filters.status || (!branchLocked && filters.branch),
+        )}
       />
     );
   }
@@ -113,6 +117,7 @@ export function OrdersQuery({
         branches={query.data.branches}
         filters={filters}
         canManage={canManage}
+        branchLocked={branchLocked}
         onDataChanged={() => {
           void query.invalidate();
           void invalidateProducts();

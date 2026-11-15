@@ -86,7 +86,7 @@ export function UserRoleForm({ user, roles, actor }: UserRoleFormProps) {
           id={`role-${user.id}`}
           label={<span className="sr-only">Role for {user.email}</span>}
           value={selected}
-          onChange={(event) => setSelected(event.target.value)}
+          onValueChange={(value) => setSelected(value)}
           disabled={isSaving}
           containerClassName="w-full sm:w-44"
         >

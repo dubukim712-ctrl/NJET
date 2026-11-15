@@ -102,9 +102,9 @@ export function InventoryValuationReport({ profile }: { profile: InventoryValuat
         <Select
           label="Branch"
           value={branchId}
-          onChange={(event) => {
+          onValueChange={(value) => {
             setPage(1);
-            setBranchId(event.target.value);
+            setBranchId(value);
           }}
           containerClassName="w-full sm:w-64"
         >

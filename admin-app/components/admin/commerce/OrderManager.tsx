@@ -21,12 +21,14 @@ export function OrderManager({
   branches,
   filters,
   canManage,
+  branchLocked,
   onDataChanged,
 }: {
   orders: StaffOrder[];
   branches: OrderBranchOption[];
   filters: OrderFilters;
   canManage: boolean;
+  branchLocked: boolean;
   onDataChanged: () => void;
 }) {
   const [pendingAction, setPendingAction] = useState<{
@@ -65,7 +67,11 @@ export function OrderManager({
 
   return (
     <div className="space-y-4">
-      <OrdersFilters branches={branches} filters={filters} />
+      <OrdersFilters
+        branches={branches}
+        filters={filters}
+        branchLocked={branchLocked}
+      />
       {error && (
         <p className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive" role="alert">
           {error}
@@ -73,7 +79,9 @@ export function OrderManager({
       )}
       {!orders.length && (
         <p className="rounded-xl border bg-card p-6 text-sm text-muted-foreground">
-          {filters.q || filters.status || filters.branch
+          {filters.q ||
+          filters.status ||
+          (!branchLocked && filters.branch)
             ? "No orders match the selected filters."
             : "No orders have been placed yet."}
         </p>

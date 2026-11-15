@@ -114,8 +114,8 @@ export function CheckoutFields(props: CheckoutFieldsProps) {
         <Select
           label="How would you like to receive your order?"
           value={props.fulfillment}
-          onChange={(event) =>
-            props.onFulfillmentChange(event.target.value as Fulfillment)
+          onValueChange={(value) =>
+            props.onFulfillmentChange(value as Fulfillment)
           }
         >
           <option value="pickup">Pick up at store</option>
@@ -125,7 +125,7 @@ export function CheckoutFields(props: CheckoutFieldsProps) {
           <Select
             label="Pickup branch"
             value={props.branchId}
-            onChange={(event) => props.onBranchChange(event.target.value)}
+            onValueChange={(value) => props.onBranchChange(value)}
             required
           >
             <option value="">Select a branch</option>
@@ -139,7 +139,7 @@ export function CheckoutFields(props: CheckoutFieldsProps) {
           <Select
             label="Delivery zone"
             value={props.zoneId}
-            onChange={(event) => props.onZoneChange(event.target.value)}
+            onValueChange={(value) => props.onZoneChange(value)}
             required
           >
             <option value="">Select a delivery zone</option>
@@ -157,8 +157,8 @@ export function CheckoutFields(props: CheckoutFieldsProps) {
         <Select
           label="Payment method"
           value={props.paymentMethod}
-          onChange={(event) =>
-            props.onPaymentMethodChange(event.target.value as PaymentMethod)
+          onValueChange={(value) =>
+            props.onPaymentMethodChange(value as PaymentMethod)
           }
         >
           <option value="cash" disabled={props.cashUnavailable}>
@@ -208,9 +208,9 @@ export function CheckoutFields(props: CheckoutFieldsProps) {
               }
               name="paymentProvider"
               value={props.paymentProvider}
-              onChange={(event) =>
+              onValueChange={(value) =>
                 props.onPaymentProviderChange(
-                  event.target.value as PaymentProvider,
+                  value as PaymentProvider,
                 )
               }
               required
@@ -225,8 +225,8 @@ export function CheckoutFields(props: CheckoutFieldsProps) {
             <Select
               label="Payment account"
               value={props.paymentRecipientId}
-              onChange={(event) =>
-                props.onPaymentRecipientChange(event.target.value)
+              onValueChange={(value) =>
+                props.onPaymentRecipientChange(value)
               }
               required
             >

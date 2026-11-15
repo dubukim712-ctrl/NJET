@@ -73,7 +73,7 @@ export function ProductPurchasePanel({
       <Select
         label="Store branch"
         value={branchId}
-        onChange={(event) => changeBranch(event.target.value)}
+        onValueChange={(value) => changeBranch(value)}
         disabled={!branches.length}
       >
         {!branches.length && <option value="">No active branches</option>}
@@ -86,7 +86,7 @@ export function ProductPurchasePanel({
       <Select
         label="Variant"
         value={selectedVariant?.id ?? ""}
-        onChange={(event) => setVariantId(event.target.value)}
+        onValueChange={(value) => setVariantId(value)}
         disabled={!branchId || !branchVariants.length}
       >
         {!branchVariants.length && <option value="">No variants listed</option>}

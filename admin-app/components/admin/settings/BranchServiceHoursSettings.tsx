@@ -119,7 +119,7 @@ export function BranchServiceHoursSettings({
         helperText="Configure one branch at a time."
         value={branchId}
         disabled={busy}
-        onChange={(event) => changeBranch(event.currentTarget.value)}
+        onValueChange={(value) => changeBranch(value)}
       >
         {branches.map((branch) => (
           <option key={branch.id} value={branch.id}>{branch.name}</option>

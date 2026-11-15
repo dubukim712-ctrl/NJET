@@ -104,8 +104,7 @@ export function OrderCompletionPaymentForm({
           <Select
             label="Method"
             value={method}
-            onChange={(event) => {
-              const value = event.target.value;
+            onValueChange={(value) => {
               if (value === "cash" || value === "online" || value === "other") {
                 setMethod(value);
               }
@@ -121,7 +120,7 @@ export function OrderCompletionPaymentForm({
               <Select
                 label="Provider"
                 value={provider}
-                onChange={(event) => setProvider(event.target.value)}
+                onValueChange={(value) => setProvider(value)}
                 required
               >
                 <option value="">Select provider</option>

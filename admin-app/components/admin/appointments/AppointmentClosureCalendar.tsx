@@ -130,7 +130,7 @@ export function AppointmentClosureCalendar({
             helperText="Closures only affect the selected branch."
             value={branchId}
             disabled={busy}
-            onChange={(event) => setBranchId(event.currentTarget.value)}
+            onValueChange={(value) => setBranchId(value)}
           >
             {branches.map((branch) => (
               <option key={branch.id} value={branch.id}>{branch.name}</option>

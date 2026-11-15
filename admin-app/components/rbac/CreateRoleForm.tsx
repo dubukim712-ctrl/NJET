@@ -160,7 +160,7 @@ export function CreateRoleForm({ permissions }: CreateRoleFormProps) {
           label="Surface"
           value={scope}
           disabled={isSubmitting}
-          onChange={(event) => changeScope(event.target.value as RoleScope)}
+          onValueChange={(value) => changeScope(value as RoleScope)}
           helperText="Staff roles can use the admin panel. Customer roles can only use the storefront."
           containerClassName="sm:max-w-xs"
         >

@@ -76,6 +76,12 @@ html {
   scroll-behavior: smooth;
 }
 
+html body[data-scroll-locked] {
+  margin-right: 0 !important;
+  padding-right: 0 !important;
+  overflow: visible !important;
+}
+
 body {
   min-height: 100vh;
   min-height: 100dvh;

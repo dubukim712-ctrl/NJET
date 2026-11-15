@@ -78,8 +78,8 @@ export function UsersFilters({ roles, search, roleId }: UsersFiltersProps) {
           name="role"
           label="Role"
           value={roleValue}
-          onChange={(event) => {
-            const nextRoleId = event.target.value;
+          onValueChange={(value) => {
+            const nextRoleId = value;
             setRoleValue(nextRoleId);
             scheduleFilterUpdate(searchValue, nextRoleId);
           }}

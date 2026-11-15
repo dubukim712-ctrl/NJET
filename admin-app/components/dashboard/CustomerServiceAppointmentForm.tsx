@@ -171,8 +171,8 @@ export function CustomerServiceAppointmentForm() {
                 helperText="Choose the branch that will handle your request."
                 required
                 value={branchId}
-                onChange={(event) => {
-                  setBranchId(event.currentTarget.value);
+                onValueChange={(value) => {
+                  setBranchId(value);
                   setAppointmentTime('');
                 }}
               >
@@ -196,8 +196,8 @@ export function CustomerServiceAppointmentForm() {
                 label="Service mode"
                 helperText="Choose a branch visit or service at your address."
                 value={serviceMode}
-                onChange={(event) => {
-                  const mode = event.currentTarget.value === 'home_service'
+                onValueChange={(value) => {
+                  const mode = value === 'home_service'
                     ? 'home_service'
                     : 'branch_visit';
                   setServiceMode(mode);

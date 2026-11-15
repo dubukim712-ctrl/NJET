@@ -58,8 +58,8 @@ export function WalkInSalePayment({
         label="Payment method"
         value={values.paymentMethod}
         disabled={disabled}
-        onChange={(event) =>
-          update('paymentMethod', event.target.value as PaymentMethod)
+        onValueChange={(value) =>
+          update('paymentMethod', value as PaymentMethod)
         }
       >
         <option value="cash">Cash</option>
@@ -110,8 +110,8 @@ export function WalkInSalePayment({
             label="Online payment provider"
             value={values.paymentProvider}
             disabled={disabled}
-            onChange={(event) =>
-              update('paymentProvider', event.target.value as PaymentProvider)
+            onValueChange={(value) =>
+              update('paymentProvider', value as PaymentProvider)
             }
           >
             {PAYMENT_PROVIDERS.map((provider) => (

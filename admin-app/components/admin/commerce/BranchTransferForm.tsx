@@ -110,17 +110,17 @@ export function BranchTransferForm({
             {!branches.find((branch) => branch.id === assignedBranchId)?.active && ' (inactive)'}
           </p>
         ) : (
-          <Select label="From branch" value={selectedSourceBranchId} onChange={(event) => {
-            setSourceBranchId(event.target.value);
-            if (destinationBranchId === event.target.value) {
-              setDestinationBranchId(activeBranches.find((branch) => branch.id !== event.target.value)?.id ?? '');
+          <Select label="From branch" value={selectedSourceBranchId} onValueChange={(value) => {
+            setSourceBranchId(value);
+            if (destinationBranchId === value) {
+              setDestinationBranchId(activeBranches.find((branch) => branch.id !== value)?.id ?? '');
             }
             setLines((current) => current.map((line) => ({ ...line, unitIds: [] })));
           }} required>
             {activeBranches.map((branch) => <option key={branch.id} value={branch.id}>{branch.name}</option>)}
           </Select>
         )}
-        <Select label="To branch" value={destinationBranchId} onChange={(event) => setDestinationBranchId(event.target.value)} required>
+        <Select label="To branch" value={destinationBranchId} onValueChange={(value) => setDestinationBranchId(value)} required>
           {activeBranches.filter((branch) => branch.id !== selectedSourceBranchId).map((branch) => (
             <option key={branch.id} value={branch.id}>{branch.name}</option>
           ))}
@@ -139,8 +139,8 @@ export function BranchTransferForm({
         return (
           <div key={index} className="space-y-3 rounded-lg border p-3">
             <div className="flex items-start gap-3">
-              <Select label={`Variant ${index + 1}`} value={line.variantId} onChange={(event) => updateLine(index, {
-                variantId: event.target.value, quantity: 1, unitIds: [],
+              <Select label={`Variant ${index + 1}`} value={line.variantId} onValueChange={(value) => updateLine(index, {
+                variantId: value, quantity: 1, unitIds: [],
               })} required containerClassName="flex-1">
                 <option value="">Select a variant</option>
                 {variants.map((entry) => <option key={entry.id} value={entry.id}>{entry.sku} - {entry.name}</option>)}

@@ -63,7 +63,7 @@ export function UserBranchForm({
         <Select
           label={<span className="sr-only">Branch for {user.email}</span>}
           value={selected}
-          onChange={(event) => setSelected(event.target.value)}
+          onValueChange={(value) => setSelected(value)}
           disabled={saving}
           containerClassName="w-full sm:w-48"
         >

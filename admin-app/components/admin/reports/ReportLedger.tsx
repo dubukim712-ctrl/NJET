@@ -93,7 +93,7 @@ export function ReportLedger({
           <Select
             label="Rows"
             value={pageSize}
-            onChange={(event) => onPageSize(Number(event.target.value) as 25 | 50 | 100)}
+            onValueChange={(value) => onPageSize(Number(value) as 25 | 50 | 100)}
           >
             <option value={25}>25</option>
             <option value={50}>50</option>

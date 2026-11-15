@@ -25,7 +25,7 @@ export function DashboardBranchSelector({
         <Select
           label="Branch"
           value={context.selectedBranchId ?? 'all'}
-          onChange={(event) => selectBranch(event.currentTarget.value)}
+          onValueChange={(value) => selectBranch(value)}
           disabled={isPending || context.branches.length === 0}
           containerClassName="w-full"
         >

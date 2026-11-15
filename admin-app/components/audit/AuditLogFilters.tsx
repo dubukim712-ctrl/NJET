@@ -63,8 +63,8 @@ export function AuditLogFilters({ action, table }: AuditLogFiltersProps) {
           name="action"
           label="Action"
           value={actionValue}
-          onChange={(event) => {
-            const nextAction = event.target.value;
+          onValueChange={(value) => {
+            const nextAction = value;
             setActionValue(nextAction);
             scheduleFilterUpdate(nextAction, tableValue);
           }}
@@ -85,8 +85,8 @@ export function AuditLogFilters({ action, table }: AuditLogFiltersProps) {
           name="table"
           label="Entity"
           value={tableValue}
-          onChange={(event) => {
-            const nextTable = event.target.value;
+          onValueChange={(value) => {
+            const nextTable = value;
             setTableValue(nextTable);
             scheduleFilterUpdate(actionValue, nextTable);
           }}

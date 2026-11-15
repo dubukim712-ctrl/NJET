@@ -86,8 +86,8 @@ export function ShopProductBrowser({ products }: { products: CatalogProduct[] })
             id="shop-category"
             label="Category"
             value={category}
-            onChange={(event) => {
-              setCategory(event.target.value);
+            onValueChange={(value) => {
+              setCategory(value);
               setSubcategory('all');
             }}
             className="bg-background"
@@ -103,7 +103,7 @@ export function ShopProductBrowser({ products }: { products: CatalogProduct[] })
             id="shop-subcategory"
             label="Subcategory"
             value={subcategory}
-            onChange={(event) => setSubcategory(event.target.value)}
+            onValueChange={(value) => setSubcategory(value)}
             className="bg-background"
           >
             <option value="all">All subcategories</option>

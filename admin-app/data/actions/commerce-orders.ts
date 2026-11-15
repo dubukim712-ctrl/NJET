@@ -22,7 +22,10 @@ export async function getCommerceOrdersAction(
     PERMISSIONS.ordersRead,
     '/admin/orders'
   );
-  if (profile.scope === 'staff' && !profile.is_full_access && !profile.branch_id) {
+  const isBranchScopedStaff =
+    profile.scope === 'staff' && !profile.is_full_access;
+  const branchScope = isBranchScopedStaff ? profile.branch_id : null;
+  if (isBranchScopedStaff && !branchScope) {
     return {
       success: false,
       error: 'No branch is assigned to your account. Contact an administrator to access orders.',
@@ -32,7 +35,8 @@ export async function getCommerceOrdersAction(
   const result = await getCommerceOrders(
     supabase,
     parsedFilters.data,
-    hasPermission(profile, PERMISSIONS.ordersManage)
+    hasPermission(profile, PERMISSIONS.ordersManage),
+    branchScope
   );
   if (result.error || !result.data) {
     return {
