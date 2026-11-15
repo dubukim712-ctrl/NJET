@@ -19,9 +19,11 @@ import {
   Wrench,
   type LucideIcon,
   LayoutDashboard,
+  MessageSquareText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { hasPermission, PERMISSIONS } from "@/lib/permissions";
+import { SupportChatUnreadCount } from "@/components/support-chat/SupportChatUnreadCount";
 import type { UserProfile } from "@/types/database";
 
 interface SidebarProps {
@@ -54,6 +56,17 @@ const ADMIN_NAVIGATION: NavGroup[] = [
         href: "/admin",
         icon: LayoutDashboard,
         permission: PERMISSIONS.adminAccess,
+      },
+    ],
+  },
+  {
+    name: "Support",
+    items: [
+      {
+        name: "Customer chats",
+        href: "/admin/chats",
+        icon: MessageSquareText,
+        permission: PERMISSIONS.supportChatManage,
       },
     ],
   },
@@ -185,6 +198,7 @@ export function Sidebar({ user, className, onNavigate }: SidebarProps) {
   })).filter((group) => group.items.length > 0);
 
   const renderLink = (item: NavItem) => {
+    const isCustomerChats = item.href === "/admin/chats";
     const active =
       item.href === "/admin" || item.href === "/"
         ? pathname === item.href
@@ -199,8 +213,10 @@ export function Sidebar({ user, className, onNavigate }: SidebarProps) {
           onFocus={() => router.prefetch(item.href)}
           onClick={onNavigate}
           aria-current={active ? "page" : undefined}
+          aria-label={isCustomerChats && collapsed ? item.name : undefined}
           className={cn(
             "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+            isCustomerChats && "relative",
             "hover:bg-accent hover:text-accent-foreground",
             active
               ? "bg-accent text-accent-foreground"
@@ -210,6 +226,9 @@ export function Sidebar({ user, className, onNavigate }: SidebarProps) {
         >
           <item.icon className="h-5 w-5 shrink-0" aria-hidden="true" />
           {!collapsed && <span>{item.name}</span>}
+          {isCustomerChats && (
+            <SupportChatUnreadCount userId={user?.id ?? null} compact={collapsed} />
+          )}
         </Link>
       </li>
     );

@@ -19,6 +19,7 @@ export const PERMISSIONS = {
   serviceAppointmentsRead: 'service_appointments.read',
   serviceAppointmentsManage: 'service_appointments.manage',
   serviceAppointmentsWork: 'service_appointments.work',
+  supportChatManage: 'support.chat.manage',
 } as const;
 
 export type PermissionKey = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];

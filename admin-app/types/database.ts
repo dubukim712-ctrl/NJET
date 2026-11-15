@@ -9,6 +9,7 @@ import type {
 import type { CommerceTables } from './commerce-tables';
 import type { AdminNotificationTables } from './admin-notifications';
 import type { ReceiptTables } from './receipt-tables';
+import type { SupportChatTables } from './support-chat-tables';
 import type { DatabaseFunctions } from './database-functions';
 
 export type {
@@ -198,7 +199,7 @@ export type Database = {
           },
         ];
       };
-    } & CommerceTables & AdminNotificationTables & ReceiptTables;
+    } & CommerceTables & AdminNotificationTables & ReceiptTables & SupportChatTables;
     Views: {
       user_profiles: {
         Row: UserProfile;

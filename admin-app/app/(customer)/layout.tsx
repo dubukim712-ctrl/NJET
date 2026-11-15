@@ -1,5 +1,6 @@
 import { requireCustomer } from '@/data/auth/guards';
 import { StorefrontShell } from '@/components/layout/StorefrontShell';
+import { SupportChatLauncher } from '@/components/support-chat/SupportChatLauncher';
 
 export default async function CustomerLayout({
   children,
@@ -8,5 +9,10 @@ export default async function CustomerLayout({
 }) {
   const { profile } = await requireCustomer('/dashboard');
 
-  return <StorefrontShell user={profile}>{children}</StorefrontShell>;
+  return (
+    <>
+      <StorefrontShell user={profile}>{children}</StorefrontShell>
+      <SupportChatLauncher />
+    </>
+  );
 }
