@@ -7,6 +7,7 @@ import {
   generateOrderCertificateAction,
   saveOrderInvoiceAction,
 } from "@/data/actions/order-documents";
+import { generateOrderReceiptAction } from "@/data/actions/order-receipts";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Download } from "lucide-react";
@@ -16,20 +17,25 @@ export function CompletedOrderDocuments({
   invoiceNo,
   isEbikeOrder,
   certificate,
+  receipt,
   canManage,
   onDataChanged,
 }: {
   orderId: string;
   invoiceNo: string | null;
   isEbikeOrder: boolean;
-  certificate: { url: string | null } | null;
+  certificate: { url: string | null; certificateNumber: string } | null;
+  receipt: { url: string | null } | null;
   canManage: boolean;
   onDataChanged: () => void;
 }) {
   const router = useRouter();
   const [invoiceNumber, setInvoiceNumber] = useState(invoiceNo ?? "");
   const [savedInvoiceNo, setSavedInvoiceNo] = useState(invoiceNo ?? "");
-  const [busy, setBusy] = useState<"invoice" | "certificate" | null>(null);
+  const [certificateNumber, setCertificateNumber] = useState(
+    certificate?.certificateNumber ?? ""
+  );
+  const [busy, setBusy] = useState<"invoice" | "certificate" | "receipt" | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const saveInvoice = async (event: FormEvent<HTMLFormElement>) => {
@@ -60,10 +66,17 @@ export function CompletedOrderDocuments({
   };
 
   const generateCertificate = async () => {
+    if (!certificateNumber.trim()) {
+      setError("Enter a certificate number.");
+      return;
+    }
     setBusy("certificate");
     setError(null);
     try {
-      const result = await generateOrderCertificateAction({ orderId });
+      const result = await generateOrderCertificateAction({
+        orderId,
+        certificateNumber,
+      });
       if (!result.success) {
         setError(result.error);
         toast.error(result.error);
@@ -82,11 +95,63 @@ export function CompletedOrderDocuments({
     }
   };
 
-  if (!canManage && !invoiceNo && !(isEbikeOrder && certificate)) return null;
+  const generateReceipt = async () => {
+    setBusy("receipt");
+    setError(null);
+    try {
+      const result = await generateOrderReceiptAction({ orderId });
+      if (!result.success) {
+        setError(result.error);
+        toast.error(result.error);
+        return;
+      }
+      toast.success("Sales receipt generated.");
+      if (result.data.warning) toast.warning(result.data.warning);
+      onDataChanged();
+      router.refresh();
+    } catch (actionError) {
+      console.error("Could not generate the sales receipt.", actionError);
+      setError("Could not generate the sales receipt. Please try again.");
+      toast.error("Could not generate the sales receipt. Please try again.");
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  if (!canManage && !invoiceNo && !(isEbikeOrder && certificate) && !receipt) return null;
 
   return (
     <section className="space-y-3 border-t pt-4">
-      <h3 className="text-sm font-semibold">Completed order documents</h3>
+      <h3 className="text-sm font-semibold">Documents</h3>
+      <div className="flex flex-wrap items-center gap-2">
+        {canManage && (
+          <Button
+            type="button"
+            size="default"
+            variant={receipt ? "secondary" : "default"}
+            loading={busy === "receipt"}
+            disabled={busy !== null}
+            onClick={generateReceipt}
+          >
+            {receipt ? "Regenerate sales receipt" : "Generate sales receipt"}
+          </Button>
+        )}
+        {receipt?.url ? (
+          <a
+            href={receipt.url}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex min-h-10 items-center gap-2 rounded-md border px-4 text-sm font-medium hover:bg-accent"
+          >
+            <Download className="h-4 w-4" />
+            Download sales receipt
+          </a>
+        ) : receipt ? (
+          <span className="text-sm text-destructive">
+            Receipt link unavailable; refresh this page.
+          </span>
+        ) : null}
+      </div>
       {canManage ? (
         <form
           onSubmit={saveInvoice}
@@ -124,38 +189,53 @@ export function CompletedOrderDocuments({
       ) : null}
 
       {isEbikeOrder && (
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="space-y-2">
           {canManage && (
-            <Button
-              type="button"
-              size="default"
-              variant={certificate ? "secondary" : "default"}
-              loading={busy === "certificate"}
-              disabled={busy !== null}
-              onClick={generateCertificate}
-            >
-              {certificate ? "Regenerate certificate" : "Generate certificate"}
-            </Button>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+              <label className="w-full space-y-1 text-sm sm:max-w-xs">
+                <span>Certificate number</span>
+                <Input
+                  value={certificateNumber}
+                  onChange={(event) => setCertificateNumber(event.target.value)}
+                  maxLength={80}
+                  required
+                  disabled={busy !== null}
+                  className="min-h-10 w-full rounded-md border bg-background px-3"
+                />
+              </label>
+              <Button
+                type="button"
+                size="default"
+                variant={certificate ? "secondary" : "default"}
+                loading={busy === "certificate"}
+                disabled={busy !== null || !certificateNumber.trim()}
+                onClick={generateCertificate}
+              >
+                {certificate ? "Regenerate certificate" : "Generate certificate"}
+              </Button>
+            </div>
           )}
-          {certificate?.url ? (
-            <a
-              href={certificate.url}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex gap-2 min-h-10 items-center rounded-md border px-4 text-sm font-medium hover:bg-accent"
-            >
-              <Download className="h-4 w-4" />
-              Download certificate
-            </a>
-          ) : certificate ? (
-            <span className="text-sm text-destructive">
-              Certificate link unavailable; refresh this page.
-            </span>
-          ) : canManage ? (
-            <p className="text-xs text-muted-foreground">
-              Sample certificate; not an official document.
-            </p>
-          ) : null}
+          <div className="flex flex-wrap items-center gap-2">
+            {certificate?.url ? (
+              <a
+                href={certificate.url}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex gap-2 min-h-10 items-center rounded-md border px-4 text-sm font-medium hover:bg-accent"
+              >
+                <Download className="h-4 w-4" />
+                Download certificate
+              </a>
+            ) : certificate ? (
+              <span className="text-sm text-destructive">
+                Certificate link unavailable; refresh this page.
+              </span>
+            ) : canManage ? (
+              <p className="text-xs text-muted-foreground">
+                Sample certificate; not an official document.
+              </p>
+            ) : null}
+          </div>
         </div>
       )}
       {error && (

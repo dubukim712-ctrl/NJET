@@ -13,7 +13,7 @@ import {
 import type { createClient } from '@/data/supabase/server';
 import { PERMISSIONS } from '@/lib/permissions';
 import {
-  orderDocumentIdSchema,
+  orderCertificateSchema,
   orderInvoiceSchema,
 } from '@/lib/validations/order-documents';
 
@@ -25,10 +25,11 @@ type SupabaseClient = Awaited<ReturnType<typeof createClient>>;
 
 function rpcError(
   error: { code?: string; message: string },
-  fallback: string
+  fallback: string,
+  migration = '20240101000027_completed_order_documents.sql'
 ): string {
   if (error.code === 'PGRST202') {
-    return 'The order-document migration is missing. Run supabase/migrations/20240101000027_completed_order_documents.sql, then refresh this page.';
+    return `The required order-document migration is missing. Run supabase/migrations/${migration}, then refresh this page.`;
   }
   if (error.code === 'P0001') return error.message;
   console.error(fallback, error.message);
@@ -100,16 +101,20 @@ export async function generateOrderCertificateAction(
     PERMISSIONS.ordersManage,
     '/admin/orders'
   );
-  const parsed = orderDocumentIdSchema.safeParse(payload);
+  const parsed = orderCertificateSchema.safeParse(payload);
   if (!parsed.success) {
-    return { success: false, error: 'Select a valid order.' };
+    return {
+      success: false,
+      error: 'Enter a valid certificate number.',
+      fieldErrors: parsed.error.flatten().fieldErrors,
+    };
   }
 
   let uploadedPath: string | null = null;
   try {
     const orderResult = await supabase
       .from('orders')
-      .select('id, order_number, customer_name, status')
+      .select('id, customer_name, address_line1, barangay, city, province, postal_code, branch_name, status')
       .eq('id', parsed.data.orderId)
       .maybeSingle();
     if (orderResult.error) throw orderResult.error;
@@ -124,7 +129,7 @@ export async function generateOrderCertificateAction(
 
     const itemsResult = await supabase
       .from('order_items')
-      .select('id, product_name, product_type, variant_name, sku, quantity')
+      .select('product_name, product_type, variant_name, quantity')
       .eq('order_id', order.id)
       .order('created_at')
       .limit(100);
@@ -139,39 +144,6 @@ export async function generateOrderCertificateAction(
       };
     }
 
-    const unitsResult = await supabase
-      .from('ebike_units')
-      .select('order_item_id, serial_number, motor_number')
-      .in('order_item_id', ebikeItems.map((item) => item.id))
-      .order('serial_number')
-      .limit(3000);
-    if (unitsResult.error) throw unitsResult.error;
-
-    const rows = ebikeItems.flatMap((item) => {
-      const units = unitsResult.data.filter(
-        (unit) => unit.order_item_id === item.id
-      );
-      if (units.length !== item.quantity) {
-        throw new Error(
-          'E-bike serial records are incomplete. Complete unit identification before generating a certificate.'
-        );
-      }
-      return units.map((unit) => {
-        if (!unit.serial_number || !unit.motor_number) {
-          throw new Error(
-            'E-bike serial records are incomplete. Complete unit identification before generating a certificate.'
-          );
-        }
-        return {
-          productName: item.product_name,
-          variantName: item.variant_name,
-          sku: item.sku,
-          serialNumber: unit.serial_number,
-          motorNumber: unit.motor_number,
-        };
-      });
-    });
-
     const previousResult = await supabase
       .from('order_certificates')
       .select('object_path')
@@ -181,13 +153,20 @@ export async function generateOrderCertificateAction(
 
     const certificateData = {
       customerName: order.customer_name,
-      orderNumber: order.order_number,
-      issuedAt: new Date().toLocaleDateString('en-PH', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-      }),
-      rows,
+      customerAddress: [
+        order.address_line1,
+        order.barangay,
+        order.city,
+        order.province,
+        order.postal_code,
+      ].filter(Boolean).join(', '),
+      products: ebikeItems.map((item) => ({
+        productName: item.product_name,
+        variantName: item.variant_name,
+        quantity: item.quantity,
+      })),
+      branchName: order.branch_name,
+      certificateNumber: parsed.data.certificateNumber,
     };
     let templateVersion = SAMPLE_CERTIFICATE_TEMPLATE_VERSION;
     let bytes: Uint8Array;
@@ -235,6 +214,7 @@ export async function generateOrderCertificateAction(
       p_object_path: objectPath,
       p_file_size: bytes.byteLength,
       p_template_version: templateVersion,
+      p_certificate_number: parsed.data.certificateNumber,
     });
     if (saveResult.error) {
       const cleanupSucceeded = await removeUnattachedCertificate(
@@ -245,7 +225,11 @@ export async function generateOrderCertificateAction(
       return {
         success: false,
         error: cleanupSucceeded
-          ? rpcError(saveResult.error, 'Could not attach the certificate.')
+          ? rpcError(
+              saveResult.error,
+              'Could not attach the certificate.',
+              '20240101000074_order_certificate_number.sql'
+            )
           : 'The certificate could not be attached and its temporary file could not be removed. Contact an administrator.',
       };
     }
@@ -275,9 +259,7 @@ export async function generateOrderCertificateAction(
     console.error('Could not generate the ownership certificate.', error);
     const errorMessage = error instanceof OwnershipCertificateTemplateError
       ? error.message
-      : error instanceof Error && error.message.startsWith('E-bike serial records')
-        ? error.message
-        : 'Could not generate the ownership certificate. Please try again.';
+      : 'Could not generate the ownership certificate. Please try again.';
     return {
       success: false,
       error: cleanupSucceeded

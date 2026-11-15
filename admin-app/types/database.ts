@@ -7,6 +7,8 @@ import type {
   UserProfile,
 } from './rbac';
 import type { CommerceTables } from './commerce-tables';
+import type { AdminNotificationTables } from './admin-notifications';
+import type { ReceiptTables } from './receipt-tables';
 import type { DatabaseFunctions } from './database-functions';
 
 export type {
@@ -17,6 +19,7 @@ export type {
   RoleScope,
   UserProfile,
 } from './rbac';
+export type { AdminNotification, NotificationEventType } from './admin-notifications';
 
 export type Json =
   | string
@@ -195,7 +198,7 @@ export type Database = {
           },
         ];
       };
-    } & CommerceTables;
+    } & CommerceTables & AdminNotificationTables & ReceiptTables;
     Views: {
       user_profiles: {
         Row: UserProfile;

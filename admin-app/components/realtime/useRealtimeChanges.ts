@@ -87,5 +87,6 @@ function isRealtimeTable(value: string): value is RealtimeTable {
     'branch_transfers',
     'branch_transfer_items',
     'branch_transfer_units',
+    'notifications',
   ].includes(value);
 }

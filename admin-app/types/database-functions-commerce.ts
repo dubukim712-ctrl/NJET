@@ -120,6 +120,7 @@ export type DatabaseCommerceFunctions = {
       p_payment_recipient_id: string | null;
       p_payment_reference: string | null;
       p_terms_version: string;
+      p_return_policy_version: string;
       p_privacy_version: string;
       p_terms_accepted: boolean;
       p_privacy_accepted: boolean;
@@ -264,6 +265,7 @@ export type DatabaseCommerceFunctions = {
       p_object_path: string;
       p_file_size: number;
       p_template_version: string;
+      p_certificate_number: string;
     };
     Returns: undefined;
   };

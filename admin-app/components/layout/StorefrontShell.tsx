@@ -4,19 +4,13 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  Home,
-  CalendarDays,
-  Package,
-  ShoppingBag,
-  Clock3,
-  Mail,
-  MapPin,
-  Phone,
+  Home, CalendarDays, Package, ShoppingBag, Clock3, Mail, MapPin, Phone,
   type LucideIcon,
 } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { UserNav } from "@/components/auth/UserNav";
 import { CartDrawer } from "@/components/cart/CartDrawer";
+import { LegalFooterLinks } from "@/components/layout/LegalFooterLinks";
 import {
   StorefrontBusinessInfoQueryError,
   useStorefrontBusinessInfoQuery,
@@ -208,7 +202,7 @@ export function StorefrontShell({ user, children }: StorefrontShellProps) {
               </p>
             </section>
 
-            <div className="grid gap-8 sm:grid-cols-2 sm:gap-6">
+            <div className="grid gap-8 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
               <section>
                 <h3 className="text-xs font-semibold uppercase tracking-[0.16em] text-primary-foreground/70">
                   Contact
@@ -297,6 +291,8 @@ export function StorefrontShell({ user, children }: StorefrontShellProps) {
                   </p>
                 )}
               </section>
+
+              <LegalFooterLinks />
             </div>
           </div>
 

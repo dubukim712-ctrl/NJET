@@ -35,7 +35,8 @@ export type StaffOrder = Pick<
     'object_path'
   > & { url: string | null })[];
   invoiceNo: string | null;
-  certificate: { url: string | null } | null;
+  certificate: { url: string | null; certificateNumber: string } | null;
+  receipt: { url: string | null } | null;
 };
 
 export type OrderBranchOption = Pick<
@@ -116,7 +117,7 @@ export async function getCommerceOrders(
           .in('order_id', orderIds)
           .limit(50)
       : Promise.resolve({ data: [], error: null });
-    const [itemsResult, documentsResult, invoicesResult, certificatesResult, homeCreditDetailsResult] =
+    const [itemsResult, documentsResult, invoicesResult, certificatesResult, receiptsResult, homeCreditDetailsResult] =
       await Promise.all([
         supabase
           .from('order_items')
@@ -137,6 +138,11 @@ export async function getCommerceOrders(
           .limit(50),
         supabase
           .from('order_certificates')
+          .select('id, order_id, object_path, certificate_number')
+          .in('order_id', orderIds)
+          .limit(50),
+        supabase
+          .from('order_receipts')
           .select('id, order_id, object_path')
           .in('order_id', orderIds)
           .limit(50),
@@ -146,6 +152,7 @@ export async function getCommerceOrders(
     if (documentsResult.error) throw documentsResult.error;
     if (invoicesResult.error) throw invoicesResult.error;
     if (certificatesResult.error) throw certificatesResult.error;
+    if (receiptsResult.error) throw receiptsResult.error;
     if (homeCreditDetailsResult.error) throw homeCreditDetailsResult.error;
 
     const recipientIds = [...new Set(
@@ -207,6 +214,25 @@ export async function getCommerceOrders(
         );
       }
     }
+    let receiptUrlByPath = new Map<string, string>();
+    if (receiptsResult.data.length) {
+      const { data, error } = await supabase.storage
+        .from('njet-order-receipts')
+        .createSignedUrls(
+          receiptsResult.data.map((receipt) => receipt.object_path),
+          60,
+          { download: true }
+        );
+      if (error) {
+        console.error('Could not create private sales receipt links.', error);
+      } else {
+        receiptUrlByPath = new Map(
+          data.flatMap((entry) =>
+            entry.path && entry.signedUrl ? [[entry.path, entry.signedUrl] as const] : []
+          )
+        );
+      }
+    }
 
     return {
       data: orders.map((order) => ({
@@ -238,7 +264,18 @@ export async function getCommerceOrders(
             (entry) => entry.order_id === order.id
           );
           return certificate
-            ? { url: certificateUrlByPath.get(certificate.object_path) ?? null }
+            ? {
+                url: certificateUrlByPath.get(certificate.object_path) ?? null,
+                certificateNumber: certificate.certificate_number,
+              }
+            : null;
+        })(),
+        receipt: (() => {
+          const receipt = receiptsResult.data.find(
+            (entry) => entry.order_id === order.id
+          );
+          return receipt
+            ? { url: receiptUrlByPath.get(receipt.object_path) ?? null }
             : null;
         })(),
       })),

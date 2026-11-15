@@ -3,7 +3,6 @@
 import { revalidatePath } from 'next/cache';
 import type { ActionResult } from '@/data/actions/auth';
 import { getAuthContext, requireCustomer } from '@/data/auth/guards';
-import { TERMS_VERSION, PRIVACY_VERSION } from '@/lib/commerce';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 import {
   checkoutSchema,
@@ -78,8 +77,9 @@ export async function createCommerceOrderAction(
       p_payment_provider: input.paymentProvider,
       p_payment_recipient_id: input.paymentRecipientId,
       p_payment_reference: null,
-      p_terms_version: TERMS_VERSION,
-      p_privacy_version: PRIVACY_VERSION,
+      p_terms_version: input.termsVersion,
+      p_return_policy_version: input.returnPolicyVersion,
+      p_privacy_version: input.privacyVersion,
       p_terms_accepted: input.termsAccepted,
       p_privacy_accepted: input.privacyAccepted,
       p_items: input.items.map(({ variantId, quantity }) => ({

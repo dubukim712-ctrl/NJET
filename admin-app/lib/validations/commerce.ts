@@ -17,6 +17,9 @@ export const checkoutSchema = z.object({
   paymentMethod: z.enum(['cash', 'online', 'home_credit']),
   paymentProvider: z.enum(['gcash', 'bank_transfer', 'card']).nullable(),
   paymentRecipientId: z.string().uuid().nullable(),
+  termsVersion: z.string().min(1).max(100),
+  returnPolicyVersion: z.string().min(1).max(100),
+  privacyVersion: z.string().min(1).max(100),
   termsAccepted: z.literal(true),
   privacyAccepted: z.literal(true),
   items: z.array(z.object({

@@ -4,6 +4,7 @@ import { useState, type ReactNode } from "react";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import { UserNav } from "@/components/auth/UserNav";
+import { AdminNotificationBell } from "@/components/admin/notifications/AdminNotificationBell";
 import { Sidebar } from "@/components/layout/Sidebar";
 import type { UserProfile } from "@/types/database";
 
@@ -34,6 +35,7 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
           </Link>
 
           <div className="ml-auto flex items-center gap-3">
+            {user && <AdminNotificationBell userId={user.id} />}
             <UserNav user={user} />
           </div>
         </div>

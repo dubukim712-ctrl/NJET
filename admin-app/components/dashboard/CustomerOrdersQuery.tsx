@@ -23,6 +23,7 @@ const CUSTOMER_ORDER_REALTIME_TABLES: readonly RealtimeTable[] = [
   "order_documents",
   "order_invoices",
   "order_certificates",
+  "order_receipts",
 ];
 
 export function CustomerOrdersQuery() {
@@ -244,7 +245,7 @@ export function CustomerOrdersQuery() {
                 )}
               </div>
               {order.status === "completed" &&
-                (order.invoiceNo || order.certificateUrl) && (
+                (order.invoiceNo || order.certificateUrl || order.receiptUrl) && (
                   <section className="mt-4 flex flex-wrap items-center gap-3 border-t pt-4">
                     {order.invoiceNo && (
                       <p className="text-sm">
@@ -262,6 +263,16 @@ export function CustomerOrdersQuery() {
                         className="inline-flex min-h-10 items-center rounded-md border px-3 text-sm font-medium hover:bg-accent"
                       >
                         Download ownership certificate
+                      </a>
+                    )}
+                    {order.receiptUrl && (
+                      <a
+                        href={order.receiptUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex min-h-10 items-center rounded-md border px-3 text-sm font-medium hover:bg-accent"
+                      >
+                        Download sales receipt
                       </a>
                     )}
                   </section>

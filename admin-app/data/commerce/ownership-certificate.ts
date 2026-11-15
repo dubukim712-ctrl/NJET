@@ -1,22 +1,21 @@
 import { PDFDocument, PageSizes, StandardFonts, rgb } from 'pdf-lib';
 import { OWNERSHIP_CERTIFICATE_TEMPLATE_FIELDS } from './ownership-certificate-template-config';
 
-export interface OwnershipCertificateRow {
+export interface OwnershipCertificateProduct {
   productName: string;
   variantName: string;
-  sku: string;
-  serialNumber: string;
-  motorNumber: string;
+  quantity: number;
 }
 
 export interface OwnershipCertificateData {
   customerName: string;
-  orderNumber: string;
-  issuedAt: string;
-  rows: OwnershipCertificateRow[];
+  customerAddress: string;
+  products: OwnershipCertificateProduct[];
+  branchName: string;
+  certificateNumber: string;
 }
 
-const ROWS_PER_PAGE = 24;
+const PRODUCTS_PER_PAGE = 24;
 const SAMPLE_NOTICE = 'SAMPLE - NOT AN OFFICIAL DOCUMENT';
 
 export class OwnershipCertificateTemplateError extends Error {
@@ -66,36 +65,26 @@ export async function buildOwnershipCertificateFromTemplate(
       );
     }
   };
-  const customerNameField = getTextField(
-    OWNERSHIP_CERTIFICATE_TEMPLATE_FIELDS.customerName
-  );
-  const orderNumberField = getTextField(
-    OWNERSHIP_CERTIFICATE_TEMPLATE_FIELDS.orderNumber
-  );
-  const issuedAtField = getTextField(
-    OWNERSHIP_CERTIFICATE_TEMPLATE_FIELDS.issuedAt
-  );
-  const ebikeDetailsField = getTextField(
-    OWNERSHIP_CERTIFICATE_TEMPLATE_FIELDS.ebikeDetails
-  );
+  const customerNameField = getTextField(OWNERSHIP_CERTIFICATE_TEMPLATE_FIELDS.customerName);
+  const customerAddressField = getTextField(OWNERSHIP_CERTIFICATE_TEMPLATE_FIELDS.customerAddress);
+  const productDetailsField = getTextField(OWNERSHIP_CERTIFICATE_TEMPLATE_FIELDS.productDetails);
+  const branchNameField = getTextField(OWNERSHIP_CERTIFICATE_TEMPLATE_FIELDS.branchName);
+  const certificateNumberField = getTextField(OWNERSHIP_CERTIFICATE_TEMPLATE_FIELDS.certificateNumber);
 
-  if (!ebikeDetailsField.isMultiline()) {
+  if (!productDetailsField.isMultiline()) {
     throw new OwnershipCertificateTemplateError(
-      'The ebike_details field must be a multiline text field.'
+      'The product_details field must be a multiline text field.'
     );
   }
 
   const singleLine = (value: string) => value.replace(/\s+/g, ' ').trim();
   customerNameField.setText(singleLine(data.customerName));
-  orderNumberField.setText(singleLine(data.orderNumber));
-  issuedAtField.setText(singleLine(data.issuedAt));
-  ebikeDetailsField.setText(
-    data.rows
-      .map((row) => [
-        `${singleLine(row.productName)} ${singleLine(row.variantName)} (${singleLine(row.sku)})`,
-        `Serial: ${singleLine(row.serialNumber)}`,
-        `Motor: ${singleLine(row.motorNumber)}`,
-      ].join(' | '))
+  customerAddressField.setText(singleLine(data.customerAddress));
+  branchNameField.setText(singleLine(data.branchName));
+  certificateNumberField.setText(singleLine(data.certificateNumber));
+  productDetailsField.setText(
+    data.products
+      .map((product) => `${singleLine(product.productName)} - ${singleLine(product.variantName)}${product.quantity > 1 ? ` x ${product.quantity}` : ''}`)
       .join('\n')
   );
 
@@ -109,9 +98,10 @@ export async function validateOwnershipCertificateTemplate(
 ): Promise<void> {
   await buildOwnershipCertificateFromTemplate(templateBytes, {
     customerName: '',
-    orderNumber: '',
-    issuedAt: '',
-    rows: [],
+    customerAddress: '',
+    products: [],
+    branchName: '',
+    certificateNumber: '',
   });
 }
 
@@ -119,18 +109,18 @@ export async function buildOwnershipCertificate(
   data: OwnershipCertificateData
 ): Promise<Uint8Array> {
   const document = await PDFDocument.create();
-  document.setTitle(`Certificate of Ownership - ${data.orderNumber}`);
+  document.setTitle(`Certificate of Ownership - ${data.certificateNumber}`);
   document.setSubject(SAMPLE_NOTICE);
   const regular = await document.embedFont(StandardFonts.Helvetica);
   const bold = await document.embedFont(StandardFonts.HelveticaBold);
-  const pages = Math.ceil(data.rows.length / ROWS_PER_PAGE);
+  const pages = Math.max(1, Math.ceil(data.products.length / PRODUCTS_PER_PAGE));
 
   for (let pageIndex = 0; pageIndex < pages; pageIndex += 1) {
     const page = document.addPage(PageSizes.A4);
     const { width, height } = page.getSize();
-    const rows = data.rows.slice(
-      pageIndex * ROWS_PER_PAGE,
-      (pageIndex + 1) * ROWS_PER_PAGE
+    const products = data.products.slice(
+      pageIndex * PRODUCTS_PER_PAGE,
+      (pageIndex + 1) * PRODUCTS_PER_PAGE
     );
 
     page.drawText('CERTIFICATE OF OWNERSHIP', {
@@ -147,40 +137,34 @@ export async function buildOwnershipCertificate(
       font: bold,
       color: rgb(0.72, 0.2, 0.12),
     });
-    page.drawText(`Order: ${data.orderNumber}`, {
+    page.drawText(`Certificate No: ${data.certificateNumber}`, {
       x: 48,
       y: height - 118,
       size: 11,
       font: regular,
     });
-    page.drawText(`Owner: ${data.customerName}`, {
+    page.drawText(`Customer: ${data.customerName}`, {
       x: 48,
       y: height - 137,
       size: 11,
       font: regular,
-      maxWidth: width - 96,
     });
-    page.drawText(`Issued: ${data.issuedAt}`, {
+    page.drawText(`Address: ${data.customerAddress}`, {
       x: 48,
       y: height - 156,
       size: 11,
       font: regular,
+      maxWidth: width - 96,
     });
-    page.drawText(
-      'This sample records the ownership details for the e-bike units listed below.',
-      {
-        x: 48,
-        y: height - 178,
-        size: 9,
-        font: regular,
-        maxWidth: width - 96,
-      }
-    );
+    page.drawText(`Branch: ${data.branchName}`, {
+      x: 48,
+      y: height - 175,
+      size: 11,
+      font: regular,
+    });
 
-    const headerY = height - 202;
-    page.drawText('E-BIKE', { x: 48, y: headerY, size: 9, font: bold });
-    page.drawText('SERIAL NUMBER', { x: 245, y: headerY, size: 9, font: bold });
-    page.drawText('MOTOR NUMBER', { x: 400, y: headerY, size: 9, font: bold });
+    const headerY = height - 205;
+    page.drawText('PRODUCT + VARIANT', { x: 48, y: headerY, size: 9, font: bold });
     page.drawLine({
       start: { x: 48, y: headerY - 6 },
       end: { x: width - 48, y: headerY - 6 },
@@ -188,29 +172,18 @@ export async function buildOwnershipCertificate(
       color: rgb(0.65, 0.69, 0.67),
     });
 
-    rows.forEach((row, rowIndex) => {
-      const y = headerY - 24 - rowIndex * 21;
-      page.drawText(`${row.productName} ${row.variantName} (${row.sku})`, {
+    products.forEach((product, productIndex) => {
+      const y = headerY - 24 - productIndex * 21;
+      page.drawText(
+        `${product.productName} - ${product.variantName}${product.quantity > 1 ? ` x ${product.quantity}` : ''}`,
+        {
         x: 48,
         y,
-        size: 8,
+        size: 9,
         font: regular,
-        maxWidth: 188,
-      });
-      page.drawText(row.serialNumber, {
-        x: 245,
-        y,
-        size: 8,
-        font: regular,
-        maxWidth: 145,
-      });
-      page.drawText(row.motorNumber, {
-        x: 400,
-        y,
-        size: 8,
-        font: regular,
-        maxWidth: width - 448,
-      });
+        maxWidth: width - 96,
+        }
+      );
     });
 
     page.drawText(`Page ${pageIndex + 1} of ${pages}`, {

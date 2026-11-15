@@ -1,6 +1,10 @@
 import { unstable_rethrow } from 'next/navigation';
 import { createClient } from '@/data/supabase/server';
+import { getCurrentLegalPolicyVersions } from '@/data/commerce/legal-policies';
+import type { LegalPolicySlug } from '@/data/legal-policies';
 import type { PaymentProvider } from '@/types/commerce-tables';
+
+export type LegalPolicyVersions = Record<LegalPolicySlug, string>;
 
 export type CheckoutOptions = {
   branches: { id: string; name: string; address: string }[];
@@ -11,6 +15,7 @@ export type CheckoutOptions = {
     recipientName: string;
     accountDetails: string;
   }[];
+  policyVersions: LegalPolicyVersions;
 };
 
 export async function getCheckoutOptions(): Promise<{
@@ -23,6 +28,7 @@ export async function getCheckoutOptions(): Promise<{
       { data: branches, error: branchError },
       { data: zones, error: zoneError },
       { data: recipients, error: recipientError },
+      policyVersions,
     ] =
       await Promise.all([
         supabase
@@ -44,6 +50,7 @@ export async function getCheckoutOptions(): Promise<{
           .order('provider')
           .order('created_at')
           .limit(100),
+        getCurrentLegalPolicyVersions(supabase),
       ]);
     if (branchError) throw branchError;
     if (zoneError) throw zoneError;
@@ -54,7 +61,10 @@ export async function getCheckoutOptions(): Promise<{
       recipientName: recipient.recipient_name,
       accountDetails: recipient.account_details,
     }));
-    return { data: { branches, zones, paymentRecipients }, error: null };
+    return {
+      data: { branches, zones, paymentRecipients, policyVersions },
+      error: null,
+    };
   } catch (error) {
     unstable_rethrow(error);
     console.error('Could not load checkout options.', error);

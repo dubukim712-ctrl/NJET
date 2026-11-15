@@ -161,7 +161,7 @@ type DeliveryZone = Timestamped & {
   active: boolean;
 };
 
-type Order = {
+export type Order = {
   id: string;
   order_number: string;
   customer_id: string | null;
@@ -192,6 +192,7 @@ type Order = {
   online_due_minor: number;
   home_credit_downpayment_due_minor: number;
   terms_version: string | null;
+  return_policy_version: string | null;
   privacy_version: string | null;
   terms_accepted_at: string | null;
   privacy_accepted_at: string | null;
@@ -205,7 +206,7 @@ type Order = {
   updated_at: string;
 };
 
-type OrderItem = {
+export type OrderItem = {
   id: string;
   order_id: string;
   variant_id: string;
@@ -221,7 +222,7 @@ type OrderItem = {
   created_at: string;
 };
 
-type OrderPaymentTransaction = {
+export type OrderPaymentTransaction = {
   id: string;
   order_id: string;
   transaction_type: OrderPaymentTransactionType;
@@ -258,6 +259,7 @@ type OrderInvoice = {
 type OrderCertificate = {
   id: string;
   order_id: string;
+  certificate_number: string;
   object_path: string;
   content_type: string;
   file_size: number;
@@ -295,7 +297,7 @@ type OwnershipCertificateTemplate = {
   updated_at: string;
 };
 
-type BusinessSettings = {
+export type BusinessSettings = {
   id: number;
   business_name: string;
   phone: string;
@@ -305,6 +307,21 @@ type BusinessSettings = {
   business_hours: string;
   created_at: string;
   updated_at: string;
+};
+
+type StorefrontLegalPolicyVersion = {
+  id: number;
+  slug: 'terms' | 'return-policy' | 'privacy';
+  version: string;
+  intro: string;
+  sections: {
+    id: string;
+    title: string;
+    summary: string;
+    paragraphs: string[];
+    bullets?: string[];
+  }[];
+  created_at: string;
 };
 
 type ServiceAppointment = {
@@ -400,6 +417,7 @@ export type CommerceTables = {
   payment_recipients: Table<PaymentRecipient>;
   ownership_certificate_templates: Table<OwnershipCertificateTemplate>;
   business_settings: Table<BusinessSettings>;
+  storefront_legal_policy_versions: Table<StorefrontLegalPolicyVersion>;
   service_appointments: Table<ServiceAppointment>;
   service_appointment_cancellation_requests: Table<ServiceAppointmentCancellationRequest>;
   service_appointment_internal_notes: Table<ServiceAppointmentInternalNote>;

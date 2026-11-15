@@ -9,3 +9,9 @@ export const orderInvoiceSchema = orderDocumentIdSchema.extend({
     (value) => !/[\u0000-\u001f\u007f]/.test(value)
   ),
 });
+
+export const orderCertificateSchema = orderDocumentIdSchema.extend({
+  certificateNumber: z.string().trim().min(1).max(80).refine(
+    (value) => !/[\u0000-\u001f\u007f]/.test(value)
+  ),
+});

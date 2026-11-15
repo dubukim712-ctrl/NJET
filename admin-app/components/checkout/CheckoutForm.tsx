@@ -15,6 +15,7 @@ import { useCart } from '@/components/cart/CartProvider';
 import { CheckoutAuthNotice } from '@/components/checkout/CheckoutAuthNotice';
 import { CheckoutFields } from '@/components/checkout/CheckoutFields';
 import { CheckoutOrderSummary } from '@/components/checkout/CheckoutOrderSummary';
+import { useCheckoutPolicyConsent } from '@/components/checkout/useCheckoutPolicyConsent';
 import { Button } from '@/components/ui/Button';
 import type { CheckoutOptions } from '@/data/commerce/checkout-options';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
@@ -24,6 +25,7 @@ export function CheckoutForm({
   branches,
   zones,
   paymentRecipients,
+  policyVersions,
 }: CheckoutOptions) {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -41,8 +43,7 @@ export function CheckoutForm({
   const [branchId, setBranchId] = useState(branches[0]?.id ?? '');
   const [zoneId, setZoneId] = useState(zones[0]?.id ?? '');
   const [identityFiles, setIdentityFiles] = useState<File[]>([]);
-  const [termsAccepted, setTermsAccepted] = useState(false);
-  const [privacyAccepted, setPrivacyAccepted] = useState(false);
+  const policyConsent = useCheckoutPolicyConsent(policyVersions);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [requiresLogin, setRequiresLogin] = useState(false);
@@ -52,15 +53,12 @@ export function CheckoutForm({
   const activeZoneId = zones.some((zone) => zone.id === zoneId)
     ? zoneId
     : zones[0]?.id ?? '';
-  const activeRecipient = paymentRecipients.find(
-    (recipient) =>
-      recipient.id === paymentRecipientId &&
-      recipient.provider === paymentProvider
+  const activeRecipient = paymentRecipients.find((recipient) =>
+    recipient.id === paymentRecipientId && recipient.provider === paymentProvider
   );
-  const activePaymentProvider =
-    activeRecipient?.provider ?? paymentRecipients[0]?.provider ?? paymentProvider;
-  const activePaymentRecipientId =
-    activeRecipient?.id ?? paymentRecipients[0]?.id ?? '';
+  const activePaymentProvider = activeRecipient?.provider
+    ?? paymentRecipients[0]?.provider ?? paymentProvider;
+  const activePaymentRecipientId = activeRecipient?.id ?? paymentRecipients[0]?.id ?? '';
   const {
     data: variants = [],
     error: queryError,
@@ -72,8 +70,7 @@ export function CheckoutForm({
   const loadingCart = items.length > 0 && isFetching;
   const variantById = new Map(variants.map((variant) => [variant.id, variant]));
   const cartItems = items.map((item) => ({
-    ...item,
-    variant: variantById.get(item.variantId) ?? null,
+    ...item, variant: variantById.get(item.variantId) ?? null,
   }));
   const allVariantsLoaded = cartItems.length > 0 && cartItems.every((item) => item.variant);
   const hasEbike = cartItems.some((item) => item.variant?.productType === 'ebike');
@@ -151,7 +148,7 @@ export function CheckoutForm({
     if (!stockAvailable) return setError('The selected fulfillment option does not have enough stock for this cart.');
     if (!paymentAvailable) return setError('Choose an active payment account for the selected payment method.');
     if (hasEbike && !identityFiles.length) return setError('Upload at least one valid ID for an e-bike order.');
-    if (!termsAccepted || !privacyAccepted) return setError('Confirm both policy notices before placing your order.');
+    if (policyConsent.error) return setError(policyConsent.error);
 
     setBusy(true);
     const formData = new FormData(event.currentTarget);
@@ -186,8 +183,11 @@ export function CheckoutForm({
         paymentMethod,
         paymentProvider: paymentProofRequired ? activePaymentProvider : null,
         paymentRecipientId: paymentProofRequired ? activePaymentRecipientId : null,
-        termsAccepted,
-        privacyAccepted,
+        termsAccepted: policyConsent.termsAccepted,
+        termsVersion: policyConsent.versions.terms,
+        returnPolicyVersion: policyConsent.versions['return-policy'],
+        privacyAccepted: policyConsent.privacyAccepted,
+        privacyVersion: policyConsent.versions.privacy,
         items: items.map((item) => ({ variantId: item.variantId, quantity: item.quantity })),
         documents: uploaded.documents,
       });
@@ -281,8 +281,8 @@ export function CheckoutForm({
           onBranchChange={setBranchId}
           onZoneChange={setZoneId}
           onIdentityFilesChange={setIdentityFiles}
-          onTermsChange={setTermsAccepted}
-          onPrivacyChange={setPrivacyAccepted}
+          onTermsChange={policyConsent.onTermsChange}
+          onPrivacyChange={policyConsent.onPrivacyChange}
         />
       </div>
       <CheckoutOrderSummary

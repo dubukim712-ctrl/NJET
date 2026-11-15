@@ -5,6 +5,7 @@ export type RealtimeTable =
   | 'order_documents'
   | 'order_invoices'
   | 'order_certificates'
+  | 'order_receipts'
   | 'payment_recipients'
   | 'service_appointments'
   | 'branch_inventory'
@@ -22,7 +23,8 @@ export type RealtimeTable =
   | 'inventory_movements'
   | 'branch_transfers'
   | 'branch_transfer_items'
-  | 'branch_transfer_units';
+  | 'branch_transfer_units'
+  | 'notifications';
 
 export type RealtimeConnectionState =
   | 'connecting'

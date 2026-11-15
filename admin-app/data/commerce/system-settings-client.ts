@@ -14,9 +14,11 @@ const MAX_TEMPLATE_SIZE = 5 * 1024 * 1024;
 const BRANDING_BUCKET = 'njet-storefront-branding';
 const PAYMENT_MEDIA_BUCKET = 'njet-payment-recipient-media';
 const TEMPLATE_BUCKET = 'njet-certificate-templates';
+const RECEIPT_TEMPLATE_BUCKET = 'njet-sales-receipt-templates';
 
 export type SettingsAsset =
   | { kind: 'template'; path: string }
+  | { kind: 'receipt-template'; path: string }
   | { kind: 'business-logo'; path: string }
   | { kind: 'payment-qr'; provider: PaymentProvider; path: string };
 
@@ -29,12 +31,13 @@ export async function uploadSystemSettingsAsset(
   let path: string;
   let contentType: string;
 
-  if (kind === 'template') {
+  if (kind === 'template' || kind === 'receipt-template') {
     if (file.type !== 'application/pdf' || file.size < 1 || file.size > MAX_TEMPLATE_SIZE) {
       return { path: null, error: 'Use a PDF template no larger than 5 MB.' };
     }
-    bucket = TEMPLATE_BUCKET;
-    path = `templates/${crypto.randomUUID()}.pdf`;
+    const receiptTemplate = kind === 'receipt-template';
+    bucket = receiptTemplate ? RECEIPT_TEMPLATE_BUCKET : TEMPLATE_BUCKET;
+    path = `${receiptTemplate ? 'receipt-templates' : 'templates'}/${crypto.randomUUID()}.pdf`;
     contentType = 'application/pdf';
   } else if (kind === 'business-logo') {
     const extension = IMAGE_EXTENSIONS[file.type];

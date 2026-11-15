@@ -4,16 +4,19 @@ import { useState, type KeyboardEvent } from 'react';
 import { BusinessInfoEditor } from '@/components/admin/settings/BusinessInfoEditor';
 import { BranchServiceHoursSettings } from '@/components/admin/settings/BranchServiceHoursSettings';
 import { OwnershipCertificateTemplateSettings } from '@/components/admin/settings/OwnershipCertificateTemplateSettings';
+import { SalesReceiptTemplateSettings } from '@/components/admin/settings/SalesReceiptTemplateSettings';
 import { PaymentRecipientEditor } from '@/components/admin/settings/PaymentRecipientEditor';
+import { LegalPoliciesSettings } from '@/components/admin/settings/LegalPoliciesSettings';
 import { PAYMENT_PROVIDER_OPTIONS } from '@/data/commerce/payment-recipients';
 import type { AdminSystemSettings } from '@/data/commerce/system-settings';
 
-type SettingsTab = 'business' | 'service-hours' | 'payments' | 'certificates';
+type SettingsTab = 'business' | 'service-hours' | 'payments' | 'documents' | 'policies';
 const SETTINGS_TABS: { id: SettingsTab; label: string }[] = [
   { id: 'business', label: 'Business' },
   { id: 'service-hours', label: 'Service hours' },
   { id: 'payments', label: 'Payment Accounts' },
-  { id: 'certificates', label: 'Certificates' },
+  { id: 'documents', label: 'Documents' },
+  { id: 'policies', label: 'Policies' },
 ];
 
 export function SystemSettingsManager({
@@ -124,13 +127,26 @@ export function SystemSettingsManager({
       </section>
 
       <section
-        id="settings-certificates-panel"
+        id="settings-documents-panel"
         role="tabpanel"
-        aria-labelledby="settings-certificates-tab"
+        aria-labelledby="settings-documents-tab"
         tabIndex={0}
-        hidden={activeTab !== 'certificates'}
+        hidden={activeTab !== 'documents'}
       >
-        <OwnershipCertificateTemplateSettings template={settings.certificateTemplate} />
+        <div className="grid min-w-0 gap-4 xl:grid-cols-2">
+          <OwnershipCertificateTemplateSettings template={settings.certificateTemplate} />
+          <SalesReceiptTemplateSettings template={settings.receiptTemplate} />
+        </div>
+      </section>
+
+      <section
+        id="settings-policies-panel"
+        role="tabpanel"
+        aria-labelledby="settings-policies-tab"
+        tabIndex={0}
+        hidden={activeTab !== 'policies'}
+      >
+        <LegalPoliciesSettings policies={settings.legalPolicies} />
       </section>
     </div>
   );

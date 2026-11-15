@@ -1,6 +1,8 @@
 import { unstable_rethrow } from 'next/navigation';
 import { requireFullAccess } from '@/data/auth/guards';
+import { getCurrentLegalPolicies } from '@/data/commerce/legal-policies';
 import type { createClient } from '@/data/supabase/server';
+import type { LegalPolicy } from '@/data/legal-policies';
 import type { PaymentProvider } from '@/types/commerce-tables';
 
 type SupabaseClient = Awaited<ReturnType<typeof createClient>>;
@@ -42,7 +44,14 @@ export type AdminSystemSettings = {
   certificateTemplate: {
     templateVersion: string;
     updatedAt: string;
+    previewUrl: string | null;
   } | null;
+  receiptTemplate: {
+    templateVersion: string;
+    updatedAt: string;
+    previewUrl: string | null;
+  } | null;
+  legalPolicies: LegalPolicy[];
   paymentRecipients: AdminPaymentRecipient[];
 };
 
@@ -55,9 +64,11 @@ export async function getAdminSystemSettings(): Promise<{
     const [
       businessResult,
       templateResult,
+      receiptTemplateResult,
       recipientResult,
       branchesResult,
       serviceHoursResult,
+      legalPolicies,
     ] = await Promise.all([
       supabase
         .from('business_settings')
@@ -66,7 +77,12 @@ export async function getAdminSystemSettings(): Promise<{
         .maybeSingle(),
       supabase
         .from('ownership_certificate_templates')
-        .select('template_version, updated_at')
+        .select('object_path, template_version, updated_at')
+        .eq('id', 1)
+        .maybeSingle(),
+      supabase
+        .from('sales_receipt_templates')
+        .select('object_path, template_version, updated_at')
         .eq('id', 1)
         .maybeSingle(),
       supabase
@@ -80,13 +96,37 @@ export async function getAdminSystemSettings(): Promise<{
         .from('branch_service_hours')
         .select('branch_id, day_of_week, is_open, opens_at, closes_at')
         .limit(700),
+      getCurrentLegalPolicies(supabase),
     ]);
     if (businessResult.error) throw businessResult.error;
     if (templateResult.error) throw templateResult.error;
+    if (receiptTemplateResult.error) throw receiptTemplateResult.error;
     if (recipientResult.error) throw recipientResult.error;
     if (branchesResult.error) throw branchesResult.error;
     if (serviceHoursResult.error) throw serviceHoursResult.error;
     if (!businessResult.data) throw new Error('Business settings are not initialized.');
+    const certificateTemplatePreview = templateResult.data
+      ? await supabase.storage
+          .from('njet-certificate-templates')
+          .createSignedUrl(templateResult.data.object_path, 300)
+      : null;
+    if (certificateTemplatePreview?.error) {
+      console.error(
+        'Could not create an ownership certificate template preview link.',
+        certificateTemplatePreview.error
+      );
+    }
+    const receiptTemplatePreview = receiptTemplateResult.data
+      ? await supabase.storage
+          .from('njet-sales-receipt-templates')
+          .createSignedUrl(receiptTemplateResult.data.object_path, 300)
+      : null;
+    if (receiptTemplatePreview?.error) {
+      console.error(
+        'Could not create a sales receipt template preview link.',
+        receiptTemplatePreview.error
+      );
+    }
     const branding = supabase.storage.from('njet-storefront-branding');
 
     return {
@@ -116,8 +156,17 @@ export async function getAdminSystemSettings(): Promise<{
           ? {
               templateVersion: templateResult.data.template_version,
               updatedAt: templateResult.data.updated_at,
+              previewUrl: certificateTemplatePreview?.data?.signedUrl ?? null,
             }
           : null,
+        receiptTemplate: receiptTemplateResult.data
+          ? {
+              templateVersion: receiptTemplateResult.data.template_version,
+              updatedAt: receiptTemplateResult.data.updated_at,
+              previewUrl: receiptTemplatePreview?.data?.signedUrl ?? null,
+            }
+          : null,
+        legalPolicies,
         paymentRecipients: recipientResult.data.map((recipient) => {
           const storage = supabase.storage.from('njet-payment-recipient-media');
           return {

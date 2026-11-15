@@ -19,6 +19,7 @@ export type CustomerOrder = Pick<
   >[];
   invoiceNo: string | null;
   certificateUrl: string | null;
+  receiptUrl: string | null;
 };
 
 export async function getCustomerOrders(
@@ -40,7 +41,7 @@ export async function getCustomerOrders(
     if (!orders.length) return { data: [], error: null };
 
     const orderIds = orders.map((order) => order.id);
-    const [itemsResult, invoicesResult, certificatesResult] = await Promise.all([
+    const [itemsResult, invoicesResult, certificatesResult, receiptsResult] = await Promise.all([
       supabase
         .from('order_items')
         .select('order_id, product_name, variant_name, product_type, quantity, unit_price_minor')
@@ -57,10 +58,16 @@ export async function getCustomerOrders(
         .select('order_id, object_path')
         .in('order_id', orderIds)
         .limit(50),
+      supabase
+        .from('order_receipts')
+        .select('order_id, object_path')
+        .in('order_id', orderIds)
+        .limit(50),
     ]);
     if (itemsResult.error) throw itemsResult.error;
     if (invoicesResult.error) throw invoicesResult.error;
     if (certificatesResult.error) throw certificatesResult.error;
+    if (receiptsResult.error) throw receiptsResult.error;
 
     let certificateUrlByOrder = new Map<string, string>();
     if (certificatesResult.data.length) {
@@ -87,6 +94,31 @@ export async function getCustomerOrders(
         );
       }
     }
+    let receiptUrlByOrder = new Map<string, string>();
+    if (receiptsResult.data.length) {
+      const { data, error } = await supabase.storage
+        .from('njet-order-receipts')
+        .createSignedUrls(
+          receiptsResult.data.map((receipt) => receipt.object_path),
+          60,
+          { download: true }
+        );
+      if (error) {
+        console.error('Could not create private sales receipt links.', error);
+      } else {
+        const signedByPath = new Map(
+          data.flatMap((entry) =>
+            entry.path && entry.signedUrl ? [[entry.path, entry.signedUrl] as const] : []
+          )
+        );
+        receiptUrlByOrder = new Map(
+          receiptsResult.data.flatMap((receipt) => {
+            const url = signedByPath.get(receipt.object_path);
+            return url ? [[receipt.order_id, url] as const] : [];
+          })
+        );
+      }
+    }
 
     return {
       data: orders.map((order) => ({
@@ -94,6 +126,7 @@ export async function getCustomerOrders(
         items: itemsResult.data.filter((item) => item.order_id === order.id),
         invoiceNo: invoicesResult.data.find((invoice) => invoice.order_id === order.id)?.invoice_no ?? null,
         certificateUrl: certificateUrlByOrder.get(order.id) ?? null,
+        receiptUrl: receiptUrlByOrder.get(order.id) ?? null,
       })),
       error: null,
     };

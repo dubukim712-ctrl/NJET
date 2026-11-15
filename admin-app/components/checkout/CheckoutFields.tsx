@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { CreditCard, FileImage, Phone, UserRound } from "lucide-react";
 import { getPaymentProviderLabel } from "@/data/commerce/payment-recipients";
 import {
@@ -16,7 +17,7 @@ import type {
   PaymentProvider,
 } from "@/types/commerce-tables";
 
-interface CheckoutFieldsProps extends CheckoutOptions {
+interface CheckoutFieldsProps extends Omit<CheckoutOptions, 'policyVersions'> {
   fulfillment: Fulfillment;
   paymentMethod: PaymentMethod;
   branchId: string;
@@ -268,9 +269,19 @@ export function CheckoutFields(props: CheckoutFieldsProps) {
       <section className="space-y-3 rounded-xl border bg-card p-5 sm:p-6">
         <h2 className="text-lg font-semibold">Policies</h2>
         <p className="text-sm leading-5 text-muted-foreground">
-          These are explicit draft placeholders and must be replaced with
-          legally reviewed NJET policies before launch.
+          Please review these policies before placing your order.
         </p>
+        <nav aria-label="Customer policies" className="flex flex-wrap gap-x-4 gap-y-2 text-sm">
+          <Link className="font-medium text-primary underline underline-offset-4" href="/terms">
+            Terms &amp; Conditions
+          </Link>
+          <Link className="font-medium text-primary underline underline-offset-4" href="/return-policy">
+            Return &amp; Refund Policy
+          </Link>
+          <Link className="font-medium text-primary underline underline-offset-4" href="/privacy">
+            Privacy Policy
+          </Link>
+        </nav>
         <label className="flex items-start gap-3 text-sm leading-5">
           <input
             type="checkbox"
@@ -278,9 +289,7 @@ export function CheckoutFields(props: CheckoutFieldsProps) {
             required
             className="mt-1 size-4 accent-primary"
           />
-          <span>
-            I agree to the Terms &amp; Conditions (draft placeholder).
-          </span>
+          <span>I agree to the Terms &amp; Conditions.</span>
         </label>
         <label className="flex items-start gap-3 text-sm leading-5">
           <input
@@ -289,7 +298,7 @@ export function CheckoutFields(props: CheckoutFieldsProps) {
             required
             className="mt-1 size-4 accent-primary"
           />
-          <span>I acknowledge the Privacy Policy (draft placeholder).</span>
+          <span>I acknowledge the Privacy Policy.</span>
         </label>
       </section>
     </div>

@@ -19,6 +19,7 @@ export function OwnershipCertificateTemplateSettings({
   template: {
     templateVersion: string;
     updatedAt: string;
+    previewUrl: string | null;
   } | null;
 }) {
   const router = useRouter();
@@ -26,6 +27,7 @@ export function OwnershipCertificateTemplateSettings({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fieldNames = Object.values(OWNERSHIP_CERTIFICATE_TEMPLATE_FIELDS).join(', ');
+  const previewUrl = template?.previewUrl ?? '/ownership-certificate-sample.pdf';
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -96,8 +98,47 @@ export function OwnershipCertificateTemplateSettings({
       </div>
       <p className="text-sm text-muted-foreground">
         Upload a standard AcroForm PDF with text fields named {fieldNames}.
-        The ebike_details field must be multiline.
+        The product_details field must be multiline. Replace older templates
+        that use the previous field names.
       </p>
+      <section className="space-y-3" aria-label="Certificate of Ownership PDF preview">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h3 className="text-sm font-semibold">
+            {template?.previewUrl ? 'Current PDF' : 'Sample PDF preview'}
+          </h3>
+          <div className="flex flex-wrap gap-3 text-sm">
+            {template?.previewUrl && (
+              <a
+                href={template.previewUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="font-medium text-primary underline underline-offset-4"
+              >
+                Open current PDF
+              </a>
+            )}
+            <a
+              href="/ownership-certificate-sample.pdf"
+              download
+              className="font-medium text-primary underline underline-offset-4"
+            >
+              Download sample PDF
+            </a>
+          </div>
+        </div>
+        {template && !template.previewUrl && (
+          <p className="text-sm text-destructive" role="status">
+            The active PDF preview is unavailable. Showing the sample instead.
+          </p>
+        )}
+        <iframe
+          title={template?.previewUrl ? 'Current Certificate of Ownership template' : 'Sample Certificate of Ownership template'}
+          src={previewUrl}
+          loading="lazy"
+          referrerPolicy="no-referrer"
+          className="h-[65vh] min-h-[420px] w-full rounded-md border bg-background"
+        />
+      </section>
       <form className="space-y-4" onSubmit={submit}>
         <Input
           name="template"

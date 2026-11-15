@@ -45,12 +45,15 @@ Secured authentication and dashboard built with Next.js 16 (App Router), TypeScr
      order-document storage for the storefront prototype.
 
 Commerce routes are `/shop`, `/shop/view-product/[slug]`, and `/checkout`.
+Terms, Return & Refund, and Privacy pages are available at `/terms`,
+`/return-policy`, and `/privacy`; have the policy text reviewed before live use.
+Their content is editable under Admin Settings > Policies, with each save
+retained as a new version.
 Staff configuration and order review are under `/admin/products`,
 `/admin/branches`, `/admin/delivery-zones`, and `/admin/orders`. Stock is not
 held until staff confirms an order. Online payment is a manual proof-of-payment
-flow, Home Credit applications are completed in-store, and the terms/privacy
-copy remains a legal-review placeholder. Replace all `is_demo` sample records
-and policy placeholders before using the flow with real customers.
+flow and Home Credit applications are completed in-store. Replace all `is_demo`
+sample records before using the flow with real customers.
 
 Product types are the fixed main categories; staff create subcategories under
 each type from `/admin/products`. Product images are public storefront images;

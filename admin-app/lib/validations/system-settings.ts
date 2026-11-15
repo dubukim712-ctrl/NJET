@@ -6,9 +6,13 @@ export const certificateTemplatePathSchema = z.string().regex(
   new RegExp(`^templates/${uuid}\\.pdf$`)
 );
 
+export const salesReceiptTemplatePathSchema = z.string().regex(
+  new RegExp(`^receipt-templates/${uuid}\\.pdf$`)
+);
+
 export const settingsAssetPathSchema = z.string().regex(
   new RegExp(
-    `^(templates/${uuid}\\.pdf|logos/${uuid}\\.(jpg|png|webp)|recipients/(gcash|bank_transfer|card)/qr/${uuid}\\.(jpg|png|webp))$`
+    `^(templates/${uuid}\\.pdf|receipt-templates/${uuid}\\.pdf|logos/${uuid}\\.(jpg|png|webp)|recipients/(gcash|bank_transfer|card)/qr/${uuid}\\.(jpg|png|webp))$`
   )
 );
 

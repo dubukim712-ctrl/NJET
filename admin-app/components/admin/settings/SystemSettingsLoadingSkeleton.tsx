@@ -7,7 +7,7 @@ export function SystemSettingsLoadingSkeleton() {
         className="flex gap-2 overflow-hidden border-b"
         aria-hidden="true"
       >
-        {[36, 32, 40, 28].map((width, index) => (
+        {[36, 32, 40, 28, 30].map((width, index) => (
           <div
             key={index}
             className={`h-11 shrink-0 animate-pulse ${

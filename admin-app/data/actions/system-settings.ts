@@ -17,6 +17,7 @@ import {
 } from '@/lib/validations/system-settings';
 
 const TEMPLATE_BUCKET = 'njet-certificate-templates';
+const RECEIPT_TEMPLATE_BUCKET = 'njet-sales-receipt-templates';
 const PAYMENT_MEDIA_BUCKET = 'njet-payment-recipient-media';
 const MAX_TEMPLATE_SIZE = 5 * 1024 * 1024;
 
@@ -225,9 +226,11 @@ export async function removeUnusedSystemSettingsAssetAction(
 
   const bucket = parsed.data.startsWith('templates/')
     ? TEMPLATE_BUCKET
-    : parsed.data.startsWith('logos/')
-      ? 'njet-storefront-branding'
-      : PAYMENT_MEDIA_BUCKET;
+    : parsed.data.startsWith('receipt-templates/')
+      ? RECEIPT_TEMPLATE_BUCKET
+      : parsed.data.startsWith('logos/')
+        ? 'njet-storefront-branding'
+        : PAYMENT_MEDIA_BUCKET;
   const removed = await removeStoredObject(supabase, bucket, parsed.data);
   return removed
     ? { success: true, data: undefined }

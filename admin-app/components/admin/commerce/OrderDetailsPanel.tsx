@@ -1,13 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Download } from "lucide-react";
 import type { StaffOrder } from "@/data/commerce/admin-orders";
 import {
   cancelCommerceOrderAction,
   confirmCommerceOrderAction,
 } from "@/data/actions/commerce-admin";
 import { CompletedOrderDocuments } from "@/components/admin/commerce/CompletedOrderDocuments";
+import { OrderPrivateDocuments } from "@/components/admin/commerce/OrderPrivateDocuments";
 import { HomeCreditOrderSummary } from "@/components/admin/commerce/HomeCreditOrderSummary";
 import { HomeCreditOrderCompletionForm } from "@/components/admin/commerce/HomeCreditOrderCompletionForm";
 import { OrderCompletionPaymentForm } from "@/components/admin/commerce/OrderCompletionPaymentForm";
@@ -193,46 +193,18 @@ export function OrderDetailsPanel({
         </section>
       </div>
 
-      {order.documents.length > 0 && (
-        <section className="space-y-2">
-          <h3 className="text-sm font-semibold">Private documents</h3>
-          <ul className="flex flex-wrap gap-2">
-            {order.documents.map((document) => (
-              <li key={document.id}>
-                {document.url ? (
-                  <a
-                    href={document.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center min-h-10 gap-2 rounded-md border px-3 text-sm font-medium hover:bg-accent"
-                  >
-                    <Download className="h-4 w-4" />
-                    Download{" "}
-                    {document.kind === "identity" ? "ID" : "payment proof"}
-                  </a>
-                ) : (
-                  <span className="text-sm text-destructive">
-                    Private file link unavailable; refresh this page.
-                  </span>
-                )}
-              </li>
-            ))}
-          </ul>
-          <p className="text-xs text-muted-foreground">
-            Verify required IDs and payment proof before confirming.
-          </p>
-        </section>
-      )}
+      <OrderPrivateDocuments documents={order.documents} />
 
       {order.status === "completed" && (
         <CompletedOrderDocuments
-          key={`${order.id}:${order.invoiceNo ?? ""}`}
+          key={`${order.id}:${order.invoiceNo ?? ""}:${order.certificate?.certificateNumber ?? ""}`}
           orderId={order.id}
           invoiceNo={order.invoiceNo}
           isEbikeOrder={order.items.some(
             (item) => item.product_type === "ebike",
           )}
           certificate={order.certificate}
+          receipt={order.receipt}
           canManage={canManage}
           onDataChanged={onDataChanged}
         />
