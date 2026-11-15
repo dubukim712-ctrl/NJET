@@ -118,6 +118,7 @@ export function OrdersQuery({
         filters={filters}
         canManage={canManage}
         branchLocked={branchLocked}
+        isUpdating={query.isPlaceholderData && query.isFetching}
         onDataChanged={() => {
           void query.invalidate();
           void invalidateProducts();

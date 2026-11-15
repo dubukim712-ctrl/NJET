@@ -121,14 +121,25 @@ export function ProductVariantsTab({
                       </p>
                     </div>
                     {canManageProducts && (
-                      <Button
-                        type="button"
-                        size="sm"
-                        onClick={() => setSelected({ product })}
-                      >
-                        <Plus className="mr-2 size-4" aria-hidden="true" />
-                        Add variant
-                      </Button>
+                      <>
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={() => setSelected({ product })}
+                          className="hidden md:inline-flex"
+                        >
+                          <Plus className="mr-2 size-4" aria-hidden="true" />
+                          Add variant
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          onClick={() => setSelected({ product })}
+                          className="md:hidden"
+                        >
+                          <Plus className="size-4" aria-hidden="true" />
+                        </Button>
+                      </>
                     )}
                   </header>
                   {productVariants.length > 0 && (
@@ -136,24 +147,24 @@ export function ProductVariantsTab({
                       {productVariants.map((variant) => (
                         <li
                           key={variant.id}
-                          className="flex flex-wrap items-center justify-between gap-3 p-3"
+                          className="flex flex-wrap items-start md:items-center justify-between gap-3 p-3"
                         >
-                          <div className="min-w-0">
+                          <div className="max-w-[calc(100%-5rem)] md:max-w-[calc(100%-10rem)]">
                             <p className="font-medium">
                               {variant.name} · {formatPhp(variant.price_minor)}
                             </p>
                             <p className="text-xs text-muted-foreground">
                               {variant.sku} · Reservation{" "}
-                              {formatPhp(variant.reservation_minor)} ·{" "}
-                              Storefront Home Credit downpayment{" "}
+                              {formatPhp(variant.reservation_minor)} · Home
+                              Credit downpayment{" "}
                               {formatPhp(variant.home_credit_downpayment_minor)}{" "}
-                              ·{" "}
+                              ·
                               {variant.active ? (
-                                <span className="bg-primary/90 text-primary-foreground px-2 py-1 text-xs rounded">
+                                <span className="text-primary/90  px-2 py-1 text-xs rounded">
                                   Active
                                 </span>
                               ) : (
-                                <span className="bg-muted text-muted-foreground px-2 py-1 text-xs rounded">
+                                <span className="text-muted  px-2 py-1 text-xs rounded">
                                   Inactive
                                 </span>
                               )}
@@ -176,18 +187,35 @@ export function ProductVariantsTab({
                               )}
                           </div>
                           {canManageProducts && (
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setSelected({ product, variant })}
-                            >
-                              <Pencil
-                                className="mr-2 size-4"
-                                aria-hidden="true"
-                              />
-                              Edit variant
-                            </Button>
+                            <>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  setSelected({ product, variant })
+                                }
+                                className="hidden md:inline-flex"
+                              >
+                                <Pencil
+                                  className="mr-2 size-4"
+                                  aria-hidden="true"
+                                />
+                                Edit variant
+                              </Button>
+
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  setSelected({ product, variant })
+                                }
+                                className="md:hidden"
+                              >
+                                <Pencil className="size-4" aria-hidden="true" />
+                              </Button>
+                            </>
                           )}
                         </li>
                       ))}

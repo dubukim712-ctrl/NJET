@@ -89,12 +89,10 @@ export function BranchInventoryRows({
                   </td>
 
                   {canManage && (
-                    <td className=" text-right">
+                    <td className="text-right py-4">
                       <Button
                         type="button"
                         variant="ghost"
-                        size="icon"
-                        className="size-9"
                         aria-label={`Transfer ${variant?.name ?? "inventory"} from ${branchById.get(row.branch_id)?.name ?? "branch"}`}
                         title="Transfer inventory"
                         disabled={!variant || branches.length < 2}
@@ -102,7 +100,11 @@ export function BranchInventoryRows({
                           onTransfer(row.branch_id, row.variant_id)
                         }
                       >
-                        <ArrowLeftRight className="size-4" aria-hidden="true" />
+                        <ArrowLeftRight
+                          className="mr-2 size-4"
+                          aria-hidden="true"
+                        />
+                        Transfer
                       </Button>
                     </td>
                   )}

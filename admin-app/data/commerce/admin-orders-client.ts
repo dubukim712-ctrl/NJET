@@ -26,6 +26,7 @@ export function useCommerceOrdersQuery(
     retry: false,
     staleTime: 15_000,
     gcTime: 30 * 60_000,
+    placeholderData: (previousData) => previousData,
   });
   const invalidate = useCallback(
     async () => {

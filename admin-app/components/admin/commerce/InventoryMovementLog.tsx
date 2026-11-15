@@ -54,7 +54,9 @@ export function InventoryMovementLog({
                   {LABELS[movement.movement_type]}
                 </p>
                 <p className="mt-1 break-words text-xs text-muted-foreground">
-                  {branchNames.get(movement.branch_id) ?? "Branch"} ·{" "}
+                  {branchNames.get(movement.branch_id) ?? "Branch"}
+                </p>
+                <p className="break-words text-xs text-muted-foreground">
                   {variantNames.get(movement.variant_id) ?? "Product variant"}
                 </p>
                 {movement.reference_id && (
@@ -63,8 +65,10 @@ export function InventoryMovementLog({
                   </p>
                 )}
               </div>
-              <div className="shrink-0 min-[376px]:text-right">
-                <p className="font-semibold tabular-nums">
+              <div className="shrink-0 text-right">
+                <p
+                  className={`font-semibold tabular-nums ${movement.quantity_delta > 0 ? "text-green-600" : "text-destructive"}`}
+                >
                   {movement.quantity_delta > 0 ? "+" : ""}
                   {movement.quantity_delta}
                 </p>

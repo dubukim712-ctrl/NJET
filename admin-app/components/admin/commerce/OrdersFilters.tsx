@@ -134,19 +134,25 @@ export function OrdersFilters({
         ))}
       </Select>
 
-      <div className="flex items-end">
-        {hasFilters ? (
+      {hasFilters ? (
+        <div className="space-y-2">
+          <span
+            aria-hidden="true"
+            className="hidden text-sm font-medium sm:block sm:invisible"
+          >
+            Clear
+          </span>
           <Link
             href="/admin/orders"
             onClick={() => {
               if (debounceTimer.current) clearTimeout(debounceTimer.current);
             }}
-            className="inline-flex h-11 w-full items-center justify-center rounded-md border border-input px-5 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground lg:w-auto"
+            className="flex h-11 w-full items-center justify-center rounded-md border border-input px-5 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground lg:w-auto"
           >
             Clear
           </Link>
-        ) : null}
-      </div>
+        </div>
+      ) : null}
     </form>
   );
 }

@@ -1,4 +1,4 @@
-import { formatPhp } from '@/lib/commerce';
+import { formatPhp } from "@/lib/commerce";
 
 export function HomeCreditOrderSummary({
   details,
@@ -14,15 +14,41 @@ export function HomeCreditOrderSummary({
 }) {
   return (
     <>
-      <p>Home Credit account: <strong>{details.accountNo}</strong></p>
-      <p>
-        Actual downpayment: {formatPhp(details.downpaymentMinor)}
-        {' + '}financed balance: {formatPhp(totalMinor - details.downpaymentMinor)}
-        {' = '}sales revenue: <strong>{formatPhp(totalMinor)}</strong>
+      <p className="text-muted-foreground flex justify-between gap-2 bg-muted-foreground/5 rounded-md p-2">
+        Home Credit account
+        <span className="text-foreground font-bold text-right">
+          {details.accountNo}
+        </span>
       </p>
-      <p>
-        Terms: {details.termsMonths} months
-        {' · '}Monthly payment: {formatPhp(details.monthlyPaymentMinor)}
+      <p className="text-muted-foreground flex justify-between gap-2 bg-muted-foreground/5 rounded-md p-2">
+        Actual downpayment
+        <span className="text-foreground font-bold text-right">
+          {formatPhp(details.downpaymentMinor)}
+        </span>
+      </p>
+      <p className="text-muted-foreground flex justify-between gap-2 bg-muted-foreground/5 rounded-md p-2">
+        Financed balance
+        <span className="text-foreground font-bold text-right">
+          {formatPhp(totalMinor - details.downpaymentMinor)}
+        </span>
+      </p>
+      <p className="text-muted-foreground flex justify-between gap-2 bg-muted-foreground/5 rounded-md p-2">
+        Sales revenue
+        <span className="text-foreground font-bold text-right">
+          {formatPhp(totalMinor)}
+        </span>
+      </p>
+      <p className="text-muted-foreground flex justify-between gap-2 bg-muted-foreground/5 rounded-md p-2">
+        Terms
+        <span className="text-foreground font-bold text-right">
+          {details.termsMonths} months
+        </span>
+      </p>
+      <p className="text-muted-foreground flex justify-between gap-2 bg-muted-foreground/5 rounded-md p-2">
+        Monthly payment
+        <span className="text-foreground font-bold text-right">
+          {formatPhp(details.monthlyPaymentMinor)}
+        </span>
       </p>
     </>
   );

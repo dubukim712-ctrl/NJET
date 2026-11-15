@@ -64,69 +64,107 @@ export function OrderDetailsPanel({
         </section>
         <section className="space-y-2 text-sm">
           <h3 className="font-semibold">Fulfillment &amp; payment</h3>
-          <p>
-            {order.fulfillment === "pickup"
-              ? `Pickup at ${order.branch_name}`
-              : `Delivery via ${order.delivery_zone_name}`}
-          </p>
-          {order.address_line1 && (
-            <p className="text-muted-foreground">
-              {[
-                order.address_line1,
-                order.barangay,
-                order.city,
-                order.province,
-                order.postal_code,
-              ]
-                .filter(Boolean)
-                .join(", ")}
+
+          {order.fulfillment === "pickup" ? (
+            <p className="text-muted-foreground flex justify-between gap-2 bg-muted-foreground/5 rounded-md p-2">
+              Pickup at{" "}
+              <span className="text-foreground font-bold text-right">
+                {order.branch_name}
+              </span>
+            </p>
+          ) : (
+            <p className="text-muted-foreground flex justify-between gap-2 bg-muted-foreground/5 rounded-md p-2">
+              Delivery via
+              <span className="text-foreground font-bold text-right">
+                {order.delivery_zone_name}
+              </span>
             </p>
           )}
-          <p className="capitalize">
-            Checkout method: {order.payment_method.replaceAll("_", " ")}
-            {order.payment_provider
-              ? ` · ${order.payment_provider.replaceAll("_", " ")}`
-              : ""}
+
+          {order.address_line1 && (
+            <p className="text-muted-foreground flex justify-between gap-2 bg-muted-foreground/5 rounded-md p-2">
+              Address
+              <span className="text-foreground font-bold text-right">
+                {[
+                  order.address_line1,
+                  order.barangay,
+                  order.city,
+                  order.province,
+                  order.postal_code,
+                ]
+                  .filter(Boolean)
+                  .join(", ")}
+              </span>
+            </p>
+          )}
+          <p className="text-muted-foreground capitalize flex justify-between gap-2 bg-muted-foreground/5 rounded-md p-2">
+            Checkout method
+            <span className="text-foreground font-bold text-right">
+              {order.payment_method.replaceAll("_", " ")}
+              {order.payment_provider
+                ? ` · ${order.payment_provider.replaceAll("_", " ")}`
+                : ""}
+            </span>
           </p>
           {order.paymentRecipientName && (
-            <p>Recipient: {order.paymentRecipientName}</p>
+            <p className="text-muted-foreground flex justify-between gap-2 bg-muted-foreground/5 rounded-md p-2">
+              Recipient
+              <span className="text-foreground font-bold text-right">
+                {order.paymentRecipientName}
+              </span>
+            </p>
           )}
           {order.payment_reference && (
-            <p>Reference: {order.payment_reference}</p>
+            <p className="text-muted-foreground flex justify-between gap-2 bg-muted-foreground/5 rounded-md p-2">
+              Reference
+              <span className="text-foreground font-bold text-right">
+                {order.payment_reference}
+              </span>
+            </p>
           )}
-          <p>
-            Total: <strong>{formatPhp(order.total_minor)}</strong>
+          <p className="text-muted-foreground flex justify-between gap-2 bg-muted-foreground/5 rounded-md p-2">
+            Total
+            <span className="text-foreground font-bold text-right">
+              {formatPhp(order.total_minor)}
+            </span>
           </p>
           {order.order_source === "walk_in" &&
             order.cash_tendered_minor !== null && (
-              <p>
-                Cash tendered:{" "}
-                <strong>{formatPhp(order.cash_tendered_minor)}</strong>
-                {" · "}Change:{" "}
-                <strong>
+              <p className="text-muted-foreground flex justify-between gap-2 bg-muted-foreground/5 rounded-md p-2">
+                Cash tendered
+                <span className="text-foreground font-bold text-right">
+                  {formatPhp(order.cash_tendered_minor)}
+                </span>
+                {" · "}Change
+                <span className="text-foreground font-bold text-right">
                   {formatPhp(order.cash_tendered_minor - order.total_minor)}
-                </strong>
+                </span>
               </p>
             )}
           {order.reservation_due_minor > 0 && (
-            <p>
-              Reservation: {formatPhp(order.reservation_due_minor)}
-              {order.payment_method === "online"
-                ? order.status === "awaiting_payment"
-                  ? " · payment proof pending"
-                  : " · online proof submitted"
-                : order.payment_method === "home_credit"
-                  ? " · Home Credit reservation component"
-                  : " · due at store"}
+            <p className="text-muted-foreground flex justify-between gap-2 bg-muted-foreground/5 rounded-md p-2">
+              Reservation
+              <span className="text-foreground font-bold text-right">
+                {formatPhp(order.reservation_due_minor)}
+                {order.payment_method === "online"
+                  ? order.status === "awaiting_payment"
+                    ? " · payment proof pending"
+                    : " · online proof submitted"
+                  : order.payment_method === "home_credit"
+                    ? " · Home Credit reservation component"
+                    : " · due at store"}
+              </span>
             </p>
           )}
           {order.home_credit_downpayment_due_minor > 0 && (
-            <p>
-              Home Credit downpayment:{" "}
-              {formatPhp(order.home_credit_downpayment_due_minor)}
-              {order.status === "awaiting_payment"
-                ? " · payment proof pending"
-                : " · online proof submitted"}
+            <p className="text-muted-foreground flex justify-between gap-2 bg-muted-foreground/5 rounded-md p-2">
+              Home Credit downpayment
+              <span className="text-foreground font-bold text-right">
+                {formatPhp(order.home_credit_downpayment_due_minor)}
+                {order.status === "awaiting_payment"
+                  ? " · payment proof pending"
+                  : " · online proof submitted"}
+              </span>
             </p>
           )}
           {order.homeCreditDetails && (
@@ -137,14 +175,19 @@ export function OrderDetailsPanel({
           )}
           {order.payment_method === "home_credit" ? (
             !order.homeCreditDetails && (
-              <p>
-                Home Credit balance before processing:{" "}
-                <strong>{formatPhp(order.balance_due_minor)}</strong>
+              <p className="text-muted-foreground flex justify-between gap-2 bg-muted-foreground/5 rounded-md p-2">
+                Home Credit balance before processing
+                <span className="text-foreground font-bold text-right">
+                  {formatPhp(order.balance_due_minor)}
+                </span>
               </p>
             )
           ) : (
-            <p>
-              Due at store: <strong>{formatPhp(storeDue)}</strong>
+            <p className="text-muted-foreground flex justify-between gap-2 bg-muted-foreground/5 rounded-md p-2">
+              Due at store:{" "}
+              <span className="text-foreground font-bold text-right">
+                {formatPhp(storeDue)}
+              </span>
             </p>
           )}
         </section>
@@ -176,8 +219,7 @@ export function OrderDetailsPanel({
             ))}
           </ul>
           <p className="text-xs text-muted-foreground">
-            Links expire after one minute. Verify required IDs and payment proof
-            before confirming.
+            Verify required IDs and payment proof before confirming.
           </p>
         </section>
       )}

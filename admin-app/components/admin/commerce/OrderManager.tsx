@@ -3,7 +3,10 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { ChevronDown } from "lucide-react";
-import type { OrderBranchOption, StaffOrder } from "@/data/commerce/admin-orders";
+import type {
+  OrderBranchOption,
+  StaffOrder,
+} from "@/data/commerce/admin-orders";
 import {
   OrderDetailsPanel,
   type OrderMutationAction,
@@ -14,7 +17,9 @@ import { Button } from "@/components/ui/Button";
 import { formatPhp } from "@/lib/commerce";
 import type { OrderFilters } from "@/lib/validations/order-filters";
 
-type OrderAction = (payload: unknown) => Promise<{ success: boolean; error?: string }>;
+type OrderAction = (
+  payload: unknown,
+) => Promise<{ success: boolean; error?: string }>;
 
 export function OrderManager({
   orders,
@@ -22,6 +27,7 @@ export function OrderManager({
   filters,
   canManage,
   branchLocked,
+  isUpdating,
   onDataChanged,
 }: {
   orders: StaffOrder[];
@@ -29,6 +35,7 @@ export function OrderManager({
   filters: OrderFilters;
   canManage: boolean;
   branchLocked: boolean;
+  isUpdating: boolean;
   onDataChanged: () => void;
 }) {
   const [pendingAction, setPendingAction] = useState<{
@@ -72,71 +79,103 @@ export function OrderManager({
         filters={filters}
         branchLocked={branchLocked}
       />
-      {error && (
-        <p className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive" role="alert">
-          {error}
-        </p>
-      )}
-      {!orders.length && (
-        <p className="rounded-xl border bg-card p-6 text-sm text-muted-foreground">
-          {filters.q ||
-          filters.status ||
-          (!branchLocked && filters.branch)
-            ? "No orders match the selected filters."
-            : "No orders have been placed yet."}
-        </p>
-      )}
-      {orders.map((order) => {
-        const storeDue = order.payment_method === "home_credit"
-          ? 0
-          : order.balance_due_minor
-            + (order.payment_method === "online" ? 0 : order.reservation_due_minor);
-        const isExpanded = expandedOrderId === order.id;
-        const detailsId = `order-details-${order.id}`;
-        return (
-          <article key={order.id} className="rounded-xl border bg-card p-4 sm:p-5">
-            <header className="flex flex-wrap items-start justify-between gap-3">
-              <div className="min-w-0">
-                <h2 className="text-lg font-semibold">{order.order_number}</h2>
-                <p className="mt-1 break-words text-sm text-muted-foreground">
-                  {new Date(order.created_at).toLocaleString("en-PH")} · {order.customer_name} · {order.contact_number}
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className={`rounded-full px-3 py-1 text-xs font-medium ${
-                  order.order_source === "walk_in"
-                    ? "bg-violet-100 text-violet-900 dark:bg-violet-900/30 dark:text-violet-200"
-                    : "bg-secondary text-secondary-foreground"
-                }`}>
-                  {order.order_source === "walk_in" ? "Walk-in" : "Online"}
-                </span>
-                <OrderStatusBadge status={order.status} />
-                <button
-                  type="button"
-                  aria-expanded={isExpanded}
-                  aria-controls={isExpanded ? detailsId : undefined}
-                  onClick={() => setExpandedOrderId(isExpanded ? null : order.id)}
-                  className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-md border border-input px-3 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
-                >
-                  {isExpanded ? "Hide details" : "View details"}
-                  <ChevronDown aria-hidden="true" className={`size-4 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
-                </button>
-              </div>
-            </header>
-            {isExpanded && (
-              <OrderDetailsPanel
-                order={order}
-                storeDue={storeDue}
-                canManage={canManage}
-                busyAction={pendingAction?.orderId === order.id ? pendingAction.mutation : null}
-                isAnyOrderBusy={pendingAction !== null}
-                onUpdateOrder={(action, mutation) => { void updateOrder(order.id, action, mutation); }}
-                onDataChanged={onDataChanged}
-              />
-            )}
-          </article>
-        );
-      })}
+      <div className="space-y-4" aria-busy={isUpdating}>
+        {isUpdating && (
+          <p className="text-sm text-muted-foreground" role="status">
+            Updating orders…
+          </p>
+        )}
+        {error && (
+          <p
+            className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive"
+            role="alert"
+          >
+            {error}
+          </p>
+        )}
+        {!orders.length && !isUpdating && (
+          <p className="rounded-xl border bg-card p-6 text-sm text-muted-foreground">
+            {filters.q || filters.status || (!branchLocked && filters.branch)
+              ? "No orders match the selected filters."
+              : "No orders have been placed yet."}
+          </p>
+        )}
+        {orders.map((order) => {
+          const storeDue =
+            order.payment_method === "home_credit"
+              ? 0
+              : order.balance_due_minor +
+                (order.payment_method === "online"
+                  ? 0
+                  : order.reservation_due_minor);
+          const isExpanded = expandedOrderId === order.id;
+          const detailsId = `order-details-${order.id}`;
+          return (
+            <article
+              key={order.id}
+              className="rounded-xl border bg-card p-4 sm:p-5"
+            >
+              <header className="flex flex-wrap items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <h2 className="text-lg font-semibold">
+                    {order.order_number}
+                  </h2>
+                  <p className="mt-1 break-words text-sm text-muted-foreground">
+                    {new Date(order.created_at).toLocaleString("en-PH")} ·{" "}
+                    {order.customer_name} · {order.contact_number}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span
+                    className={`rounded-full px-3 py-1 text-xs font-medium ${
+                      order.order_source === "walk_in"
+                        ? "bg-violet-100 text-violet-900 dark:bg-violet-900/30 dark:text-violet-200"
+                        : "bg-secondary text-secondary-foreground"
+                    }`}
+                  >
+                    {order.order_source === "walk_in" ? "Walk-in" : "Online"}
+                  </span>
+                  <OrderStatusBadge status={order.status} />
+                  <Button
+                    variant="link"
+                    size="sm"
+                    type="button"
+                    aria-expanded={isExpanded}
+                    aria-controls={isExpanded ? detailsId : undefined}
+                    onClick={() =>
+                      setExpandedOrderId(isExpanded ? null : order.id)
+                    }
+                    className="flex items-center gap-1 text-sm font-medium"
+                  >
+                    {isExpanded ? "Hide details" : "View details"}
+                    <ChevronDown
+                      aria-hidden="true"
+                      className={`size-4 transition-transform ${isExpanded ? "rotate-180" : ""}`}
+                    />
+                  </Button>
+                </div>
+              </header>
+              {isExpanded && (
+                <OrderDetailsPanel
+                  order={order}
+                  storeDue={storeDue}
+                  canManage={canManage}
+                  busyAction={
+                    pendingAction?.orderId === order.id
+                      ? pendingAction.mutation
+                      : null
+                  }
+                  isAnyOrderBusy={pendingAction !== null}
+                  onUpdateOrder={(action, mutation) => {
+                    void updateOrder(order.id, action, mutation);
+                  }}
+                  onDataChanged={onDataChanged}
+                />
+              )}
+            </article>
+          );
+        })}
+      </div>
     </div>
   );
 }
