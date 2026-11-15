@@ -11,6 +11,10 @@ export const startGuestEmailChatSchema = z.object({
     email: z.string().trim().email().max(254),
   });
 
+export const pendingGuestChatRecoverySchema = startGuestEmailChatSchema.extend({
+  requestedAt: z.number().int().positive(),
+});
+
 export const startGuestPhoneChatSchema = z.object({
   name: z.string().trim().min(1).max(120),
   phone: guestPhoneSchema,

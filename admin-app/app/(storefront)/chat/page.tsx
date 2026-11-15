@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/data/supabase/server';
 import { getAuthContext } from '@/data/auth/guards';
 import {
+  getPendingGuestChatRecovery,
   getGuestChatTokenHash,
 } from '@/data/support-chat/guest-session';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
@@ -43,6 +44,7 @@ export default async function CustomerChatPage() {
   }
 
   const guestTokenHash = await getGuestChatTokenHash();
+  const pendingRecovery = await getPendingGuestChatRecovery();
   if (!guestTokenHash) {
     return (
       <CustomerSupportChat
@@ -50,6 +52,7 @@ export default async function CustomerChatPage() {
         userId={null}
         initialThreadId={null}
         initialRealtimeKey={null}
+        initialRecovery={pendingRecovery}
       />
     );
   }

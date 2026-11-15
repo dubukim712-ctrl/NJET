@@ -3,6 +3,7 @@ import test from 'node:test';
 import { shouldShowTimeDivider } from '../lib/support-chat/message-time.ts';
 import {
   guestEmailAccessVerifySchema,
+  pendingGuestChatRecoverySchema,
   startGuestEmailChatSchema,
   startGuestPhoneChatSchema,
   supportChatMessageSchema,
@@ -19,6 +20,25 @@ test('message time dividers show at conversation start and after 10 minutes', ()
   assert.equal(
     shouldShowTimeDivider('2026-11-15T10:10:00.000Z', start, false),
     true,
+  );
+});
+
+test('pending guest recovery state validates its cookie payload', () => {
+  assert.deepEqual(
+    pendingGuestChatRecoverySchema.safeParse({
+      name: 'Sam',
+      email: 'sam@example.com',
+      requestedAt: 1,
+    }).data,
+    { name: 'Sam', email: 'sam@example.com', requestedAt: 1 },
+  );
+  assert.equal(
+    pendingGuestChatRecoverySchema.safeParse({
+      name: 'Sam',
+      email: 'invalid',
+      requestedAt: 1,
+    }).success,
+    false,
   );
 });
 

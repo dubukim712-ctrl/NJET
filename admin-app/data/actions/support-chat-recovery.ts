@@ -4,7 +4,9 @@ import { createHmac, randomInt } from 'node:crypto';
 import { createClient } from '@/data/supabase/server';
 import { createServiceClient } from '@/data/supabase/service';
 import {
+  clearPendingGuestChatRecovery,
   createGuestChatToken,
+  setPendingGuestChatRecovery,
   setGuestChatToken,
 } from '@/data/support-chat/guest-session';
 import {
@@ -51,7 +53,7 @@ async function sendRecoveryEmail(email: string, code: string) {
 
 export async function requestGuestChatEmailAccessAction(
   input: unknown,
-): Promise<ActionResult<{ message: string }>> {
+): Promise<ActionResult<{ message: string; requestedAt: number }>> {
   const validation = startGuestEmailChatSchema.safeParse(input);
   if (!validation.success) {
     return { success: false, error: 'Enter your name and a valid email address.' };
@@ -89,10 +91,16 @@ export async function requestGuestChatEmailAccessAction(
       return { success: false, error: 'Recovery could not be started. Please try again later.' };
     }
     await sendRecoveryEmail(email, code);
+    const requestedAt = Date.now();
+    await setPendingGuestChatRecovery({
+      name: validation.data.name,
+      email,
+      requestedAt,
+    });
 
     return {
       success: true,
-      data: { message: 'If a code can be sent, it will arrive shortly.' },
+      data: { message: 'If a code can be sent, it will arrive shortly.', requestedAt },
     };
   } catch (error) {
     console.error(
@@ -138,6 +146,7 @@ export async function verifyGuestChatEmailAccessAction(
     }
 
     await setGuestChatToken(token);
+    await clearPendingGuestChatRecovery();
     return {
       success: true,
       data: {

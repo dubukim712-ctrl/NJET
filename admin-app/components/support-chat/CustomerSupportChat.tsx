@@ -9,6 +9,7 @@ import {
 } from '@/data/actions/support-chat-recovery';
 import { startGuestChatAction } from '@/data/actions/support-chat';
 import { ChatConversation } from '@/components/support-chat/ChatConversation';
+import type { PendingGuestChatRecovery } from '@/data/support-chat/guest-session';
 
 const RESEND_COOLDOWN_SECONDS = 60;
 
@@ -17,6 +18,7 @@ interface CustomerSupportChatProps {
   userId: string | null;
   initialThreadId: string | null;
   initialRealtimeKey: string | null;
+  initialRecovery?: PendingGuestChatRecovery | null;
   initialError?: string | null;
 }
 
@@ -25,6 +27,7 @@ export function CustomerSupportChat({
   userId,
   initialThreadId,
   initialRealtimeKey,
+  initialRecovery = null,
   initialError = null,
 }: CustomerSupportChatProps) {
   const [threadId, setThreadId] = useState(initialThreadId);
@@ -32,18 +35,23 @@ export function CustomerSupportChat({
   const [contactMethod, setContactMethod] = useState<'email' | 'phone'>('email');
   const [name, setName] = useState('');
   const [contact, setContact] = useState('');
-  const [recoveryEmail, setRecoveryEmail] = useState('');
-  const [recoveryName, setRecoveryName] = useState('');
+  const [recoveryEmail, setRecoveryEmail] = useState(initialRecovery?.email ?? '');
+  const [recoveryName, setRecoveryName] = useState(initialRecovery?.name ?? '');
   const [code, setCode] = useState('');
-  const [notice, setNotice] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(
+    initialRecovery ? 'If a code can be sent, it will arrive shortly.' : null,
+  );
   const [error, setError] = useState(initialError);
   const [busy, setBusy] = useState(false);
-  const [resendAvailableAt, setResendAvailableAt] = useState<number | null>(null);
-  const [clockNow, setClockNow] = useState(0);
+  const [resendAvailableAt, setResendAvailableAt] = useState<number | null>(
+    initialRecovery ? initialRecovery.requestedAt + RESEND_COOLDOWN_SECONDS * 1000 : null,
+  );
+  const [clockNow, setClockNow] = useState(initialRecovery?.requestedAt ?? 0);
   const resendCooldownSeconds =
     resendAvailableAt === null
       ? 0
       : Math.max(0, Math.ceil((resendAvailableAt - clockNow) / 1000));
+  const startResendCooldown = (requestedAt: number) => { setClockNow(requestedAt); setResendAvailableAt(requestedAt + RESEND_COOLDOWN_SECONDS * 1000); };
 
   useEffect(() => {
     if (resendAvailableAt === null) return;
@@ -74,17 +82,14 @@ export function CustomerSupportChat({
         setRecoveryEmail(contact.trim().toLowerCase());
         setRecoveryName(name.trim());
         setNotice(result.data.message);
+        startResendCooldown(result.data.requestedAt);
       }
       setBusy(false);
       return;
     }
 
     const result = await startGuestChatAction({ name, phone: contact });
-    if (!result.success) {
-      setError(result.error);
-      setBusy(false);
-      return;
-    }
+    if (!result.success) { setError(result.error); setBusy(false); return; }
 
     setThreadId(result.data.threadId);
     setRealtimeKey(result.data.realtimeKey);
@@ -101,9 +106,7 @@ export function CustomerSupportChat({
     });
     if (result.success) {
       setNotice(result.data.message);
-      const now = Date.now();
-      setClockNow(now);
-      setResendAvailableAt(now + RESEND_COOLDOWN_SECONDS * 1000);
+      startResendCooldown(result.data.requestedAt);
     } else {
       setError(result.error);
     }
