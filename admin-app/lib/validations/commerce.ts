@@ -22,6 +22,7 @@ export const checkoutSchema = z.object({
   privacyVersion: z.string().min(1).max(100),
   termsAccepted: z.literal(true),
   privacyAccepted: z.literal(true),
+  couponCode: z.string().trim().max(32).nullable().default(null),
   items: z.array(z.object({
     variantId: z.string().uuid(),
     quantity: z.number().int().min(1).max(99),

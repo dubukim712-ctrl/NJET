@@ -5,6 +5,8 @@ import { formatPhp } from '@/lib/commerce';
 import type { CartVariant } from '@/data/commerce/catalog-client';
 import type { PaymentMethod } from '@/types/commerce-tables';
 import { ProductImage } from '@/components/shop/ProductImage';
+import { ProductPrice } from '@/components/shop/ProductPrice';
+import type { ReactNode } from 'react';
 
 type CheckoutLine = {
   variantId: string;
@@ -13,8 +15,10 @@ type CheckoutLine = {
 };
 
 export function CheckoutOrderSummary({
+  couponInput,
   items,
   subtotal,
+  discountTotal,
   deliveryFee,
   total,
   reservationDue,
@@ -27,8 +31,10 @@ export function CheckoutOrderSummary({
   loading,
   busy,
 }: {
+  couponInput: ReactNode;
   items: CheckoutLine[];
   subtotal: number;
+  discountTotal: number;
   deliveryFee: number;
   total: number;
   reservationDue: number;
@@ -44,6 +50,7 @@ export function CheckoutOrderSummary({
   return (
     <aside className="h-fit space-y-4 rounded-xl border bg-card p-5 lg:sticky lg:top-24">
       <h2 className="text-lg font-semibold">Order summary</h2>
+      {couponInput}
       <ul className="space-y-3 border-b pb-4">
         {items.map((item) => (
           <li key={item.variantId} className="flex gap-3 text-sm">
@@ -56,11 +63,27 @@ export function CheckoutOrderSummary({
               {item.variant?.productName ?? 'Unavailable item'} · {item.variant?.name ?? ''}
               <span className="block text-xs text-muted-foreground">Qty {item.quantity}</span>
             </span>
-            <span className="shrink-0">{formatPhp((item.variant?.price_minor ?? 0) * item.quantity)}</span>
+            <ProductPrice
+              priceMinor={(item.variant?.price_minor ?? 0) * item.quantity}
+              listPriceMinor={(item.variant?.list_price_minor ?? 0) * item.quantity}
+              className="shrink-0 justify-end text-right"
+            />
           </li>
         ))}
       </ul>
       <div className="space-y-2 text-sm">
+        {discountTotal > 0 && (
+          <>
+            <p className="flex justify-between">
+              <span>Items before discount</span>
+              <span>{formatPhp(subtotal + discountTotal)}</span>
+            </p>
+            <p className="flex justify-between text-primary">
+              <span>Discount</span>
+              <span>-{formatPhp(discountTotal)}</span>
+            </p>
+          </>
+        )}
         <p className="flex justify-between"><span>Subtotal</span><span>{formatPhp(subtotal)}</span></p>
         <p className="flex justify-between"><span>Delivery</span><span>{formatPhp(deliveryFee)}</span></p>
         <p className="flex justify-between border-t pt-3 font-semibold"><span>Total</span><span>{formatPhp(total)}</span></p>

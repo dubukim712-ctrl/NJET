@@ -1,16 +1,18 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  Home, CalendarDays, Package, ShoppingBag, Clock3, Mail, MapPin, Phone,
+  Home, CalendarDays, Package, ShoppingBag, Search, X,
   type LucideIcon,
 } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { UserNav } from "@/components/auth/UserNav";
 import { CartDrawer } from "@/components/cart/CartDrawer";
-import { LegalFooterLinks } from "@/components/layout/LegalFooterLinks";
+import { StorefrontFooter } from "@/components/layout/StorefrontFooter";
+import { ShopFiltersProvider } from "@/components/shop/ShopFiltersContext";
 import {
   StorefrontBusinessInfoQueryError,
   useStorefrontBusinessInfoQuery,
@@ -38,6 +40,11 @@ const NAVIGATION: {
 export function StorefrontShell({ user, children }: StorefrontShellProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const [shopFiltersOpen, setShopFiltersOpen] = useState(false);
+  const [shopFiltersPopoverRoot, setShopFiltersPopoverRoot] =
+    useState<HTMLDivElement | null>(null);
+  const shopFiltersContainerRef = useRef<HTMLDivElement>(null);
+  const shopFiltersButtonRef = useRef<HTMLButtonElement>(null);
   const { user: clientUser } = useAuth();
   const businessInfoQuery = useStorefrontBusinessInfoQuery();
   const businessInfo = businessInfoQuery.data ?? null;
@@ -61,6 +68,35 @@ export function StorefrontShell({ user, children }: StorefrontShellProps) {
     NAVIGATION[1],
     ...(canAccessStorefront ? [NAVIGATION[2], NAVIGATION[3]] : []),
   ];
+
+  useEffect(() => {
+    if (!shopFiltersOpen) return;
+
+    const closeOnOutsideClick = (event: PointerEvent) => {
+      if (!(event.target instanceof Node)) return;
+      if (
+        event.target instanceof Element &&
+        event.target.closest('[role="listbox"]')
+      ) {
+        return;
+      }
+      if (!shopFiltersContainerRef.current?.contains(event.target)) {
+        setShopFiltersOpen(false);
+      }
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      setShopFiltersOpen(false);
+      shopFiltersButtonRef.current?.focus();
+    };
+
+    document.addEventListener("pointerdown", closeOnOutsideClick);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeOnOutsideClick);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [shopFiltersOpen]);
 
   const navigation = (mobile = false) => (
     <nav
@@ -152,6 +188,31 @@ export function StorefrontShell({ user, children }: StorefrontShellProps) {
 
           <div className="hidden lg:block">{navigation()}</div>
           <div className="flex items-center gap-2">
+            {pathname === "/shop" && (
+              <div ref={shopFiltersContainerRef} className="relative lg:hidden">
+                <button
+                  ref={shopFiltersButtonRef}
+                  type="button"
+                  aria-label={shopFiltersOpen ? "Hide product filters" : "Search products"}
+                  aria-expanded={shopFiltersOpen}
+                  aria-controls="shop-filters-popover-root"
+                  title={shopFiltersOpen ? "Hide product filters" : "Search products"}
+                  onClick={() => setShopFiltersOpen((open) => !open)}
+                  className="inline-flex size-10 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  {shopFiltersOpen ? (
+                    <X className="size-5" aria-hidden="true" />
+                  ) : (
+                    <Search className="size-5" aria-hidden="true" />
+                  )}
+                </button>
+                <div
+                  id="shop-filters-popover-root"
+                  ref={(element) => setShopFiltersPopoverRoot(element)}
+                  className="fixed left-1/2 top-[4.5rem] z-[60] w-[min(90vw,24rem)] -translate-x-1/2"
+                />
+              </div>
+            )}
             <CartDrawer />
             {displayUser ? (
               <UserNav user={displayUser} showHelp />
@@ -176,131 +237,21 @@ export function StorefrontShell({ user, children }: StorefrontShellProps) {
       </header>
 
       <main className="mx-auto min-h-[calc(100dvh-4rem)] max-w-7xl px-4 pt-6 pb-8 sm:px-6 sm:py-8">
-        {children}
+        <ShopFiltersProvider
+          value={{
+            open: shopFiltersOpen,
+            popoverRoot: shopFiltersPopoverRoot,
+          }}
+        >
+          {children}
+        </ShopFiltersProvider>
       </main>
-      <footer className="mt-8 border-t border-primary/20 bg-primary text-primary-foreground">
-        <div className="mx-auto max-w-7xl px-4 py-9 sm:px-6 sm:py-11 lg:py-12">
-          <div className="grid gap-8 md:grid-cols-[minmax(12rem,0.85fr)_minmax(0,1.5fr)] md:gap-10">
-            <section className="max-w-sm">
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary-foreground/70">
-                Thanks for riding with us
-              </p>
-              <h2 className="mt-3 text-2xl font-semibold tracking-tight">
-                {businessInfo?.businessName || "NJET"}
-              </h2>
-              <p
-                className="mt-3 text-sm leading-6 text-primary-foreground/80"
-                role={businessInfoError ? "status" : undefined}
-              >
-                {businessInfoError
-                  ? "Business contact information is temporarily unavailable."
-                  : businessInfoQuery.isPending
-                    ? "Loading business contact information..."
-                    : hasBusinessContact || businessInfo?.businessHours
-                      ? "Get in touch with our team. We are here to help you find your next ride."
-                      : "Business contact details have not been added yet."}
-              </p>
-            </section>
-
-            <div className="grid gap-8 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
-              <section>
-                <h3 className="text-xs font-semibold uppercase tracking-[0.16em] text-primary-foreground/70">
-                  Contact
-                </h3>
-                {hasBusinessContact ? (
-                  <address className="mt-4 space-y-4 not-italic">
-                    {businessInfo?.phone && (
-                      <a
-                        className="flex items-start gap-3 text-sm transition-colors hover:text-white"
-                        href={`tel:${businessInfo.phone.replace(/[^+0-9]/g, "")}`}
-                      >
-                        <Phone
-                          className="mt-0.5 size-4 shrink-0"
-                          aria-hidden="true"
-                        />
-                        <span className="min-w-0">
-                          <span className="block text-xs text-primary-foreground/70">
-                            Call
-                          </span>
-                          <span className="break-words">
-                            {businessInfo.phone}
-                          </span>
-                        </span>
-                      </a>
-                    )}
-                    {businessInfo?.email && (
-                      <a
-                        className="flex items-start gap-3 text-sm transition-colors hover:text-white"
-                        href={`mailto:${businessInfo.email}`}
-                      >
-                        <Mail
-                          className="mt-0.5 size-4 shrink-0"
-                          aria-hidden="true"
-                        />
-                        <span className="min-w-0">
-                          <span className="block text-xs text-primary-foreground/70">
-                            Email
-                          </span>
-                          <span className="break-all">
-                            {businessInfo.email}
-                          </span>
-                        </span>
-                      </a>
-                    )}
-                    {businessInfo?.address && (
-                      <div className="flex items-start gap-3 text-sm">
-                        <MapPin
-                          className="mt-0.5 size-4 shrink-0"
-                          aria-hidden="true"
-                        />
-                        <span className="min-w-0">
-                          <span className="block text-xs text-primary-foreground/70">
-                            Address
-                          </span>
-                          <span className="break-words">
-                            {businessInfo.address}
-                          </span>
-                        </span>
-                      </div>
-                    )}
-                  </address>
-                ) : (
-                  <p className="mt-4 text-sm leading-6 text-primary-foreground/80">
-                    Contact details have not been added yet.
-                  </p>
-                )}
-              </section>
-
-              <section>
-                <h3 className="text-xs font-semibold uppercase tracking-[0.16em] text-primary-foreground/70">
-                  Business hours
-                </h3>
-                {businessInfo?.businessHours ? (
-                  <div className="mt-4 flex items-start gap-3">
-                    <Clock3
-                      className="mt-0.5 size-4 shrink-0"
-                      aria-hidden="true"
-                    />
-                    <p className="whitespace-pre-line text-sm leading-6">
-                      {businessInfo.businessHours}
-                    </p>
-                  </div>
-                ) : (
-                  <p className="mt-4 text-sm leading-6 text-primary-foreground/80">
-                    Hours have not been added yet.
-                  </p>
-                )}
-              </section>
-
-              <LegalFooterLinks />
-            </div>
-          </div>
-
-          <div className="mt-8 border-t border-primary-foreground/15 pt-4 text-xs text-primary-foreground/70">
-            © 2026 {businessInfo?.businessName || "NJET"}. All rights reserved.
-          </div>
-        </div>
-      </footer>
+      <StorefrontFooter
+        businessInfo={businessInfo}
+        businessInfoError={businessInfoError}
+        businessInfoPending={businessInfoQuery.isPending}
+        hasBusinessContact={hasBusinessContact}
+      />
       <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_16px_rgba(0,0,0,0.06)] backdrop-blur lg:hidden">
         <div className="mx-auto flex max-w-lg justify-around">
           {navigation(true)}

@@ -5,7 +5,9 @@ import { ProductCatalogTab } from '@/components/admin/commerce/ProductCatalogTab
 import { ProductEditor } from '@/components/admin/commerce/ProductEditor';
 import { ProductStockTab } from '@/components/admin/commerce/ProductStockTab';
 import { ProductVariantsTab } from '@/components/admin/commerce/ProductVariantsTab';
+import { ProductDiscountsTab } from '@/components/admin/commerce/ProductDiscountsTab';
 import { Modal } from '@/components/ui/Modal';
+import type { ProductDiscountAdminRow } from '@/lib/validations/product-discount';
 import type { Database } from '@/types/database';
 
 type Product = Database['public']['Tables']['products']['Row'];
@@ -19,7 +21,7 @@ type Movement = Database['public']['Tables']['inventory_movements']['Row'];
 type Transfer = Database['public']['Tables']['branch_transfers']['Row'];
 type TransferItem = Database['public']['Tables']['branch_transfer_items']['Row'];
 
-type ProductTab = 'catalog' | 'variants' | 'stock';
+type ProductTab = 'catalog' | 'variants' | 'stock' | 'discounts';
 
 export function ProductManager({
   products,
@@ -34,6 +36,7 @@ export function ProductManager({
   transfers,
   transferItems,
   transferUnits,
+  productDiscounts,
   canManageProducts,
   isBranchScopedStaff,
   assignedBranchId,
@@ -54,6 +57,7 @@ export function ProductManager({
     serial_number: string | null;
     motor_number: string | null;
   }[];
+  productDiscounts: ProductDiscountAdminRow[];
   canManageProducts: boolean;
   isBranchScopedStaff: boolean;
   assignedBranchId: string | null;
@@ -66,7 +70,7 @@ export function ProductManager({
       <div
         role="tablist"
         aria-label="Product management"
-        className="flex gap-2 border-b"
+        className="flex flex-wrap gap-2 border-b"
       >
         <button
           id="product-catalog-tab"
@@ -112,6 +116,21 @@ export function ProductManager({
           }`}
         >
           Stock
+        </button>
+        <button
+          id="product-discounts-tab"
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'discounts'}
+          aria-controls="product-discounts-panel"
+          onClick={() => setActiveTab('discounts')}
+          className={`border-b-2 px-4 py-3 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+            activeTab === 'discounts'
+              ? 'border-primary text-primary'
+              : 'border-transparent text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          Discounts
         </button>
       </div>
 
@@ -168,6 +187,22 @@ export function ProductManager({
             canManageProducts={canManageProducts}
             isBranchScopedStaff={isBranchScopedStaff}
             assignedBranchId={assignedBranchId}
+          />
+        </section>
+      )}
+      {activeTab === 'discounts' && (
+        <section
+          id="product-discounts-panel"
+          role="tabpanel"
+          aria-labelledby="product-discounts-tab"
+          tabIndex={0}
+        >
+          <ProductDiscountsTab
+            discounts={productDiscounts}
+            products={products}
+            variants={variants}
+            categories={categories}
+            canManageProducts={canManageProducts}
           />
         </section>
       )}

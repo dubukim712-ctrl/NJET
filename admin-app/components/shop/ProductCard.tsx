@@ -1,38 +1,50 @@
 import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
+import { ArrowUpRight } from 'lucide-react';
 import type { CatalogProduct } from '@/data/commerce/catalog';
-import { formatPhp } from '@/lib/commerce';
 import { ProductImage } from '@/components/shop/ProductImage';
+import { ProductPrice } from '@/components/shop/ProductPrice';
 
 export function ProductCard({
   product,
   compactOnNarrow = false,
-  stackFooterOnNarrow = false,
   loading,
 }: {
   product: CatalogProduct;
   compactOnNarrow?: boolean;
-  stackFooterOnNarrow?: boolean;
   loading?: 'eager' | 'lazy';
 }) {
-  const startingPrice = product.variants.length
-    ? Math.min(...product.variants.map((variant) => variant.price_minor))
-    : null;
+  const startingVariant = product.variants.reduce<(typeof product.variants)[number] | null>(
+    (lowest, variant) => !lowest || variant.price_minor < lowest.price_minor ? variant : lowest,
+    null
+  );
 
   return (
     <Link
       href={`/shop/view-product/${product.slug}`}
       aria-label={`View product: ${product.name}`}
+      title="Open product details"
       className={`group block overflow-hidden rounded-xl border bg-card transition-colors hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
         compactOnNarrow ? 'min-[320px]:max-[768px]:rounded-lg' : ''
       }`}
     >
       <article>
-        <ProductImage
-          path={product.image_path}
-          alt={product.name}
-          loading={loading}
-        />
+        <div className="relative">
+          <ProductImage
+            path={product.image_path}
+            alt={product.name}
+            loading={loading}
+          />
+          <span
+            aria-hidden="true"
+            className={`absolute right-3 top-3 inline-flex size-10 items-center justify-center rounded-full bg-card/95 text-primary shadow-sm ring-1 ring-border transition-colors group-hover:bg-primary group-hover:text-primary-foreground group-focus-visible:bg-primary group-focus-visible:text-primary-foreground ${
+              compactOnNarrow
+                ? 'min-[320px]:max-[768px]:right-2 min-[320px]:max-[768px]:top-2 min-[320px]:max-[768px]:size-8'
+                : ''
+            }`}
+          >
+            <ArrowUpRight className="size-5" />
+          </span>
+        </div>
         <div
           className={`space-y-3 p-4 sm:p-5 ${
             compactOnNarrow
@@ -76,41 +88,26 @@ export function ProductCard({
             </p>
           </div>
           <div
-            className={`flex items-center justify-between gap-3 ${
-              compactOnNarrow && stackFooterOnNarrow
-                ? 'min-[320px]:max-[768px]:flex-col min-[320px]:max-[768px]:items-start min-[320px]:max-[768px]:gap-1'
-                : compactOnNarrow
-                  ? 'min-[320px]:max-[768px]:gap-1'
+            className={`flex min-h-10 min-w-0 items-center text-sm font-semibold ${
+              compactOnNarrow
+                ? 'min-[320px]:max-[768px]:min-h-8 min-[320px]:max-[768px]:text-xs'
                 : ''
             }`}
           >
-            <div
-              className={`relative flex min-h-10 items-center text-sm font-semibold ${
-                compactOnNarrow
-                  ? 'min-[320px]:max-[768px]:min-h-8 min-[320px]:max-[768px]:text-xs'
-                  : ''
-              }`}
-            >
-              {startingPrice === null ? (
-                'Price unavailable'
-              ) : (
-                <>
-                  <span className="absolute -top-2 left-0 text-[10px] font-medium leading-3 text-muted-foreground sm:text-xs sm:leading-4">
-                    From
-                  </span>
-                  <span>{formatPhp(startingPrice)}</span>
-                </>
-              )}
-            </div>
-            <span
-              className={`inline-flex min-h-10 items-center gap-2 rounded-md px-3 text-sm font-semibold text-primary group-hover:bg-primary/10 ${
-                compactOnNarrow
-                  ? 'min-[320px]:max-[768px]:min-h-8 min-[320px]:max-[768px]:gap-1 min-[320px]:max-[768px]:px-1 min-[320px]:max-[768px]:text-xs min-[320px]:max-[768px]:whitespace-nowrap'
-                  : ''
-              }`}
-            >
-              View product <ArrowRight className="h-4 w-4" aria-hidden="true" />
-            </span>
+            {startingVariant === null ? (
+              'Price unavailable'
+            ) : (
+              <div className="flex flex-col items-start">
+                <span className="text-[10px] font-medium leading-3 text-muted-foreground sm:text-xs sm:leading-4">
+                  From
+                </span>
+                <ProductPrice
+                  priceMinor={startingVariant.price_minor}
+                  listPriceMinor={startingVariant.list_price_minor}
+                  className="text-sm"
+                />
+              </div>
+            )}
           </div>
         </div>
       </article>

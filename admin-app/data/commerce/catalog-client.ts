@@ -7,12 +7,16 @@ import {
   StorefrontAvailabilityRowsSchema,
   StorefrontCatalogRowsSchema,
 } from '@/lib/validations/storefront-catalog';
+import { activeVariantDiscountRowsSchema } from '@/lib/validations/product-discount';
 import type { ProductType } from '@/types/commerce-tables';
 
 export type CartVariant = {
   id: string;
   name: string;
   price_minor: number;
+  list_price_minor: number;
+  discount_unit_minor: number;
+  discount_name: string | null;
   reservation_minor: number;
   home_credit_downpayment_minor: number;
   sku: string;
@@ -50,18 +54,30 @@ export async function getCartVariants(
     );
     if (!returnedVariantIds.length) return { data: [], error: null };
 
-    const availabilityResult = await supabase.rpc(
-      'storefront_variant_availability',
-      { p_variant_ids: returnedVariantIds }
-    );
+    const [availabilityResult, discountResult] = await Promise.all([
+      supabase.rpc('storefront_variant_availability', {
+        p_variant_ids: returnedVariantIds,
+      }),
+      supabase.rpc('active_variant_discounts', {
+        p_variant_ids: returnedVariantIds,
+        p_channel: 'storefront',
+      }),
+    ]);
     if (availabilityResult.error) throw availabilityResult.error;
+    if (discountResult.error) throw discountResult.error;
 
     const parsedAvailability = StorefrontAvailabilityRowsSchema.safeParse(
       availabilityResult.data
     );
-    if (!parsedAvailability.success) {
+    const parsedDiscounts = activeVariantDiscountRowsSchema.safeParse(
+      discountResult.data
+    );
+    if (!parsedAvailability.success || !parsedDiscounts.success) {
       throw new Error('Cart availability response failed validation.');
     }
+    const discountsByVariant = new Map(
+      parsedDiscounts.data.map((discount) => [discount.variant_id, discount])
+    );
 
     const stockByVariant = new Map<
       string,
@@ -88,10 +104,14 @@ export async function getCartVariants(
           row.home_credit_downpayment_minor === null
         ) return [];
 
+        const discount = discountsByVariant.get(row.variant_id);
         return [{
           id: row.variant_id,
           name: row.variant_name,
-          price_minor: row.price_minor,
+          price_minor: discount?.unit_price_minor ?? row.price_minor,
+          list_price_minor: discount?.list_price_minor ?? row.price_minor,
+          discount_unit_minor: discount?.discount_unit_minor ?? 0,
+          discount_name: discount?.discount_name ?? null,
           reservation_minor: row.reservation_minor,
           home_credit_downpayment_minor: row.home_credit_downpayment_minor,
           sku: row.sku,

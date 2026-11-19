@@ -5,6 +5,7 @@ import {
   StorefrontBranchOptionsSchema,
   StorefrontCatalogRowsSchema,
 } from '@/lib/validations/storefront-catalog';
+import { activeVariantDiscountRowsSchema } from '@/lib/validations/product-discount';
 import type { Database } from '@/types/database';
 
 type Product = Database['public']['Tables']['products']['Row'];
@@ -22,6 +23,9 @@ export type CatalogVariant = Pick<
   | 'home_credit_downpayment_minor'
   | 'image_path'
 > & {
+  list_price_minor: number;
+  discount_unit_minor: number;
+  discount_name: string | null;
   stockByBranch: {
     branchId: string;
     stock: number | null;
@@ -88,19 +92,32 @@ export async function getStoreCatalog(slug?: string): Promise<CatalogResult> {
 
     const rows = parsedRows.data;
     const variantIds = rows.flatMap((row) => row.variant_id ? [row.variant_id] : []);
-    const availabilityRows = slug && variantIds.length
-      ? await supabase.rpc('storefront_variant_availability', {
-          p_variant_ids: variantIds,
-        })
-      : null;
+    const [availabilityRows, discountRows] = await Promise.all([
+      slug && variantIds.length
+        ? supabase.rpc('storefront_variant_availability', { p_variant_ids: variantIds })
+        : null,
+      variantIds.length
+        ? supabase.rpc('active_variant_discounts', {
+            p_variant_ids: variantIds,
+            p_channel: 'storefront',
+          })
+        : null,
+    ]);
     if (availabilityRows?.error) throw availabilityRows.error;
+    if (discountRows?.error) throw discountRows.error;
 
     const parsedAvailability = StorefrontAvailabilityRowsSchema.safeParse(
       availabilityRows?.data ?? []
     );
-    if (!parsedAvailability.success) {
+    const parsedDiscounts = activeVariantDiscountRowsSchema.safeParse(
+      discountRows?.data ?? []
+    );
+    if (!parsedAvailability.success || !parsedDiscounts.success) {
       throw new Error('Storefront availability response failed validation.');
     }
+    const discountsByVariant = new Map(
+      parsedDiscounts.data.map((discount) => [discount.variant_id, discount])
+    );
 
     const stockByVariant = new Map<
       string,
@@ -145,12 +162,16 @@ export async function getStoreCatalog(slug?: string): Promise<CatalogResult> {
         row.reservation_minor !== null &&
         row.home_credit_downpayment_minor !== null
       ) {
+        const discount = discountsByVariant.get(row.variant_id);
         product.variants.push({
           id: row.variant_id,
           product_id: row.product_id,
           name: row.variant_name,
           sku: row.sku,
-          price_minor: row.price_minor,
+          price_minor: discount?.unit_price_minor ?? row.price_minor,
+          list_price_minor: discount?.list_price_minor ?? row.price_minor,
+          discount_unit_minor: discount?.discount_unit_minor ?? 0,
+          discount_name: discount?.discount_name ?? null,
           reservation_minor: row.reservation_minor,
           home_credit_downpayment_minor: row.home_credit_downpayment_minor,
           image_path: row.variant_image_path,

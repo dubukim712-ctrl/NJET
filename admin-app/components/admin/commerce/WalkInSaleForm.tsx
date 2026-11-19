@@ -2,14 +2,15 @@
 
 import { useIsFetching, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState, type FormEvent } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { createWalkInSaleAction } from '@/data/actions/walk-in-sales';
-import type {
-  WalkInBranchOption,
-  WalkInCartLine,
-  WalkInCatalogItem,
+import {
+  applyWalkInDiscountQuote,
+  getWalkInCartPricing,
+  type WalkInBranchOption,
+  type WalkInCartLine,
+  type WalkInCatalogItem,
 } from '@/data/commerce/walk-in-sales';
 import {
   walkInCatalogQueryOptions,
@@ -17,9 +18,11 @@ import {
 } from '@/data/commerce/walk-in-sales-client';
 import { useInvalidateAdminProductsQuery } from '@/data/commerce/admin-products-client';
 import { adminOrdersQueryKey } from '@/data/commerce/admin-orders-client';
-import { Button } from '@/components/ui/Button';
 import { WalkInSaleSections } from '@/components/admin/commerce/WalkInSaleSections';
+import { WalkInSaleActions } from '@/components/admin/commerce/WalkInSaleActions';
 import { WalkInSaleCustomerDetails } from '@/components/admin/commerce/WalkInSaleCustomerDetails';
+import { DiscountCodeInput } from '@/components/commerce/DiscountCodeInput';
+import { useDiscountQuote } from '@/components/commerce/useDiscountQuote';
 import type { WalkInSalePaymentValues } from '@/components/admin/commerce/WalkInSalePayment';
 import type { PhilippineAddressValues } from '@/components/admin/commerce/PhilippineAddressFields';
 import { formatPhp, parsePhpAmount } from '@/lib/commerce';
@@ -70,30 +73,23 @@ export function WalkInSaleForm({
   const [busy, setBusy] = useState(false);
   const [catalogError, setCatalogError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-
-  const cartQuantities = new Map(
-    cart.map((line) => [line.variantId, line.quantity])
-  );
-  const productByVariant = new Map(
-    catalog.map((product) => [product.variant_id, product])
-  );
-  const totalMinor = cart.reduce((total, line) => {
-    const product = productByVariant.get(line.variantId);
-    return total + (product ? product.price_minor * line.quantity : 0);
-  }, 0);
-  const hasUnavailableItems = cart.some((line) => {
-    const product = productByVariant.get(line.variantId);
-    return !product || line.quantity > product.stock;
+  const cartSignature = JSON.stringify({
+    phone: contactNumber.trim(),
+    items: cart.map(({ variantId, quantity }) => [variantId, quantity]),
   });
+  const { activePreview, onApplied, onCleared } = useDiscountQuote(cartSignature);
+  const displayCatalog = applyWalkInDiscountQuote(catalog, activePreview?.rows ?? []);
+  const { cartQuantities, totalMinor, discountTotal, hasUnavailableItems } =
+    getWalkInCartPricing(cart, displayCatalog);
   const cashTenderedMinor = parsePhpAmount(payment.cashTendered);
-  const cashIsShort =
-    payment.paymentMethod === 'cash' &&
+  const cashIsShort = payment.paymentMethod === 'cash' &&
     (cashTenderedMinor === null || cashTenderedMinor < totalMinor);
 
   const changeBranch = async (nextBranchId: string) => {
     if (!nextBranchId || nextBranchId === branchId) return;
     setCatalogError(null);
     setError(null);
+    onCleared();
     try {
       await queryClient.fetchQuery(walkInCatalogQueryOptions(nextBranchId));
       setBranchId(nextBranchId);
@@ -108,6 +104,7 @@ export function WalkInSaleForm({
   };
 
   const addToCart = (product: WalkInCatalogItem) => {
+    onCleared();
     setCart((current) => {
       const existing = current.find(
         (line) => line.variantId === product.variant_id
@@ -129,11 +126,17 @@ export function WalkInSaleForm({
   };
 
   const updateQuantity = (variantId: string, quantity: number) => {
+    onCleared();
     setCart((current) =>
       current.map((line) =>
         line.variantId === variantId ? { ...line, quantity } : line
       )
     );
+  };
+
+  const removeFromCart = (variantId: string) => {
+    onCleared();
+    setCart((current) => current.filter((line) => line.variantId !== variantId));
   };
 
   const submitSale = async (event: FormEvent<HTMLFormElement>) => {
@@ -184,6 +187,7 @@ export function WalkInSaleForm({
             ? payment.homeCreditDetails
             : null,
         items: cart,
+        couponCode: activePreview?.code ?? null,
       });
       if (!result.success) {
         setError(result.error);
@@ -203,10 +207,9 @@ export function WalkInSaleForm({
     }
   };
 
-  const changeMinor =
-    payment.paymentMethod === 'cash' && cashTenderedMinor !== null
-      ? cashTenderedMinor - totalMinor
-      : null;
+  const changeMinor = payment.paymentMethod === 'cash' && cashTenderedMinor !== null
+    ? cashTenderedMinor - totalMinor
+    : null;
 
   return (
     <form className="space-y-5" onSubmit={submitSale}>
@@ -226,7 +229,10 @@ export function WalkInSaleForm({
         disabled={catalogBusy || busy}
         onBranchChange={(id) => void changeBranch(id)}
         onCustomerNameChange={setCustomerName}
-        onContactNumberChange={setContactNumber}
+        onContactNumberChange={(value) => {
+          setContactNumber(value);
+          onCleared();
+        }}
         onAddressChange={(address: PhilippineAddressValues) =>
           setPayment((current) => ({ ...current, ...address }))
         }
@@ -244,17 +250,28 @@ export function WalkInSaleForm({
       )}
       {branchId ? (
         <WalkInSaleSections
-          products={catalog}
+          products={displayCatalog}
           cart={cart}
           cartQuantities={cartQuantities}
           totalMinor={totalMinor}
+          discountTotal={discountTotal}
+          couponInput={
+            <DiscountCodeInput
+              key={cartSignature}
+              channel="walk_in"
+              appliedCode={activePreview?.code}
+              phone={contactNumber}
+              items={cart.map(({ variantId, quantity }) => ({ variantId, quantity }))}
+              disabled={busy || catalogBusy || !cart.length}
+              onApplied={onApplied}
+              onCleared={onCleared}
+            />
+          }
           catalogBusy={catalogBusy}
           busy={busy}
           onAdd={addToCart}
           onQuantityChange={updateQuantity}
-          onRemove={(variantId) =>
-            setCart((current) => current.filter((line) => line.variantId !== variantId))
-          }
+          onRemove={removeFromCart}
           payment={payment}
           onPaymentChange={setPayment}
           cashTenderedMinor={cashTenderedMinor}
@@ -269,24 +286,15 @@ export function WalkInSaleForm({
         </p>
       )}
 
-      <footer className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-        <Button type="button" variant="outline" asChild disabled={busy}>
-          <Link href="/admin/orders">Cancel</Link>
-        </Button>
-        <Button
-          type="submit"
-          loading={busy}
-          disabled={
-            !cart.length ||
-            !branchId ||
-            catalogBusy ||
-            hasUnavailableItems ||
-            cashIsShort
-          }
-        >
-          Complete sale
-        </Button>
-      </footer>
+      <WalkInSaleActions
+        busy={busy}
+        canComplete={
+          Boolean(cart.length && branchId) &&
+          !catalogBusy &&
+          !hasUnavailableItems &&
+          !cashIsShort
+        }
+      />
     </form>
   );
 }

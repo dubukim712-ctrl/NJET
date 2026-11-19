@@ -1,4 +1,5 @@
 import type { createClient } from '@/data/supabase/server';
+import { productDiscountRowsSchema } from '@/lib/validations/product-discount';
 
 type SupabaseClient = Awaited<ReturnType<typeof createClient>>;
 
@@ -15,6 +16,7 @@ export async function getCommerceManagementData(supabase: SupabaseClient) {
       unitsResult,
       movementsResult,
       transfersResult,
+      discountsResult,
     ] = await Promise.all([
       supabase.from('products').select('*').order('name').limit(200),
       supabase.rpc('admin_product_variants'),
@@ -30,6 +32,7 @@ export async function getCommerceManagementData(supabase: SupabaseClient) {
         .limit(2000),
       supabase.from('inventory_movements').select('*').order('created_at', { ascending: false }).limit(200),
       supabase.from('branch_transfers').select('*').order('dispatched_at', { ascending: false }).limit(50),
+      supabase.rpc('admin_product_discounts'),
     ]);
     if (productsResult.error) throw productsResult.error;
     if (variantsResult.error) throw variantsResult.error;
@@ -41,6 +44,9 @@ export async function getCommerceManagementData(supabase: SupabaseClient) {
     if (unitsResult.error) throw unitsResult.error;
     if (movementsResult.error) throw movementsResult.error;
     if (transfersResult.error) throw transfersResult.error;
+    if (discountsResult.error) throw discountsResult.error;
+    const discounts = productDiscountRowsSchema.safeParse(discountsResult.data);
+    if (!discounts.success) throw new Error('Product discount response failed validation.');
 
     const transferIds = transfersResult.data.map((transfer) => transfer.id);
     const transferItemsResult = transferIds.length
@@ -76,6 +82,7 @@ export async function getCommerceManagementData(supabase: SupabaseClient) {
           transferItemId: link.transfer_item_id,
           ...(transferUnitById.get(link.unit_id) ?? { serial_number: null, motor_number: null }),
         })),
+        productDiscounts: discounts.data,
       },
       error: null,
     };

@@ -2,7 +2,6 @@
 
 import { useQueryClient } from '@tanstack/react-query';
 import { useState, type FormEvent } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { createCommerceOrderAction } from '@/data/actions/commerce-checkout';
@@ -10,11 +9,16 @@ import { useCartVariantsQuery } from '@/data/commerce/catalog-client';
 import { uploadOrderDocuments } from '@/data/commerce/documents-client';
 import { adminOrdersQueryKey } from '@/data/commerce/admin-orders-client';
 import { useInvalidateCustomerOrdersQuery } from '@/data/commerce/customer-orders-client';
+import { getCheckoutCartPricing } from '@/data/commerce/checkout-pricing';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useCart } from '@/components/cart/CartProvider';
 import { CheckoutAuthNotice } from '@/components/checkout/CheckoutAuthNotice';
+import { CheckoutEmptyCart } from '@/components/checkout/CheckoutEmptyCart';
+import { CheckoutFormLayout } from '@/components/checkout/CheckoutFormLayout';
 import { CheckoutFields } from '@/components/checkout/CheckoutFields';
 import { CheckoutOrderSummary } from '@/components/checkout/CheckoutOrderSummary';
+import { DiscountCodeInput } from '@/components/commerce/DiscountCodeInput';
+import { useDiscountQuote } from '@/components/commerce/useDiscountQuote';
 import { useCheckoutPolicyConsent } from '@/components/checkout/useCheckoutPolicyConsent';
 import { Button } from '@/components/ui/Button';
 import type { CheckoutOptions } from '@/data/commerce/checkout-options';
@@ -68,31 +72,30 @@ export function CheckoutForm({
     ? queryError.message
     : queryError ? 'Cart item details could not be loaded.' : null;
   const loadingCart = items.length > 0 && isFetching;
-  const variantById = new Map(variants.map((variant) => [variant.id, variant]));
-  const cartItems = items.map((item) => ({
-    ...item, variant: variantById.get(item.variantId) ?? null,
-  }));
-  const allVariantsLoaded = cartItems.length > 0 && cartItems.every((item) => item.variant);
-  const hasEbike = cartItems.some((item) => item.variant?.productType === 'ebike');
-  const subtotal = cartItems.reduce(
-    (sum, item) => sum + (item.variant?.price_minor ?? 0) * item.quantity,
-    0
-  );
-  const pickupReservationAmount = fulfillment === 'pickup'
-    ? cartItems.reduce((sum, item) =>
-        sum + (item.variant?.productType === 'ebike'
-          ? item.variant.reservation_minor * item.quantity
-          : 0), 0)
-    : 0;
-  const cartHomeCreditDownpayment = cartItems.reduce(
-    (sum, item) =>
-      sum + (item.variant?.home_credit_downpayment_minor ?? 0) * item.quantity,
-    0
-  );
+  const cartSignature = JSON.stringify(items.map(({ variantId, quantity }) => [variantId, quantity]));
+  const { activePreview, onApplied, onCleared } = useDiscountQuote(cartSignature);
   const deliveryFee = fulfillment === 'delivery'
     ? zones.find((zone) => zone.id === activeZoneId)?.fee_minor ?? 0
     : 0;
-  const total = subtotal + deliveryFee;
+  const {
+    cartItems,
+    allVariantsLoaded,
+    hasEbike,
+    subtotal,
+    discountTotal,
+    pickupReservationAmount,
+    homeCreditDownpayment: cartHomeCreditDownpayment,
+    total,
+    stockAvailable,
+  } = getCheckoutCartPricing({
+    items,
+    variants,
+    quoteRows: activePreview?.rows ?? [],
+    fulfillment,
+    branchId: activeBranchId,
+    branches,
+    deliveryFee,
+  });
   const onlineAvailable =
     paymentRecipients.length > 0 &&
     !(fulfillment === 'pickup' && hasEbike && pickupReservationAmount === 0);
@@ -117,15 +120,6 @@ export function CheckoutForm({
   const paymentAvailable = paymentMethod === 'online'
     ? onlineAvailable && paymentRecipientAvailable
     : homeCreditDownpaymentDue === 0 || paymentRecipientAvailable;
-  const pickupAvailable = allVariantsLoaded && cartItems.every((item) =>
-    (item.variant?.stockByBranch.find((stock) => stock.branchId === activeBranchId)?.stock ?? 0) >= item.quantity
-  );
-  const deliveryAvailable = allVariantsLoaded && branches.some((branch) =>
-    cartItems.every((item) =>
-      (item.variant?.stockByBranch.find((stock) => stock.branchId === branch.id)?.stock ?? 0) >= item.quantity
-    )
-  );
-  const stockAvailable = fulfillment === 'pickup' ? pickupAvailable : deliveryAvailable;
   const onlineDue = paymentMethod === 'online'
     ? reservationDue > 0 && fulfillment === 'pickup' ? reservationDue : total
     : 0;
@@ -189,6 +183,7 @@ export function CheckoutForm({
         privacyAccepted: policyConsent.privacyAccepted,
         privacyVersion: policyConsent.versions.privacy,
         items: items.map((item) => ({ variantId: item.variantId, quantity: item.quantity })),
+        couponCode: activePreview?.code ?? null,
         documents: uploaded.documents,
       });
       if (!result.success) {
@@ -214,14 +209,7 @@ export function CheckoutForm({
   };
 
   if (!items.length) {
-    return (
-      <section className="rounded-xl border bg-card p-8 text-center">
-        {cartError && <p className="mb-4 text-sm text-destructive" role="alert">{cartError}</p>}
-        <h1 className="text-xl font-semibold">Your cart is empty</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Add products before starting checkout.</p>
-        <Button asChild className="mt-5"><Link href="/shop">Browse products</Link></Button>
-      </section>
-    );
+    return <CheckoutEmptyCart cartError={cartError} />;
   }
 
   if (!user) return <CheckoutAuthNotice needsSignIn />;
@@ -230,24 +218,14 @@ export function CheckoutForm({
   }
 
   return (
-    <form className="grid gap-6 lg:grid-cols-[1fr_21rem]" onSubmit={submitOrder}>
-      <div className="space-y-5">
-        {cartError && <p className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive" role="alert">{cartError}</p>}
-        {(catalogError || loadingCart) && (
-          <p className="rounded-lg border bg-card p-4 text-sm text-muted-foreground" role="status">
-            {catalogError ?? 'Loading current product details...'}
-          </p>
-        )}
-        {error && (
-          <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive" role="alert">
-            <p>{error}</p>
-            {requiresLogin && (
-              <Link href="/login?redirect=%2Fcheckout" className="mt-2 inline-flex min-h-8 items-center font-medium underline underline-offset-4">
-                Sign in to continue
-              </Link>
-            )}
-          </div>
-        )}
+    <CheckoutFormLayout
+      onSubmit={submitOrder}
+      cartError={cartError}
+      catalogError={catalogError}
+      loadingCart={loadingCart}
+      error={error}
+      requiresLogin={requiresLogin}
+      fields={
         <CheckoutFields
           branches={branches}
           zones={zones}
@@ -284,22 +262,36 @@ export function CheckoutForm({
           onTermsChange={policyConsent.onTermsChange}
           onPrivacyChange={policyConsent.onPrivacyChange}
         />
-      </div>
-      <CheckoutOrderSummary
-        items={cartItems}
-        subtotal={subtotal}
-        deliveryFee={deliveryFee}
-        total={total}
-        reservationDue={reservationDue}
-        homeCreditDownpaymentDue={homeCreditDownpaymentDue}
-        paymentMethod={paymentMethod}
-        onlineDue={onlineDue}
-        stockAvailable={stockAvailable}
-        paymentAvailable={paymentAvailable}
-        allVariantsLoaded={allVariantsLoaded}
-        loading={loadingCart || Boolean(catalogError)}
-        busy={busy}
-      />
-    </form>
+      }
+      summary={
+        <CheckoutOrderSummary
+          couponInput={
+            <DiscountCodeInput
+              key={cartSignature}
+              channel="storefront"
+              appliedCode={activePreview?.code}
+              items={items.map(({ variantId, quantity }) => ({ variantId, quantity }))}
+              disabled={busy || loadingCart || !allVariantsLoaded}
+              onApplied={onApplied}
+              onCleared={onCleared}
+            />
+          }
+          items={cartItems}
+          subtotal={subtotal}
+          discountTotal={discountTotal}
+          deliveryFee={deliveryFee}
+          total={total}
+          reservationDue={reservationDue}
+          homeCreditDownpaymentDue={homeCreditDownpaymentDue}
+          paymentMethod={paymentMethod}
+          onlineDue={onlineDue}
+          stockAvailable={stockAvailable}
+          paymentAvailable={paymentAvailable}
+          allVariantsLoaded={allVariantsLoaded}
+          loading={loadingCart || Boolean(catalogError)}
+          busy={busy}
+        />
+      }
+    />
   );
 }

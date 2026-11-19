@@ -5,6 +5,7 @@ import { AddToCartButton } from "@/components/cart/AddToCartButton";
 import { Select } from "@/components/ui/Select";
 import { getAvailableQuantityLimit } from "@/data/cart";
 import type { CatalogProduct } from "@/data/commerce/catalog";
+import { ProductPrice } from "@/components/shop/ProductPrice";
 import { formatPhp } from "@/lib/commerce";
 
 export function ProductPurchasePanel({
@@ -108,9 +109,10 @@ export function ProductPurchasePanel({
       {selectedVariant && (
         <div className="rounded-lg bg-secondary/60 p-4">
           <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <p className="font-semibold">
-              {formatPhp(selectedVariant.price_minor)}
-            </p>
+            <ProductPrice
+              priceMinor={selectedVariant.price_minor}
+              listPriceMinor={selectedVariant.list_price_minor}
+            />
             <p className={`text-sm ${stockAlert} font-bold`}>
               {selectedVariant.available
                 ? selectedVariant.branchStock?.stock === null

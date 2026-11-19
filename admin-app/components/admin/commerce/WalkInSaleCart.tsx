@@ -7,11 +7,13 @@ import type {
 } from '@/data/commerce/walk-in-sales';
 import { formatPhp } from '@/lib/commerce';
 import { Button } from '@/components/ui/Button';
+import { ProductPrice } from '@/components/shop/ProductPrice';
 
 export function WalkInSaleCart({
   products,
   cart,
   totalMinor,
+  discountTotal,
   disabled,
   onQuantityChange,
   onRemove,
@@ -19,6 +21,7 @@ export function WalkInSaleCart({
   products: WalkInCatalogItem[];
   cart: WalkInCartLine[];
   totalMinor: number;
+  discountTotal: number;
   disabled: boolean;
   onQuantityChange: (variantId: string, quantity: number) => void;
   onRemove: (variantId: string) => void;
@@ -94,9 +97,11 @@ export function WalkInSaleCart({
                         <Plus className="size-4" aria-hidden="true" />
                       </Button>
                     </div>
-                    <span className="text-sm font-semibold tabular-nums">
-                      {formatPhp(product.price_minor * line.quantity)}
-                    </span>
+                    <ProductPrice
+                      priceMinor={product.price_minor * line.quantity}
+                      listPriceMinor={product.list_price_minor * line.quantity}
+                      className="justify-end text-sm tabular-nums"
+                    />
                   </div>
                 )}
                 {product && line.quantity > product.stock && (
@@ -112,6 +117,18 @@ export function WalkInSaleCart({
         <p className="rounded-lg border border-dashed p-5 text-sm text-muted-foreground">
           Add products from the catalog to start a sale.
         </p>
+      )}
+      {discountTotal > 0 && (
+        <div className="space-y-2 border-t pt-3 text-sm">
+          <p className="flex justify-between">
+            <span>Items before discount</span>
+            <span className="tabular-nums">{formatPhp(totalMinor + discountTotal)}</span>
+          </p>
+          <p className="flex justify-between text-primary">
+            <span>Discount</span>
+            <span className="tabular-nums">-{formatPhp(discountTotal)}</span>
+          </p>
+        </div>
       )}
       <div className="flex justify-between border-t pt-3 font-semibold">
         <span>Total</span>

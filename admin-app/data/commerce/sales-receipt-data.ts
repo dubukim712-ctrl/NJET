@@ -15,6 +15,7 @@ type ReceiptOrder = {
   payment_method: string;
   payment_provider: string | null;
   total_minor: number;
+  discount_total_minor: number;
   delivery_fee_minor: number;
   home_credit_downpayment_due_minor: number;
   balance_due_minor: number;
@@ -30,6 +31,8 @@ type ReceiptItem = {
   sku: string;
   quantity: number;
   unit_price_minor: number;
+  regular_unit_price_minor: number;
+  discount_unit_minor: number;
 };
 
 type ReceiptPayment = {
@@ -187,12 +190,20 @@ export function buildSalesReceiptData({
       : '',
     certificateNumber: certificateNumber ?? '',
     salesInvoiceNumber: invoiceNo ?? '',
-    items: items.map((item) =>
-      `${item.quantity} x ${item.product_name} - ${item.variant_name} (${item.sku}) - ${formatPhp(item.unit_price_minor * item.quantity)}`
-    ).join('\n'),
+    items: items.map((item) => {
+      const regularTotal = item.regular_unit_price_minor * item.quantity;
+      const discountTotal = item.discount_unit_minor * item.quantity;
+      const itemTotal = item.unit_price_minor * item.quantity;
+      const price = discountTotal > 0
+        ? `Regular ${formatPhp(regularTotal)} - Discount ${formatPhp(discountTotal)} - Paid ${formatPhp(itemTotal)}`
+        : formatPhp(itemTotal);
+      return `${item.quantity} x ${item.product_name} - ${item.variant_name} (${item.sku}) - ${price}`;
+    }).join('\n'),
     subtotal: formatPhp(
-      items.reduce((sum, item) => sum + item.unit_price_minor * item.quantity, 0)
-    ),
+      items.reduce((sum, item) => sum + item.regular_unit_price_minor * item.quantity, 0)
+    ) + (order.discount_total_minor > 0
+      ? ` - Discounts ${formatPhp(order.discount_total_minor)}`
+      : ''),
     deliveryFee: formatPhp(order.delivery_fee_minor),
     total: formatPhp(order.total_minor),
     paymentMethod: paymentLabel(order.payment_method, order.payment_provider),

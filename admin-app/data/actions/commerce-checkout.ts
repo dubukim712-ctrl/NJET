@@ -62,7 +62,7 @@ export async function createCommerceOrderAction(
   const paths = input.documents.map((document) => document.objectPath);
   let orderId: string | null = null;
   try {
-    const { data, error } = await supabase.rpc('create_commerce_order_with_recipient', {
+    const { data, error } = await supabase.rpc('create_commerce_order_with_discount', {
       p_customer_name: input.customerName,
       p_contact_number: input.contactNumber,
       p_fulfillment: input.fulfillment,
@@ -90,6 +90,7 @@ export async function createCommerceOrderAction(
         kind,
         object_path: objectPath,
       })),
+      p_coupon_code: input.couponCode,
     });
     if (error) {
       const cleanupSucceeded = await removeUnlinkedDocuments(supabase, paths);

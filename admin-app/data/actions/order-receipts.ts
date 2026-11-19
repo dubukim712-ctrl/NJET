@@ -60,7 +60,7 @@ export async function generateOrderReceiptAction(
   try {
     const orderResult = await supabase
       .from('orders')
-      .select('id, order_number, customer_name, contact_number, branch_name, fulfillment, delivery_zone_name, address_line1, barangay, city, province, postal_code, payment_method, payment_provider, total_minor, delivery_fee_minor, home_credit_downpayment_due_minor, balance_due_minor, completed_at, updated_at, status')
+      .select('id, order_number, customer_name, contact_number, branch_name, fulfillment, delivery_zone_name, address_line1, barangay, city, province, postal_code, payment_method, payment_provider, total_minor, discount_total_minor, delivery_fee_minor, home_credit_downpayment_due_minor, balance_due_minor, completed_at, updated_at, status')
       .eq('id', parsed.data.orderId)
       .maybeSingle();
     if (orderResult.error) throw orderResult.error;
@@ -79,7 +79,7 @@ export async function generateOrderReceiptAction(
           .maybeSingle(),
         supabase
           .from('order_items')
-          .select('id, variant_id, product_name, product_type, variant_name, sku, quantity, unit_price_minor')
+          .select('id, variant_id, product_name, product_type, variant_name, sku, quantity, unit_price_minor, regular_unit_price_minor, discount_unit_minor')
           .eq('order_id', order.id)
           .order('created_at')
           .limit(100),

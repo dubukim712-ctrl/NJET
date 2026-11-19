@@ -3,10 +3,11 @@
 import { useMemo, useState } from 'react';
 import { Search } from 'lucide-react';
 import type { WalkInCatalogItem } from '@/data/commerce/walk-in-sales';
-import { formatPhp, productTypeLabel } from '@/lib/commerce';
+import { productTypeLabel } from '@/lib/commerce';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { ProductImage } from '@/components/shop/ProductImage';
+import { ProductPrice } from '@/components/shop/ProductPrice';
 
 type ProductGroup = Pick<
   WalkInCatalogItem,
@@ -96,9 +97,12 @@ export function WalkInProductCatalog({
                     >
                       <div className="min-w-0">
                         <p className="truncate text-sm font-medium">{variant.variant_name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {variant.sku} · {formatPhp(variant.price_minor)}
-                        </p>
+                        <p className="text-xs text-muted-foreground">{variant.sku}</p>
+                        <ProductPrice
+                          priceMinor={variant.price_minor}
+                          listPriceMinor={variant.list_price_minor}
+                          className="text-sm"
+                        />
                         <p className={`text-xs ${variant.stock > quantity ? 'text-muted-foreground' : 'text-destructive'}`}>
                           {Math.max(variant.stock - quantity, 0)} available
                         </p>

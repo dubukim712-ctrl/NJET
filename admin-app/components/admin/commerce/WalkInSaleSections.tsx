@@ -10,12 +10,15 @@ import type {
   WalkInCartLine,
   WalkInCatalogItem,
 } from '@/data/commerce/walk-in-sales';
+import type { ReactNode } from 'react';
 
 export function WalkInSaleSections({
   products,
   cart,
   cartQuantities,
   totalMinor,
+  discountTotal,
+  couponInput,
   catalogBusy,
   busy,
   onAdd,
@@ -31,6 +34,8 @@ export function WalkInSaleSections({
   cart: WalkInCartLine[];
   cartQuantities: Map<string, number>;
   totalMinor: number;
+  discountTotal: number;
+  couponInput: ReactNode;
   catalogBusy: boolean;
   busy: boolean;
   onAdd: (product: WalkInCatalogItem) => void;
@@ -51,10 +56,12 @@ export function WalkInSaleSections({
         onAdd={onAdd}
       />
       <div className="space-y-5">
+        {couponInput}
         <WalkInSaleCart
           products={products}
           cart={cart}
           totalMinor={totalMinor}
+          discountTotal={discountTotal}
           disabled={busy || catalogBusy}
           onQuantityChange={onQuantityChange}
           onRemove={onRemove}

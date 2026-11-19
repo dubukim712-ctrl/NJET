@@ -9,13 +9,15 @@ export type CustomerOrder = Pick<
   OrderRow,
   | 'id' | 'order_number' | 'customer_name' | 'fulfillment' | 'branch_name'
   | 'delivery_zone_name' | 'payment_method' | 'status' | 'total_minor'
+  | 'discount_total_minor' | 'applied_coupon_code'
   | 'reservation_due_minor' | 'balance_due_minor' | 'online_due_minor'
   | 'home_credit_downpayment_due_minor' | 'created_at'
 > & {
   items: Pick<
     OrderItemRow,
     | 'order_id' | 'product_name' | 'variant_name' | 'product_type'
-    | 'quantity' | 'unit_price_minor'
+    | 'quantity' | 'unit_price_minor' | 'regular_unit_price_minor'
+    | 'discount_unit_minor' | 'discount_name_snapshot'
   >[];
   invoiceNo: string | null;
   certificateUrl: string | null;
@@ -31,7 +33,8 @@ export async function getCustomerOrders(
       .from('orders')
       .select(`
         id, order_number, customer_name, fulfillment, branch_name, delivery_zone_name,
-        payment_method, status, total_minor, reservation_due_minor, balance_due_minor,
+        payment_method, status, total_minor, discount_total_minor, applied_coupon_code,
+        reservation_due_minor, balance_due_minor,
         online_due_minor, home_credit_downpayment_due_minor, created_at
       `)
       .eq('customer_id', userId)
@@ -44,7 +47,7 @@ export async function getCustomerOrders(
     const [itemsResult, invoicesResult, certificatesResult, receiptsResult] = await Promise.all([
       supabase
         .from('order_items')
-        .select('order_id, product_name, variant_name, product_type, quantity, unit_price_minor')
+        .select('order_id, product_name, variant_name, product_type, quantity, unit_price_minor, regular_unit_price_minor, discount_unit_minor, discount_name_snapshot')
         .in('order_id', orderIds)
         .order('created_at')
         .limit(1500),

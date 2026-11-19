@@ -69,19 +69,21 @@ export async function createWalkInSaleAction(
       })),
     };
     const result = input.paymentMethod === 'home_credit' && homeCreditDetails
-      ? await supabase.rpc('create_walk_in_home_credit_sale', {
+      ? await supabase.rpc('create_walk_in_home_credit_sale_with_discount', {
           ...sharedArgs,
           p_home_credit_acc_no: homeCreditDetails.accountNo,
           p_downpayment_minor: homeCreditDetails.downpayment,
           p_terms_months: homeCreditDetails.termsMonths,
           p_monthly_payment_minor: homeCreditDetails.monthlyPayment,
+          p_coupon_code: input.couponCode,
         })
-      : await supabase.rpc('create_walk_in_sale', {
+      : await supabase.rpc('create_walk_in_sale_with_discount', {
           ...sharedArgs,
           p_payment_method: input.paymentMethod,
           p_payment_provider: input.paymentProvider,
           p_payment_reference: input.paymentReference,
           p_cash_tendered_minor: input.cashTenderedMinor,
+          p_coupon_code: input.couponCode,
         });
     const { data, error } = result;
     if (error) {

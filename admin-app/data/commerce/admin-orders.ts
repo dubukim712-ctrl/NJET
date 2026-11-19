@@ -14,7 +14,8 @@ export type StaffOrder = Pick<
   | 'branch_name' | 'delivery_zone_name' | 'address_line1' | 'barangay'
   | 'city' | 'province' | 'postal_code' | 'payment_method' | 'payment_provider'
   | 'payment_recipient_id'
-  | 'payment_reference' | 'status' | 'total_minor' | 'delivery_fee_minor'
+  | 'payment_reference' | 'status' | 'total_minor' | 'discount_total_minor'
+  | 'applied_coupon_code' | 'delivery_fee_minor'
   | 'reservation_due_minor' | 'balance_due_minor' | 'online_due_minor'
   | 'home_credit_downpayment_due_minor' | 'created_at'
 > & {
@@ -22,7 +23,8 @@ export type StaffOrder = Pick<
   items: Pick<
     OrderItemRow,
     | 'id' | 'order_id' | 'product_name' | 'product_type' | 'variant_name'
-    | 'sku' | 'quantity' | 'unit_price_minor'
+    | 'sku' | 'quantity' | 'unit_price_minor' | 'regular_unit_price_minor'
+    | 'discount_unit_minor' | 'discount_name_snapshot'
   >[];
   homeCreditDetails: {
     accountNo: string;
@@ -62,6 +64,7 @@ export async function getCommerceOrders(
         cash_tendered_minor, branch_id, branch_name,
         delivery_zone_name, address_line1, barangay, city, province, postal_code,
         payment_method, payment_provider, payment_recipient_id, payment_reference, status, total_minor,
+        discount_total_minor, applied_coupon_code,
         delivery_fee_minor, reservation_due_minor, balance_due_minor, online_due_minor,
         home_credit_downpayment_due_minor,
         created_at
@@ -121,7 +124,7 @@ export async function getCommerceOrders(
       await Promise.all([
         supabase
           .from('order_items')
-          .select('id, order_id, product_name, product_type, variant_name, sku, quantity, unit_price_minor')
+          .select('id, order_id, product_name, product_type, variant_name, sku, quantity, unit_price_minor, regular_unit_price_minor, discount_unit_minor, discount_name_snapshot')
           .in('order_id', orderIds)
           .order('created_at')
           .limit(1500),

@@ -17,6 +17,7 @@ export const walkInSaleSchema = z
     city: addressField,
     province: addressField,
     postalCode: z.string().trim().max(20).nullable(),
+    couponCode: z.string().trim().max(32).nullable().default(null),
     homeCreditDetails: homeCreditProcessingSchema.nullable(),
     items: z
       .array(

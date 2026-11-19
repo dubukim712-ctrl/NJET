@@ -10,6 +10,7 @@ import type { CommerceTables } from './commerce-tables';
 import type { AdminNotificationTables } from './admin-notifications';
 import type { ReceiptTables } from './receipt-tables';
 import type { SupportChatTables } from './support-chat-tables';
+import type { ProductDiscountTables } from './product-discount-tables';
 import type { DatabaseFunctions } from './database-functions';
 
 export type {
@@ -199,7 +200,8 @@ export type Database = {
           },
         ];
       };
-    } & CommerceTables & AdminNotificationTables & ReceiptTables & SupportChatTables;
+    } & CommerceTables & AdminNotificationTables & ReceiptTables & SupportChatTables
+      & ProductDiscountTables;
     Views: {
       user_profiles: {
         Row: UserProfile;
