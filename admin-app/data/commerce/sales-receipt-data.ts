@@ -100,6 +100,7 @@ export function buildSalesReceiptData({
   payments,
   business,
   homeCredit,
+  branchAddress,
   units,
 }: {
   order: ReceiptOrder;
@@ -109,6 +110,7 @@ export function buildSalesReceiptData({
   payments: ReceiptPayment[];
   business: Business;
   homeCredit: HomeCreditDetails | null;
+  branchAddress: string;
   units: EBikeUnit[];
 }): SalesReceiptData {
   const amountPaid = payments.reduce((sum, payment) => (
@@ -170,6 +172,7 @@ export function buildSalesReceiptData({
       ? order.delivery_zone_name ?? 'Delivery'
       : order.branch_name,
     storeBranch: order.branch_name,
+    branchAddress,
     fulfillment: order.fulfillment === 'delivery' ? 'Delivery' : 'Branch pickup',
     productType: uniqueValues(items.map((item) => ({
       ebike: 'Electric Bicycle',

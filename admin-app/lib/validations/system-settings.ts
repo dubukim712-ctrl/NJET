@@ -33,6 +33,10 @@ export const businessSettingsSchema = z.object({
   logoPath: z.string().regex(new RegExp(`^logos/${uuid}\\.(jpg|png|webp)$`)).nullable(),
 }).strict();
 
+export const phoneVerificationSettingsSchema = z.object({
+  phoneVerificationRequired: z.boolean(),
+}).strict();
+
 export const paymentRecipientSettingsSchema = z.object({
   id: z.string().uuid().nullable(),
   provider: z.enum(['gcash', 'bank_transfer', 'card']),

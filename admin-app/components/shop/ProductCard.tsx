@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ArrowUpRight } from 'lucide-react';
+import { ArrowUpRight, Star } from 'lucide-react';
 import type { CatalogProduct } from '@/data/commerce/catalog';
 import { ProductImage } from '@/components/shop/ProductImage';
 import { ProductPrice } from '@/components/shop/ProductPrice';
@@ -17,11 +17,18 @@ export function ProductCard({
     (lowest, variant) => !lowest || variant.price_minor < lowest.price_minor ? variant : lowest,
     null
   );
+  const { averageRating, reviewCount } = product.ratingSummary;
 
   return (
     <Link
       href={`/shop/view-product/${product.slug}`}
-      aria-label={`View product: ${product.name}`}
+      aria-label={`View product: ${product.name}. ${
+        reviewCount
+          ? `${averageRating.toFixed(1)} out of 5 stars from ${reviewCount} ${
+              reviewCount === 1 ? 'review' : 'reviews'
+            }.`
+          : 'No reviews yet.'
+      }`}
       title="Open product details"
       className={`group block overflow-hidden rounded-xl border bg-card transition-colors hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
         compactOnNarrow ? 'min-[320px]:max-[768px]:rounded-lg' : ''
@@ -77,6 +84,22 @@ export function ProductCard({
             >
               {product.name}
             </h2>
+            <div className="mt-1 flex items-center gap-1.5 text-xs">
+              <span className="inline-flex items-center gap-0.5 text-primary" aria-hidden="true">
+                {[1, 2, 3, 4, 5].map((value) => (
+                  <Star
+                    key={value}
+                    className={`size-3.5 ${averageRating >= value ? 'fill-current' : ''}`}
+                  />
+                ))}
+              </span>
+              <span className="font-medium">
+                {reviewCount ? averageRating.toFixed(1) : 'No reviews'}
+              </span>
+              {reviewCount > 0 && (
+                <span className="text-muted-foreground">({reviewCount})</span>
+              )}
+            </div>
             <p
               className={`mt-1 line-clamp-2 min-h-10 text-sm leading-5 text-muted-foreground ${
                 compactOnNarrow

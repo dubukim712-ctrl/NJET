@@ -11,6 +11,7 @@ import type { AdminNotificationTables } from './admin-notifications';
 import type { ReceiptTables } from './receipt-tables';
 import type { SupportChatTables } from './support-chat-tables';
 import type { ProductDiscountTables } from './product-discount-tables';
+import type { ProductReviewTables } from './product-review-tables';
 import type { DatabaseFunctions } from './database-functions';
 
 export type {
@@ -22,6 +23,7 @@ export type {
   UserProfile,
 } from './rbac';
 export type { AdminNotification, NotificationEventType } from './admin-notifications';
+export type { ProductReview, ProductReviewStatus } from './product-review-tables';
 
 export type Json =
   | string
@@ -158,6 +160,8 @@ export type Database = {
           email: string;
           full_name: string | null;
           avatar_url: string | null;
+          phone_number: string | null;
+          phone_verified_at: string | null;
           role_id: string;
           branch_id: string | null;
           created_at: string;
@@ -168,6 +172,8 @@ export type Database = {
           email: string;
           full_name?: string | null;
           avatar_url?: string | null;
+          phone_number?: string | null;
+          phone_verified_at?: string | null;
           role_id: string;
           branch_id?: string | null;
           created_at?: string;
@@ -178,6 +184,8 @@ export type Database = {
           email?: string;
           full_name?: string | null;
           avatar_url?: string | null;
+          phone_number?: string | null;
+          phone_verified_at?: string | null;
           role_id?: string;
           branch_id?: string | null;
           created_at?: string;
@@ -201,7 +209,7 @@ export type Database = {
         ];
       };
     } & CommerceTables & AdminNotificationTables & ReceiptTables & SupportChatTables
-      & ProductDiscountTables;
+      & ProductDiscountTables & ProductReviewTables;
     Views: {
       user_profiles: {
         Row: UserProfile;

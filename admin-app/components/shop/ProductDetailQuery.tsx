@@ -6,6 +6,7 @@ import { ProductPurchasePanel } from '@/components/shop/ProductPurchasePanel';
 import { ProductDetailSkeleton } from '@/components/shop/ProductDetailSkeleton';
 import { Button } from '@/components/ui/Button';
 import { ProductImage } from '@/components/shop/ProductImage';
+import { ProductReviewsSection } from '@/components/shop/ProductReviewsSection';
 import type { CatalogProduct } from '@/data/commerce/catalog';
 import {
   StorefrontCatalogQueryError,
@@ -120,6 +121,7 @@ function ProductDetailContent({
           </p>
         </div>
       </div>
+      <ProductReviewsSection productId={product.id} />
     </div>
   );
 }

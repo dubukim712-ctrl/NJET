@@ -26,7 +26,11 @@ interface CartContextValue {
   items: CartItem[];
   itemCount: number;
   error: string | null;
-  addItem: (variantId: string, maxQuantity?: number | null) => CartResult;
+  addItem: (
+    variantId: string,
+    maxQuantity?: number | null,
+    branchId?: string
+  ) => CartResult;
   setQuantity: (
     variantId: string,
     quantity: number,
@@ -61,9 +65,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const addItem = (
     variantId: string,
-    maxQuantity?: number | null
+    maxQuantity?: number | null,
+    branchId?: string
   ): CartResult => {
-    const result = addCartItem(items, variantId, maxQuantity);
+    const result = addCartItem(items, variantId, maxQuantity, branchId);
     return result.success ? commit(result.items) : result;
   };
 

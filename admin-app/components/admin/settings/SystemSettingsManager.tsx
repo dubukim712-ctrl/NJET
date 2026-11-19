@@ -7,13 +7,15 @@ import { OwnershipCertificateTemplateSettings } from '@/components/admin/setting
 import { SalesReceiptTemplateSettings } from '@/components/admin/settings/SalesReceiptTemplateSettings';
 import { PaymentRecipientEditor } from '@/components/admin/settings/PaymentRecipientEditor';
 import { LegalPoliciesSettings } from '@/components/admin/settings/LegalPoliciesSettings';
+import { CheckoutPhoneVerificationSettings } from '@/components/admin/settings/CheckoutPhoneVerificationSettings';
 import { PAYMENT_PROVIDER_OPTIONS } from '@/data/commerce/payment-recipients';
 import type { AdminSystemSettings } from '@/data/commerce/system-settings';
 
-type SettingsTab = 'business' | 'service-hours' | 'payments' | 'documents' | 'policies';
+type SettingsTab = 'business' | 'service-hours' | 'checkout' | 'payments' | 'documents' | 'policies';
 const SETTINGS_TABS: { id: SettingsTab; label: string }[] = [
   { id: 'business', label: 'Business' },
   { id: 'service-hours', label: 'Service hours' },
+  { id: 'checkout', label: 'Checkout' },
   { id: 'payments', label: 'Payment Accounts' },
   { id: 'documents', label: 'Documents' },
   { id: 'policies', label: 'Policies' },
@@ -96,6 +98,18 @@ export function SystemSettingsManager({
         <BranchServiceHoursSettings
           branches={settings.branchServiceHours.branches}
           hours={settings.branchServiceHours.hours}
+        />
+      </section>
+
+      <section
+        id="settings-checkout-panel"
+        role="tabpanel"
+        aria-labelledby="settings-checkout-tab"
+        tabIndex={0}
+        hidden={activeTab !== 'checkout'}
+      >
+        <CheckoutPhoneVerificationSettings
+          required={settings.checkoutSettings.phoneVerificationRequired}
         />
       </section>
 

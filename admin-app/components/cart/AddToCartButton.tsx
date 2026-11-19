@@ -8,16 +8,18 @@ import { Button } from '@/components/ui/Button';
 export function AddToCartButton({
   variantId,
   maxQuantity,
+  branchId,
 }: {
   variantId: string;
   maxQuantity: number | null;
+  branchId: string;
 }) {
   const { addItem, items } = useCart();
   const quantity = items.find((item) => item.variantId === variantId)?.quantity ?? 0;
   const atStockLimit = maxQuantity !== null && quantity >= maxQuantity;
 
   const handleAdd = () => {
-    const result = addItem(variantId, maxQuantity);
+    const result = addItem(variantId, maxQuantity, branchId);
     if (result.success) {
       toast.success('Added to your cart.');
     } else {

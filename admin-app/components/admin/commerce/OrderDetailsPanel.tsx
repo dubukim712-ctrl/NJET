@@ -6,6 +6,7 @@ import {
   cancelCommerceOrderAction,
   confirmCommerceOrderAction,
 } from "@/data/actions/commerce-admin";
+import { markOrderPhoneManuallyVerifiedAction } from "@/data/actions/phone-verification";
 import { CompletedOrderDocuments } from "@/components/admin/commerce/CompletedOrderDocuments";
 import { OrderPrivateDocuments } from "@/components/admin/commerce/OrderPrivateDocuments";
 import { OrderOverviewSections } from "@/components/admin/commerce/OrderOverviewSections";
@@ -13,6 +14,7 @@ import { HomeCreditOrderCompletionForm } from "@/components/admin/commerce/HomeC
 import { OrderCompletionPaymentForm } from "@/components/admin/commerce/OrderCompletionPaymentForm";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { toast } from "sonner";
 
 type OrderAction = (
   payload: unknown,
@@ -39,6 +41,30 @@ export function OrderDetailsPanel({
   const [completingHomeCredit, setCompletingHomeCredit] = useState(false);
   const [completingSale, setCompletingSale] = useState(false);
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [verifyingPhone, setVerifyingPhone] = useState(false);
+  const [phoneVerificationError, setPhoneVerificationError] = useState<string | null>(null);
+
+  const markPhoneVerified = async () => {
+    setVerifyingPhone(true);
+    setPhoneVerificationError(null);
+    try {
+      const result = await markOrderPhoneManuallyVerifiedAction({ orderId: order.id });
+      if (!result.success) {
+        throw new Error(result.error ?? "Could not verify this order contact number.");
+      }
+      toast.success("Order contact number marked as verified.");
+      onDataChanged();
+    } catch (error) {
+      console.error("Could not manually verify an order contact number.", error);
+      const message = error instanceof Error
+        ? error.message
+        : "Could not verify this order contact number.";
+      setPhoneVerificationError(message);
+      toast.error(message);
+    } finally {
+      setVerifyingPhone(false);
+    }
+  };
 
   return (
     <div
@@ -46,6 +72,41 @@ export function OrderDetailsPanel({
       className="mt-5 space-y-5 border-t pt-5"
     >
       <OrderOverviewSections order={order} storeDue={storeDue} />
+
+      {order.order_source === "online" && (
+        <section className="space-y-3 border-t pt-4">
+          <div>
+            <h3 className="text-sm font-semibold">Phone number verification</h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {order.phone_verification_status === "manual_pending"
+                ? "Pending staff verification"
+                : order.phone_verification_status === "manual_verified"
+                  ? "Verified manually by staff"
+                  : order.phone_verification_status === "otp_verified"
+                    ? "Verified by SMS code"
+                    : "Not required"}
+            </p>
+          </div>
+          {canManage &&
+            order.phone_verification_status === "manual_pending" &&
+            order.status === "awaiting_confirmation" && (
+              <Button
+                type="button"
+                variant="secondary"
+                loading={verifyingPhone}
+                disabled={isAnyOrderBusy}
+                onClick={markPhoneVerified}
+              >
+                Mark phone as manually verified
+              </Button>
+            )}
+          {phoneVerificationError && (
+            <p className="text-sm text-destructive" role="alert">
+              {phoneVerificationError}
+            </p>
+          )}
+        </section>
+      )}
 
       <OrderPrivateDocuments documents={order.documents} />
 
@@ -70,7 +131,10 @@ export function OrderDetailsPanel({
             <Button
               type="button"
               loading={busyAction === "confirm"}
-              disabled={isAnyOrderBusy}
+              disabled={
+                isAnyOrderBusy ||
+                order.phone_verification_status === "manual_pending"
+              }
               onClick={() =>
                 onUpdateOrder(confirmCommerceOrderAction, "confirm")
               }
@@ -105,7 +169,7 @@ export function OrderDetailsPanel({
               type="button"
               variant="destructive"
               loading={busyAction === "cancel"}
-              disabled={isAnyOrderBusy}
+              disabled={isAnyOrderBusy || verifyingPhone}
               onClick={() => setCancelDialogOpen(true)}
             >
               Cancel order

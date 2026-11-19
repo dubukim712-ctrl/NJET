@@ -24,8 +24,7 @@ export function OrderPrivateDocuments({
                 className="inline-flex items-center min-h-10 gap-2 rounded-md border px-3 text-sm font-medium hover:bg-accent"
               >
                 <Download className="h-4 w-4" />
-                Download{" "}
-                {document.kind === "identity" ? "ID" : "payment proof"}
+                Download {document.kind === "identity" ? "ID" : "payment proof"}
               </a>
             ) : (
               <span className="text-sm text-destructive">

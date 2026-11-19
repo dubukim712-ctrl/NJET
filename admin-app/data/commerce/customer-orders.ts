@@ -13,12 +13,15 @@ export type CustomerOrder = Pick<
   | 'reservation_due_minor' | 'balance_due_minor' | 'online_due_minor'
   | 'home_credit_downpayment_due_minor' | 'created_at'
 > & {
-  items: Pick<
-    OrderItemRow,
-    | 'order_id' | 'product_name' | 'variant_name' | 'product_type'
-    | 'quantity' | 'unit_price_minor' | 'regular_unit_price_minor'
-    | 'discount_unit_minor' | 'discount_name_snapshot'
-  >[];
+  items: (
+    Pick<
+      OrderItemRow,
+      | 'order_id' | 'product_name' | 'variant_name' | 'product_type'
+      | 'id'
+      | 'quantity' | 'unit_price_minor' | 'regular_unit_price_minor'
+      | 'discount_unit_minor' | 'discount_name_snapshot'
+    > & { productId: string | null }
+  )[];
   invoiceNo: string | null;
   certificateUrl: string | null;
   receiptUrl: string | null;
@@ -47,7 +50,14 @@ export async function getCustomerOrders(
     const [itemsResult, invoicesResult, certificatesResult, receiptsResult] = await Promise.all([
       supabase
         .from('order_items')
-        .select('order_id, product_name, variant_name, product_type, quantity, unit_price_minor, regular_unit_price_minor, discount_unit_minor, discount_name_snapshot')
+        .select(`
+          id, order_id, product_name, variant_name, product_type, quantity,
+          unit_price_minor, regular_unit_price_minor, discount_unit_minor,
+          discount_name_snapshot,
+          variant:product_variants!order_items_variant_id_fkey(
+            product:products!product_variants_product_id_fkey(id)
+          )
+        `)
         .in('order_id', orderIds)
         .order('created_at')
         .limit(1500),
@@ -71,6 +81,10 @@ export async function getCustomerOrders(
     if (invoicesResult.error) throw invoicesResult.error;
     if (certificatesResult.error) throw certificatesResult.error;
     if (receiptsResult.error) throw receiptsResult.error;
+    const items = itemsResult.data.map(({ variant, ...item }) => ({
+      ...item,
+      productId: variant?.product?.id ?? null,
+    }));
 
     let certificateUrlByOrder = new Map<string, string>();
     if (certificatesResult.data.length) {
@@ -126,7 +140,7 @@ export async function getCustomerOrders(
     return {
       data: orders.map((order) => ({
         ...order,
-        items: itemsResult.data.filter((item) => item.order_id === order.id),
+        items: items.filter((item) => item.order_id === order.id),
         invoiceNo: invoicesResult.data.find((invoice) => invoice.order_id === order.id)?.invoice_no ?? null,
         certificateUrl: certificateUrlByOrder.get(order.id) ?? null,
         receiptUrl: receiptUrlByOrder.get(order.id) ?? null,

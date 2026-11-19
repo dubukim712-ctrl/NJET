@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Package } from 'lucide-react';
 import { OrderStatusBadge } from '@/components/commerce/OrderStatusBadge';
 import { ProductPrice } from '@/components/shop/ProductPrice';
+import { CustomerOrderReviewActions } from '@/components/dashboard/CustomerOrderReviewActions';
 import type { CustomerOrder } from '@/data/commerce/customer-orders';
 import { formatPhp } from '@/lib/commerce';
 
@@ -20,6 +21,17 @@ export function CustomerOrderCard({
       (order.payment_method === 'home_credit' &&
         order.home_credit_downpayment_due_minor > 0)) &&
       order.status === 'awaiting_confirmation');
+  const reviewItems = order.status === 'completed'
+    ? order.items.flatMap((item) =>
+        item.productId
+          ? [{
+              id: item.productId,
+              name: `${item.product_name} · ${item.variant_name}`,
+              orderItemId: item.id,
+            }]
+          : []
+      )
+    : [];
 
   return (
     <li className="rounded-xl border bg-card p-5 sm:p-6">
@@ -63,10 +75,13 @@ export function CustomerOrderCard({
       )}
       <ul className="mt-4 space-y-2 border-y py-4 text-sm">
         {order.items.map((item, index) => (
-          <li key={`${order.id}-${index}`} className="flex justify-between gap-3">
-            <span className="min-w-0">
-              {item.product_name} · {item.variant_name} × {item.quantity}
-            </span>
+          <li
+            key={`${order.id}-${index}`}
+            className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"
+          >
+            <div className="min-w-0">
+              <p>{item.product_name} · {item.variant_name} × {item.quantity}</p>
+            </div>
             <ProductPrice
               priceMinor={item.unit_price_minor * item.quantity}
               listPriceMinor={item.regular_unit_price_minor * item.quantity}
@@ -125,7 +140,7 @@ export function CustomerOrderCard({
         )}
       </div>
       {order.status === 'completed' &&
-        (order.invoiceNo || order.certificateUrl || order.receiptUrl) && (
+        (order.invoiceNo || order.certificateUrl || order.receiptUrl || reviewItems.length > 0) && (
           <section className="mt-4 flex flex-wrap items-center gap-3 border-t pt-4">
             {order.invoiceNo && (
               <p className="text-sm">
@@ -141,6 +156,13 @@ export function CustomerOrderCard({
               <a href={order.receiptUrl} target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center rounded-md border px-3 text-sm font-medium hover:bg-accent">
                 Download sales receipt
               </a>
+            )}
+            {reviewItems.length > 0 && (
+              <CustomerOrderReviewActions
+                orderId={order.id}
+                orderNumber={order.order_number}
+                items={reviewItems}
+              />
             )}
           </section>
         )}

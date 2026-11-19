@@ -2,6 +2,7 @@ import type {
   Fulfillment,
   OrderPaymentMethod,
   OrderPaymentTransactionType,
+  OrderPhoneVerificationStatus,
   OrderStatus,
   PaymentMethod,
   PaymentProvider,
@@ -16,6 +17,9 @@ export type Order = {
   cash_tendered_minor: number | null;
   customer_name: string;
   contact_number: string;
+  phone_verification_status: OrderPhoneVerificationStatus;
+  phone_verified_at: string | null;
+  phone_verified_by: string | null;
   fulfillment: Fulfillment;
   branch_id: string | null;
   branch_name: string;

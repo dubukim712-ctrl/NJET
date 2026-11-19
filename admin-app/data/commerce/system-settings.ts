@@ -31,6 +31,9 @@ export type StorefrontBusinessInfo = Omit<AdminBusinessInfo, 'logoPath'>;
 
 export type AdminSystemSettings = {
   businessInfo: AdminBusinessInfo;
+  checkoutSettings: {
+    phoneVerificationRequired: boolean;
+  };
   branchServiceHours: {
     branches: { id: string; name: string }[];
     hours: {
@@ -72,7 +75,7 @@ export async function getAdminSystemSettings(): Promise<{
     ] = await Promise.all([
       supabase
         .from('business_settings')
-        .select('business_name, phone, email, address, business_hours, logo_path')
+        .select('business_name, phone, email, address, business_hours, logo_path, phone_verification_required')
         .eq('id', 1)
         .maybeSingle(),
       supabase
@@ -141,6 +144,10 @@ export async function getAdminSystemSettings(): Promise<{
           logoUrl: businessResult.data.logo_path
             ? branding.getPublicUrl(businessResult.data.logo_path).data.publicUrl
             : null,
+        },
+        checkoutSettings: {
+          phoneVerificationRequired:
+            businessResult.data.phone_verification_required,
         },
         branchServiceHours: {
           branches: branchesResult.data,

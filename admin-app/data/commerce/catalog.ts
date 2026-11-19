@@ -5,6 +5,7 @@ import {
   StorefrontBranchOptionsSchema,
   StorefrontCatalogRowsSchema,
 } from '@/lib/validations/storefront-catalog';
+import { productRatingSummariesRowsSchema } from '@/lib/validations/product-review';
 import { activeVariantDiscountRowsSchema } from '@/lib/validations/product-discount';
 import type { Database } from '@/types/database';
 
@@ -47,6 +48,10 @@ export type CatalogProduct = Pick<
 > & {
   categoryName: string | null;
   subcategoryName: string | null;
+  ratingSummary: {
+    averageRating: number;
+    reviewCount: number;
+  };
   variants: CatalogVariant[];
 };
 
@@ -91,8 +96,9 @@ export async function getStoreCatalog(slug?: string): Promise<CatalogResult> {
     }
 
     const rows = parsedRows.data;
+    const productIds = [...new Set(rows.map((row) => row.product_id))];
     const variantIds = rows.flatMap((row) => row.variant_id ? [row.variant_id] : []);
-    const [availabilityRows, discountRows] = await Promise.all([
+    const [availabilityRows, discountRows, ratingRows] = await Promise.all([
       slug && variantIds.length
         ? supabase.rpc('storefront_variant_availability', { p_variant_ids: variantIds })
         : null,
@@ -102,9 +108,15 @@ export async function getStoreCatalog(slug?: string): Promise<CatalogResult> {
             p_channel: 'storefront',
           })
         : null,
+      productIds.length
+        ? supabase.rpc('published_product_rating_summaries', {
+            p_product_ids: productIds,
+          })
+        : null,
     ]);
     if (availabilityRows?.error) throw availabilityRows.error;
     if (discountRows?.error) throw discountRows.error;
+    if (ratingRows?.error) throw ratingRows.error;
 
     const parsedAvailability = StorefrontAvailabilityRowsSchema.safeParse(
       availabilityRows?.data ?? []
@@ -112,9 +124,25 @@ export async function getStoreCatalog(slug?: string): Promise<CatalogResult> {
     const parsedDiscounts = activeVariantDiscountRowsSchema.safeParse(
       discountRows?.data ?? []
     );
-    if (!parsedAvailability.success || !parsedDiscounts.success) {
-      throw new Error('Storefront availability response failed validation.');
+    const parsedRatings = productRatingSummariesRowsSchema.safeParse(
+      ratingRows?.data ?? []
+    );
+    if (
+      !parsedAvailability.success ||
+      !parsedDiscounts.success ||
+      !parsedRatings.success
+    ) {
+      throw new Error('Storefront catalog data failed validation.');
     }
+    const ratingsByProduct = new Map(
+      parsedRatings.data.map((rating) => [
+        rating.product_id,
+        {
+          averageRating: rating.average_rating,
+          reviewCount: rating.review_count,
+        },
+      ])
+    );
     const discountsByVariant = new Map(
       parsedDiscounts.data.map((discount) => [discount.variant_id, discount])
     );
@@ -137,6 +165,10 @@ export async function getStoreCatalog(slug?: string): Promise<CatalogResult> {
     for (const row of rows) {
       let product = productsById.get(row.product_id);
       if (!product) {
+        const ratingSummary = ratingsByProduct.get(row.product_id);
+        if (!ratingSummary) {
+          throw new Error('Storefront rating summary response was incomplete.');
+        }
         product = {
           id: row.product_id,
           slug: row.product_slug,
@@ -149,6 +181,7 @@ export async function getStoreCatalog(slug?: string): Promise<CatalogResult> {
           is_demo: row.is_demo,
           categoryName: row.category_name,
           subcategoryName: row.subcategory_name,
+          ratingSummary,
           variants: [],
         };
         productsById.set(product.id, product);

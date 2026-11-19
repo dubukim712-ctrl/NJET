@@ -29,6 +29,11 @@ export type OrderStatus =
   | 'cancelled'
   | 'expired'
   | 'completed';
+export type OrderPhoneVerificationStatus =
+  | 'not_required'
+  | 'otp_verified'
+  | 'manual_pending'
+  | 'manual_verified';
 export type ServiceAppointmentStatus =
   | 'requested'
   | 'confirmed'
@@ -44,11 +49,11 @@ export type ServiceAppointmentCancellationRequestStatus =
   | 'approved'
   | 'rejected';
 
-type Table<Row> = {
+type Table<Row, Relationships = []> = {
   Row: Row;
   Insert: Partial<Row>;
   Update: Partial<Row>;
-  Relationships: [];
+  Relationships: Relationships;
 };
 
 type Timestamped = {
@@ -183,6 +188,7 @@ export type BusinessSettings = {
   id: number;
   business_name: string;
   phone: string;
+  phone_verification_required: boolean;
   email: string;
   address: string;
   logo_path: string | null;
@@ -281,7 +287,16 @@ export type CommerceTables = {
   products: Table<Product>;
   product_categories: Table<ProductCategory>;
   product_subcategories: Table<ProductSubcategory>;
-  product_variants: Table<ProductVariant>;
+  product_variants: Table<
+    ProductVariant,
+    [{
+      foreignKeyName: 'product_variants_product_id_fkey';
+      columns: ['product_id'];
+      isOneToOne: false;
+      referencedRelation: 'products';
+      referencedColumns: ['id'];
+    }]
+  >;
   branch_inventory: Table<BranchInventory>;
   ebike_units: Table<EbikeUnit>;
   inventory_movements: Table<InventoryMovement>;
@@ -290,7 +305,16 @@ export type CommerceTables = {
   branch_transfer_units: Table<BranchTransferUnit>;
   delivery_zones: Table<DeliveryZone>;
   orders: Table<Order>;
-  order_items: Table<OrderItem>;
+  order_items: Table<
+    OrderItem,
+    [{
+      foreignKeyName: 'order_items_variant_id_fkey';
+      columns: ['variant_id'];
+      isOneToOne: false;
+      referencedRelation: 'product_variants';
+      referencedColumns: ['id'];
+    }]
+  >;
   order_payment_transactions: Table<OrderPaymentTransaction>;
   order_documents: Table<OrderDocument>;
   order_invoices: Table<OrderInvoice>;

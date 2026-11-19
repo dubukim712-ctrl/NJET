@@ -4,6 +4,8 @@ import type { DatabaseCoreFunctions } from './database-functions-core';
 import type { DatabaseStorefrontFunctions } from './database-functions-storefront';
 import type { DatabaseReceiptFunctions } from './database-functions-receipts';
 import type { DatabaseSupportChatFunctions } from './database-functions-support-chat';
+import type { DatabaseProductReviewFunctions } from './database-functions-product-reviews';
+import type { DatabasePhoneVerificationFunctions } from './database-functions-phone-verification';
 
 export type DatabaseFunctions =
   & DatabaseCommerceFunctions
@@ -11,4 +13,6 @@ export type DatabaseFunctions =
   & DatabaseStorefrontFunctions
   & DatabaseCoreFunctions
   & DatabaseReceiptFunctions
-  & DatabaseSupportChatFunctions;
+  & DatabaseSupportChatFunctions
+  & DatabaseProductReviewFunctions
+  & DatabasePhoneVerificationFunctions

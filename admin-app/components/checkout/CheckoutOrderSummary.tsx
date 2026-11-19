@@ -30,6 +30,7 @@ export function CheckoutOrderSummary({
   allVariantsLoaded,
   loading,
   busy,
+  phoneVerificationReady,
 }: {
   couponInput: ReactNode;
   items: CheckoutLine[];
@@ -46,27 +47,37 @@ export function CheckoutOrderSummary({
   allVariantsLoaded: boolean;
   loading: boolean;
   busy: boolean;
+  phoneVerificationReady: boolean;
 }) {
   return (
-    <aside className="h-fit space-y-4 rounded-xl border bg-card p-5 lg:sticky lg:top-24">
+    <aside className="h-fit min-w-0 space-y-4 rounded-xl border bg-card p-4 sm:p-5 lg:sticky lg:top-24">
       <h2 className="text-lg font-semibold">Order summary</h2>
       {couponInput}
-      <ul className="space-y-3 border-b pb-4">
+      <ul className="space-y-4 border-b pb-4">
         {items.map((item) => (
-          <li key={item.variantId} className="flex gap-3 text-sm">
-            <ProductImage
-              path={item.variant?.imagePath ?? item.variant?.productImagePath ?? null}
-              alt={item.variant ? `${item.variant.productName} - ${item.variant.name}` : 'Unavailable item'}
-              className="h-12 w-12 shrink-0 rounded-md aspect-square"
-            />
-            <span className="min-w-0 flex-1">
-              {item.variant?.productName ?? 'Unavailable item'} · {item.variant?.name ?? ''}
-              <span className="block text-xs text-muted-foreground">Qty {item.quantity}</span>
-            </span>
+          <li key={item.variantId} className="min-w-0 space-y-2 text-sm">
+            <div className="flex min-w-0 items-start gap-3">
+              <ProductImage
+                path={item.variant?.imagePath ?? item.variant?.productImagePath ?? null}
+                alt={item.variant ? `${item.variant.productName} - ${item.variant.name}` : 'Unavailable item'}
+                className="size-12 shrink-0 rounded-md aspect-square"
+              />
+              <div className="min-w-0 flex-1">
+                <p className="break-words font-medium leading-5">
+                  {item.variant?.productName ?? 'Unavailable item'}
+                </p>
+                {item.variant?.name && (
+                  <p className="mt-0.5 break-words text-xs text-muted-foreground">
+                    {item.variant.name}
+                  </p>
+                )}
+                <p className="mt-1 text-xs text-muted-foreground">Qty {item.quantity}</p>
+              </div>
+            </div>
             <ProductPrice
               priceMinor={(item.variant?.price_minor ?? 0) * item.quantity}
               listPriceMinor={(item.variant?.list_price_minor ?? 0) * item.quantity}
-              className="shrink-0 justify-end text-right"
+              className="w-full justify-end text-right"
             />
           </li>
         ))}
@@ -74,19 +85,28 @@ export function CheckoutOrderSummary({
       <div className="space-y-2 text-sm">
         {discountTotal > 0 && (
           <>
-            <p className="flex justify-between">
-              <span>Items before discount</span>
-              <span>{formatPhp(subtotal + discountTotal)}</span>
+            <p className="flex items-start justify-between gap-3">
+              <span className="min-w-0">Items before discount</span>
+              <span className="shrink-0 text-right tabular-nums">{formatPhp(subtotal + discountTotal)}</span>
             </p>
-            <p className="flex justify-between text-primary">
-              <span>Discount</span>
-              <span>-{formatPhp(discountTotal)}</span>
+            <p className="flex items-start justify-between gap-3 text-primary">
+              <span className="min-w-0">Discount</span>
+              <span className="shrink-0 text-right tabular-nums">-{formatPhp(discountTotal)}</span>
             </p>
           </>
         )}
-        <p className="flex justify-between"><span>Subtotal</span><span>{formatPhp(subtotal)}</span></p>
-        <p className="flex justify-between"><span>Delivery</span><span>{formatPhp(deliveryFee)}</span></p>
-        <p className="flex justify-between border-t pt-3 font-semibold"><span>Total</span><span>{formatPhp(total)}</span></p>
+        <p className="flex items-start justify-between gap-3">
+          <span className="min-w-0">Subtotal</span>
+          <span className="shrink-0 text-right tabular-nums">{formatPhp(subtotal)}</span>
+        </p>
+        <p className="flex items-start justify-between gap-3">
+          <span className="min-w-0">Delivery</span>
+          <span className="shrink-0 text-right tabular-nums">{formatPhp(deliveryFee)}</span>
+        </p>
+        <p className="flex items-start justify-between gap-3 border-t pt-3 font-semibold">
+          <span className="min-w-0">Total</span>
+          <span className="shrink-0 text-right tabular-nums">{formatPhp(total)}</span>
+        </p>
       </div>
       {reservationDue > 0 && (
         <p className="rounded-lg bg-secondary p-3 text-xs leading-5">
@@ -113,7 +133,12 @@ export function CheckoutOrderSummary({
           The selected payment account is unavailable for the required downpayment.
         </p>
       )}
-      <Button type="submit" className="w-full" loading={busy} disabled={loading || !allVariantsLoaded || !stockAvailable || !paymentAvailable}>
+      {!phoneVerificationReady && (
+        <p className="text-xs text-muted-foreground" role="status">
+          Verify your contact number before placing the order.
+        </p>
+      )}
+      <Button type="submit" className="w-full" loading={busy} disabled={loading || !allVariantsLoaded || !stockAvailable || !paymentAvailable || !phoneVerificationReady}>
         Place order
       </Button>
       <p className="text-xs leading-5 text-muted-foreground">

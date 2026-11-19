@@ -1,4 +1,4 @@
-import { PDFDocument, TextAlignment } from 'pdf-lib';
+import { PDFDocument, PDFImage, TextAlignment, ImageAlignment, rgb } from 'pdf-lib';
 import type { SalesReceiptImage } from '@/data/commerce/sales-receipt-images';
 import {
   SALES_RECEIPT_TEMPLATE_FIELDS,
@@ -20,6 +20,7 @@ export type SalesReceiptData = {
   ownerAddress: string;
   branchName: string;
   storeBranch: string;
+  branchAddress: string;
   fulfillment: string;
   productType: string;
   modelType: string;
@@ -68,11 +69,53 @@ function multiline(value: string) {
     .join('\n');
 }
 
+function drawImageInWidget(
+  document: PDFDocument,
+  form: ReturnType<PDFDocument['getForm']>,
+  fieldName: string,
+  image: PDFImage
+) {
+  const field = form.getField(fieldName);
+  const widgets = field.acroField.getWidgets();
+  for (const widget of widgets) {
+    const pageRef = widget.P();
+    let page = pageRef
+      ? document
+          .getPages()
+          .find((candidate) => candidate.ref.toString() === pageRef.toString())
+      : undefined;
+    if (!page) continue;
+    const rectangle = widget.getRectangle();
+    const inset = 2;
+    const innerWidth = Math.max(1, rectangle.width - inset * 2);
+    const innerHeight = Math.max(1, rectangle.height - inset * 2);
+    const scale = Math.min(
+      innerWidth / image.width,
+      innerHeight / image.height
+    );
+    const width = image.width * scale;
+    const height = image.height * scale;
+    page.drawRectangle({
+      x: rectangle.x,
+      y: rectangle.y,
+      width: rectangle.width,
+      height: rectangle.height,
+      color: rgb(1, 1, 1),
+      borderWidth: 0,
+    });
+    page.drawImage(image, {
+      x: rectangle.x + (rectangle.width - width) / 2,
+      y: rectangle.y + (rectangle.height - height) / 2,
+      width,
+      height,
+    });
+  }
+}
+
 export async function buildSalesReceiptFromTemplate(
   templateBytes: Uint8Array,
   data: SalesReceiptData,
   images: {
-    businessLogo?: SalesReceiptImage | null;
     variantImage?: SalesReceiptImage | null;
   } = {}
 ): Promise<Uint8Array> {
@@ -101,24 +144,21 @@ export async function buildSalesReceiptFromTemplate(
     );
   }
 
-  const fields = Object.values(SALES_RECEIPT_TEMPLATE_FIELDS);
   const availableFields = new Set(form.getFields().map((field) => field.getName()));
-  const missingFields = fields.filter((fieldName) => !availableFields.has(fieldName));
-  if (missingFields.length) {
-    throw new SalesReceiptTemplateError(
-      `The sales receipt template is missing these fields: ${missingFields.join(', ')}.`
-    );
-  }
   const imageFieldNames = Object.values(SALES_RECEIPT_TEMPLATE_IMAGE_FIELDS);
   for (const fieldName of imageFieldNames) {
     if (!availableFields.has(fieldName)) continue;
     try {
       form.getTextField(fieldName);
     } catch (error) {
-      throw new SalesReceiptTemplateError(
-        `The optional "${fieldName}" image area must be a text field.`,
-        error
-      );
+      try {
+        form.getButton(fieldName);
+      } catch {
+        throw new SalesReceiptTemplateError(
+          `The optional "${fieldName}" image area must be a text field or push-button image control.`,
+          error
+        );
+      }
     }
   }
 
@@ -137,6 +177,7 @@ export async function buildSalesReceiptFromTemplate(
     [SALES_RECEIPT_TEMPLATE_FIELDS.ownerAddress, data.ownerAddress],
     [SALES_RECEIPT_TEMPLATE_FIELDS.branchName, data.branchName],
     [SALES_RECEIPT_TEMPLATE_FIELDS.storeBranch, data.storeBranch],
+    [SALES_RECEIPT_TEMPLATE_FIELDS.branchAddress, data.branchAddress],
     [SALES_RECEIPT_TEMPLATE_FIELDS.fulfillment, data.fulfillment],
     [SALES_RECEIPT_TEMPLATE_FIELDS.productType, data.productType],
     [SALES_RECEIPT_TEMPLATE_FIELDS.modelType, data.modelType],
@@ -175,6 +216,7 @@ export async function buildSalesReceiptFromTemplate(
   ]);
 
   for (const [fieldName, value] of values) {
+    if (!availableFields.has(fieldName)) continue;
     let field: ReturnType<typeof form.getTextField>;
     try {
       field = form.getTextField(fieldName);
@@ -202,28 +244,28 @@ export async function buildSalesReceiptFromTemplate(
   try {
     form.updateFieldAppearances();
     const imageFields = [
-      [SALES_RECEIPT_TEMPLATE_IMAGE_FIELDS.businessLogo, images.businessLogo],
       [SALES_RECEIPT_TEMPLATE_IMAGE_FIELDS.variantImage, images.variantImage],
     ] as const;
     for (const [fieldName, image] of imageFields) {
-      if (!image) continue;
-      if (!availableFields.has(fieldName)) {
-        throw new SalesReceiptTemplateError(
-          `Add a text field named "${fieldName}" to the template to display this image.`
-        );
-      }
-      const field = form.getTextField(fieldName);
-      field.setText('');
-      field.setAlignment(TextAlignment.Center);
+      if (!image || !availableFields.has(fieldName)) continue;
       const embeddedImage = await document.embedJpg(image.bytes);
-      field.setImage(embeddedImage);
+      drawImageInWidget(document, form, fieldName, embeddedImage);
+      try {
+        const field = form.getButton(fieldName);
+        field.setImage(embeddedImage, ImageAlignment.Center);
+      } catch {
+        const field = form.getTextField(fieldName);
+        field.setText('');
+        field.setAlignment(TextAlignment.Center);
+        field.setImage(embeddedImage);
+      }
     }
     form.flatten();
     return await document.save();
   } catch (error) {
     if (error instanceof SalesReceiptTemplateError) throw error;
     throw new SalesReceiptTemplateError(
-      'The sales receipt values could not be placed in this template.',
+      'The sales receipt values or image controls could not be placed in this template.',
       error
     );
   }
@@ -247,6 +289,7 @@ export async function validateSalesReceiptTemplate(
     ownerAddress: 'Sample address',
     branchName: 'Sample branch',
     storeBranch: 'Sample branch',
+    branchAddress: '123 Sample Street',
     fulfillment: 'Pickup',
     productType: 'Electric Bicycle',
     modelType: 'Sample model',

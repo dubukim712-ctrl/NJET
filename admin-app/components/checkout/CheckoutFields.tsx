@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { CreditCard, FileImage, Phone, UserRound } from "lucide-react";
+import { CreditCard, FileImage, UserRound } from "lucide-react";
 import { getPaymentProviderLabel } from "@/data/commerce/payment-recipients";
 import {
   PhilippineAddressFields,
@@ -10,6 +10,7 @@ import {
 } from "@/components/admin/commerce/PhilippineAddressFields";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
+import { CheckoutPhoneVerification } from "@/components/checkout/CheckoutPhoneVerification";
 import type { CheckoutOptions } from "@/data/commerce/checkout-options";
 import type {
   Fulfillment,
@@ -17,7 +18,12 @@ import type {
   PaymentProvider,
 } from "@/types/commerce-tables";
 
-interface CheckoutFieldsProps extends Omit<CheckoutOptions, 'policyVersions'> {
+interface CheckoutFieldsProps extends Omit<
+  CheckoutOptions,
+  'policyVersions' | 'customerPhoneNumber' | 'customerPhoneVerified'
+> {
+  initialPhoneNumber: string | null;
+  initialVerifiedPhoneNumber: string | null;
   fulfillment: Fulfillment;
   paymentMethod: PaymentMethod;
   branchId: string;
@@ -35,6 +41,7 @@ interface CheckoutFieldsProps extends Omit<CheckoutOptions, 'policyVersions'> {
   onBranchChange: (value: string) => void;
   onZoneChange: (value: string) => void;
   onIdentityFilesChange: (files: File[]) => void;
+  onPhoneVerificationChange: (verified: boolean) => void;
   onTermsChange: (accepted: boolean) => void;
   onPrivacyChange: (accepted: boolean) => void;
 }
@@ -74,21 +81,11 @@ export function CheckoutFields(props: CheckoutFieldsProps) {
             required
             leadingIcon={<UserRound className="h-4 w-4" />}
           />
-          <Input
-            name="contactNumber"
-            label="Contact number"
-            type="tel"
-            autoComplete="tel"
-            pattern="[0-9]{7,11}"
-            minLength={7}
-            maxLength={11}
-            onChange={(event) =>
-              (event.target.value = event.target.value
-                .replace(/[^0-9]/g, "")
-                .slice(0, 11))
-            }
-            required
-            leadingIcon={<Phone className="h-4 w-4" />}
+          <CheckoutPhoneVerification
+            initialPhoneNumber={props.initialPhoneNumber}
+            initialVerifiedPhoneNumber={props.initialVerifiedPhoneNumber}
+            verificationRequired={props.phoneVerificationRequired}
+            onVerificationChange={props.onPhoneVerificationChange}
           />
         </div>
         <PhilippineAddressFields
@@ -132,7 +129,7 @@ export function CheckoutFields(props: CheckoutFieldsProps) {
             <option value="">Select a branch</option>
             {props.branches.map((branch) => (
               <option key={branch.id} value={branch.id}>
-                {branch.name} - {branch.address}
+                {branch.name}
               </option>
             ))}
           </Select>

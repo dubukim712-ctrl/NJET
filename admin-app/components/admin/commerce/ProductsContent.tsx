@@ -9,6 +9,10 @@ export async function ProductsContent() {
     <ProductsQuery
       userId={user.id}
       canManageProducts={hasPermission(profile, PERMISSIONS.productsManage)}
+      canModerateProductReviews={hasPermission(
+        profile,
+        PERMISSIONS.productReviewsModerate
+      )}
       isBranchScopedStaff={profile.scope === 'staff' && !profile.is_full_access}
       assignedBranchId={profile.branch_id}
     />

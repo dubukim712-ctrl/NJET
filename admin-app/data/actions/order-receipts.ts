@@ -21,7 +21,6 @@ import type { createClient } from '@/data/supabase/server';
 const RECEIPT_TEMPLATE_BUCKET = 'njet-sales-receipt-templates';
 const RECEIPT_BUCKET = 'njet-order-receipts';
 const PRODUCT_IMAGE_BUCKET = 'njet-product-images';
-const BUSINESS_LOGO_BUCKET = 'njet-storefront-branding';
 const RECEIPT_MAX_SIZE = 2 * 1024 * 1024;
 type SupabaseClient = Awaited<ReturnType<typeof createClient>>;
 
@@ -60,7 +59,7 @@ export async function generateOrderReceiptAction(
   try {
     const orderResult = await supabase
       .from('orders')
-      .select('id, order_number, customer_name, contact_number, branch_name, fulfillment, delivery_zone_name, address_line1, barangay, city, province, postal_code, payment_method, payment_provider, total_minor, discount_total_minor, delivery_fee_minor, home_credit_downpayment_due_minor, balance_due_minor, completed_at, updated_at, status')
+      .select('id, order_number, customer_name, contact_number, branch_id, branch_name, fulfillment, delivery_zone_name, address_line1, barangay, city, province, postal_code, payment_method, payment_provider, total_minor, discount_total_minor, delivery_fee_minor, home_credit_downpayment_due_minor, balance_due_minor, completed_at, updated_at, status')
       .eq('id', parsed.data.orderId)
       .maybeSingle();
     if (orderResult.error) throw orderResult.error;
@@ -68,6 +67,16 @@ export async function generateOrderReceiptAction(
     if (!order) return { success: false, error: 'Order not found.' };
     if (order.status !== 'completed') {
       return { success: false, error: 'Sales receipts can only be generated for completed orders.' };
+    }
+    let branchAddress = '';
+    if (order.branch_id) {
+      const branchResult = await supabase
+        .from('branches')
+        .select('address')
+        .eq('id', order.branch_id)
+        .maybeSingle();
+      if (branchResult.error) throw branchResult.error;
+      branchAddress = branchResult.data?.address ?? '';
     }
 
     const [businessResult, itemsResult, paymentsResult, invoiceResult, certificateResult, homeCreditResult, previousResult, templateResult] =
@@ -138,12 +147,27 @@ export async function generateOrderReceiptAction(
         .limit(3000),
       supabase
         .from('product_variants')
-        .select('id, image_path')
+        .select('id, product_id, image_path')
         .in('id', itemsResult.data.map((item) => item.variant_id))
         .limit(100),
     ]);
     if (unitsResult.error) throw unitsResult.error;
     if (variantsResult.error) throw variantsResult.error;
+    const productIds = [
+      ...new Set(
+        variantsResult.data
+          .map((variant) => variant.product_id)
+          .filter((productId): productId is string => Boolean(productId))
+      ),
+    ];
+    const productsResult = productIds.length
+      ? await supabase
+          .from('products')
+          .select('id, image_path')
+          .in('id', productIds)
+          .limit(100)
+      : { data: [], error: null };
+    if (productsResult.error) throw productsResult.error;
     for (const item of itemsResult.data.filter((entry) => entry.product_type === 'ebike')) {
       const units = unitsResult.data.filter((unit) => unit.order_item_id === item.id);
       if (
@@ -165,23 +189,22 @@ export async function generateOrderReceiptAction(
     }
     const imageItem = itemsResult.data.find((item) => item.product_type === 'ebike')
       ?? itemsResult.data[0];
-    const variantImagePath = variantsResult.data.find(
+    const selectedVariant = variantsResult.data.find(
       (variant) => variant.id === imageItem.variant_id
-    )?.image_path ?? null;
-    const [businessLogo, variantImage] = await Promise.all([
-      loadSalesReceiptImage(
-        supabase,
-        BUSINESS_LOGO_BUCKET,
-        businessResult.data.logo_path,
-        'business logo'
-      ),
-      loadSalesReceiptImage(
-        supabase,
-        PRODUCT_IMAGE_BUCKET,
-        variantImagePath,
-        'product variant image'
-      ),
-    ]);
+    );
+    const fallbackProductImagePath = selectedVariant
+      ? productsResult.data.find(
+          (product) => product.id === selectedVariant.product_id
+        )?.image_path ?? null
+      : null;
+    const variantImagePath =
+      selectedVariant?.image_path ?? fallbackProductImagePath;
+    const variantImage = await loadSalesReceiptImage(
+      supabase,
+      PRODUCT_IMAGE_BUCKET,
+      variantImagePath,
+      'product variant image'
+    );
     const { data: templateFile, error: templateError } = await supabase.storage
       .from(RECEIPT_TEMPLATE_BUCKET)
       .download(templateResult.data.object_path);
@@ -196,13 +219,14 @@ export async function generateOrderReceiptAction(
         order,
         invoiceNo: invoiceResult.data?.invoice_no ?? null,
         certificateNumber: certificateResult.data?.certificate_number ?? null,
+        branchAddress,
         items: itemsResult.data,
         payments: paymentsResult.data,
         business: businessResult.data,
         homeCredit: homeCreditResult.data,
         units: unitsResult.data,
       }),
-      { businessLogo, variantImage }
+      { variantImage }
     );
     if (bytes.byteLength > RECEIPT_MAX_SIZE) {
       return { success: false, error: 'The generated sales receipt is too large.' };
@@ -255,12 +279,23 @@ export async function generateOrderReceiptAction(
       if (!removed) {
         return {
           success: true,
-          data: { warning: 'The new sales receipt is attached, but the previous file could not be removed.' },
+          data: {
+            warning: [
+              'The new sales receipt is attached, but the previous file could not be removed.',
+              ...(!variantImage ? ['No product or variant image is configured for this receipt.'] : []),
+            ].join(' '),
+          },
         };
       }
     }
 
-    return { success: true, data: {} };
+    const missingImages = [
+      ...(!variantImage ? ['No product or variant image is configured for this receipt.'] : []),
+    ];
+    return {
+      success: true,
+      data: missingImages.length ? { warning: missingImages.join(' ') } : {},
+    };
   } catch (error) {
     const cleanupSucceeded = uploadedPath
       ? await removeUnattachedReceipt(supabase, uploadedPath)

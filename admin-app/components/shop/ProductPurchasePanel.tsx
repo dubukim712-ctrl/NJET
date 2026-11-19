@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { AddToCartButton } from "@/components/cart/AddToCartButton";
 import { Select } from "@/components/ui/Select";
-import { getAvailableQuantityLimit } from "@/data/cart";
 import type { CatalogProduct } from "@/data/commerce/catalog";
 import { ProductPrice } from "@/components/shop/ProductPrice";
 import { formatPhp } from "@/lib/commerce";
@@ -157,7 +156,8 @@ export function ProductPurchasePanel({
       {selectedVariant?.available ? (
         <AddToCartButton
           variantId={selectedVariant.id}
-          maxQuantity={getAvailableQuantityLimit(selectedVariant.stockByBranch)}
+          branchId={branchId}
+          maxQuantity={selectedVariant.branchStock?.stock ?? null}
         />
       ) : (
         <button

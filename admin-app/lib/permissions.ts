@@ -10,6 +10,7 @@ export const PERMISSIONS = {
   storefrontAccess: 'storefront.access',
   productsRead: 'products.read',
   productsManage: 'products.manage',
+  productReviewsModerate: 'product_reviews.moderate',
   branchesRead: 'branches.read',
   branchesManage: 'branches.manage',
   deliveryZonesRead: 'delivery_zones.read',

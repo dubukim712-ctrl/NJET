@@ -103,16 +103,16 @@ export function SalesReceiptTemplateSettings({
         )}
       </div>
       <p className="text-sm text-muted-foreground">
-        Upload an AcroForm PDF with text fields named{' '}
+        Text fields are optional. Add only the fields you want filled from this list:{' '}
         <span className="break-words font-medium text-foreground">
           {fieldNames}
         </span>
-        . The items and payments fields must be multiline.
+        . The items and payments fields must be multiline if included.
       </p>
       <p className="text-sm text-muted-foreground">
-        Optional text-field image areas: {imageFieldNames}. The business logo uses
-        the saved business logo; the variant image uses the first e-bike item, or
-        the first order item if there is no e-bike.
+        Optional image areas: {imageFieldNames}. Use a text field or LibreOffice
+        push-button image control with the exact field name. The variant image
+        uses the first e-bike item, or the first order item if there is no e-bike.
       </p>
       <section className="space-y-3" aria-label="Sales receipt PDF preview">
         <div className="flex flex-wrap items-center justify-between gap-2">

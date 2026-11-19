@@ -20,6 +20,7 @@ const values = {
   owner_address: '45 Sample Road, Imus, Cavite 4103',
   branch_name: 'Imus Branch',
   store_branch: 'Imus Branch',
+  branch_address: '123 Sample Street, Imus, Cavite',
   fulfillment: 'Branch pickup',
   product_type: 'Electric Bicycle',
   model_type: 'Cruiser',
@@ -177,6 +178,7 @@ async function main() {
     { label: 'Store branch', name: 'store_branch' },
     { label: 'Fulfillment', name: 'fulfillment' },
   ]);
+  addRow([{ label: 'Branch address', name: 'branch_address' }]);
   addRow([
     { label: 'Payment method', name: 'payment_method' },
     { label: 'Mode of payment', name: 'payment_mode' },

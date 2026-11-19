@@ -13,6 +13,7 @@ import {
 import {
   certificateTemplatePathSchema,
   paymentRecipientSettingsSchema,
+  phoneVerificationSettingsSchema,
   settingsAssetPathSchema,
 } from '@/lib/validations/system-settings';
 
@@ -20,6 +21,38 @@ const TEMPLATE_BUCKET = 'njet-certificate-templates';
 const RECEIPT_TEMPLATE_BUCKET = 'njet-sales-receipt-templates';
 const PAYMENT_MEDIA_BUCKET = 'njet-payment-recipient-media';
 const MAX_TEMPLATE_SIZE = 5 * 1024 * 1024;
+
+export async function savePhoneVerificationSettingsAction(
+  payload: unknown
+): Promise<ActionResult> {
+  const { supabase } = await requireFullAccess('/admin/settings');
+  const parsed = phoneVerificationSettingsSchema.safeParse(payload);
+  if (!parsed.success) {
+    return { success: false, error: 'Choose a valid checkout verification setting.' };
+  }
+
+  try {
+    const { error } = await supabase
+      .from('business_settings')
+      .update({
+        phone_verification_required: parsed.data.phoneVerificationRequired,
+      })
+      .eq('id', 1)
+      .select('id')
+      .single();
+    if (error) throw error;
+
+    revalidatePath('/admin/settings');
+    revalidatePath('/checkout');
+    return { success: true, data: undefined };
+  } catch (error) {
+    console.error('Could not save phone verification settings.', error);
+    return {
+      success: false,
+      error: 'Could not save the checkout verification setting. Please try again.',
+    };
+  }
+}
 
 export async function saveOwnershipCertificateTemplateAction(
   payload: unknown

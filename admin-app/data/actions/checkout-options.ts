@@ -8,8 +8,8 @@ import type { CheckoutOptions } from '@/data/commerce/checkout-options';
 export async function getCheckoutOptionsAction(): Promise<
   ActionResult<CheckoutOptions>
 > {
-  await requireCustomer('/checkout');
-  const result = await getCheckoutOptions();
+  const { user } = await requireCustomer('/checkout');
+  const result = await getCheckoutOptions(user.id);
   if (!result.data) {
     return {
       success: false,

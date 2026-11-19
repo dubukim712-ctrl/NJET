@@ -1,6 +1,7 @@
 export interface CartItem {
   variantId: string;
   quantity: number;
+  branchId?: string;
 }
 
 export type BranchStockAvailability = {
@@ -18,7 +19,12 @@ const STORAGE_ERROR = '__cart_storage_error__';
 const MAX_QUANTITY = 99;
 const MAX_CART_ITEMS = 30;
 const VARIANT_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const BRANCH_ID = VARIANT_ID;
 const cartListeners = new Set<() => void>();
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
 
 export function getAvailableQuantityLimit(
   stockByBranch: readonly BranchStockAvailability[]
@@ -82,13 +88,15 @@ export function parseCartSnapshot(snapshot: string) {
   const items: CartItem[] = [];
   const variantIds = new Set<string>();
   for (const value of parsed) {
+    if (!isRecord(value)) {
+      return { items: [] as CartItem[], error: 'Saved cart data is invalid.' };
+    }
+    const branchId = value.branchId;
     if (
-      typeof value !== 'object' ||
-      value === null ||
-      !('variantId' in value) ||
-      !('quantity' in value) ||
       typeof value.variantId !== 'string' ||
       !VARIANT_ID.test(value.variantId) ||
+      (branchId !== undefined &&
+        (typeof branchId !== 'string' || !BRANCH_ID.test(branchId))) ||
       typeof value.quantity !== 'number' ||
       !Number.isInteger(value.quantity) ||
       value.quantity < 1 ||
@@ -99,7 +107,11 @@ export function parseCartSnapshot(snapshot: string) {
     }
 
     variantIds.add(value.variantId);
-    items.push({ variantId: value.variantId, quantity: value.quantity });
+    items.push({
+      variantId: value.variantId,
+      quantity: value.quantity,
+      ...(typeof branchId === 'string' ? { branchId } : {}),
+    });
   }
 
   if (items.length > MAX_CART_ITEMS) {
@@ -111,10 +123,14 @@ export function parseCartSnapshot(snapshot: string) {
 export function addCartItem(
   items: CartItem[],
   variantId: string,
-  maxQuantity?: number | null
+  maxQuantity?: number | null,
+  branchId?: string
 ): CartMutation {
   if (!VARIANT_ID.test(variantId)) {
     return { success: false, error: 'This product variant is invalid.' };
+  }
+  if (branchId !== undefined && !BRANCH_ID.test(branchId)) {
+    return { success: false, error: 'This store branch is invalid.' };
   }
 
   const existing = items.find((item) => item.variantId === variantId);
@@ -140,10 +156,14 @@ export function addCartItem(
     items: existing
       ? items.map((item) =>
           item.variantId === variantId
-            ? { ...item, quantity: item.quantity + 1 }
+            ? {
+                ...item,
+                quantity: item.quantity + 1,
+                ...(branchId ? { branchId } : {}),
+              }
             : item
         )
-      : [...items, { variantId, quantity: 1 }],
+      : [...items, { variantId, quantity: 1, ...(branchId ? { branchId } : {}) }],
   };
 }
 

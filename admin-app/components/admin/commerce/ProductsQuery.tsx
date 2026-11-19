@@ -30,11 +30,13 @@ const INVENTORY_REALTIME_TABLES: readonly RealtimeTable[] = [
 export function ProductsQuery({
   userId,
   canManageProducts,
+  canModerateProductReviews,
   isBranchScopedStaff,
   assignedBranchId,
 }: {
   userId: string;
   canManageProducts: boolean;
+  canModerateProductReviews: boolean;
   isBranchScopedStaff: boolean;
   assignedBranchId: string | null;
 }) {
@@ -99,7 +101,9 @@ export function ProductsQuery({
       )}
       <ProductManager
         {...query.data}
+        userId={userId}
         canManageProducts={canManageProducts}
+        canModerateProductReviews={canModerateProductReviews}
         isBranchScopedStaff={isBranchScopedStaff}
         assignedBranchId={assignedBranchId}
       />

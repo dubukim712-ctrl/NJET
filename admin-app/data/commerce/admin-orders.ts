@@ -10,6 +10,7 @@ type OrderDocumentRow = Database['public']['Tables']['order_documents']['Row'];
 export type StaffOrder = Pick<
   OrderRow,
   | 'id' | 'order_number' | 'customer_name' | 'contact_number' | 'fulfillment'
+  | 'phone_verification_status' | 'phone_verified_at' | 'phone_verified_by'
   | 'order_source' | 'cash_tendered_minor'
   | 'branch_name' | 'delivery_zone_name' | 'address_line1' | 'barangay'
   | 'city' | 'province' | 'postal_code' | 'payment_method' | 'payment_provider'
@@ -60,7 +61,8 @@ export async function getCommerceOrders(
     let orderQuery = supabase
       .from('orders')
       .select(`
-        id, order_number, customer_name, contact_number, fulfillment, order_source,
+        id, order_number, customer_name, contact_number, phone_verification_status,
+        phone_verified_at, phone_verified_by, fulfillment, order_source,
         cash_tendered_minor, branch_id, branch_name,
         delivery_zone_name, address_line1, barangay, city, province, postal_code,
         payment_method, payment_provider, payment_recipient_id, payment_reference, status, total_minor,
@@ -204,8 +206,7 @@ export async function getCommerceOrders(
         .from('njet-order-certificates')
         .createSignedUrls(
           certificatesResult.data.map((certificate) => certificate.object_path),
-          60,
-          { download: true }
+          60
         );
       if (error) {
         console.error('Could not create private ownership-certificate links.', error);
@@ -223,8 +224,7 @@ export async function getCommerceOrders(
         .from('njet-order-receipts')
         .createSignedUrls(
           receiptsResult.data.map((receipt) => receipt.object_path),
-          60,
-          { download: true }
+          60
         );
       if (error) {
         console.error('Could not create private sales receipt links.', error);

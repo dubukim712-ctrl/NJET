@@ -23,8 +23,8 @@ export function CheckoutFormLayout({
   summary: ReactNode;
 }) {
   return (
-    <form className="grid gap-6 lg:grid-cols-[1fr_21rem]" onSubmit={onSubmit}>
-      <div className="space-y-5">
+    <form className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,21rem)]" onSubmit={onSubmit}>
+      <div className="min-w-0 space-y-5">
         {cartError && (
           <p className="rounded-lg bg-destructive/10 p-3 text-sm text-destructive" role="alert">
             {cartError}

@@ -13,6 +13,7 @@ export const SALES_RECEIPT_TEMPLATE_FIELDS = {
   ownerAddress: 'owner_address',
   branchName: 'branch_name',
   storeBranch: 'store_branch',
+  branchAddress: 'branch_address',
   fulfillment: 'fulfillment',
   productType: 'product_type',
   modelType: 'model_type',
@@ -38,6 +39,5 @@ export const SALES_RECEIPT_TEMPLATE_FIELDS = {
 } as const;
 
 export const SALES_RECEIPT_TEMPLATE_IMAGE_FIELDS = {
-  businessLogo: 'business_logo',
   variantImage: 'variant_image',
 } as const;

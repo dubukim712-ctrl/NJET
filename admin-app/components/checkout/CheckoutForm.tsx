@@ -5,20 +5,18 @@ import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { createCommerceOrderAction } from '@/data/actions/commerce-checkout';
-import { useCartVariantsQuery } from '@/data/commerce/catalog-client';
 import { uploadOrderDocuments } from '@/data/commerce/documents-client';
 import { adminOrdersQueryKey } from '@/data/commerce/admin-orders-client';
 import { useInvalidateCustomerOrdersQuery } from '@/data/commerce/customer-orders-client';
-import { getCheckoutCartPricing } from '@/data/commerce/checkout-pricing';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useCart } from '@/components/cart/CartProvider';
+import { useCheckoutPricing } from '@/components/checkout/useCheckoutPricing';
 import { CheckoutAuthNotice } from '@/components/checkout/CheckoutAuthNotice';
 import { CheckoutEmptyCart } from '@/components/checkout/CheckoutEmptyCart';
 import { CheckoutFormLayout } from '@/components/checkout/CheckoutFormLayout';
 import { CheckoutFields } from '@/components/checkout/CheckoutFields';
 import { CheckoutOrderSummary } from '@/components/checkout/CheckoutOrderSummary';
 import { DiscountCodeInput } from '@/components/commerce/DiscountCodeInput';
-import { useDiscountQuote } from '@/components/commerce/useDiscountQuote';
 import { useCheckoutPolicyConsent } from '@/components/checkout/useCheckoutPolicyConsent';
 import { Button } from '@/components/ui/Button';
 import type { CheckoutOptions } from '@/data/commerce/checkout-options';
@@ -30,6 +28,9 @@ export function CheckoutForm({
   zones,
   paymentRecipients,
   policyVersions,
+  phoneVerificationRequired,
+  customerPhoneNumber,
+  customerPhoneVerified,
 }: CheckoutOptions) {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -44,15 +45,24 @@ export function CheckoutForm({
   const [paymentRecipientId, setPaymentRecipientId] = useState(
     paymentRecipients[0]?.id ?? ''
   );
-  const [branchId, setBranchId] = useState(branches[0]?.id ?? '');
+  const [branchId, setBranchId] = useState<string | null>(null);
+  const [phoneVerificationReady, setPhoneVerificationReady] = useState(!phoneVerificationRequired || customerPhoneVerified);
   const [zoneId, setZoneId] = useState(zones[0]?.id ?? '');
   const [identityFiles, setIdentityFiles] = useState<File[]>([]);
   const policyConsent = useCheckoutPolicyConsent(policyVersions);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [requiresLogin, setRequiresLogin] = useState(false);
-  const activeBranchId = branches.some((branch) => branch.id === branchId)
-    ? branchId
+  const firstCartBranchId = items[0]?.branchId;
+  const preferredBranchId =
+    firstCartBranchId &&
+    items.every((item) => item.branchId === firstCartBranchId) &&
+    branches.some((branch) => branch.id === firstCartBranchId)
+      ? firstCartBranchId
+      : null;
+  const branchCandidate = branchId ?? preferredBranchId;
+  const activeBranchId = branches.some((branch) => branch.id === branchCandidate)
+    ? branchCandidate ?? ''
     : branches[0]?.id ?? '';
   const activeZoneId = zones.some((zone) => zone.id === zoneId)
     ? zoneId
@@ -64,20 +74,6 @@ export function CheckoutForm({
     ?? paymentRecipients[0]?.provider ?? paymentProvider;
   const activePaymentRecipientId = activeRecipient?.id ?? paymentRecipients[0]?.id ?? '';
   const {
-    data: variants = [],
-    error: queryError,
-    isFetching,
-  } = useCartVariantsQuery(items.map((item) => item.variantId));
-  const catalogError = queryError instanceof Error
-    ? queryError.message
-    : queryError ? 'Cart item details could not be loaded.' : null;
-  const loadingCart = items.length > 0 && isFetching;
-  const cartSignature = JSON.stringify(items.map(({ variantId, quantity }) => [variantId, quantity]));
-  const { activePreview, onApplied, onCleared } = useDiscountQuote(cartSignature);
-  const deliveryFee = fulfillment === 'delivery'
-    ? zones.find((zone) => zone.id === activeZoneId)?.fee_minor ?? 0
-    : 0;
-  const {
     cartItems,
     allVariantsLoaded,
     hasEbike,
@@ -87,14 +83,20 @@ export function CheckoutForm({
     homeCreditDownpayment: cartHomeCreditDownpayment,
     total,
     stockAvailable,
-  } = getCheckoutCartPricing({
+    activePreview,
+    onApplied,
+    onCleared,
+    cartSignature,
+    catalogError,
+    loadingCart,
+    deliveryFee,
+  } = useCheckoutPricing({
     items,
-    variants,
-    quoteRows: activePreview?.rows ?? [],
     fulfillment,
     branchId: activeBranchId,
     branches,
-    deliveryFee,
+    zoneId: activeZoneId,
+    zones,
   });
   const onlineAvailable =
     paymentRecipients.length > 0 &&
@@ -123,7 +125,6 @@ export function CheckoutForm({
   const onlineDue = paymentMethod === 'online'
     ? reservationDue > 0 && fulfillment === 'pickup' ? reservationDue : total
     : 0;
-
   const submitOrder = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (busy) return;
@@ -137,6 +138,9 @@ export function CheckoutForm({
     }
     if (!hasPermission(user, PERMISSIONS.storefrontAccess)) {
       return setError('This account does not have permission to place customer orders.');
+    }
+    if (!phoneVerificationReady) {
+      return setError('Verify this contact number before placing your order.');
     }
     if (loadingCart || !allVariantsLoaded) return setError(catalogError ?? 'Some cart items are no longer available.');
     if (!stockAvailable) return setError('The selected fulfillment option does not have enough stock for this cart.');
@@ -227,8 +231,8 @@ export function CheckoutForm({
       requiresLogin={requiresLogin}
       fields={
         <CheckoutFields
-          branches={branches}
-          zones={zones}
+          branches={branches} zones={zones}
+          phoneVerificationRequired={phoneVerificationRequired}
           paymentRecipients={paymentRecipients}
           fulfillment={fulfillment}
           paymentMethod={paymentMethod}
@@ -239,6 +243,10 @@ export function CheckoutForm({
           onlineAvailable={onlineAvailable}
           cashUnavailable={cashUnavailable}
           homeCreditDownpaymentDue={homeCreditDownpaymentDue}
+          initialPhoneNumber={customerPhoneNumber}
+          initialVerifiedPhoneNumber={
+            customerPhoneVerified ? customerPhoneNumber : null
+          }
           hasEbike={hasEbike}
           onFulfillmentChange={(value) => {
             setFulfillment(value);
@@ -259,6 +267,7 @@ export function CheckoutForm({
           onBranchChange={setBranchId}
           onZoneChange={setZoneId}
           onIdentityFilesChange={setIdentityFiles}
+          onPhoneVerificationChange={setPhoneVerificationReady}
           onTermsChange={policyConsent.onTermsChange}
           onPrivacyChange={policyConsent.onPrivacyChange}
         />
@@ -290,6 +299,7 @@ export function CheckoutForm({
           allVariantsLoaded={allVariantsLoaded}
           loading={loadingCart || Boolean(catalogError)}
           busy={busy}
+          phoneVerificationReady={phoneVerificationReady}
         />
       }
     />
