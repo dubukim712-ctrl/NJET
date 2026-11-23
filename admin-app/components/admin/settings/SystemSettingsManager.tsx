@@ -127,7 +127,7 @@ export function SystemSettingsManager({
             Add fallback accounts, then deactivate any recipient that is temporarily unavailable.
           </p>
         </header>
-        <div className="grid min-w-0 gap-4 xl:grid-cols-3">
+        <div className="grid min-w-0 gap-4">
           {PAYMENT_PROVIDER_OPTIONS.map(({ value }) => (
             <PaymentRecipientEditor
               key={value}
