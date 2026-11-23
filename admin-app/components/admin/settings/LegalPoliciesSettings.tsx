@@ -47,10 +47,23 @@ export function LegalPoliciesSettings({
           new version; previous versions remain available for order records.
         </p>
       </header>
+      <div className="space-y-1.5 md:hidden">
+        <label htmlFor="legal-policy-section" className="block text-sm font-medium">Legal policy</label>
+        <select
+          id="legal-policy-section"
+          value={activeSlug}
+          onChange={(event) => setActiveSlug(event.currentTarget.value as LegalPolicySlug)}
+          className="min-h-11 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          {POLICY_TABS.map((tab) => (
+            <option key={tab.slug} value={tab.slug}>{tab.label}</option>
+          ))}
+        </select>
+      </div>
       <div
         role="tablist"
         aria-label="Legal policies"
-        className="flex gap-2 overflow-x-auto border-b"
+        className="hidden gap-2 overflow-x-auto border-b md:flex"
       >
         {POLICY_TABS.map((tab) => (
           <button

@@ -112,7 +112,7 @@ export function CheckoutForm({
   const onlineDue = paymentMethod === 'online'
     ? reservationDue > 0 && fulfillment === 'pickup' ? reservationDue : total
     : 0;
-  const { busy, error, requiresLogin, fieldErrors, retryable, submit } = useCheckoutSubmission(clear);
+  const { busy, error, submissionError, fieldErrors, retryable, submit } = useCheckoutSubmission(clear);
 
   function getCheckoutError() {
     if (!phoneVerificationReady) return 'Verify this contact number before placing your order.';
@@ -178,7 +178,6 @@ export function CheckoutForm({
       catalogError={catalogError}
       loadingCart={loadingCart}
       error={error}
-      requiresLogin={requiresLogin}
       fields={
         <CheckoutFields
           branches={branches} zones={zones}
@@ -240,6 +239,7 @@ export function CheckoutForm({
           items={cartItems}
           itemsError={fieldErrors?.items?.join(" ")}
           retryable={retryable}
+          submissionError={submissionError}
           subtotal={subtotal}
           discountTotal={discountTotal}
           deliveryFee={deliveryFee}

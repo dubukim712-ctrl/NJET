@@ -13,6 +13,11 @@ import { checkoutSchema, type CheckoutInput } from '@/lib/validations/commerce';
 const ambiguousOrderError =
   'We could not confirm whether your order was placed. Retry with the same checkout details, or check your order history before refreshing this page or starting a new checkout.';
 
+export type CheckoutSubmissionError = {
+  message: string;
+  nextStep?: 'order-history' | 'sign-in';
+};
+
 type Submission = {
   form: HTMLFormElement;
   customerId: string;
@@ -42,19 +47,22 @@ export function useCheckoutSubmission(clear: () => { success: boolean }) {
   const formRef = useRef<HTMLFormElement | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [requiresLogin, setRequiresLogin] = useState(false);
+  const [submissionError, setSubmissionError] = useState<CheckoutSubmissionError | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]> | undefined>();
   const [retryable, setRetryable] = useState(false);
 
   useEffect(() => {
-    if (!fieldErrors) return;
     const form = formRef.current;
-    const target = form?.querySelector<HTMLElement>(
-      '[aria-invalid="true"]:not([disabled]):not([type="hidden"])',
-    ) ?? form?.querySelector<HTMLElement>('[data-checkout-items-error]')
-      ?? form?.querySelector<HTMLElement>('[data-checkout-error]');
-    target?.focus();
-  }, [fieldErrors]);
+    if (fieldErrors) {
+      const target = form?.querySelector<HTMLElement>(
+        '[aria-invalid="true"]:not([disabled]):not([type="hidden"])',
+      ) ?? form?.querySelector<HTMLElement>('[data-checkout-items-error]')
+        ?? form?.querySelector<HTMLElement>('[data-checkout-error]');
+      target?.focus();
+    } else if (submissionError) {
+      form?.querySelector<HTMLElement>('[data-checkout-submission-error]')?.focus();
+    }
+  }, [fieldErrors, submissionError]);
 
   async function submit({
     form, customerId, identityFiles, hasEbike, getCheckoutError, paymentProofRequired, payload,
@@ -63,7 +71,7 @@ export function useCheckoutSubmission(clear: () => { success: boolean }) {
     formRef.current = form;
     setError(null);
     setFieldErrors(undefined);
-    setRequiresLogin(false);
+    setSubmissionError(null);
 
     const signature = JSON.stringify([customerId, payload]);
     let attempt = attemptRef.current;
@@ -96,15 +104,23 @@ export function useCheckoutSubmission(clear: () => { success: boolean }) {
         const uploaded = hasEbike
           ? await uploadOrderDocuments(null, identityFiles)
           : { documents: [], error: null };
-        if (uploaded.error) return setError(uploaded.error);
+        if (uploaded.error) return setSubmissionError({ message: uploaded.error });
         attempt.documents = uploaded.documents;
       }
 
       const result = await createCommerceOrderAction({ ...orderInput, documents: attempt.documents });
       if (!result.success) {
-        setError(result.retryable ? ambiguousOrderError : result.error);
-        setFieldErrors(result.fieldErrors);
-        setRequiresLogin(Boolean(result.requiresLogin));
+        if (result.fieldErrors && Object.keys(result.fieldErrors).length) {
+          setError(result.error);
+          setFieldErrors(result.fieldErrors);
+        } else if (result.retryable) {
+          setSubmissionError({ message: ambiguousOrderError, nextStep: 'order-history' });
+        } else {
+          setSubmissionError({
+            message: result.error,
+            nextStep: result.requiresLogin ? 'sign-in' : undefined,
+          });
+        }
         setRetryable(Boolean(result.retryable));
         return;
       }
@@ -119,14 +135,14 @@ export function useCheckoutSubmission(clear: () => { success: boolean }) {
     } catch (submissionError) {
       console.error('Could not complete checkout submission.', submissionError);
       setRetryable(Boolean(attempt.documents));
-      setError(attempt.documents
-        ? ambiguousOrderError
-        : 'A document could not be uploaded. Please try again.');
+      setSubmissionError(attempt.documents
+        ? { message: ambiguousOrderError, nextStep: 'order-history' }
+        : { message: 'A document could not be uploaded. Please try again.' });
     } finally {
       busyRef.current = false;
       setBusy(false);
     }
   }
 
-  return { busy, error, requiresLogin, fieldErrors, retryable, submit };
+  return { busy, error, submissionError, fieldErrors, retryable, submit };
 }

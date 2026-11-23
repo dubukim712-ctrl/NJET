@@ -63,7 +63,7 @@ export function CustomerOrderCard({
           </span>
           <div>
             {needsPayment ? (
-              <Link href={`/dashboard/orders/${order.id}`} className="font-semibold text-primary hover:underline">
+              <Link href={`/dashboard/orders/${order.id}`} className="inline-flex min-h-11 items-center font-semibold text-primary hover:underline">
                 {order.order_number}
               </Link>
             ) : (
@@ -79,7 +79,7 @@ export function CustomerOrderCard({
           {needsPayment && (
             <Link
               href={`/dashboard/orders/${order.id}`}
-              className="inline-flex min-h-10 items-center rounded-md border px-3 text-sm font-medium hover:bg-accent"
+              className="inline-flex min-h-11 items-center rounded-md border px-3 text-sm font-medium hover:bg-accent"
             >
               {order.status === 'awaiting_payment' ? 'Complete payment' : 'View payment'}
             </Link>
@@ -173,7 +173,7 @@ export function CustomerOrderCard({
                 type="button"
                 disabled={downloading}
                 onClick={() => downloadDocument('certificate')}
-                className="inline-flex min-h-10 items-center rounded-md border px-3 text-sm font-medium hover:bg-accent disabled:opacity-50"
+                className="inline-flex min-h-11 items-center rounded-md border px-3 text-sm font-medium hover:bg-accent disabled:opacity-50"
               >
                 Download ownership certificate
               </button>
@@ -183,7 +183,7 @@ export function CustomerOrderCard({
                 type="button"
                 disabled={downloading}
                 onClick={() => downloadDocument('receipt')}
-                className="inline-flex min-h-10 items-center rounded-md border px-3 text-sm font-medium hover:bg-accent disabled:opacity-50"
+                className="inline-flex min-h-11 items-center rounded-md border px-3 text-sm font-medium hover:bg-accent disabled:opacity-50"
               >
                 Download sales receipt
               </button>

@@ -115,7 +115,7 @@ export function OrderManager({
               key={order.id}
               className="rounded-xl border bg-card p-4 sm:p-5"
             >
-              <header className="flex flex-wrap items-center justify-between gap-3">
+              <header className="grid gap-3 sm:flex sm:flex-wrap sm:items-center sm:justify-between">
                 <div className="min-w-0">
                   <h2 className="text-lg font-semibold">
                     {order.order_number}
@@ -125,7 +125,7 @@ export function OrderManager({
                     {order.customer_name} · {order.contact_number}
                   </p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex min-w-0 flex-wrap items-center gap-2">
                   <span
                     className={`rounded-full px-3 py-1 text-xs font-medium ${
                       order.order_source === "walk_in"
@@ -136,25 +136,27 @@ export function OrderManager({
                     {order.order_source === "walk_in" ? "Walk-in" : "Online"}
                   </span>
                   <OrderStatusBadge status={order.status} />
-                  <Button
-                    variant="link"
-                    size="sm"
-                    type="button"
-                    aria-expanded={isExpanded}
-                    aria-controls={isExpanded ? detailsId : undefined}
-                    onClick={() =>
-                      setExpandedOrderId(isExpanded ? null : order.id)
-                    }
-                    className="flex items-center gap-1 text-sm font-medium"
-                  >
-                    {isExpanded ? "Hide details" : "View details"}
-                    <ChevronDown
-                      aria-hidden="true"
-                      className={`size-4 transition-transform ${isExpanded ? "rotate-180" : ""}`}
-                    />
-                  </Button>
                 </div>
               </header>
+              <div className="mt-2 sm:flex sm:justify-end">
+                <Button
+                  variant="link"
+                  size="sm"
+                  type="button"
+                  aria-expanded={isExpanded}
+                  aria-controls={isExpanded ? detailsId : undefined}
+                  onClick={() =>
+                    setExpandedOrderId(isExpanded ? null : order.id)
+                  }
+                  className="min-h-11 w-full justify-between px-0 text-sm font-medium sm:w-auto sm:gap-2"
+                >
+                  {isExpanded ? "Hide details" : "View details"}
+                  <ChevronDown
+                    aria-hidden="true"
+                    className={`size-4 transition-transform ${isExpanded ? "rotate-180" : ""}`}
+                  />
+                </Button>
+              </div>
               {isExpanded && (
                 <OrderDetailsPanel
                   order={order}

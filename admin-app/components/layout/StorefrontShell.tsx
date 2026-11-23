@@ -169,7 +169,7 @@ export function StorefrontShell({ user, children }: StorefrontShellProps) {
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
           <Link
             href="/"
-            className="flex min-w-0 shrink-0 items-center gap-2 text-base font-semibold tracking-tight sm:text-lg"
+            className="flex min-w-0 items-center gap-2 text-base font-semibold tracking-tight sm:text-lg"
           >
             {businessInfo?.logoUrl && (
               <Image
@@ -178,7 +178,7 @@ export function StorefrontShell({ user, children }: StorefrontShellProps) {
                 width={36}
                 height={36}
                 unoptimized
-                className="size-9 rounded-md object-contain"
+                className="size-9 shrink-0 rounded-md object-contain"
               />
             )}
             <span className="truncate">
@@ -193,12 +193,12 @@ export function StorefrontShell({ user, children }: StorefrontShellProps) {
                 <button
                   ref={shopFiltersButtonRef}
                   type="button"
-                  aria-label={shopFiltersOpen ? "Hide product filters" : "Search products"}
+                  aria-label="Search and filters"
                   aria-expanded={shopFiltersOpen}
                   aria-controls="shop-filters-popover-root"
-                  title={shopFiltersOpen ? "Hide product filters" : "Search products"}
+                  title="Search and filters"
                   onClick={() => setShopFiltersOpen((open) => !open)}
-                  className="inline-flex size-10 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   {shopFiltersOpen ? (
                     <X className="size-5" aria-hidden="true" />

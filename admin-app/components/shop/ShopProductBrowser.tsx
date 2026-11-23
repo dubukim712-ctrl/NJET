@@ -1,11 +1,12 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Search } from 'lucide-react';
 import type { CatalogProduct } from '@/data/commerce/catalog';
 import { ProductCard } from '@/components/shop/ProductCard';
 import { useShopFilters } from '@/components/shop/ShopFiltersContext';
+import { Button } from '@/components/ui/Button';
 import { Select } from '@/components/ui/Select';
 
 type FilterOption = [string, string];
@@ -103,6 +104,7 @@ export function ShopProductBrowser({ products }: { products: CatalogProduct[] })
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [category, setCategory] = useState('all');
   const [subcategory, setSubcategory] = useState('all');
+  const resultsHeadingRef = useRef<HTMLHeadingElement>(null);
 
   useEffect(() => {
     const timeout = window.setTimeout(() => setDebouncedSearch(search.trim().toLowerCase()), 250);
@@ -150,6 +152,14 @@ export function ShopProductBrowser({ products }: { products: CatalogProduct[] })
     [category, debouncedSearch, products, subcategory]
   );
 
+  function clearFilters() {
+    setSearch('');
+    setDebouncedSearch('');
+    setCategory('all');
+    setSubcategory('all');
+    resultsHeadingRef.current?.focus();
+  }
+
   const filterPanelProps = {
     search,
     onSearchChange: setSearch,
@@ -178,7 +188,7 @@ export function ShopProductBrowser({ products }: { products: CatalogProduct[] })
         <div className="mb-4 flex items-end justify-between gap-3">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">Explore</p>
-            <h2 className="mt-1 text-2xl font-semibold tracking-tight">Products</h2>
+            <h2 ref={resultsHeadingRef} tabIndex={-1} className="mt-1 text-2xl font-semibold tracking-tight">Products</h2>
           </div>
           <p className="text-sm text-muted-foreground" aria-live="polite">
             {filteredProducts.length} {filteredProducts.length === 1 ? 'item' : 'items'}
@@ -200,6 +210,9 @@ export function ShopProductBrowser({ products }: { products: CatalogProduct[] })
             <p className="mt-1 text-sm text-muted-foreground">
               Try another search or choose a different category.
             </p>
+            <Button type="button" variant="outline" className="mt-4 min-h-11" onClick={clearFilters}>
+              Clear filters
+            </Button>
           </div>
         )}
       </section>

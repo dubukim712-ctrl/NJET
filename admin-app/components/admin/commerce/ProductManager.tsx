@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type KeyboardEvent } from 'react';
 import { ProductCatalogTab } from '@/components/admin/commerce/ProductCatalogTab';
 import { ProductEditor } from '@/components/admin/commerce/ProductEditor';
 import { ProductStockTab } from '@/components/admin/commerce/ProductStockTab';
@@ -22,7 +22,15 @@ type Movement = Database['public']['Tables']['inventory_movements']['Row'];
 type Transfer = Database['public']['Tables']['branch_transfers']['Row'];
 type TransferItem = Database['public']['Tables']['branch_transfer_items']['Row'];
 
-type ProductTab = 'catalog' | 'variants' | 'stock' | 'discounts' | 'reviews';
+const PRODUCT_TABS = [
+  { id: 'catalog', label: 'Product Catalog' },
+  { id: 'reviews', label: 'Reviews' },
+  { id: 'variants', label: 'Variants' },
+  { id: 'stock', label: 'Stock' },
+  { id: 'discounts', label: 'Discounts' },
+] as const;
+
+type ProductTab = (typeof PRODUCT_TABS)[number]['id'];
 
 export function ProductManager({
   products,
@@ -72,6 +80,31 @@ export function ProductManager({
   const selectedTab = activeTab === 'reviews' && !canModerateProductReviews
     ? 'catalog'
     : activeTab;
+  const tabs = PRODUCT_TABS.filter((tab) => tab.id !== 'reviews' || canModerateProductReviews);
+
+  function handleTabKeyDown(event: KeyboardEvent<HTMLButtonElement>, index: number) {
+    let nextIndex: number;
+    switch (event.key) {
+      case 'ArrowRight':
+        nextIndex = (index + 1) % tabs.length;
+        break;
+      case 'ArrowLeft':
+        nextIndex = (index - 1 + tabs.length) % tabs.length;
+        break;
+      case 'Home':
+        nextIndex = 0;
+        break;
+      case 'End':
+        nextIndex = tabs.length - 1;
+        break;
+      default:
+        return;
+    }
+    event.preventDefault();
+    const nextTab = tabs[nextIndex].id;
+    setActiveTab(nextTab);
+    document.getElementById(`product-${nextTab}-tab`)?.focus();
+  }
 
   return (
     <div className="space-y-6">
@@ -80,92 +113,36 @@ export function ProductManager({
         aria-label="Product management"
         className="flex flex-wrap gap-2 border-b"
       >
-        <button
-          id="product-catalog-tab"
-          type="button"
-          role="tab"
-          aria-selected={selectedTab === 'catalog'}
-          aria-controls="product-catalog-panel"
-          onClick={() => setActiveTab('catalog')}
-          className={`border-b-2 px-4 py-3 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-            selectedTab === 'catalog'
-              ? 'border-primary text-primary'
-              : 'border-transparent text-muted-foreground hover:text-foreground'
-          }`}
-        >
-          Product Catalog
-        </button>
-        {canModerateProductReviews && (
+        {tabs.map((tab, index) => (
           <button
-            id="product-reviews-tab"
+            key={tab.id}
+            id={`product-${tab.id}-tab`}
             type="button"
             role="tab"
-            aria-selected={selectedTab === 'reviews'}
-            aria-controls="product-reviews-panel"
-            onClick={() => setActiveTab('reviews')}
+            aria-selected={selectedTab === tab.id}
+            aria-controls={`product-${tab.id}-panel`}
+            tabIndex={selectedTab === tab.id ? 0 : -1}
+            onClick={() => setActiveTab(tab.id)}
+            onKeyDown={(event) => handleTabKeyDown(event, index)}
             className={`border-b-2 px-4 py-3 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-              selectedTab === 'reviews'
+              selectedTab === tab.id
                 ? 'border-primary text-primary'
                 : 'border-transparent text-muted-foreground hover:text-foreground'
             }`}
           >
-            Reviews
+            {tab.label}
           </button>
-        )}
-        <button
-          id="product-variants-tab"
-          type="button"
-          role="tab"
-          aria-selected={selectedTab === 'variants'}
-          aria-controls="product-variants-panel"
-          onClick={() => setActiveTab('variants')}
-          className={`border-b-2 px-4 py-3 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-            selectedTab === 'variants'
-              ? 'border-primary text-primary'
-              : 'border-transparent text-muted-foreground hover:text-foreground'
-          }`}
-        >
-          Variants
-        </button>
-        <button
-          id="product-stock-tab"
-          type="button"
-          role="tab"
-          aria-selected={selectedTab === 'stock'}
-          aria-controls="product-stock-panel"
-          onClick={() => setActiveTab('stock')}
-          className={`border-b-2 px-4 py-3 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-            selectedTab === 'stock'
-              ? 'border-primary text-primary'
-              : 'border-transparent text-muted-foreground hover:text-foreground'
-          }`}
-        >
-          Stock
-        </button>
-        <button
-          id="product-discounts-tab"
-          type="button"
-          role="tab"
-          aria-selected={selectedTab === 'discounts'}
-          aria-controls="product-discounts-panel"
-          onClick={() => setActiveTab('discounts')}
-          className={`border-b-2 px-4 py-3 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-            selectedTab === 'discounts'
-              ? 'border-primary text-primary'
-              : 'border-transparent text-muted-foreground hover:text-foreground'
-          }`}
-        >
-          Discounts
-        </button>
+        ))}
       </div>
 
-      {selectedTab === 'catalog' && (
-        <section
-          id="product-catalog-panel"
-          role="tabpanel"
-          aria-labelledby="product-catalog-tab"
-          tabIndex={0}
-        >
+      <section
+        id="product-catalog-panel"
+        role="tabpanel"
+        aria-labelledby="product-catalog-tab"
+        tabIndex={0}
+        hidden={selectedTab !== 'catalog'}
+      >
+        {selectedTab === 'catalog' && (
           <ProductCatalogTab
             products={products}
             variants={variants}
@@ -174,30 +151,32 @@ export function ProductManager({
             canManageProducts={canManageProducts}
             onCreateProduct={() => setCreateModalOpen(true)}
           />
-        </section>
-      )}
-      {selectedTab === 'variants' && (
-        <section
-          id="product-variants-panel"
-          role="tabpanel"
-          aria-labelledby="product-variants-tab"
-          tabIndex={0}
-        >
+        )}
+      </section>
+      <section
+        id="product-variants-panel"
+        role="tabpanel"
+        aria-labelledby="product-variants-tab"
+        tabIndex={0}
+        hidden={selectedTab !== 'variants'}
+      >
+        {selectedTab === 'variants' && (
           <ProductVariantsTab
             products={products}
             variants={variants}
             categories={categories}
             canManageProducts={canManageProducts}
           />
-        </section>
-      )}
-      {selectedTab === 'stock' && (
-        <section
-          id="product-stock-panel"
-          role="tabpanel"
-          aria-labelledby="product-stock-tab"
-          tabIndex={0}
-        >
+        )}
+      </section>
+      <section
+        id="product-stock-panel"
+        role="tabpanel"
+        aria-labelledby="product-stock-tab"
+        tabIndex={0}
+        hidden={selectedTab !== 'stock'}
+      >
+        {selectedTab === 'stock' && (
           <ProductStockTab
             products={products}
             variants={variants}
@@ -213,15 +192,16 @@ export function ProductManager({
             isBranchScopedStaff={isBranchScopedStaff}
             assignedBranchId={assignedBranchId}
           />
-        </section>
-      )}
-      {selectedTab === 'discounts' && (
-        <section
-          id="product-discounts-panel"
-          role="tabpanel"
-          aria-labelledby="product-discounts-tab"
-          tabIndex={0}
-        >
+        )}
+      </section>
+      <section
+        id="product-discounts-panel"
+        role="tabpanel"
+        aria-labelledby="product-discounts-tab"
+        tabIndex={0}
+        hidden={selectedTab !== 'discounts'}
+      >
+        {selectedTab === 'discounts' && (
           <ProductDiscountsTab
             discounts={productDiscounts}
             products={products}
@@ -229,16 +209,19 @@ export function ProductManager({
             categories={categories}
             canManageProducts={canManageProducts}
           />
-        </section>
-      )}
-      {selectedTab === 'reviews' && canModerateProductReviews && (
+        )}
+      </section>
+      {canModerateProductReviews && (
         <section
           id="product-reviews-panel"
           role="tabpanel"
           aria-labelledby="product-reviews-tab"
           tabIndex={0}
+          hidden={selectedTab !== 'reviews'}
         >
-          <ProductReviewsTab userId={userId} />
+          {selectedTab === 'reviews' && (
+            <ProductReviewsTab userId={userId} />
+          )}
         </section>
       )}
 

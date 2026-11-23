@@ -193,7 +193,7 @@ export function ProductCatalogTab({
                         <details className="relative shrink-0">
                           <summary
                             aria-label={`Actions for ${product.name}`}
-                            className="flex size-9 list-none cursor-pointer items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-details-marker]:hidden"
+                            className="flex min-h-11 min-w-11 list-none cursor-pointer items-center justify-center rounded-md text-muted-foreground hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring [&::-webkit-details-marker]:hidden"
                           >
                             <MoreVertical
                               className="size-5"
@@ -203,7 +203,7 @@ export function ProductCatalogTab({
                           <div className="absolute right-0 top-full z-20 mt-2 w-35 p-1 text-sm rounded-lg border bg-card shadow-lg">
                             <button
                               type="button"
-                              className="flex min-h-7 w-full items-center gap-2 rounded-md px-3 text-left hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                              className="flex min-h-11 min-w-11 w-full items-center gap-2 rounded-md px-3 text-left hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                               onClick={(event) => {
                                 event.currentTarget
                                   .closest("details")

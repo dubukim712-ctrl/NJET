@@ -1,5 +1,7 @@
 'use client';
 
+import Link from 'next/link';
+import type { CheckoutSubmissionError } from '@/components/checkout/useCheckoutSubmission';
 import { Button } from '@/components/ui/Button';
 import { formatPhp } from '@/lib/commerce';
 import type { CartVariant } from '@/data/commerce/catalog-client';
@@ -18,6 +20,7 @@ export function CheckoutOrderSummary({
   couponInput,
   itemsError,
   retryable,
+  submissionError,
   items,
   subtotal,
   discountTotal,
@@ -37,6 +40,7 @@ export function CheckoutOrderSummary({
   couponInput: ReactNode;
   itemsError?: string;
   retryable: boolean;
+  submissionError: CheckoutSubmissionError | null;
   items: CheckoutLine[];
   subtotal: number;
   discountTotal: number;
@@ -142,6 +146,24 @@ export function CheckoutOrderSummary({
         <p className="text-xs text-muted-foreground" role="status">
           Verify your contact number before placing the order.
         </p>
+      )}
+      {submissionError && (
+        <div
+          className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive"
+          role="alert"
+          tabIndex={-1}
+          data-checkout-submission-error
+        >
+          <p>{submissionError.message}</p>
+          {submissionError.nextStep && (
+            <Link
+              href={submissionError.nextStep === 'order-history' ? '/dashboard/orders' : '/login?redirect=%2Fcheckout'}
+              className="inline-flex min-h-11 items-center font-medium underline underline-offset-4"
+            >
+              {submissionError.nextStep === 'order-history' ? 'View order history' : 'Sign in to continue'}
+            </Link>
+          )}
+        </div>
       )}
       <Button type="submit" className="w-full" loading={busy} disabled={!retryable && (loading || !allVariantsLoaded || !stockAvailable || !paymentAvailable || !phoneVerificationReady)}>
         {retryable ? "Retry order" : "Place order"}

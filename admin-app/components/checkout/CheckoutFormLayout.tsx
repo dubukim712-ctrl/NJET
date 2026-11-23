@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import type { FormEventHandler, ReactNode } from 'react';
 
 export function CheckoutFormLayout({
@@ -9,7 +8,6 @@ export function CheckoutFormLayout({
   catalogError,
   loadingCart,
   error,
-  requiresLogin,
   fields,
   summary,
 }: {
@@ -18,7 +16,6 @@ export function CheckoutFormLayout({
   catalogError: string | null;
   loadingCart: boolean;
   error: string | null;
-  requiresLogin: boolean;
   fields: ReactNode;
   summary: ReactNode;
 }) {
@@ -38,11 +35,6 @@ export function CheckoutFormLayout({
         {error && (
           <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive" role="alert" tabIndex={-1} data-checkout-error>
             <p>{error}</p>
-            {requiresLogin && (
-              <Link href="/login?redirect=%2Fcheckout" className="mt-2 inline-flex min-h-8 items-center font-medium underline underline-offset-4">
-                Sign in to continue
-              </Link>
-            )}
           </div>
         )}
         {fields}
