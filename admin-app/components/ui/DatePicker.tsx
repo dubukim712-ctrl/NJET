@@ -246,12 +246,12 @@ export function DatePicker({
   return (
     <div className="relative min-w-0 space-y-1.5" ref={wrapperRef}>
       <label
-        className="block break-words text-sm font-medium leading-5 text-[#26342f]"
+        className="block break-words text-sm font-medium leading-5 text-foreground"
         htmlFor={buttonId}
       >
         {label}
         {required && (
-          <span aria-hidden="true" className="ml-1 text-[#8b3027]">
+          <span aria-hidden="true" className="ml-1 text-destructive">
             *
           </span>
         )}
@@ -287,13 +287,13 @@ export function DatePicker({
         />
       </button>
       {helperText && (
-        <p className="break-words text-xs leading-5 text-[#4c5a56]" id={helperId}>
+        <p className="break-words text-xs leading-5 text-muted-foreground" id={helperId}>
           {helperText}
         </p>
       )}
       {error && (
         <p
-          className="break-words text-sm font-medium leading-5 text-[#8b3027]"
+          className="break-words text-sm font-medium leading-5 text-destructive"
           id={errorId}
           role="alert"
         >

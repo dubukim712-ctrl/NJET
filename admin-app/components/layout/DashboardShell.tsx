@@ -1,11 +1,22 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useState,
+  useSyncExternalStore,
+  type ReactNode,
+} from "react";
 import Link from "next/link";
-import { Menu, X } from "lucide-react";
+import { Menu, Moon, Sun, X } from "lucide-react";
 import { UserNav } from "@/components/auth/UserNav";
 import { AdminNotificationBell } from "@/components/admin/notifications/AdminNotificationBell";
 import { Sidebar } from "@/components/layout/Sidebar";
+import {
+  getAdminThemeSnapshot,
+  getServerAdminThemeSnapshot,
+  saveAdminThemePreference,
+  subscribeToAdminTheme,
+} from "@/data/admin-theme";
 import type { UserProfile } from "@/types/database";
 
 interface DashboardShellProps {
@@ -15,6 +26,43 @@ interface DashboardShellProps {
 
 export function DashboardShell({ user, children }: DashboardShellProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const themeSnapshot = useSyncExternalStore(
+    subscribeToAdminTheme,
+    getAdminThemeSnapshot,
+    getServerAdminThemeSnapshot,
+  );
+  const themePreference = themeSnapshot.startsWith("system")
+    ? "system"
+    : themeSnapshot;
+  const isDark = themeSnapshot.endsWith("dark");
+
+  useEffect(() => {
+    const root = document.documentElement;
+    root.dataset.adminTheme = themePreference;
+    root.classList.toggle("dark", isDark);
+  }, [themePreference, isDark]);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    return () => {
+      delete root.dataset.adminTheme;
+      root.classList.remove("dark");
+    };
+  }, []);
+
+  const toggleTheme = () => {
+    const nextPreference =
+      themePreference === "system"
+        ? isDark
+          ? "light"
+          : "dark"
+        : "system";
+    saveAdminThemePreference(nextPreference);
+  };
+  const themeAction =
+    themePreference === "system"
+      ? `Switch to ${isDark ? "light" : "dark"} mode`
+      : "Use system theme";
 
   return (
     <div className="min-h-dvh bg-background">
@@ -35,6 +83,20 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
           </Link>
 
           <div className="ml-auto flex items-center gap-3">
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className="rounded-md p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              aria-label={themeAction}
+              aria-pressed={isDark}
+              title={themeAction}
+            >
+              {isDark ? (
+                <Sun className="h-5 w-5" aria-hidden="true" />
+              ) : (
+                <Moon className="h-5 w-5" aria-hidden="true" />
+              )}
+            </button>
             {user && <AdminNotificationBell userId={user.id} />}
             <UserNav user={user} />
           </div>

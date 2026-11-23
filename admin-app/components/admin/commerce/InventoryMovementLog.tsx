@@ -67,7 +67,7 @@ export function InventoryMovementLog({
               </div>
               <div className="shrink-0 text-right">
                 <p
-                  className={`font-semibold tabular-nums ${movement.quantity_delta > 0 ? "text-green-600" : "text-destructive"}`}
+                  className={`font-semibold tabular-nums ${movement.quantity_delta > 0 ? "text-green-600 dark:text-green-400" : "text-destructive"}`}
                 >
                   {movement.quantity_delta > 0 ? "+" : ""}
                   {movement.quantity_delta}
