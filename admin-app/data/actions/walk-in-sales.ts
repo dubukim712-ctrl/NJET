@@ -32,9 +32,17 @@ export async function getWalkInCatalogAction(
   return { success: true, data: result.data };
 }
 
+type WalkInSaleResult = ActionResult<{ orderId: string }> & { outcomeUncertain?: boolean };
+
+const unconfirmedSale = {
+  success: false,
+  error: 'The sale could not be confirmed. Check Orders before retrying.',
+  outcomeUncertain: true,
+} as const;
+
 export async function createWalkInSaleAction(
   payload: unknown
-): Promise<ActionResult<{ orderId: string }>> {
+): Promise<WalkInSaleResult> {
   const { supabase } = await requirePermission(
     PERMISSIONS.ordersManage,
     '/admin/orders/new'
@@ -88,16 +96,17 @@ export async function createWalkInSaleAction(
     const { data, error } = result;
     if (error) {
       console.error('Could not create walk-in sale.', error);
-      return { success: false, error: error.message };
+      // SQLSTATE errors report a database rejection. Other failures can lack a commit result.
+      return /^[0-9A-Z]{5}$/.test(error.code) && !error.code.startsWith('08') && error.code !== '40003'
+        ? { success: false, error: error.message }
+        : unconfirmedSale;
     }
+    if (!data) return unconfirmedSale;
     revalidatePath('/admin/orders');
     revalidatePath('/admin/products');
     return { success: true, data: { orderId: data } };
   } catch (error) {
     console.error('Could not create walk-in sale.', error);
-    return {
-      success: false,
-      error: 'The walk-in sale could not be created. Please try again.',
-    };
+    return unconfirmedSale;
   }
 }

@@ -123,3 +123,32 @@ test('walk-in cart totals apply unit discounts and flag quantities above branch 
   assert.equal(pricing.hasUnavailableItems, true);
   assert.equal(pricing.cartQuantities.get(variantId), 2);
 });
+
+test('walk-in checkout distinguishes a rejected sale from an uncertain outcome', async (t) => {
+  t.mock.method(console, 'error', () => {});
+  const payloads = [
+    {
+      rpc: () => ({ data: null, error: { code: 'P0001', message: 'Insufficient branch stock.' } }),
+      expected: { success: false, error: 'Insufficient branch stock.' },
+    },
+    ...[
+      () => ({ data: null, error: { code: '', message: 'Connection lost.' } }),
+      () => ({ data: null, error: { code: '08006', message: 'Connection failure.' } }),
+      () => ({ data: null, error: null }),
+      () => { throw new Error('Connection lost'); },
+    ].map((rpc) => ({
+      rpc,
+      expected: {
+        success: false,
+        error: 'The sale could not be confirmed. Check Orders before retrying.',
+        outcomeUncertain: true,
+      },
+    })),
+  ];
+
+  for (const { rpc, expected } of payloads) {
+    const context = actionContext(staff, { rpc });
+    assert.deepEqual(await context.run(() => createWalkInSaleAction(cashSale)), expected);
+    assert.equal(context.calls.length, 1);
+  }
+});

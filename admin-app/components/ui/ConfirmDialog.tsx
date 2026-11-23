@@ -51,8 +51,11 @@ export function ConfirmDialog({
       aria-labelledby={titleId}
       aria-describedby={descriptionId}
       onClose={() => onOpenChange(false)}
+      onCancel={(event) => {
+        if (loading) event.preventDefault();
+      }}
       onClick={(event) => {
-        if (event.target === event.currentTarget) {
+        if (!loading && event.target === event.currentTarget) {
           onOpenChange(false);
         }
       }}
@@ -75,11 +78,12 @@ export function ConfirmDialog({
           </p>
         )}
 
-        <div className="mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+        <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-end">
           <Button
             type="button"
             variant="outline"
             onClick={() => onOpenChange(false)}
+            className="min-h-11"
             disabled={loading}
           >
             {cancelLabel}
@@ -88,6 +92,7 @@ export function ConfirmDialog({
             type="button"
             variant={destructive ? "destructive" : "default"}
             onClick={onConfirm}
+            className="min-h-11"
             loading={loading}
           >
             {confirmLabel}

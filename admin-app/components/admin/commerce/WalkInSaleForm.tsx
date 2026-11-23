@@ -2,9 +2,6 @@
 
 import { useIsFetching, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState, type FormEvent } from 'react';
-import { useRouter } from 'next/navigation';
-import { toast } from 'sonner';
-import { createWalkInSaleAction } from '@/data/actions/walk-in-sales';
 import {
   applyWalkInDiscountQuote,
   getWalkInCartPricing,
@@ -16,16 +13,15 @@ import {
   walkInCatalogQueryOptions,
   WalkInCatalogQueryError,
 } from '@/data/commerce/walk-in-sales-client';
-import { useInvalidateAdminProductsQuery } from '@/data/commerce/admin-products-client';
-import { adminOrdersQueryKey } from '@/data/commerce/admin-orders-client';
 import { WalkInSaleSections } from '@/components/admin/commerce/WalkInSaleSections';
+import { useWalkInSaleSubmission } from '@/components/admin/commerce/useWalkInSaleSubmission';
 import { WalkInSaleActions } from '@/components/admin/commerce/WalkInSaleActions';
 import { WalkInSaleCustomerDetails } from '@/components/admin/commerce/WalkInSaleCustomerDetails';
 import { DiscountCodeInput } from '@/components/commerce/DiscountCodeInput';
 import { useDiscountQuote } from '@/components/commerce/useDiscountQuote';
 import type { WalkInSalePaymentValues } from '@/components/admin/commerce/WalkInSalePayment';
 import type { PhilippineAddressValues } from '@/components/admin/commerce/PhilippineAddressFields';
-import { formatPhp, parsePhpAmount } from '@/lib/commerce';
+import { parsePhpAmount } from '@/lib/commerce';
 
 export function WalkInSaleForm({
   branches,
@@ -38,9 +34,8 @@ export function WalkInSaleForm({
   initialCatalog: WalkInCatalogItem[];
   canChooseBranch: boolean;
 }) {
-  const router = useRouter();
   const queryClient = useQueryClient();
-  const invalidateProducts = useInvalidateAdminProductsQuery();
+  const { busy, error, clearError, submit } = useWalkInSaleSubmission();
   const [branchId, setBranchId] = useState(initialBranchId);
   const catalogQuery = useQuery({
     ...walkInCatalogQueryOptions(branchId),
@@ -70,9 +65,7 @@ export function WalkInSaleForm({
       monthlyPayment: '',
     },
   });
-  const [busy, setBusy] = useState(false);
   const [catalogError, setCatalogError] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const cartSignature = JSON.stringify({
     phone: contactNumber.trim(),
     items: cart.map(({ variantId, quantity }) => [variantId, quantity]),
@@ -88,7 +81,7 @@ export function WalkInSaleForm({
   const changeBranch = async (nextBranchId: string) => {
     if (!nextBranchId || nextBranchId === branchId) return;
     setCatalogError(null);
-    setError(null);
+    clearError();
     onCleared();
     try {
       await queryClient.fetchQuery(walkInCatalogQueryOptions(nextBranchId));
@@ -139,73 +132,44 @@ export function WalkInSaleForm({
     setCart((current) => current.filter((line) => line.variantId !== variantId));
   };
 
-  const submitSale = async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    if (busy) return;
-    setError(null);
-    if (!branchId) return setError('Select a selling branch before completing the sale.');
-    if (!cart.length) return setError('Add at least one product to the sale.');
-    if (catalogBusy) return setError('Wait for branch stock to finish loading.');
-    if (hasUnavailableItems) {
-      return setError('Adjust or remove items that are unavailable at this branch.');
-    }
-    if (cashIsShort) {
-      return setError('Cash tendered must cover the sale total.');
-    }
-    if (payment.paymentMethod === 'home_credit') {
-      const downpayment = parsePhpAmount(payment.homeCreditDetails.downpayment);
-      const monthlyPayment = parsePhpAmount(payment.homeCreditDetails.monthlyPayment);
-      const termsMonths = Number(payment.homeCreditDetails.termsMonths);
-      if (!payment.homeCreditDetails.accountNo.trim() || downpayment === null ||
-        downpayment > totalMinor || !Number.isInteger(termsMonths) ||
-        termsMonths < 1 || termsMonths > 120 || monthlyPayment === null ||
-        (downpayment < totalMinor && monthlyPayment === 0)) {
-        return setError('Enter valid Home Credit account and financing details.');
-      }
-    }
+  const blockingReason = !branchId
+    ? 'Select a selling branch before completing the sale.'
+    : catalogBusy
+      ? 'Wait for branch stock to finish loading.'
+      : !cart.length
+        ? 'Add at least one product to the sale.'
+        : hasUnavailableItems
+          ? 'Adjust or remove items that are unavailable at this branch.'
+          : cashIsShort
+            ? 'Enter cash tendered that covers the sale total.'
+            : null;
 
-    setBusy(true);
-    try {
-      const result = await createWalkInSaleAction({
-        customerName,
-        contactNumber,
-        branchId,
-        paymentMethod: payment.paymentMethod,
-        paymentProvider:
-          payment.paymentMethod === 'online' ? payment.paymentProvider : null,
-        paymentReference:
-          payment.paymentMethod === 'online' ? payment.paymentReference : null,
-        cashTenderedMinor:
-          payment.paymentMethod === 'cash' ? cashTenderedMinor : null,
-        addressLine1: payment.addressLine1.trim() || null,
-        barangay: payment.barangay.trim() || null,
-        city: payment.city.trim() || null,
-        province: payment.province.trim() || null,
-        postalCode: payment.postalCode.trim() || null,
-        homeCreditDetails:
-          payment.paymentMethod === 'home_credit'
-            ? payment.homeCreditDetails
-            : null,
-        items: cart,
-        couponCode: activePreview?.code ?? null,
-      });
-      if (!result.success) {
-        setError(result.error);
-        toast.error(result.error);
-        return;
-      }
-      void invalidateProducts();
-      void queryClient.invalidateQueries({ queryKey: adminOrdersQueryKey });
-      toast.success('Walk-in sale completed.');
-      router.push('/admin/orders');
-    } catch (actionError) {
-      console.error('Could not create walk-in sale.', actionError);
-      setError('The sale could not be confirmed. Check Orders before retrying.');
-      toast.error('The sale could not be confirmed. Check Orders before retrying.');
-    } finally {
-      setBusy(false);
-    }
-  };
+  function submitSale(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    void submit({
+      customerName,
+      contactNumber,
+      branchId,
+      paymentMethod: payment.paymentMethod,
+      paymentProvider:
+        payment.paymentMethod === 'online' ? payment.paymentProvider : null,
+      paymentReference:
+        payment.paymentMethod === 'online' ? payment.paymentReference : null,
+      cashTenderedMinor:
+        payment.paymentMethod === 'cash' ? cashTenderedMinor : null,
+      addressLine1: payment.addressLine1.trim() || null,
+      barangay: payment.barangay.trim() || null,
+      city: payment.city.trim() || null,
+      province: payment.province.trim() || null,
+      postalCode: payment.postalCode.trim() || null,
+      homeCreditDetails:
+        payment.paymentMethod === 'home_credit'
+          ? payment.homeCreditDetails
+          : null,
+      items: cart,
+      couponCode: activePreview?.code ?? null,
+    }, totalMinor, blockingReason);
+  }
 
   const changeMinor = payment.paymentMethod === 'cash' && cashTenderedMinor !== null
     ? cashTenderedMinor - totalMinor
@@ -241,11 +205,6 @@ export function WalkInSaleForm({
       {catalogError && (
         <p className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive" role="alert">
           {catalogError}
-        </p>
-      )}
-      {error && (
-        <p className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive" role="alert">
-          {error}
         </p>
       )}
       {branchId ? (
@@ -286,15 +245,7 @@ export function WalkInSaleForm({
         </p>
       )}
 
-      <WalkInSaleActions
-        busy={busy}
-        canComplete={
-          Boolean(cart.length && branchId) &&
-          !catalogBusy &&
-          !hasUnavailableItems &&
-          !cashIsShort
-        }
-      />
+      <WalkInSaleActions busy={busy} blockingReason={blockingReason} error={error} />
     </form>
   );
 }

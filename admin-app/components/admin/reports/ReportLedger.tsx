@@ -40,7 +40,7 @@ export function ReportLedger({
   const pageCount = Math.max(1, Math.ceil(ledger.total / pageSize));
 
   const orderInfo = (order: ReportOrder) => (
-    <div className="min-w-40">
+    <div className="min-w-0 [overflow-wrap:anywhere]">
       <p className="font-medium">{order.order_number}</p>
       <p className="text-xs text-muted-foreground">
         {formatReportDateTime(order.completed_at ?? order.created_at)}
@@ -48,13 +48,13 @@ export function ReportLedger({
     </div>
   );
   const customerInfo = (order: ReportOrder) => (
-    <div className="min-w-36">
+    <div className="min-w-0 [overflow-wrap:anywhere]">
       <p className="font-medium">{order.customer_name}</p>
       <p className="text-xs text-muted-foreground">{order.contact_number}</p>
     </div>
   );
   const productInfo = (order: ReportOrder) => (
-    <div className="min-w-40">
+    <div className="min-w-0 [overflow-wrap:anywhere]">
       <p>{order.items.slice(0, 2).map((item) => `${item.product_name} × ${item.quantity}`).join(', ') || 'No item details'}</p>
       {order.items.length > 2 && <p className="text-xs text-muted-foreground">+{order.items.length - 2} more items</p>}
     </div>
@@ -108,16 +108,16 @@ export function ReportLedger({
         </p>
       ) : (
         <>
-          <div className="space-y-3 sm:hidden print:hidden">
+          <div className="space-y-3 xl:hidden print:hidden">
             {ledger.rows.map((order) => (
               <article key={order.id} className="space-y-3 rounded-lg border border-border p-3">
-                <div className="flex items-start justify-between gap-2">
+                <div className="flex flex-wrap items-start justify-between gap-2">
                   {orderInfo(order)}
                   {status(order)}
                 </div>
                 {customerInfo(order)}
                 <div className="text-sm">{productInfo(order)}</div>
-                <div className="grid grid-cols-2 gap-2 text-sm">
+                <div className="grid grid-cols-2 gap-2 text-sm [overflow-wrap:anywhere]">
                   <p><span className="text-muted-foreground">Checkout:</span> {paymentMethodLabel(order.payment_method, order.payment_provider)}</p>
                   <p><span className="text-muted-foreground">Branch:</span> {order.branch_name}</p>
                   <p><span className="text-muted-foreground">Total:</span> {formatPhp(order.total_minor)}</p>
@@ -128,7 +128,12 @@ export function ReportLedger({
               </article>
             ))}
           </div>
-          <div className="hidden overflow-x-auto sm:block print:block print:overflow-visible">
+          <div
+            role="region"
+            aria-label="Sales report orders table"
+            tabIndex={0}
+            className="hidden min-w-0 overflow-x-auto rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring xl:block print:block print:overflow-visible"
+          >
             <table className="w-full min-w-[1050px] border-collapse text-left text-sm print:min-w-0 print:text-xs">
               <thead>
                 <tr className="border-b border-border text-xs uppercase tracking-wide text-muted-foreground">

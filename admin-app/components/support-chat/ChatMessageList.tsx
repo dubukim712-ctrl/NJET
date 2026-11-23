@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { MoreVertical } from 'lucide-react';
 import {
   DropdownMenu,
@@ -8,7 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/DropdownMenu';
-import { Modal } from '@/components/ui/Modal';
+import { UnsendMessageDialog, type UnsendScope } from '@/components/support-chat/UnsendMessageDialog';
 import { shouldShowTimeDivider } from '@/lib/support-chat/message-time';
 import type { SupportChatMessage } from '@/types/support-chat';
 
@@ -19,7 +19,7 @@ interface ChatMessageListProps {
   hasOlder: boolean;
   loadingOlder: boolean;
   onLoadOlder: () => void;
-  onDelete: (messageId: string, scope: 'for_you' | 'for_everyone') => void;
+  onDelete: (messageId: string, scope: UnsendScope) => void;
 }
 
 function relativeAge(value: string, now: number) {
@@ -45,12 +45,11 @@ export function ChatMessageList({
   const [now, setNow] = useState(() => Date.now());
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const [shownTimestampId, setShownTimestampId] = useState<string | null>(null);
-  const [unsendMessage, setUnsendMessage] = useState<SupportChatMessage | null>(null);
-  const [unsendScope, setUnsendScope] = useState<'for_you' | 'for_everyone'>('for_everyone');
+  const [unsendTarget, setUnsendTarget] = useState<{ id: string; canUnsendForEveryone: boolean } | null>(null);
+  const [unsendScope, setUnsendScope] = useState<UnsendScope>('for_everyone');
   const listRef = useRef<HTMLDivElement>(null);
   const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const holdTriggered = useRef(false);
-  const radioName = useId();
   const latestId = messages[messages.length - 1]?.id;
 
   useEffect(() => {
@@ -84,14 +83,15 @@ export function ChatMessageList({
   };
 
   const showUnsendDialog = (message: SupportChatMessage, mine: boolean) => {
-    setUnsendScope(mine && !message.deleted_at ? 'for_everyone' : 'for_you');
-    setUnsendMessage(message);
+    const canUnsendForEveryone = mine && !message.deleted_at;
+    setUnsendScope(canUnsendForEveryone ? 'for_everyone' : 'for_you');
+    setUnsendTarget({ id: message.id, canUnsendForEveryone });
   };
 
   const confirmUnsend = () => {
-    if (!unsendMessage) return;
-    onDelete(unsendMessage.id, unsendScope);
-    setUnsendMessage(null);
+    if (!unsendTarget) return;
+    onDelete(unsendTarget.id, unsendScope);
+    setUnsendTarget(null);
   };
 
   return (
@@ -141,13 +141,13 @@ export function ChatMessageList({
                     type="button"
                     aria-label="More message actions"
                     title="More message actions"
-                    className={`inline-flex size-8 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-opacity hover:bg-accent hover:text-foreground focus-visible:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${openMenuId === message.id ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0 lg:pointer-events-auto lg:group-hover:opacity-100 lg:group-focus-within:opacity-100'}`}
+                    className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-opacity hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:pointer-fine:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 data-[state=open]:opacity-100"
                   >
                     <MoreVertical className="size-4" aria-hidden="true" />
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align={mine ? 'end' : 'start'} sideOffset={4}>
-                  <DropdownMenuItem onSelect={() => showUnsendDialog(message, mine)}>
+                  <DropdownMenuItem className="min-h-11" onSelect={() => showUnsendDialog(message, mine)}>
                     Unsend
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -170,7 +170,7 @@ export function ChatMessageList({
                   </p>
                 )}
                 <div className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
-                  <article className="max-w-[calc(88vw-2.5rem)] sm:max-w-[min(76vw,38rem)]">
+                  <article className="group min-w-0 max-w-[calc(88vw-2.5rem)] sm:max-w-[min(76vw,38rem)]">
                     {showSenderLabel && (
                       <p className={`mb-1 px-1 text-xs font-medium ${mine ? 'text-right text-muted-foreground' : 'text-muted-foreground'}`}>
                         {mine ? 'You' : message.sender_name}
@@ -199,12 +199,12 @@ export function ChatMessageList({
                             setOpenMenuId(message.id);
                           }
                         }}
-                        className={`w-fit max-w-full select-none rounded-2xl px-4 py-3 text-left ${mine ? 'rounded-br-sm bg-primary text-primary-foreground' : 'rounded-bl-sm border bg-card text-card-foreground'}`}
+                        className={`w-fit min-w-0 max-w-full select-none rounded-2xl px-4 py-3 text-left ${mine ? 'rounded-br-sm bg-primary text-primary-foreground' : 'rounded-bl-sm border bg-card text-card-foreground'}`}
                       >
                         {message.deleted_at ? (
                           <p className="text-sm italic opacity-75">Message deleted</p>
                         ) : (
-                          <p className="whitespace-pre-wrap break-words text-sm leading-6">
+                          <p className="whitespace-pre-wrap [overflow-wrap:anywhere] text-sm leading-6">
                             {message.body}
                           </p>
                         )}
@@ -230,76 +230,14 @@ export function ChatMessageList({
           })}
         </ol>
       )}
-      <Modal
-        open={unsendMessage !== null}
-        onClose={() => setUnsendMessage(null)}
-        title={unsendMessage && (
-          mode === 'customer'
-            ? unsendMessage.sender_role === 'customer'
-            : unsendMessage.sender_role === 'staff' && unsendMessage.sender_user_id === userId
-        ) && !unsendMessage.deleted_at
-          ? 'Who do you want to unsend this message for?'
-          : 'Unsend this message?'}
-      >
-        {unsendMessage && (
-          <div className="space-y-5">
-            {(
-              unsendMessage.sender_role === (mode === 'customer' ? 'customer' : 'staff') &&
-              (mode === 'customer' || unsendMessage.sender_user_id === userId) &&
-              !unsendMessage.deleted_at
-            ) && (
-              <label className="flex cursor-pointer items-start gap-3">
-                <input
-                  type="radio"
-                  name={radioName}
-                  value="for_everyone"
-                  checked={unsendScope === 'for_everyone'}
-                  onChange={() => setUnsendScope('for_everyone')}
-                  className="mt-1 size-4 accent-primary"
-                />
-                <span>
-                  <span className="font-semibold">Unsend for everyone</span>
-                  <span className="mt-1 block text-sm leading-5 text-muted-foreground">
-                    This message will be removed for everyone in the chat. Others may have already seen it.
-                  </span>
-                </span>
-              </label>
-            )}
-            <label className="flex cursor-pointer items-start gap-3">
-              <input
-                type="radio"
-                name={radioName}
-                value="for_you"
-                checked={unsendScope === 'for_you'}
-                onChange={() => setUnsendScope('for_you')}
-                className="mt-1 size-4 accent-primary"
-              />
-              <span>
-                <span className="font-semibold">Unsend for you</span>
-                <span className="mt-1 block text-sm leading-5 text-muted-foreground">
-                  This message will be removed for you. Others in the chat can still see it.
-                </span>
-              </span>
-            </label>
-            <div className="flex justify-end gap-3 border-t pt-4">
-              <button
-                type="button"
-                onClick={() => setUnsendMessage(null)}
-                className="min-h-10 rounded-lg px-4 text-sm font-medium text-primary hover:bg-accent"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={confirmUnsend}
-                className="min-h-10 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
-              >
-                Remove
-              </button>
-            </div>
-          </div>
-        )}
-      </Modal>
+      <UnsendMessageDialog
+        open={unsendTarget !== null}
+        canUnsendForEveryone={unsendTarget?.canUnsendForEveryone ?? false}
+        scope={unsendScope}
+        onScopeChange={setUnsendScope}
+        onConfirm={confirmUnsend}
+        onClose={() => setUnsendTarget(null)}
+      />
     </div>
   );
 }

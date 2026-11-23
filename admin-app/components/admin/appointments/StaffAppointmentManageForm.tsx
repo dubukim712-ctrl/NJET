@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
+import { getScheduleBlockingReason } from "@/components/admin/appointments/schedule-save-availability";
 import { AppointmentDateTimeFields } from "@/components/appointments/AppointmentDateTimeFields";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -67,7 +68,7 @@ export function StaffAppointmentManageForm({
   const scheduleRequired = status !== "requested" && status !== "cancelled";
   const availableTimes = slotsQuery.data?.times ?? [];
   const keepCurrentTime = Boolean(
-    time && date === initialDateTime.date && time === initialDateTime.time,
+    appointment.scheduled_at && time && date === initialDateTime.date && time === initialDateTime.time,
   );
   const timeOptions = [
     ...new Set([...availableTimes, ...(keepCurrentTime ? [time] : [])]),
@@ -86,16 +87,25 @@ export function StaffAppointmentManageForm({
               ? "Times follow branch service hours; closure periods are excluded."
               : "No service slots are available on this date.";
 
+  const checkingSlots = slotsQuery.isPending || slotsQuery.isFetching;
+  const changedSlot = Boolean(date && !keepCurrentTime);
+  const blockingReason = status === "cancelled"
+    ? "Use the cancellation action to cancel this appointment."
+    : getScheduleBlockingReason({
+        date,
+        time,
+        scheduleRequired,
+        keepCurrentTime,
+        checkingSlots,
+        slotsFailed: slotsQuery.isError,
+        availableTimes,
+        emptySlotsReason: timeHelperText,
+      });
+
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (saving || blockingReason) return;
     setError("");
-    if (
-      Boolean(date) !== Boolean(time) ||
-      (scheduleRequired && (!date || !time))
-    ) {
-      setError("Choose both a scheduled date and time.");
-      return;
-    }
 
     const form = new FormData(event.currentTarget);
     const estimate = String(form.get("estimate") ?? "");
@@ -103,7 +113,9 @@ export function StaffAppointmentManageForm({
     const parsed = staffServiceAppointmentUpdateSchema.safeParse({
       id: appointment.id,
       status,
-      scheduledAt: date && time ? `${date}T${time}:00+08:00` : null,
+      scheduledAt: keepCurrentTime
+        ? appointment.scheduled_at
+        : date && time ? `${date}T${time}:00+08:00` : null,
       assignedTechnicianId:
         String(form.get("assignedTechnicianId") ?? "") || null,
       estimateMinor: estimate ? Math.round(Number(estimate) * 100) : null,
@@ -176,28 +188,12 @@ export function StaffAppointmentManageForm({
         timeOptions={timeOptions}
         timeDisabled={
           !date ||
-          slotsQuery.isPending ||
+          checkingSlots ||
           slotsQuery.isError ||
-          !availableTimes.length
+          !timeOptions.length
         }
         required={scheduleRequired}
       />
-      {date && slotsQuery.isError && (
-        <p className="text-sm text-destructive sm:col-span-2" role="alert">
-          {slotsQuery.error instanceof ServiceAppointmentsQueryError
-            ? slotsQuery.error.message
-            : "Service times could not be loaded."}{" "}
-          <button
-            type="button"
-            className="underline"
-            onClick={() => {
-              void slotsQuery.refetch();
-            }}
-          >
-            Try again
-          </button>
-        </p>
-      )}
       <Select
         name="assignedTechnicianId"
         label="Technician"
@@ -267,14 +263,19 @@ export function StaffAppointmentManageForm({
           {error}
         </p>
       )}
-      <Button
-        type="submit"
-        className="sm:col-span-2"
-        loading={saving}
-        disabled={status === "cancelled"}
-      >
-        Save changes
-      </Button>
+      <div className="space-y-2 sm:col-span-2">
+        {blockingReason && (
+          <p className="text-sm text-muted-foreground" role="status">{blockingReason}</p>
+        )}
+        {changedSlot && slotsQuery.isError && !checkingSlots && (
+          <Button type="button" variant="outline" className="min-h-11" onClick={() => void slotsQuery.refetch()}>
+            Retry availability check
+          </Button>
+        )}
+        <Button type="submit" className="min-h-11 w-full" loading={saving} disabled={Boolean(blockingReason)}>
+          Save changes
+        </Button>
+      </div>
     </form>
   );
 }

@@ -19,9 +19,9 @@ function formatMinor(value: string) {
 function InventoryTable({ rows }: { rows: InventoryValuationResponse['result']['rows'] }) {
   return (
     <>
-      <div className="space-y-3 md:hidden">
+      <div className="space-y-3 xl:hidden">
         {rows.map((row) => (
-          <article key={`${row.branch_id}:${row.variant_id}`} className="space-y-3 rounded-xl border bg-card p-4">
+          <article key={`${row.branch_id}:${row.variant_id}`} className="min-w-0 space-y-3 rounded-xl border bg-card p-4 [overflow-wrap:anywhere]">
             <div>
               <p className="text-xs text-muted-foreground">{row.branch_name} · {row.sku}</p>
               <h3 className="mt-1 font-semibold">{row.product_name}</h3>
@@ -36,7 +36,12 @@ function InventoryTable({ rows }: { rows: InventoryValuationResponse['result']['
           </article>
         ))}
       </div>
-      <div className="hidden overflow-x-auto rounded-xl border md:block">
+      <div
+        role="region"
+        aria-label="Inventory valuation table"
+        tabIndex={0}
+        className="hidden min-w-0 overflow-x-auto rounded-xl border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring xl:block"
+      >
         <table className="w-full min-w-[760px] text-left text-sm">
           <thead className="bg-muted/50 text-xs uppercase tracking-wide text-muted-foreground">
             <tr>
