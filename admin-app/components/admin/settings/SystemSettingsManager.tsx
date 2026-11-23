@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, type KeyboardEvent } from 'react';
+import { Select } from '@/components/ui/Select';
 import { BusinessInfoEditor } from '@/components/admin/settings/BusinessInfoEditor';
 import { BranchServiceHoursSettings } from '@/components/admin/settings/BranchServiceHoursSettings';
 import { OwnershipCertificateTemplateSettings } from '@/components/admin/settings/OwnershipCertificateTemplateSettings';
@@ -51,19 +52,18 @@ export function SystemSettingsManager({
 
   return (
     <div className="space-y-6">
-      <div className="space-y-1.5 md:hidden">
-        <label htmlFor="settings-section" className="block text-sm font-medium">Settings section</label>
-        <select
-          id="settings-section"
-          value={activeTab}
-          onChange={(event) => setActiveTab(event.currentTarget.value as SettingsTab)}
-          className="min-h-11 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        >
-          {SETTINGS_TABS.map((tab) => (
-            <option key={tab.id} value={tab.id}>{tab.label}</option>
-          ))}
-        </select>
-      </div>
+      <Select
+        id="settings-section"
+        label="Settings section"
+        value={activeTab}
+        onValueChange={(value) => setActiveTab(value as SettingsTab)}
+        containerClassName="md:hidden"
+        className="min-h-11"
+      >
+        {SETTINGS_TABS.map((tab) => (
+          <option key={tab.id} value={tab.id}>{tab.label}</option>
+        ))}
+      </Select>
       <div
         role="tablist"
         aria-label="Global settings"

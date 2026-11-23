@@ -2,16 +2,9 @@
 
 import * as SelectPrimitive from "@radix-ui/react-select";
 import { Check, ChevronDown } from "lucide-react";
-import {
-  useId,
-  useEffect,
-  useRef,
-  useState,
-  type ChangeEventHandler,
-  type ReactNode,
-  type SelectHTMLAttributes,
-} from "react";
-import { getOptions, type SelectOption } from "./selectOptions";
+import { useEffect, useId, useRef, useState } from "react";
+import type { ChangeEventHandler, ReactNode, SelectHTMLAttributes } from "react";
+import { getOptions } from "./selectOptions";
 
 type SelectPresentationProps = Pick<
   SelectHTMLAttributes<HTMLSelectElement>,
@@ -51,19 +44,15 @@ type MultiSelectProps = SelectPresentationProps & {
 };
 
 export type SelectProps = SingleSelectProps | MultiSelectProps;
+function getDescription(existing?: string, feedback?: string) {
+  return [existing, feedback].filter(Boolean).join(" ") || undefined;
+}
 
 function NativeMultiSelect(props: MultiSelectProps) {
   const {
-    id,
-    name,
-    label,
-    helperText,
-    error,
-    leadingIcon,
-    containerClassName = "",
-    className = "",
-    children,
-    ...selectProps
+    id, name, label, helperText,
+    error, leadingIcon, containerClassName = "", className = "",
+    children, ...selectProps
   } = props;
   const generatedId = useId();
   const selectId = id ?? generatedId;
@@ -94,14 +83,7 @@ function NativeMultiSelect(props: MultiSelectProps) {
           name={name}
           multiple
           onChange={props.onChange}
-          aria-describedby={
-            [
-              props["aria-describedby"],
-              helperText || error ? descriptionId : "",
-            ]
-              .filter(Boolean)
-              .join(" ") || undefined
-          }
+          aria-describedby={getDescription(props["aria-describedby"], helperText || error ? descriptionId : undefined)}
           aria-invalid={error ? true : props["aria-invalid"]}
           className={`w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground shadow-sm outline-none transition placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-50 ${
             leadingIcon ? "pl-10" : ""
@@ -125,22 +107,10 @@ function NativeMultiSelect(props: MultiSelectProps) {
 
 function SingleSelect(props: SingleSelectProps) {
   const {
-    id,
-    name,
-    label,
-    helperText,
-    error,
-    leadingIcon,
-    containerClassName = "",
-    className = "",
-    children,
-    value,
-    defaultValue,
-    onValueChange,
-    disabled,
-    required,
-    form,
-    autoComplete,
+    id, name, label, helperText,
+    error, leadingIcon, containerClassName = "", className = "",
+    children, value, defaultValue, onValueChange,
+    disabled, required, form, autoComplete,
     ...accessibilityProps
   } = props;
   const generatedId = useId();
@@ -150,6 +120,9 @@ function SingleSelect(props: SingleSelectProps) {
   const emptyOption = options.find((option) => option.value === "");
   const resetValue = String(defaultValue ?? options[0]?.value ?? "");
   const triggerRef = useRef<HTMLButtonElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const wasOpenOnPointerDown = useRef(false);
+  const [open, setOpen] = useState(false);
   const [portalContainer, setPortalContainer] = useState<HTMLElement>();
   const [uncontrolledValue, setUncontrolledValue] = useState(resetValue);
   const selectedValue = String(value ?? uncontrolledValue);
@@ -173,10 +146,25 @@ function SingleSelect(props: SingleSelectProps) {
     associatedForm.addEventListener("reset", reset);
     return () => associatedForm.removeEventListener("reset", reset);
   }, [form, resetValue]);
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!open || !container) return;
+    function closeFromWrapper(event: MouseEvent) {
+      const target = event.target;
+      if (!(target instanceof Element) || target.closest("a, button, input, select, textarea")) return;
+      event.preventDefault();
+      setOpen(false);
+    }
+    container.addEventListener("click", closeFromWrapper);
+    return () => container.removeEventListener("click", closeFromWrapper);
+  }, [open]);
 
+  // Radix disables pointer events outside the listbox while it is open.
   return (
-    <div className={`min-w-0 space-y-2 ${containerClassName}`}>
+    <div ref={containerRef} style={open ? { pointerEvents: "auto" } : undefined} className={`min-w-0 space-y-2 ${containerClassName}`}>
       <SelectPrimitive.Root
+        open={open}
+        onOpenChange={setOpen}
         value={internalValue}
         onValueChange={(nextInternalValue) => {
           const option = options.find(
@@ -211,14 +199,16 @@ function SingleSelect(props: SingleSelectProps) {
           <SelectPrimitive.Trigger
             ref={triggerRef}
             id={selectId}
-            aria-describedby={
-              [
-                accessibilityProps["aria-describedby"],
-                helperText || error ? descriptionId : "",
-              ]
-                .filter(Boolean)
-                .join(" ") || undefined
-            }
+            onPointerDown={(event) => {
+              wasOpenOnPointerDown.current = open;
+              if (open) event.preventDefault();
+            }}
+            onClick={(event) => {
+              if (!open || (!wasOpenOnPointerDown.current && event.detail !== 0)) return;
+              event.preventDefault();
+              setOpen(false);
+            }}
+            aria-describedby={getDescription(accessibilityProps["aria-describedby"], helperText || error ? descriptionId : undefined)}
             aria-invalid={error ? true : accessibilityProps["aria-invalid"]}
             aria-label={accessibilityProps["aria-label"]}
             aria-required={required}
@@ -244,6 +234,16 @@ function SingleSelect(props: SingleSelectProps) {
             sideOffset={4}
             align="start"
             collisionPadding={8}
+            onPointerDownOutside={(event) => {
+              const target = event.detail.originalEvent.target;
+              if (target instanceof Node && containerRef.current?.contains(target)) event.preventDefault();
+            }}
+            onKeyDown={(event) => {
+              if (event.key === "Tab") {
+                event.preventDefault();
+                setOpen(false);
+              }
+            }}
             className="z-[100] max-h-[var(--radix-select-content-available-height)] w-[var(--radix-select-trigger-width)] min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-md border border-border bg-popover text-popover-foreground shadow-lg"
           >
             <SelectPrimitive.Viewport className="max-h-[var(--radix-select-content-available-height)] overflow-y-auto p-1">
@@ -295,9 +295,5 @@ function SingleSelect(props: SingleSelectProps) {
 }
 
 export function Select(props: SelectProps) {
-  return props.multiple ? (
-    <NativeMultiSelect {...props} />
-  ) : (
-    <SingleSelect {...props} />
-  );
+  return props.multiple ? <NativeMultiSelect {...props} /> : <SingleSelect {...props} />;
 }

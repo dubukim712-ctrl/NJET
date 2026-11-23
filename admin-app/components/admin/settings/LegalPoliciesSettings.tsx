@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, type KeyboardEvent } from 'react';
+import { Select } from '@/components/ui/Select';
 import { LegalPolicyEditor } from '@/components/admin/settings/LegalPolicyEditor';
 import type { LegalPolicy, LegalPolicySlug } from '@/data/legal-policies';
 
@@ -47,19 +48,18 @@ export function LegalPoliciesSettings({
           new version; previous versions remain available for order records.
         </p>
       </header>
-      <div className="space-y-1.5 md:hidden">
-        <label htmlFor="legal-policy-section" className="block text-sm font-medium">Legal policy</label>
-        <select
-          id="legal-policy-section"
-          value={activeSlug}
-          onChange={(event) => setActiveSlug(event.currentTarget.value as LegalPolicySlug)}
-          className="min-h-11 w-full rounded-md border border-input bg-background px-3 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        >
-          {POLICY_TABS.map((tab) => (
-            <option key={tab.slug} value={tab.slug}>{tab.label}</option>
-          ))}
-        </select>
-      </div>
+      <Select
+        id="legal-policy-section"
+        label="Legal policy"
+        value={activeSlug}
+        onValueChange={(value) => setActiveSlug(value as LegalPolicySlug)}
+        containerClassName="md:hidden"
+        className="min-h-11"
+      >
+        {POLICY_TABS.map((tab) => (
+          <option key={tab.slug} value={tab.slug}>{tab.label}</option>
+        ))}
+      </Select>
       <div
         role="tablist"
         aria-label="Legal policies"

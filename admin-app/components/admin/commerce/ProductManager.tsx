@@ -8,6 +8,7 @@ import { ProductVariantsTab } from '@/components/admin/commerce/ProductVariantsT
 import { ProductDiscountsTab } from '@/components/admin/commerce/ProductDiscountsTab';
 import { ProductReviewsTab } from '@/components/admin/commerce/ProductReviewsTab';
 import { Modal } from '@/components/ui/Modal';
+import { Select } from '@/components/ui/Select';
 import type { ProductDiscountAdminRow } from '@/lib/validations/product-discount';
 import type { Database } from '@/types/database';
 
@@ -108,10 +109,24 @@ export function ProductManager({
 
   return (
     <div className="space-y-6">
+      <Select
+        label="Products section"
+        value={selectedTab}
+        onValueChange={(value) => {
+          const tab = tabs.find((option) => option.id === value);
+          if (tab) setActiveTab(tab.id);
+        }}
+        containerClassName="md:hidden"
+        className="min-h-11"
+      >
+        {tabs.map((tab) => (
+          <option key={tab.id} value={tab.id}>{tab.label}</option>
+        ))}
+      </Select>
       <div
         role="tablist"
         aria-label="Product management"
-        className="flex flex-wrap gap-2 border-b"
+        className="hidden flex-wrap gap-2 border-b md:flex"
       >
         {tabs.map((tab, index) => (
           <button
