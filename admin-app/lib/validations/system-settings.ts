@@ -12,7 +12,7 @@ export const salesReceiptTemplatePathSchema = z.string().regex(
 
 export const settingsAssetPathSchema = z.string().regex(
   new RegExp(
-    `^(templates/${uuid}\\.pdf|receipt-templates/${uuid}\\.pdf|logos/${uuid}\\.(jpg|png|webp)|recipients/(gcash|bank_transfer|card)/qr/${uuid}\\.(jpg|png|webp))$`
+    `^(templates/${uuid}\\.pdf|receipt-templates/${uuid}\\.pdf|logos/${uuid}\\.(jpg|png|webp)|about/${uuid}\\.(jpg|png|webp)|recipients/(gcash|bank_transfer|card)/qr/${uuid}\\.(jpg|png|webp))$`
   )
 );
 
@@ -31,6 +31,7 @@ export const businessSettingsSchema = z.object({
     (value) => !/[\u0000-\u001f\u007f]/.test(value)
   ),
   logoPath: z.string().regex(new RegExp(`^logos/${uuid}\\.(jpg|png|webp)$`)).nullable(),
+  aboutImagePath: z.string().regex(new RegExp(`^about/${uuid}\\.(jpg|png|webp)$`)).nullable(),
 }).strict();
 
 export const phoneVerificationSettingsSchema = z.object({

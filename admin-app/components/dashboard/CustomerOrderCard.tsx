@@ -1,11 +1,13 @@
 'use client';
 
+import { useState, useTransition } from 'react';
 import Link from 'next/link';
 import { Package } from 'lucide-react';
 import { OrderStatusBadge } from '@/components/commerce/OrderStatusBadge';
 import { ProductPrice } from '@/components/shop/ProductPrice';
 import { CustomerOrderReviewActions } from '@/components/dashboard/CustomerOrderReviewActions';
-import type { CustomerOrder } from '@/data/commerce/customer-orders';
+import { getCustomerOrderDocumentUrlAction } from '@/data/actions/customer-orders';
+import type { CustomerOrder, CustomerOrderDocumentKind } from '@/data/commerce/customer-orders';
 import { formatPhp } from '@/lib/commerce';
 
 export function CustomerOrderCard({
@@ -15,6 +17,25 @@ export function CustomerOrderCard({
   order: CustomerOrder;
   isPlaced: boolean;
 }) {
+  const [downloadError, setDownloadError] = useState<string | null>(null);
+  const [downloading, startDownload] = useTransition();
+
+  function downloadDocument(kind: CustomerOrderDocumentKind) {
+    setDownloadError(null);
+    startDownload(async () => {
+      try {
+        const result = await getCustomerOrderDocumentUrlAction({ orderId: order.id, kind });
+        if (!result.success) {
+          setDownloadError(result.error);
+          return;
+        }
+        window.location.assign(result.data.url);
+      } catch {
+        setDownloadError('The document could not be downloaded. Please try again.');
+      }
+    });
+  }
+
   const needsPayment =
     order.status === 'awaiting_payment' ||
     ((order.payment_method === 'online' ||
@@ -140,22 +161,36 @@ export function CustomerOrderCard({
         )}
       </div>
       {order.status === 'completed' &&
-        (order.invoiceNo || order.certificateUrl || order.receiptUrl || reviewItems.length > 0) && (
+        (order.invoiceNo || order.hasCertificate || order.hasReceipt || reviewItems.length > 0) && (
           <section className="mt-4 flex flex-wrap items-center gap-3 border-t pt-4">
             {order.invoiceNo && (
               <p className="text-sm">
                 <span className="text-muted-foreground">Invoice number:</span> {order.invoiceNo}
               </p>
             )}
-            {order.certificateUrl && (
-              <a href={order.certificateUrl} target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center rounded-md border px-3 text-sm font-medium hover:bg-accent">
+            {order.hasCertificate && (
+              <button
+                type="button"
+                disabled={downloading}
+                onClick={() => downloadDocument('certificate')}
+                className="inline-flex min-h-10 items-center rounded-md border px-3 text-sm font-medium hover:bg-accent disabled:opacity-50"
+              >
                 Download ownership certificate
-              </a>
+              </button>
             )}
-            {order.receiptUrl && (
-              <a href={order.receiptUrl} target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center rounded-md border px-3 text-sm font-medium hover:bg-accent">
+            {order.hasReceipt && (
+              <button
+                type="button"
+                disabled={downloading}
+                onClick={() => downloadDocument('receipt')}
+                className="inline-flex min-h-10 items-center rounded-md border px-3 text-sm font-medium hover:bg-accent disabled:opacity-50"
+              >
                 Download sales receipt
-              </a>
+              </button>
+            )}
+            {downloading && <p role="status" className="text-sm">Preparing download...</p>}
+            {downloadError && (
+              <p role="alert" className="basis-full text-sm text-destructive">{downloadError}</p>
             )}
             {reviewItems.length > 0 && (
               <CustomerOrderReviewActions

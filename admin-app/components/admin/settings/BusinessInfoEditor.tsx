@@ -39,6 +39,9 @@ export function BusinessInfoEditor({
       let logoPath = formData.get('removeLogo') === 'on'
         ? null
         : businessInfo.logoPath;
+      let aboutImagePath = formData.get('removeAboutImage') === 'on'
+        ? null
+        : businessInfo.aboutImagePath;
       const file = formData.get('logo');
       if (file instanceof File && file.size > 0) {
         const upload = await uploadSystemSettingsAsset(file, 'business-logo');
@@ -48,6 +51,15 @@ export function BusinessInfoEditor({
         uploadedPaths.push(upload.path);
         logoPath = upload.path;
       }
+      const aboutImage = formData.get('aboutImage');
+      if (aboutImage instanceof File && aboutImage.size > 0) {
+        const upload = await uploadSystemSettingsAsset(aboutImage, 'about-image');
+        if (upload.error || !upload.path) {
+          throw new Error(upload.error ?? 'Could not upload the About Us photo.');
+        }
+        uploadedPaths.push(upload.path);
+        aboutImagePath = upload.path;
+      }
 
       const result = await saveBusinessSettingsAction({
         businessName: formData.get('businessName'),
@@ -56,6 +68,7 @@ export function BusinessInfoEditor({
         address: formData.get('address'),
         businessHours: formData.get('businessHours'),
         logoPath,
+        aboutImagePath,
       });
       if (!result.success) throw new Error(result.error);
 
@@ -64,6 +77,12 @@ export function BusinessInfoEditor({
       if (logoInput instanceof HTMLInputElement) logoInput.value = '';
       const removeLogoInput = form.elements.namedItem('removeLogo');
       if (removeLogoInput instanceof HTMLInputElement) removeLogoInput.checked = false;
+      const aboutImageInput = form.elements.namedItem('aboutImage');
+      if (aboutImageInput instanceof HTMLInputElement) aboutImageInput.value = '';
+      const removeAboutImageInput = form.elements.namedItem('removeAboutImage');
+      if (removeAboutImageInput instanceof HTMLInputElement) {
+        removeAboutImageInput.checked = false;
+      }
       await Promise.all([
         invalidateSettings(),
         invalidateStorefrontBusinessInfo(),
@@ -80,7 +99,7 @@ export function BusinessInfoEditor({
         ? saveError.message
         : 'Could not save business information.';
       const finalMessage = cleanupResults.some((removed) => !removed)
-        ? `${message} An unused uploaded logo could not be removed.`
+        ? `${message} An unused uploaded image could not be removed.`
         : message;
       setError(finalMessage);
       toast.error(finalMessage);
@@ -167,6 +186,37 @@ export function BusinessInfoEditor({
                 disabled={busy}
               />
               Remove current logo
+            </label>
+          )}
+        </div>
+        <div className="space-y-3">
+          {businessInfo.aboutImageUrl && (
+            <Image
+              src={businessInfo.aboutImageUrl}
+              alt="About section photo"
+              width={640}
+              height={360}
+              unoptimized
+              className="h-40 w-full max-w-xl rounded-md border object-cover"
+            />
+          )}
+          <Input
+            name="aboutImage"
+            label="Store or team photo"
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            disabled={busy}
+            helperText="Optional. Shown in the storefront About section. JPG, PNG, or WebP, up to 5 MB."
+          />
+          {businessInfo.aboutImagePath && (
+            <label className="flex min-h-11 items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                name="removeAboutImage"
+                className="size-4 accent-primary"
+                disabled={busy}
+              />
+              Remove current About Us photo
             </label>
           )}
         </div>

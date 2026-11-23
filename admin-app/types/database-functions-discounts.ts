@@ -26,6 +26,7 @@ export type DatabaseDiscountFunctions = {
       p_items: Json;
       p_documents: Json;
       p_coupon_code: string | null;
+      p_submission_id?: string;
     };
     Returns: string;
   };

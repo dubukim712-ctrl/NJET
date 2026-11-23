@@ -11,11 +11,13 @@ import { Button } from '@/components/ui/Button';
 import { normalizePhilippineMobileNumber } from '@/lib/phone-number';
 
 export function CheckoutPhoneVerification({
+  fieldError,
   initialPhoneNumber,
   initialVerifiedPhoneNumber,
   verificationRequired,
   onVerificationChange,
 }: {
+  fieldError?: string;
   initialPhoneNumber: string | null;
   initialVerifiedPhoneNumber: string | null;
   verificationRequired: boolean;
@@ -139,7 +141,7 @@ export function CheckoutPhoneVerification({
         helperText={verificationRequired
           ? 'Use a Philippine mobile number. It will be saved to your account after verification.'
           : 'Staff will manually verify this number before confirming your order.'}
-        error={error}
+        error={fieldError || error}
       />
       {verificationRequired && isVerified && (
         <p className="flex items-center gap-2 text-sm font-medium text-primary" role="status">

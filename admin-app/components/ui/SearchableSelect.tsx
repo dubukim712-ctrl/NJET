@@ -16,6 +16,7 @@ export function SearchableSelect({
   onChange,
   placeholder = 'Type to search',
   helperText,
+  error,
   emptyMessage = 'No matching options.',
   disabled = false,
   required = false,
@@ -27,6 +28,7 @@ export function SearchableSelect({
   onChange: (value: string) => void;
   placeholder?: string;
   helperText?: string;
+  error?: string;
   emptyMessage?: string;
   disabled?: boolean;
   required?: boolean;
@@ -61,6 +63,7 @@ export function SearchableSelect({
         value={inputValue}
         placeholder={placeholder}
         helperText={helperText}
+        error={error}
         role="combobox"
         aria-autocomplete="list"
         aria-haspopup="listbox"

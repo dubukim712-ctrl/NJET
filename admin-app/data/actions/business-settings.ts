@@ -33,10 +33,18 @@ export async function saveBusinessSettingsAction(
         'business logo'
       );
     }
+    if (parsed.data.aboutImagePath) {
+      await validateSettingsImage(
+        supabase,
+        BRANDING_BUCKET,
+        parsed.data.aboutImagePath,
+        'About Us photo'
+      );
+    }
 
     const { data: previous, error: previousError } = await supabase
       .from('business_settings')
-      .select('logo_path')
+      .select('logo_path, about_image_path')
       .eq('id', 1)
       .maybeSingle();
     if (previousError) throw previousError;
@@ -49,21 +57,30 @@ export async function saveBusinessSettingsAction(
       address: parsed.data.address,
       business_hours: parsed.data.businessHours,
       logo_path: parsed.data.logoPath,
+      about_image_path: parsed.data.aboutImagePath,
     }, { onConflict: 'id' });
     if (error) throw error;
 
-    let warning: string | undefined;
-    if (previous?.logo_path && previous.logo_path !== parsed.data.logoPath) {
-      const removed = await removeStoredObject(
-        supabase,
-        BRANDING_BUCKET,
-        previous.logo_path
-      );
-      if (!removed) warning = 'Business information was saved, but the previous logo could not be removed.';
-    }
+    const obsoleteImages = [
+      previous?.logo_path !== parsed.data.logoPath
+        ? previous?.logo_path
+        : null,
+      previous?.about_image_path !== parsed.data.aboutImagePath
+        ? previous?.about_image_path
+        : null,
+    ].filter((path): path is string => Boolean(path));
+    const cleanupResults = await Promise.all(
+      obsoleteImages.map((path) =>
+        removeStoredObject(supabase, BRANDING_BUCKET, path)
+      )
+    );
+    const warning = cleanupResults.some((removed) => !removed)
+      ? 'Business information was saved, but one or more previous images could not be removed.'
+      : undefined;
 
     revalidatePath('/admin/settings');
     revalidatePath('/dashboard');
+    revalidatePath('/');
     revalidatePath('/shop');
     revalidatePath('/checkout');
     return { success: true, data: { warning } };

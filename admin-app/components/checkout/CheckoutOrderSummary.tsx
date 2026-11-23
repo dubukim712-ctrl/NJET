@@ -16,6 +16,8 @@ type CheckoutLine = {
 
 export function CheckoutOrderSummary({
   couponInput,
+  itemsError,
+  retryable,
   items,
   subtotal,
   discountTotal,
@@ -33,6 +35,8 @@ export function CheckoutOrderSummary({
   phoneVerificationReady,
 }: {
   couponInput: ReactNode;
+  itemsError?: string;
+  retryable: boolean;
   items: CheckoutLine[];
   subtotal: number;
   discountTotal: number;
@@ -53,6 +57,7 @@ export function CheckoutOrderSummary({
     <aside className="h-fit min-w-0 space-y-4 rounded-xl border bg-card p-4 sm:p-5 lg:sticky lg:top-24">
       <h2 className="text-lg font-semibold">Order summary</h2>
       {couponInput}
+      {itemsError && <p className="text-sm text-destructive" role="alert" tabIndex={-1} data-checkout-items-error>{itemsError}</p>}
       <ul className="space-y-4 border-b pb-4">
         {items.map((item) => (
           <li key={item.variantId} className="min-w-0 space-y-2 text-sm">
@@ -138,8 +143,8 @@ export function CheckoutOrderSummary({
           Verify your contact number before placing the order.
         </p>
       )}
-      <Button type="submit" className="w-full" loading={busy} disabled={loading || !allVariantsLoaded || !stockAvailable || !paymentAvailable || !phoneVerificationReady}>
-        Place order
+      <Button type="submit" className="w-full" loading={busy} disabled={!retryable && (loading || !allVariantsLoaded || !stockAvailable || !paymentAvailable || !phoneVerificationReady)}>
+        {retryable ? "Retry order" : "Place order"}
       </Button>
       <p className="text-xs leading-5 text-muted-foreground">
         Stock is not held until staff confirms your order. Remaining balance is paid at store visit.

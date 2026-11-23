@@ -25,9 +25,14 @@ export type AdminBusinessInfo = {
   businessHours: string;
   logoPath: string | null;
   logoUrl: string | null;
+  aboutImagePath: string | null;
+  aboutImageUrl: string | null;
 };
 
-export type StorefrontBusinessInfo = Omit<AdminBusinessInfo, 'logoPath'>;
+export type StorefrontBusinessInfo = Omit<
+  AdminBusinessInfo,
+  'logoPath' | 'aboutImagePath'
+>;
 
 export type AdminSystemSettings = {
   businessInfo: AdminBusinessInfo;
@@ -75,7 +80,7 @@ export async function getAdminSystemSettings(): Promise<{
     ] = await Promise.all([
       supabase
         .from('business_settings')
-        .select('business_name, phone, email, address, business_hours, logo_path, phone_verification_required')
+        .select('business_name, phone, email, address, business_hours, logo_path, about_image_path, phone_verification_required')
         .eq('id', 1)
         .maybeSingle(),
       supabase
@@ -144,6 +149,10 @@ export async function getAdminSystemSettings(): Promise<{
           logoUrl: businessResult.data.logo_path
             ? branding.getPublicUrl(businessResult.data.logo_path).data.publicUrl
             : null,
+          aboutImagePath: businessResult.data.about_image_path,
+          aboutImageUrl: businessResult.data.about_image_path
+            ? branding.getPublicUrl(businessResult.data.about_image_path).data.publicUrl
+            : null,
         },
         checkoutSettings: {
           phoneVerificationRequired:
@@ -205,7 +214,7 @@ export async function getStorefrontBusinessInfo(
   try {
     const { data, error } = await supabase
       .from('business_settings')
-      .select('business_name, phone, email, address, business_hours, logo_path')
+      .select('business_name, phone, email, address, business_hours, logo_path, about_image_path')
       .eq('id', 1)
       .maybeSingle();
     if (error) throw error;
@@ -227,6 +236,11 @@ export async function getStorefrontBusinessInfo(
           ? supabase.storage
               .from('njet-storefront-branding')
               .getPublicUrl(data.logo_path).data.publicUrl
+          : null,
+        aboutImageUrl: data.about_image_path
+          ? supabase.storage
+              .from('njet-storefront-branding')
+              .getPublicUrl(data.about_image_path).data.publicUrl
           : null,
       },
       error: null,

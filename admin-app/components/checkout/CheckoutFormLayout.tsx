@@ -36,7 +36,7 @@ export function CheckoutFormLayout({
           </p>
         )}
         {error && (
-          <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive" role="alert">
+          <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive" role="alert" tabIndex={-1} data-checkout-error>
             <p>{error}</p>
             {requiresLogin && (
               <Link href="/login?redirect=%2Fcheckout" className="mt-2 inline-flex min-h-8 items-center font-medium underline underline-offset-4">

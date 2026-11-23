@@ -261,7 +261,7 @@ export async function removeUnusedSystemSettingsAssetAction(
     ? TEMPLATE_BUCKET
     : parsed.data.startsWith('receipt-templates/')
       ? RECEIPT_TEMPLATE_BUCKET
-      : parsed.data.startsWith('logos/')
+      : parsed.data.startsWith('logos/') || parsed.data.startsWith('about/')
         ? 'njet-storefront-branding'
         : PAYMENT_MEDIA_BUCKET;
   const removed = await removeStoredObject(supabase, bucket, parsed.data);

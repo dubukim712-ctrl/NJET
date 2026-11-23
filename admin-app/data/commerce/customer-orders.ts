@@ -23,16 +23,69 @@ export type CustomerOrder = Pick<
     > & { productId: string | null }
   )[];
   invoiceNo: string | null;
-  certificateUrl: string | null;
-  receiptUrl: string | null;
+  hasCertificate: boolean;
+  hasReceipt: boolean;
 };
+
+export type CustomerOrdersCursor = {
+  createdAt: string;
+  id: string;
+};
+
+export type CustomerOrdersPage = {
+  orders: CustomerOrder[];
+  nextCursor: CustomerOrdersCursor | null;
+};
+
+const ORDER_PAGE_SIZE = 20;
+const ORDER_ITEM_BATCH_SIZE = 250;
+
+async function loadOrderItems(supabase: SupabaseClient, orderIds: string[]) {
+  const byOrder = new Map<string, (CustomerOrder['items'][number] & { created_at: string })[]>();
+  let lastId: string | undefined;
+
+  while (true) {
+    let query = supabase
+      .from('order_items')
+      .select(`
+        id, order_id, created_at, product_name, variant_name, product_type, quantity,
+        unit_price_minor, regular_unit_price_minor, discount_unit_minor,
+        discount_name_snapshot,
+        variant:product_variants!order_items_variant_id_fkey(
+          product:products!product_variants_product_id_fkey(id)
+        )
+      `)
+      .in('order_id', orderIds)
+      .order('id')
+      .limit(ORDER_ITEM_BATCH_SIZE);
+    if (lastId) query = query.gt('id', lastId);
+
+    const { data, error } = await query;
+    if (error) throw error;
+
+    for (const { variant, ...item } of data) {
+      const items = byOrder.get(item.order_id) ?? [];
+      items.push({ ...item, productId: variant?.product?.id ?? null });
+      byOrder.set(item.order_id, items);
+    }
+    // A server-side row cap can make a nonfinal batch shorter than requested.
+    if (!data.length) break;
+    lastId = data[data.length - 1].id;
+  }
+
+  for (const items of byOrder.values()) {
+    items.sort((first, second) => first.created_at.localeCompare(second.created_at));
+  }
+  return byOrder;
+}
 
 export async function getCustomerOrders(
   supabase: SupabaseClient,
-  userId: string
-): Promise<{ data: CustomerOrder[] | null; error: string | null }> {
+  userId: string,
+  cursor: CustomerOrdersCursor | null = null,
+): Promise<{ data: CustomerOrdersPage | null; error: string | null }> {
   try {
-    const { data: orders, error: orderError } = await supabase
+    let query = supabase
       .from('orders')
       .select(`
         id, order_number, customer_name, fulfillment, branch_name, delivery_zone_name,
@@ -42,109 +95,57 @@ export async function getCustomerOrders(
       `)
       .eq('customer_id', userId)
       .order('created_at', { ascending: false })
-      .limit(50);
-    if (orderError) throw orderError;
-    if (!orders.length) return { data: [], error: null };
+      .order('id', { ascending: false })
+      .limit(ORDER_PAGE_SIZE + 1);
+    if (cursor) {
+      // Keep the database timestamp precision and use the ID to break ties.
+      query = query.or(
+        `created_at.lt.${cursor.createdAt},and(created_at.eq.${cursor.createdAt},id.lt.${cursor.id})`,
+      );
+    }
 
+    const { data: rows, error: orderError } = await query;
+    if (orderError) throw orderError;
+    if (!rows.length) return { data: { orders: [], nextCursor: null }, error: null };
+
+    const orders = rows.slice(0, ORDER_PAGE_SIZE);
+    const lastOrder = orders[orders.length - 1];
+    const nextCursor = rows.length > ORDER_PAGE_SIZE
+      ? { createdAt: lastOrder.created_at, id: lastOrder.id }
+      : null;
     const orderIds = orders.map((order) => order.id);
-    const [itemsResult, invoicesResult, certificatesResult, receiptsResult] = await Promise.all([
-      supabase
-        .from('order_items')
-        .select(`
-          id, order_id, product_name, variant_name, product_type, quantity,
-          unit_price_minor, regular_unit_price_minor, discount_unit_minor,
-          discount_name_snapshot,
-          variant:product_variants!order_items_variant_id_fkey(
-            product:products!product_variants_product_id_fkey(id)
-          )
-        `)
-        .in('order_id', orderIds)
-        .order('created_at')
-        .limit(1500),
+    const [itemsByOrder, invoicesResult, certificatesResult, receiptsResult] = await Promise.all([
+      loadOrderItems(supabase, orderIds),
       supabase
         .from('order_invoices')
         .select('order_id, invoice_no')
-        .in('order_id', orderIds)
-        .limit(50),
+        .in('order_id', orderIds),
       supabase
         .from('order_certificates')
-        .select('order_id, object_path')
-        .in('order_id', orderIds)
-        .limit(50),
+        .select('order_id')
+        .in('order_id', orderIds),
       supabase
         .from('order_receipts')
-        .select('order_id, object_path')
-        .in('order_id', orderIds)
-        .limit(50),
+        .select('order_id')
+        .in('order_id', orderIds),
     ]);
-    if (itemsResult.error) throw itemsResult.error;
     if (invoicesResult.error) throw invoicesResult.error;
     if (certificatesResult.error) throw certificatesResult.error;
     if (receiptsResult.error) throw receiptsResult.error;
-    const items = itemsResult.data.map(({ variant, ...item }) => ({
-      ...item,
-      productId: variant?.product?.id ?? null,
-    }));
-
-    let certificateUrlByOrder = new Map<string, string>();
-    if (certificatesResult.data.length) {
-      const { data, error } = await supabase.storage
-        .from('njet-order-certificates')
-        .createSignedUrls(
-          certificatesResult.data.map((certificate) => certificate.object_path),
-          60,
-          { download: true }
-        );
-      if (error) {
-        console.error('Could not create private ownership-certificate links.', error);
-      } else {
-        const signedByPath = new Map(
-          data.flatMap((entry) =>
-            entry.path && entry.signedUrl ? [[entry.path, entry.signedUrl] as const] : []
-          )
-        );
-        certificateUrlByOrder = new Map(
-          certificatesResult.data.flatMap((certificate) => {
-            const url = signedByPath.get(certificate.object_path);
-            return url ? [[certificate.order_id, url] as const] : [];
-          })
-        );
-      }
-    }
-    let receiptUrlByOrder = new Map<string, string>();
-    if (receiptsResult.data.length) {
-      const { data, error } = await supabase.storage
-        .from('njet-order-receipts')
-        .createSignedUrls(
-          receiptsResult.data.map((receipt) => receipt.object_path),
-          60,
-          { download: true }
-        );
-      if (error) {
-        console.error('Could not create private sales receipt links.', error);
-      } else {
-        const signedByPath = new Map(
-          data.flatMap((entry) =>
-            entry.path && entry.signedUrl ? [[entry.path, entry.signedUrl] as const] : []
-          )
-        );
-        receiptUrlByOrder = new Map(
-          receiptsResult.data.flatMap((receipt) => {
-            const url = signedByPath.get(receipt.object_path);
-            return url ? [[receipt.order_id, url] as const] : [];
-          })
-        );
-      }
-    }
+    const certificateOrderIds = new Set(certificatesResult.data.map(({ order_id }) => order_id));
+    const receiptOrderIds = new Set(receiptsResult.data.map(({ order_id }) => order_id));
 
     return {
-      data: orders.map((order) => ({
-        ...order,
-        items: items.filter((item) => item.order_id === order.id),
-        invoiceNo: invoicesResult.data.find((invoice) => invoice.order_id === order.id)?.invoice_no ?? null,
-        certificateUrl: certificateUrlByOrder.get(order.id) ?? null,
-        receiptUrl: receiptUrlByOrder.get(order.id) ?? null,
-      })),
+      data: {
+        orders: orders.map((order) => ({
+          ...order,
+          items: itemsByOrder.get(order.id) ?? [],
+          invoiceNo: invoicesResult.data.find((invoice) => invoice.order_id === order.id)?.invoice_no ?? null,
+          hasCertificate: certificateOrderIds.has(order.id),
+          hasReceipt: receiptOrderIds.has(order.id),
+        })),
+        nextCursor,
+      },
       error: null,
     };
   } catch (error) {
@@ -154,4 +155,43 @@ export async function getCustomerOrders(
       error: 'Order history could not be loaded. Please try again later.',
     };
   }
+}
+
+export type CustomerOrderDocumentKind = 'certificate' | 'receipt';
+
+const orderDocuments = {
+  certificate: { table: 'order_certificates', bucket: 'njet-order-certificates' },
+  receipt: { table: 'order_receipts', bucket: 'njet-order-receipts' },
+} as const;
+
+export async function getCustomerOrderDocumentUrl(
+  supabase: SupabaseClient,
+  userId: string,
+  orderId: string,
+  kind: CustomerOrderDocumentKind,
+): Promise<string | null> {
+  const { data: order, error: orderError } = await supabase
+    .from('orders')
+    .select('id')
+    .eq('id', orderId)
+    .eq('customer_id', userId)
+    .eq('status', 'completed')
+    .maybeSingle();
+  if (orderError) throw orderError;
+  if (!order) return null;
+
+  const { table, bucket } = orderDocuments[kind];
+  const { data: document, error: documentError } = await supabase
+    .from(table)
+    .select('object_path')
+    .eq('order_id', order.id)
+    .maybeSingle();
+  if (documentError) throw documentError;
+  if (!document) return null;
+
+  const { data, error } = await supabase.storage
+    .from(bucket)
+    .createSignedUrl(document.object_path, 60, { download: true });
+  if (error) throw error;
+  return data.signedUrl;
 }

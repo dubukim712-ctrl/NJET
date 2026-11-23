@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import { CheckoutPolicyFields } from "@/components/checkout/CheckoutPolicyFields";
 import { CreditCard, FileImage, UserRound } from "lucide-react";
 import { getPaymentProviderLabel } from "@/data/commerce/payment-recipients";
 import {
@@ -22,6 +22,7 @@ interface CheckoutFieldsProps extends Omit<
   CheckoutOptions,
   'policyVersions' | 'customerPhoneNumber' | 'customerPhoneVerified'
 > {
+  fieldErrors?: Record<string, string[]>;
   initialPhoneNumber: string | null;
   initialVerifiedPhoneNumber: string | null;
   fulfillment: Fulfillment;
@@ -47,6 +48,7 @@ interface CheckoutFieldsProps extends Omit<
 }
 
 export function CheckoutFields(props: CheckoutFieldsProps) {
+  const errorFor = (name: string) => props.fieldErrors?.[name]?.join(" ");
   const [address, setAddress] = useState<PhilippineAddressValues>({
     addressLine1: "",
     province: "",
@@ -76,12 +78,14 @@ export function CheckoutFields(props: CheckoutFieldsProps) {
         <div className="grid gap-4 sm:grid-cols-2">
           <Input
             name="customerName"
+            error={errorFor("customerName")}
             label="Full name"
             autoComplete="name"
             required
             leadingIcon={<UserRound className="h-4 w-4" />}
           />
           <CheckoutPhoneVerification
+            fieldError={errorFor("contactNumber")}
             initialPhoneNumber={props.initialPhoneNumber}
             initialVerifiedPhoneNumber={props.initialVerifiedPhoneNumber}
             verificationRequired={props.phoneVerificationRequired}
@@ -90,6 +94,7 @@ export function CheckoutFields(props: CheckoutFieldsProps) {
         </div>
         <PhilippineAddressFields
           values={address}
+          fieldErrors={props.fieldErrors}
           onChange={setAddress}
           disabled={false}
           required
@@ -111,6 +116,7 @@ export function CheckoutFields(props: CheckoutFieldsProps) {
         <h2 className="text-lg font-semibold">Fulfillment</h2>
         <Select
           label="How would you like to receive your order?"
+          error={errorFor("fulfillment")}
           value={props.fulfillment}
           onValueChange={(value) =>
             props.onFulfillmentChange(value as Fulfillment)
@@ -122,6 +128,7 @@ export function CheckoutFields(props: CheckoutFieldsProps) {
         {props.fulfillment === "pickup" ? (
           <Select
             label="Pickup branch"
+            error={errorFor("branchId")}
             value={props.branchId}
             onValueChange={(value) => props.onBranchChange(value)}
             required
@@ -136,6 +143,7 @@ export function CheckoutFields(props: CheckoutFieldsProps) {
         ) : (
           <Select
             label="Delivery zone"
+            error={errorFor("deliveryZoneId")}
             value={props.zoneId}
             onValueChange={(value) => props.onZoneChange(value)}
             required
@@ -154,6 +162,7 @@ export function CheckoutFields(props: CheckoutFieldsProps) {
         <h2 className="text-lg font-semibold">Payment</h2>
         <Select
           label="Payment method"
+          error={errorFor("paymentMethod")}
           value={props.paymentMethod}
           onValueChange={(value) =>
             props.onPaymentMethodChange(value as PaymentMethod)
@@ -205,6 +214,7 @@ export function CheckoutFields(props: CheckoutFieldsProps) {
                   : "Online payment platform"
               }
               name="paymentProvider"
+              error={errorFor("paymentProvider")}
               value={props.paymentProvider}
               onValueChange={(value) =>
                 props.onPaymentProviderChange(
@@ -222,6 +232,7 @@ export function CheckoutFields(props: CheckoutFieldsProps) {
             </Select>
             <Select
               label="Payment account"
+              error={errorFor("paymentRecipientId")}
               value={props.paymentRecipientId}
               onValueChange={(value) =>
                 props.onPaymentRecipientChange(value)
@@ -250,6 +261,7 @@ export function CheckoutFields(props: CheckoutFieldsProps) {
         {props.hasEbike && (
           <Input
             label="Valid ID document(s)"
+            error={errorFor("documents")}
             type="file"
             multiple
             required
@@ -263,41 +275,11 @@ export function CheckoutFields(props: CheckoutFieldsProps) {
         )}
       </section>
 
-      <section className="space-y-3 rounded-xl border bg-card p-5 sm:p-6">
-        <h2 className="text-lg font-semibold">Policies</h2>
-        <p className="text-sm leading-5 text-muted-foreground">
-          Please review these policies before placing your order.
-        </p>
-        <nav aria-label="Customer policies" className="flex flex-wrap gap-x-4 gap-y-2 text-sm">
-          <Link className="font-medium text-primary underline underline-offset-4" href="/terms">
-            Terms &amp; Conditions
-          </Link>
-          <Link className="font-medium text-primary underline underline-offset-4" href="/return-policy">
-            Return &amp; Refund Policy
-          </Link>
-          <Link className="font-medium text-primary underline underline-offset-4" href="/privacy">
-            Privacy Policy
-          </Link>
-        </nav>
-        <label className="flex items-start gap-3 text-sm leading-5">
-          <input
-            type="checkbox"
-            onChange={(event) => props.onTermsChange(event.target.checked)}
-            required
-            className="mt-1 size-4 accent-primary"
-          />
-          <span>I agree to the Terms &amp; Conditions.</span>
-        </label>
-        <label className="flex items-start gap-3 text-sm leading-5">
-          <input
-            type="checkbox"
-            onChange={(event) => props.onPrivacyChange(event.target.checked)}
-            required
-            className="mt-1 size-4 accent-primary"
-          />
-          <span>I acknowledge the Privacy Policy.</span>
-        </label>
-      </section>
+      <CheckoutPolicyFields
+        fieldErrors={props.fieldErrors}
+        onTermsChange={props.onTermsChange}
+        onPrivacyChange={props.onPrivacyChange}
+      />
     </div>
   );
 }

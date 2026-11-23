@@ -1,15 +1,9 @@
 'use client';
 
-import { useQueryClient } from '@tanstack/react-query';
 import { useState, type FormEvent } from 'react';
-import { useRouter } from 'next/navigation';
-import { toast } from 'sonner';
-import { createCommerceOrderAction } from '@/data/actions/commerce-checkout';
-import { uploadOrderDocuments } from '@/data/commerce/documents-client';
-import { adminOrdersQueryKey } from '@/data/commerce/admin-orders-client';
-import { useInvalidateCustomerOrdersQuery } from '@/data/commerce/customer-orders-client';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { useCart } from '@/components/cart/CartProvider';
+import { useCheckoutSubmission } from '@/components/checkout/useCheckoutSubmission';
 import { useCheckoutPricing } from '@/components/checkout/useCheckoutPricing';
 import { CheckoutAuthNotice } from '@/components/checkout/CheckoutAuthNotice';
 import { CheckoutEmptyCart } from '@/components/checkout/CheckoutEmptyCart';
@@ -18,7 +12,6 @@ import { CheckoutFields } from '@/components/checkout/CheckoutFields';
 import { CheckoutOrderSummary } from '@/components/checkout/CheckoutOrderSummary';
 import { DiscountCodeInput } from '@/components/commerce/DiscountCodeInput';
 import { useCheckoutPolicyConsent } from '@/components/checkout/useCheckoutPolicyConsent';
-import { Button } from '@/components/ui/Button';
 import type { CheckoutOptions } from '@/data/commerce/checkout-options';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 import type { Fulfillment, PaymentMethod, PaymentProvider } from '@/types/commerce-tables';
@@ -32,9 +25,6 @@ export function CheckoutForm({
   customerPhoneNumber,
   customerPhoneVerified,
 }: CheckoutOptions) {
-  const router = useRouter();
-  const queryClient = useQueryClient();
-  const invalidateCustomerOrders = useInvalidateCustomerOrdersQuery();
   const { user } = useAuth();
   const { items, error: cartError, clear } = useCart();
   const [fulfillment, setFulfillment] = useState<Fulfillment>('pickup');
@@ -50,9 +40,6 @@ export function CheckoutForm({
   const [zoneId, setZoneId] = useState(zones[0]?.id ?? '');
   const [identityFiles, setIdentityFiles] = useState<File[]>([]);
   const policyConsent = useCheckoutPolicyConsent(policyVersions);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [requiresLogin, setRequiresLogin] = useState(false);
   const firstCartBranchId = items[0]?.branchId;
   const preferredBranchId =
     firstCartBranchId &&
@@ -125,49 +112,32 @@ export function CheckoutForm({
   const onlineDue = paymentMethod === 'online'
     ? reservationDue > 0 && fulfillment === 'pickup' ? reservationDue : total
     : 0;
-  const submitOrder = async (event: FormEvent<HTMLFormElement>) => {
+  const { busy, error, requiresLogin, fieldErrors, retryable, submit } = useCheckoutSubmission(clear);
+
+  function getCheckoutError() {
+    if (!phoneVerificationReady) return 'Verify this contact number before placing your order.';
+    if (loadingCart || !allVariantsLoaded) return catalogError ?? 'Some cart items are no longer available.';
+    if (!stockAvailable) return 'The selected fulfillment option does not have enough stock for this cart.';
+    if (!paymentAvailable) return 'Choose an active payment account for the selected payment method.';
+    if (hasEbike && !identityFiles.length) return 'Upload at least one valid ID for an e-bike order.';
+    return policyConsent.error;
+  }
+
+  function submitOrder(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (busy) return;
-    setError(null);
-    setRequiresLogin(false);
-    if (!items.length) return setError('Your cart is empty.');
-    if (!user) {
-      setError('You must sign in before placing your order.');
-      setRequiresLogin(true);
-      return;
-    }
-    if (!hasPermission(user, PERMISSIONS.storefrontAccess)) {
-      return setError('This account does not have permission to place customer orders.');
-    }
-    if (!phoneVerificationReady) {
-      return setError('Verify this contact number before placing your order.');
-    }
-    if (loadingCart || !allVariantsLoaded) return setError(catalogError ?? 'Some cart items are no longer available.');
-    if (!stockAvailable) return setError('The selected fulfillment option does not have enough stock for this cart.');
-    if (!paymentAvailable) return setError('Choose an active payment account for the selected payment method.');
-    if (hasEbike && !identityFiles.length) return setError('Upload at least one valid ID for an e-bike order.');
-    if (policyConsent.error) return setError(policyConsent.error);
+    if (!user || !items.length) return;
 
-    setBusy(true);
-    const formData = new FormData(event.currentTarget);
+    const form = event.currentTarget;
+    const formData = new FormData(form);
     const text = (name: string) => String(formData.get(name) ?? '').trim();
-    let uploaded: Awaited<ReturnType<typeof uploadOrderDocuments>>;
-    try {
-      uploaded = await uploadOrderDocuments(null, hasEbike ? identityFiles : []);
-    } catch (uploadError) {
-      console.error('Could not upload checkout documents.', uploadError);
-      setBusy(false);
-      setError('A document could not be uploaded. Please try again.');
-      return;
-    }
-    if (uploaded.error) {
-      setBusy(false);
-      setError(uploaded.error);
-      return;
-    }
-
-    try {
-      const result = await createCommerceOrderAction({
+    void submit({
+      form,
+      customerId: user.id,
+      identityFiles,
+      hasEbike,
+      getCheckoutError,
+      paymentProofRequired,
+      payload: {
         customerName: text('customerName'),
         contactNumber: text('contactNumber'),
         fulfillment,
@@ -188,29 +158,9 @@ export function CheckoutForm({
         privacyVersion: policyConsent.versions.privacy,
         items: items.map((item) => ({ variantId: item.variantId, quantity: item.quantity })),
         couponCode: activePreview?.code ?? null,
-        documents: uploaded.documents,
-      });
-      if (!result.success) {
-        setError(result.error);
-        setRequiresLogin(Boolean(result.requiresLogin));
-        setBusy(false);
-        return;
-      }
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: adminOrdersQueryKey }),
-        invalidateCustomerOrders(),
-      ]);
-      const clearResult = clear();
-      if (!clearResult.success) toast.error('Order placed, but your local cart could not be cleared.');
-      router.push(paymentProofRequired
-        ? `/dashboard/orders/${encodeURIComponent(result.data.orderId)}`
-        : `/dashboard/orders?placed=${encodeURIComponent(result.data.orderId)}`);
-    } catch (orderError) {
-      console.error('Could not confirm checkout submission status.', orderError);
-      setError('We could not confirm whether your order was placed. Check order history before retrying.');
-      setBusy(false);
-    }
-  };
+      },
+    });
+  }
 
   if (!items.length) {
     return <CheckoutEmptyCart cartError={cartError} />;
@@ -232,6 +182,7 @@ export function CheckoutForm({
       fields={
         <CheckoutFields
           branches={branches} zones={zones}
+          fieldErrors={fieldErrors}
           phoneVerificationRequired={phoneVerificationRequired}
           paymentRecipients={paymentRecipients}
           fulfillment={fulfillment}
@@ -277,6 +228,7 @@ export function CheckoutForm({
           couponInput={
             <DiscountCodeInput
               key={cartSignature}
+              fieldError={fieldErrors?.couponCode?.join(" ")}
               channel="storefront"
               appliedCode={activePreview?.code}
               items={items.map(({ variantId, quantity }) => ({ variantId, quantity }))}
@@ -286,6 +238,8 @@ export function CheckoutForm({
             />
           }
           items={cartItems}
+          itemsError={fieldErrors?.items?.join(" ")}
+          retryable={retryable}
           subtotal={subtotal}
           discountTotal={discountTotal}
           deliveryFee={deliveryFee}

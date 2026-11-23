@@ -20,7 +20,9 @@ Secured authentication and dashboard built with Next.js 16 (App Router), TypeScr
    supabase db push
    ```
 
-   Apply all nineteen migrations in filename order. Migrations `0004`–`0006` replace
+   Apply every migration in filename order, from `20240101000001_create_users_table.sql`
+   through `20240101000101_checkout_submissions.sql`. Apply migration `00101`
+   before deploying the checkout code that uses submission IDs. Migrations `0004`–`0006` replace
    the legacy capability-based roles with granular permissions; `0007` adds
    controlled audit-log clearing and `0008` disables audit entries for that action.
    Migrations `0009`–`0012` add the commerce schema, access policies, checkout
@@ -64,12 +66,17 @@ staff enters both numbers. Parts and accessories remain quantity-based.
 Transfers reduce source stock at dispatch and add it to destination stock at
 receipt. Inventory movements are visible under `/admin/products`.
 
-3. In the Supabase dashboard, set **Authentication → URL Configuration**:
+3. Set `NEXT_PUBLIC_SITE_URL` to your public HTTPS origin in production, with no path, query, or fragment. On Vercel, `NEXT_PUBLIC_VERCEL_URL` can supply the origin when `NEXT_PUBLIC_SITE_URL` is unset. Keep the localhost origin for local development only.
+
+   In the Supabase dashboard, set **Authentication → URL Configuration**:
 
    - Site URL: `http://localhost:3000`
    - Redirect URLs:
      - `http://localhost:3000/auth/callback`
      - `http://localhost:3000/auth/confirm`
+
+   For a deployed environment, register the production origin and its corresponding
+   callback and confirm URLs instead.
 
 4. Create an account, then promote the first admin in the SQL editor:
 

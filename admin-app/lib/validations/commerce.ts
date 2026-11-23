@@ -4,8 +4,11 @@ const addressField = z.string().trim().max(200).nullable();
 export const customerOrderIdSchema = z.string().uuid();
 
 export const checkoutSchema = z.object({
-  customerName: z.string().trim().min(2).max(100),
-  contactNumber: z.string().trim().regex(/^[+0-9][0-9 ()-]{6,19}$/),
+  submissionId: z.string().uuid(),
+  customerName: z.string().trim()
+    .min(2, 'Enter a full name with at least 2 characters.')
+    .max(100, 'Enter a full name with no more than 100 characters.'),
+  contactNumber: z.string().trim().regex(/^[+0-9][0-9 ()-]{6,19}$/, 'Enter a valid contact number.'),
   fulfillment: z.enum(['pickup', 'delivery']),
   branchId: z.string().uuid().nullable(),
   deliveryZoneId: z.string().uuid().nullable(),
@@ -76,6 +79,8 @@ export const checkoutSchema = z.object({
     });
   }
 });
+
+export type CheckoutInput = z.input<typeof checkoutSchema>;
 
 export const paymentProofSubmissionSchema = z.object({
   orderId: customerOrderIdSchema,

@@ -11,6 +11,7 @@ import {
 
 type CommerceOrderResult = ActionResult<{ orderId: string }> & {
   requiresLogin?: boolean;
+  retryable?: boolean;
 };
 
 async function removeUnlinkedDocuments(
@@ -59,7 +60,6 @@ export async function createCommerceOrderAction(
   }
 
   const input = validation.data;
-  const paths = input.documents.map((document) => document.objectPath);
   let orderId: string | null = null;
   try {
     const { data, error } = await supabase.rpc('create_commerce_order_with_discount', {
@@ -91,35 +91,23 @@ export async function createCommerceOrderAction(
         object_path: objectPath,
       })),
       p_coupon_code: input.couponCode,
+      p_submission_id: input.submissionId,
     });
-    if (error) {
-      const cleanupSucceeded = await removeUnlinkedDocuments(supabase, paths);
-      return {
-        success: false,
-        error: cleanupSucceeded
-          ? error.message
-          : 'The order was not placed. Some uploaded files may remain in private storage; contact the store before retrying.',
-      };
+    if (error?.code === 'P0001') {
+      return { success: false, error: error.message };
     }
-    orderId = data;
+    if (error) console.error('Could not confirm the checkout RPC result.', error);
+    orderId = error ? null : data;
   } catch (error) {
-    console.error('Could not create the commerce order.', error);
-    const cleanupSucceeded = await removeUnlinkedDocuments(supabase, paths);
-    return {
-      success: false,
-      error: cleanupSucceeded
-        ? 'The order could not be placed. Please try again.'
-        : 'The order was not placed. Some uploaded files may remain in private storage; contact the store before retrying.',
-    };
+    console.error('Could not confirm the checkout RPC result.', error);
   }
 
   if (!orderId) {
-    const cleanupSucceeded = await removeUnlinkedDocuments(supabase, paths);
+    // The database may have committed. Keep the uploads available to this attempt.
     return {
       success: false,
-      error: cleanupSucceeded
-        ? 'The order could not be confirmed. Please try again.'
-        : 'The order was not placed. Some uploaded files may remain in private storage; contact the store before retrying.',
+      retryable: true,
+      error: 'We could not confirm your order. Retry with the same checkout details.',
     };
   }
 

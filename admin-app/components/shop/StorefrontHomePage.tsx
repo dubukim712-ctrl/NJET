@@ -4,8 +4,10 @@ import Link from "next/link";
 import { ArrowDown, ArrowRight, Bike, MapPin, ShieldCheck } from "lucide-react";
 import { ProductCard } from "@/components/shop/ProductCard";
 import { ProductImage } from "@/components/shop/ProductImage";
+import { StorefrontAboutSection } from "@/components/shop/StorefrontAboutSection";
 import { StorefrontBranchesSection } from "@/components/shop/StorefrontBranchesSection";
 import { StorefrontCatalogLoading } from "@/components/shop/StorefrontCatalogLoading";
+import { useStorefrontBusinessInfoQuery } from "@/data/commerce/storefront-business-info-client";
 import {
   StorefrontCatalogQueryError,
   useStorefrontCatalogQuery,
@@ -14,6 +16,7 @@ import { useSearchParams } from "next/dist/client/components/navigation";
 
 export function StorefrontHomePage() {
   const query = useStorefrontCatalogQuery();
+  const businessInfoQuery = useStorefrontBusinessInfoQuery();
   const catalog = query.data ?? null;
   const error =
     !catalog && query.error instanceof StorefrontCatalogQueryError
@@ -236,6 +239,9 @@ export function StorefrontHomePage() {
         )}
       </section>
 
+      <StorefrontAboutSection
+        imageUrl={businessInfoQuery.data?.aboutImageUrl ?? null}
+      />
       <StorefrontBranchesSection />
     </div>
   );

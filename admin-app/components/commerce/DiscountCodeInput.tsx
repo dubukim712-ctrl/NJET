@@ -13,6 +13,7 @@ export function DiscountCodeInput({
   items,
   phone,
   appliedCode,
+  fieldError,
   disabled,
   onApplied,
   onCleared,
@@ -21,6 +22,7 @@ export function DiscountCodeInput({
   items: { variantId: string; quantity: number }[];
   phone?: string;
   appliedCode?: string;
+  fieldError?: string;
   disabled: boolean;
   onApplied: (code: string, rows: DiscountQuoteRow[]) => void;
   onCleared: () => void;
@@ -71,6 +73,7 @@ export function DiscountCodeInput({
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
         <Input
           label="Coupon code"
+          error={fieldError}
           value={code}
           onChange={(event) => {
             setCode(event.target.value.toUpperCase());

@@ -93,6 +93,7 @@ export function CustomerOrdersQuery() {
     );
   }
 
+  const orders = query.data.pages.flatMap((page) => page.orders);
   const errorMessage =
     query.error instanceof CustomerOrdersQueryError
       ? query.error.message
@@ -102,7 +103,7 @@ export function CustomerOrdersQuery() {
       <div className="flex justify-end">
         <RealtimeStatus state={realtimeState} />
       </div>
-      {query.isError && (
+      {query.isRefetchError && (
         <div className="space-y-2" role="alert">
           <p className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
             {errorMessage}
@@ -119,9 +120,9 @@ export function CustomerOrdersQuery() {
         </div>
       )}
 
-      {query.data.length ? (
+      {orders.length ? (
         <ul className="space-y-4">
-          {query.data.map((order) => (
+          {orders.map((order) => (
             <CustomerOrderCard
               key={order.id}
               order={order}
@@ -142,6 +143,22 @@ export function CustomerOrdersQuery() {
             Browse products
           </Link>
         </section>
+      )}
+      {(query.hasNextPage || query.isFetchNextPageError) && (
+        <div className="space-y-2 text-center">
+          {query.isFetchNextPageError && (
+            <p role="alert" className="text-sm text-destructive">{errorMessage}</p>
+          )}
+          <Button
+            type="button"
+            variant="outline"
+            loading={query.isFetchingNextPage}
+            disabled={query.isFetching}
+            onClick={() => { void query.fetchNextPage({ cancelRefetch: false }); }}
+          >
+            {query.isFetchNextPageError ? "Retry loading older orders" : "Load older orders"}
+          </Button>
+        </div>
       )}
     </div>
   );

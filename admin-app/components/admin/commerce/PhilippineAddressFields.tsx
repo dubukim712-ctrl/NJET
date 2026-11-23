@@ -29,12 +29,14 @@ function toOptions(
 
 export function PhilippineAddressFields({
   values,
+  fieldErrors,
   onChange,
   disabled,
   required = false,
   enableLocationAutofill = true,
 }: {
   values: PhilippineAddressValues;
+  fieldErrors?: Partial<Record<keyof PhilippineAddressValues, string[]>>;
   onChange: (values: PhilippineAddressValues) => void;
   disabled: boolean;
   required?: boolean;
@@ -123,6 +125,7 @@ export function PhilippineAddressFields({
       <div className="grid gap-4 sm:grid-cols-2">
         <Input
           label="Street address"
+          error={fieldErrors?.addressLine1?.join(' ')}
           helperText="Enter the house or building number and street."
           containerClassName="sm:col-span-2"
           required={required}
@@ -131,6 +134,7 @@ export function PhilippineAddressFields({
         />
         <SearchableSelect
           label="Province"
+          error={fieldErrors?.province?.join(' ')}
           value={provinceCode}
           options={provinces}
           disabled={disabled || provinceLoading || Boolean(provinceError)}
@@ -141,6 +145,7 @@ export function PhilippineAddressFields({
         />
         <SearchableSelect
           label="City / municipality"
+          error={fieldErrors?.city?.join(' ')}
           value={cityCode}
           options={cities}
           disabled={disabled || !provinceCode || cityLoading || Boolean(cityError)}
@@ -151,6 +156,7 @@ export function PhilippineAddressFields({
         />
         <SearchableSelect
           label="Barangay"
+          error={fieldErrors?.barangay?.join(' ')}
           value={barangayCode}
           options={barangays}
           disabled={disabled || !cityCode || barangayLoading || Boolean(barangayError)}
@@ -165,6 +171,7 @@ export function PhilippineAddressFields({
         />
         <Input
           label="Postal code (optional)"
+          error={fieldErrors?.postalCode?.join(' ')}
           helperText="Enter the postal code if you know it."
           maxLength={20}
           value={values.postalCode}

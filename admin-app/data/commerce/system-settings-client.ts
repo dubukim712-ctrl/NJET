@@ -20,6 +20,7 @@ export type SettingsAsset =
   | { kind: 'template'; path: string }
   | { kind: 'receipt-template'; path: string }
   | { kind: 'business-logo'; path: string }
+  | { kind: 'about-image'; path: string }
   | { kind: 'payment-qr'; provider: PaymentProvider; path: string };
 
 export async function uploadSystemSettingsAsset(
@@ -39,13 +40,18 @@ export async function uploadSystemSettingsAsset(
     bucket = receiptTemplate ? RECEIPT_TEMPLATE_BUCKET : TEMPLATE_BUCKET;
     path = `${receiptTemplate ? 'receipt-templates' : 'templates'}/${crypto.randomUUID()}.pdf`;
     contentType = 'application/pdf';
-  } else if (kind === 'business-logo') {
+  } else if (kind === 'business-logo' || kind === 'about-image') {
     const extension = IMAGE_EXTENSIONS[file.type];
     if (!extension || file.size < 1 || file.size > MAX_IMAGE_SIZE) {
-      return { path: null, error: 'Use a JPG, PNG, or WebP logo no larger than 5 MB.' };
+      return {
+        path: null,
+        error: kind === 'about-image'
+          ? 'Use a JPG, PNG, or WebP photo no larger than 5 MB.'
+          : 'Use a JPG, PNG, or WebP logo no larger than 5 MB.',
+      };
     }
     bucket = BRANDING_BUCKET;
-    path = `logos/${crypto.randomUUID()}.${extension}`;
+    path = `${kind === 'about-image' ? 'about' : 'logos'}/${crypto.randomUUID()}.${extension}`;
     contentType = file.type;
   } else {
     const extension = IMAGE_EXTENSIONS[file.type];
