@@ -80,6 +80,20 @@ function formatIssuedAt(value: string) {
   }).format(new Date(value)).replace(/[^\x20-\x7e]/g, ' ');
 }
 
+function formatReceiptDateParts(value: string) {
+  const parts = new Intl.DateTimeFormat('en-PH', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+    timeZone: 'Asia/Manila',
+  }).formatToParts(new Date(value));
+  return {
+    day: parts.find((part) => part.type === 'day')?.value ?? '',
+    month: parts.find((part) => part.type === 'month')?.value ?? '',
+    year: parts.find((part) => part.type === 'year')?.value ?? '',
+  };
+}
+
 function paymentLabel(method: string, provider: string | null) {
   const label = method.replaceAll('_', ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
   const paymentProvider = provider?.replaceAll('_', ' ')
@@ -154,6 +168,8 @@ export function buildSalesReceiptData({
     order.province,
     order.postal_code,
   ].filter(Boolean).join(', ');
+  const receiptDate = order.completed_at ?? order.updated_at;
+  const dateParts = formatReceiptDateParts(receiptDate);
 
   return {
     businessName: business.business_name,
@@ -162,8 +178,11 @@ export function buildSalesReceiptData({
     businessEmail: business.email,
     receiptNumber: invoiceNo ?? order.order_number,
     orderNumber: order.order_number,
-    issuedAt: formatIssuedAt(order.completed_at ?? order.updated_at),
-    purchaseDate: formatIssuedAt(order.completed_at ?? order.updated_at),
+    issuedAt: formatIssuedAt(receiptDate),
+    dateDay: dateParts.day,
+    dateMonth: dateParts.month,
+    dateYear: dateParts.year,
+    purchaseDate: formatIssuedAt(receiptDate),
     customerName: order.customer_name,
     contactNumber: order.contact_number,
     ownerName: order.customer_name,

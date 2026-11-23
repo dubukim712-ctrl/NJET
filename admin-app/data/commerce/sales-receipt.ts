@@ -1,4 +1,13 @@
-import { PDFDocument, PDFImage, TextAlignment, ImageAlignment, rgb } from 'pdf-lib';
+import {
+  PDFButton,
+  PDFDocument,
+  PDFImage,
+  PDFTextField,
+  TextAlignment,
+  ImageAlignment,
+  rgb,
+} from 'pdf-lib';
+import type { PDFField } from 'pdf-lib';
 import type { SalesReceiptImage } from '@/data/commerce/sales-receipt-images';
 import {
   SALES_RECEIPT_TEMPLATE_FIELDS,
@@ -13,6 +22,9 @@ export type SalesReceiptData = {
   receiptNumber: string;
   orderNumber: string;
   issuedAt: string;
+  dateDay: string;
+  dateMonth: string;
+  dateYear: string;
   purchaseDate: string;
   customerName: string;
   contactNumber: string;
@@ -71,11 +83,9 @@ function multiline(value: string) {
 
 function drawImageInWidget(
   document: PDFDocument,
-  form: ReturnType<PDFDocument['getForm']>,
-  fieldName: string,
+  field: PDFField,
   image: PDFImage
 ) {
-  const field = form.getField(fieldName);
   const widgets = field.acroField.getWidgets();
   for (const widget of widgets) {
     const pageRef = widget.P();
@@ -144,21 +154,21 @@ export async function buildSalesReceiptFromTemplate(
     );
   }
 
-  const availableFields = new Set(form.getFields().map((field) => field.getName()));
+  const formFields = form.getFields();
+  const fieldsByName = new Map<string, PDFField[]>();
+  for (const field of formFields) {
+    const sameNameFields = fieldsByName.get(field.getName()) ?? [];
+    sameNameFields.push(field);
+    fieldsByName.set(field.getName(), sameNameFields);
+  }
+  const availableFields = new Set(fieldsByName.keys());
   const imageFieldNames = Object.values(SALES_RECEIPT_TEMPLATE_IMAGE_FIELDS);
   for (const fieldName of imageFieldNames) {
-    if (!availableFields.has(fieldName)) continue;
-    try {
-      form.getTextField(fieldName);
-    } catch (error) {
-      try {
-        form.getButton(fieldName);
-      } catch {
-        throw new SalesReceiptTemplateError(
-          `The optional "${fieldName}" image area must be a text field or push-button image control.`,
-          error
-        );
-      }
+    for (const field of fieldsByName.get(fieldName) ?? []) {
+      if (field instanceof PDFTextField || field instanceof PDFButton) continue;
+      throw new SalesReceiptTemplateError(
+        `The optional "${fieldName}" image area must be a text field or push-button image control.`
+      );
     }
   }
 
@@ -170,8 +180,11 @@ export async function buildSalesReceiptFromTemplate(
     [SALES_RECEIPT_TEMPLATE_FIELDS.receiptNumber, data.receiptNumber],
     [SALES_RECEIPT_TEMPLATE_FIELDS.orderNumber, data.orderNumber],
     [SALES_RECEIPT_TEMPLATE_FIELDS.issuedAt, data.issuedAt],
+    [SALES_RECEIPT_TEMPLATE_FIELDS.dateDay, data.dateDay],
+    [SALES_RECEIPT_TEMPLATE_FIELDS.dateMonth, data.dateMonth],
+    [SALES_RECEIPT_TEMPLATE_FIELDS.dateYear, data.dateYear],
     [SALES_RECEIPT_TEMPLATE_FIELDS.purchaseDate, data.purchaseDate],
-    [SALES_RECEIPT_TEMPLATE_FIELDS.customerName, data.customerName],
+    [SALES_RECEIPT_TEMPLATE_FIELDS.customerName, data.customerName.toUpperCase()],
     [SALES_RECEIPT_TEMPLATE_FIELDS.contactNumber, data.contactNumber],
     [SALES_RECEIPT_TEMPLATE_FIELDS.ownerName, data.ownerName],
     [SALES_RECEIPT_TEMPLATE_FIELDS.ownerAddress, data.ownerAddress],
@@ -216,28 +229,25 @@ export async function buildSalesReceiptFromTemplate(
   ]);
 
   for (const [fieldName, value] of values) {
-    if (!availableFields.has(fieldName)) continue;
-    let field: ReturnType<typeof form.getTextField>;
-    try {
-      field = form.getTextField(fieldName);
-    } catch (error) {
-      throw new SalesReceiptTemplateError(
-        `The "${fieldName}" sales receipt field must be a text field.`,
-        error
-      );
-    }
-    if (multilineFields.has(fieldName) && !field.isMultiline()) {
-      throw new SalesReceiptTemplateError(
-        `The ${fieldName} sales receipt field must be multiline.`
-      );
-    }
-    try {
-      field.setText(multilineFields.has(fieldName) ? multiline(value) : oneLine(value));
-    } catch (error) {
-      throw new SalesReceiptTemplateError(
-        `The "${fieldName}" sales receipt field could not accept its value.`,
-        error
-      );
+    for (const field of fieldsByName.get(fieldName) ?? []) {
+      if (!(field instanceof PDFTextField)) {
+        throw new SalesReceiptTemplateError(
+          `The "${fieldName}" sales receipt field must be a text field.`
+        );
+      }
+      if (multilineFields.has(fieldName) && !field.isMultiline()) {
+        throw new SalesReceiptTemplateError(
+          `The ${fieldName} sales receipt field must be multiline.`
+        );
+      }
+      try {
+        field.setText(multilineFields.has(fieldName) ? multiline(value) : oneLine(value));
+      } catch (error) {
+        throw new SalesReceiptTemplateError(
+          `The "${fieldName}" sales receipt field could not accept its value.`,
+          error
+        );
+      }
     }
   }
 
@@ -249,15 +259,15 @@ export async function buildSalesReceiptFromTemplate(
     for (const [fieldName, image] of imageFields) {
       if (!image || !availableFields.has(fieldName)) continue;
       const embeddedImage = await document.embedJpg(image.bytes);
-      drawImageInWidget(document, form, fieldName, embeddedImage);
-      try {
-        const field = form.getButton(fieldName);
-        field.setImage(embeddedImage, ImageAlignment.Center);
-      } catch {
-        const field = form.getTextField(fieldName);
-        field.setText('');
-        field.setAlignment(TextAlignment.Center);
-        field.setImage(embeddedImage);
+      for (const field of fieldsByName.get(fieldName) ?? []) {
+        drawImageInWidget(document, field, embeddedImage);
+        if (field instanceof PDFButton) {
+          field.setImage(embeddedImage, ImageAlignment.Center);
+        } else if (field instanceof PDFTextField) {
+          field.setText('');
+          field.setAlignment(TextAlignment.Center);
+          field.setImage(embeddedImage);
+        }
       }
     }
     form.flatten();
@@ -282,6 +292,9 @@ export async function validateSalesReceiptTemplate(
     receiptNumber: 'SAMPLE-000001',
     orderNumber: 'NJET-000001',
     issuedAt: '15 November 2026',
+    dateDay: '15',
+    dateMonth: 'Nov',
+    dateYear: '2026',
     purchaseDate: '15 November 2026',
     customerName: 'Sample customer',
     contactNumber: '0000000000',

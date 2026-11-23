@@ -29,7 +29,15 @@ export function SalesReceiptTemplateSettings({
   const invalidateSettings = useInvalidateAdminSystemSettingsQuery();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const fieldNames = Object.values(SALES_RECEIPT_TEMPLATE_FIELDS).join(', ');
+  const duplicateFieldAliases = new Set([
+    'purchase_date',
+    'owner_name',
+    'invoice_number',
+    'payment_mode',
+  ]);
+  const fieldNames = Object.values(SALES_RECEIPT_TEMPLATE_FIELDS)
+    .filter((name) => !duplicateFieldAliases.has(name))
+    .join(', ');
   const imageFieldNames = Object.values(
     SALES_RECEIPT_TEMPLATE_IMAGE_FIELDS
   ).join(', ');

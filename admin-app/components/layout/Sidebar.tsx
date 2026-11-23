@@ -243,7 +243,7 @@ export function Sidebar({ user, className, onNavigate }: SidebarProps) {
       )}
       aria-label="Sidebar navigation"
     >
-      <nav className="flex-1 space-y-4 overflow-y-auto p-3">
+      <nav className="min-h-0 flex-1 space-y-4 overflow-y-auto p-3">
         {!collapsed && (
           <p className="px-3 pb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Administration

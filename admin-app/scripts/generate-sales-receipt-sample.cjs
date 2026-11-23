@@ -13,8 +13,11 @@ const values = {
   receipt_number: 'SI-000042',
   order_number: 'NJET-000042',
   issued_at: 'November 15, 2026',
+  date_day: '15',
+  date_month: 'Nov',
+  date_year: '2026',
   purchase_date: 'November 15, 2026',
-  customer_name: 'Sample Buyer',
+  customer_name: 'SAMPLE BUYER',
   contact_number: '0917 111 1111',
   owner_name: 'Sample Buyer',
   owner_address: '45 Sample Road, Imus, Cavite 4103',
@@ -157,6 +160,11 @@ async function main() {
     { label: 'Order no.', name: 'order_number' },
     { label: 'Issued at', name: 'issued_at' },
     { label: 'Date of purchase', name: 'purchase_date' },
+  ]);
+  addRow([
+    { label: 'Day', name: 'date_day' },
+    { label: 'Month', name: 'date_month' },
+    { label: 'Year', name: 'date_year' },
   ]);
   addRow([
     { label: 'Product type', name: 'product_type' },

@@ -55,8 +55,8 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
               onClick={() => setMobileOpen(false)}
               aria-label="Close navigation menu"
             />
-            <div className="absolute inset-y-0 left-0 flex w-64 flex-col bg-background shadow-xl">
-              <div className="flex h-16 items-center justify-between border-b px-4">
+            <div className="absolute inset-y-0 left-0 flex w-64 flex-col overflow-hidden bg-background shadow-xl">
+              <div className="flex h-16 shrink-0 items-center justify-between border-b px-4">
                 <span className="text-lg font-bold">Admin App</span>
                 <button
                   type="button"
@@ -69,7 +69,7 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
               </div>
               <Sidebar
                 user={user}
-                className="flex h-full w-full border-r-0"
+                className="flex min-h-0 w-full flex-1 border-r-0"
                 onNavigate={() => setMobileOpen(false)}
               />
             </div>
