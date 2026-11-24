@@ -23,6 +23,7 @@ interface CheckoutFieldsProps extends Omit<
   'policyVersions' | 'customerPhoneNumber' | 'customerPhoneVerified'
 > {
   fieldErrors?: Record<string, string[]>;
+  initialCustomerName: string;
   initialPhoneNumber: string | null;
   initialVerifiedPhoneNumber: string | null;
   fulfillment: Fulfillment;
@@ -78,6 +79,7 @@ export function CheckoutFields(props: CheckoutFieldsProps) {
         <div className="grid gap-4 sm:grid-cols-2">
           <Input
             name="customerName"
+            defaultValue={props.initialCustomerName}
             error={errorFor("customerName")}
             label="Full name"
             autoComplete="name"

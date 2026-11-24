@@ -7,7 +7,13 @@ import {
   useCheckoutOptionsQuery,
 } from '@/data/commerce/checkout-options-client';
 
-export function CheckoutOptionsQuery({ userId }: { userId: string }) {
+export function CheckoutOptionsQuery({
+  userId,
+  initialCustomerName,
+}: {
+  userId: string;
+  initialCustomerName: string;
+}) {
   const query = useCheckoutOptionsQuery(userId);
 
   if (!query.data && query.isPending) {
@@ -55,7 +61,7 @@ export function CheckoutOptionsQuery({ userId }: { userId: string }) {
           Could not refresh checkout options. Cached options are still shown.
         </p>
       )}
-      <CheckoutForm {...query.data} />
+      <CheckoutForm {...query.data} initialCustomerName={initialCustomerName} />
     </div>
   );
 }

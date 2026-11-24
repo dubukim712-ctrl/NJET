@@ -24,7 +24,8 @@ export function CheckoutForm({
   phoneVerificationRequired,
   customerPhoneNumber,
   customerPhoneVerified,
-}: CheckoutOptions) {
+  initialCustomerName,
+}: CheckoutOptions & { initialCustomerName: string }) {
   const { user } = useAuth();
   const { items, error: cartError, clear } = useCart();
   const [fulfillment, setFulfillment] = useState<Fulfillment>('pickup');
@@ -193,6 +194,7 @@ export function CheckoutForm({
           onlineAvailable={onlineAvailable}
           cashUnavailable={cashUnavailable}
           homeCreditDownpaymentDue={homeCreditDownpaymentDue}
+          initialCustomerName={initialCustomerName}
           initialPhoneNumber={customerPhoneNumber}
           initialVerifiedPhoneNumber={
             customerPhoneVerified ? customerPhoneNumber : null

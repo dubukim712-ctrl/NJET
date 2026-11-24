@@ -1,6 +1,7 @@
 import { CheckoutAuthNotice } from '@/components/checkout/CheckoutAuthNotice';
 import { CheckoutOptionsQuery } from '@/components/checkout/CheckoutOptionsQuery';
 import { getAuthContext } from '@/data/auth/guards';
+import { resolveCheckoutCustomerName } from '@/data/commerce/checkout-customer-name';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 
 export const metadata = { title: 'Checkout' };
@@ -22,7 +23,11 @@ export default async function CheckoutPage() {
       ) : !hasCustomerAccess ? (
         <CheckoutAuthNotice needsSignIn={false} />
       ) : (
-        <CheckoutOptionsQuery userId={auth.user.id} />
+        <CheckoutOptionsQuery
+          key={auth.user.id}
+          userId={auth.user.id}
+          initialCustomerName={resolveCheckoutCustomerName(auth.profile?.full_name, auth.user.user_metadata)}
+        />
       )}
     </div>
   );
