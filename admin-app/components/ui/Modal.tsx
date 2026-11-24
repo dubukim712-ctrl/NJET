@@ -42,10 +42,10 @@ export function Modal({
       onClick={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}
-      className={`fixed inset-0 m-auto max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] overflow-visible rounded-xl border-0 bg-transparent p-0 text-card-foreground shadow-none backdrop:bg-black/50 ${width}`}
+      className={`fixed inset-0 m-auto max-h-[90dvh] w-[calc(100%-2rem)] overflow-visible rounded-xl border-0 bg-transparent p-0 text-card-foreground shadow-none backdrop:bg-black/50 ${width}`}
     >
-      <div className="max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-xl border bg-card text-card-foreground shadow-xl">
-        <header className="sticky top-0 z-10 flex items-center justify-between gap-4 border-b bg-card px-5 py-4">
+      <div className="max-h-[90dvh] overflow-y-auto rounded-xl border bg-card text-card-foreground shadow-xl">
+        <header className="sticky top-0 z-10 flex items-center justify-between gap-4 border-b bg-card px-4 py-3 sm:px-5 sm:py-4">
           <h2 id={titleId} className="text-lg font-semibold">
             {title}
           </h2>
@@ -58,7 +58,7 @@ export function Modal({
             <X className="size-5" aria-hidden="true" />
           </button>
         </header>
-        <div className="p-5 sm:p-6">{children}</div>
+        <div className="p-4 sm:p-6">{children}</div>
       </div>
     </dialog>
   );

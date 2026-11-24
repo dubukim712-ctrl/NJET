@@ -113,7 +113,7 @@ export function ProductCategoryManager({
 }) {
   return (
     <>
-      <Button type="button" variant="outline" size="sm" onClick={() => onOpenChange(true)}>
+      <Button type="button" variant="outline" size="sm" className="hidden sm:inline-flex" onClick={() => onOpenChange(true)}>
         Manage main categories
       </Button>
       <Modal

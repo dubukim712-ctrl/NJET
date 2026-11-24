@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { MoreVertical, Pencil, Plus, Search } from "lucide-react";
 import { ProductCategoryManager } from "@/components/admin/commerce/ProductCategoryManager";
 import { ProductEditor } from "@/components/admin/commerce/ProductEditor";
@@ -46,6 +46,8 @@ export function ProductCatalogTab({
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const closeModal = () => setModal(null);
+  const catalogActionsRef = useRef<HTMLButtonElement>(null);
+  const openAfterMenu = useRef<(() => void) | null>(null);
   const categoryById = new Map(
     categories.map((category) => [category.id, category]),
   );
@@ -74,7 +76,7 @@ export function ProductCatalogTab({
         <h2 className="text-xl font-semibold">Product catalog</h2>
         {canManageProducts && (
           <>
-            <div className="hidden flex-wrap gap-2 sm:flex">
+            <div className="flex flex-wrap gap-2">
               <ProductCategoryManager
                 categories={categories}
                 open={categoryManagerOpen}
@@ -86,7 +88,7 @@ export function ProductCatalogTab({
                 open={subcategoryManagerOpen}
                 onOpenChange={setSubcategoryManagerOpen}
               />
-              <Button type="button" size="sm" onClick={onCreateProduct}>
+              <Button type="button" size="sm" className="hidden sm:inline-flex" onClick={onCreateProduct}>
                 <Plus className="mr-1 size-4" aria-hidden="true" />
                 Create product
               </Button>
@@ -98,28 +100,40 @@ export function ProductCatalogTab({
                   variant="secondary"
                   size="icon"
                   className="h-11 w-11 sm:hidden"
+                  ref={catalogActionsRef}
                   aria-label="Product catalog actions"
                 >
                   <MoreVertical className="size-5" aria-hidden="true" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuContent
+                align="end"
+                className="w-56"
+                onCloseAutoFocus={(event) => {
+                  const openDialog = openAfterMenu.current;
+                  openAfterMenu.current = null;
+                  if (!openDialog) return;
+                  event.preventDefault();
+                  catalogActionsRef.current?.focus();
+                  openDialog();
+                }}
+              >
                 <DropdownMenuItem
                   className="min-h-11 cursor-pointer"
-                  onSelect={() => setCategoryManagerOpen(true)}
+                  onSelect={() => { openAfterMenu.current = () => setCategoryManagerOpen(true); }}
                 >
                   Manage main categories
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   className="min-h-11 cursor-pointer"
-                  onSelect={() => setSubcategoryManagerOpen(true)}
+                  onSelect={() => { openAfterMenu.current = () => setSubcategoryManagerOpen(true); }}
                 >
                   Manage subcategories
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   className="min-h-11 cursor-pointer"
-                  onSelect={onCreateProduct}
+                  onSelect={() => { openAfterMenu.current = onCreateProduct; }}
                 >
                   <Plus className="mr-2 size-4" aria-hidden="true" />
                   Create product
@@ -205,9 +219,9 @@ export function ProductCatalogTab({
                               type="button"
                               className="flex min-h-11 min-w-11 w-full items-center gap-2 rounded-md px-3 text-left hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                               onClick={(event) => {
-                                event.currentTarget
-                                  .closest("details")
-                                  ?.removeAttribute("open");
+                                const menu = event.currentTarget.closest("details");
+                                menu?.querySelector("summary")?.focus();
+                                menu?.removeAttribute("open");
                                 setModal({ kind: "product", product });
                               }}
                             >

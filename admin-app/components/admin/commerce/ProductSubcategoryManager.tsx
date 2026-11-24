@@ -132,7 +132,7 @@ export function ProductSubcategoryManager({
 }) {
   return (
     <>
-      <Button type="button" variant="outline" size="sm" onClick={() => onOpenChange(true)}>
+      <Button type="button" variant="outline" size="sm" className="hidden sm:inline-flex" onClick={() => onOpenChange(true)}>
         Manage subcategories
       </Button>
       <Modal
