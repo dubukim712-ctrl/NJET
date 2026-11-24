@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter, useSearchParams } from "next/navigation";
 import { AlertCircle, Loader2, Mail } from "lucide-react";
 import { toast } from "sonner";
+import { addSignInNotice } from "@/lib/auth-sign-in-notice";
 import { loginSchema, type LoginInput } from "@/lib/validations/auth";
 import { loginAction } from "@/data/actions/auth";
 import { Input } from "@/components/ui/Input";
@@ -49,8 +50,7 @@ export function LoginForm() {
     const result = await loginAction(formData);
 
     if (result.success) {
-      toast.success("Welcome back!");
-      window.location.assign(result.data.redirectTo);
+      window.location.assign(addSignInNotice(new URL(result.data.redirectTo, window.location.origin)));
     } else if (result.verificationRequired) {
       rememberVerificationEmail(data.email);
       toast.info("Verify your email to finish signing in.");

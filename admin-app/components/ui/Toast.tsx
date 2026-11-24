@@ -1,10 +1,10 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { Toaster, toast, type ToasterProps } from "sonner";
 
-export type ToastProviderProps = ToasterProps;
+export type ToastProviderProps = ToasterProps & { children?: ReactNode };
 
 function useToastHost() {
   const [host, setHost] = useState<HTMLDivElement | null>(null);
@@ -61,6 +61,7 @@ export function ToastProvider({
   visibleToasts = 4,
   mobileOffset = { bottom: 16, left: 16, right: 16 },
   toastOptions,
+  children,
   ...props
 }: ToastProviderProps) {
   const { host, attachHost } = useToastHost();
@@ -89,7 +90,7 @@ export function ToastProvider({
   return (
     <>
       <span hidden ref={attachHost} />
-      {host && createPortal(toaster, host)}
+      {host && createPortal(<>{toaster}{children}</>, host)}
     </>
   );
 }

@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { AuthSignInNotice } from "@/components/auth/AuthSignInNotice";
 import { ToastProvider } from "@/components/ui/Toast";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { CartProvider } from "@/components/cart/CartProvider";
@@ -64,8 +65,10 @@ export default async function RootLayout({
           <CartProvider>
             <QueryProvider>{children}</QueryProvider>
           </CartProvider>
-          <ToastProvider position="top-right" visibleToasts={3} />
         </AuthProvider>
+        <ToastProvider position="top-right" visibleToasts={3}>
+          <AuthSignInNotice signedIn={Boolean(user)} />
+        </ToastProvider>
       </body>
     </html>
   );

@@ -15,7 +15,6 @@ export function SignOutButton() {
     setLoading(true);
     try {
       await signOut();
-      toast.success('Signed out.');
       router.push('/login');
       router.refresh();
     } catch {

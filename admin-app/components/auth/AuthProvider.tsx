@@ -9,6 +9,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { toast } from 'sonner';
 import { createClient } from '@/data/supabase/client';
 import type { UserProfile } from '@/types/database';
 
@@ -55,6 +56,7 @@ export function AuthProvider({
       : null
   );
   const userId = user?.id;
+  const signOutPending = useRef<Promise<void> | null>(null);
 
   useEffect(() => {
     const supabase = createClient();
@@ -184,9 +186,21 @@ export function AuthProvider({
   }, [userId]);
 
   const signOut = useCallback(async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    setUser(null);
+    if (signOutPending.current) return signOutPending.current;
+
+    const signOutRequest = (async () => {
+      const { error } = await createClient().auth.signOut();
+      if (error) throw error;
+      setUser(null);
+      toast.success('Signed out.', { id: 'auth-sign-out' });
+    })();
+    signOutPending.current = signOutRequest;
+
+    try {
+      await signOutRequest;
+    } finally {
+      signOutPending.current = null;
+    }
   }, []);
 
   const refreshUser = useCallback(async () => {

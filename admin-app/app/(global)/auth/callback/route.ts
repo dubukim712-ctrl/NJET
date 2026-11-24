@@ -1,3 +1,4 @@
+import { addSignInNotice } from '@/lib/auth-sign-in-notice';
 import { NextResponse, type NextRequest } from 'next/server';
 import type { EmailOtpType } from '@supabase/supabase-js';
 import { createClient } from '@/data/supabase/server';
@@ -96,7 +97,8 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      return NextResponse.redirect(new URL(destination, origin));
+      const destinationUrl = new URL(destination, origin);
+      return NextResponse.redirect(isOAuthCallback && user ? addSignInNotice(destinationUrl) : destinationUrl);
     }
   } catch {
     // Fall through to the error redirect below.

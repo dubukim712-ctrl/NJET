@@ -40,7 +40,6 @@ export function UserNav({ user, showHelp = false }: UserNavProps) {
   const handleLogout = async () => {
     try {
       await signOut();
-      toast.success("Signed out.");
       router.push("/login");
       router.refresh();
     } catch {
