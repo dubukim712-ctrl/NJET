@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/components/auth/AuthProvider";
@@ -24,8 +24,16 @@ const CUSTOMER_ORDER_REALTIME_TABLES: readonly RealtimeTable[] = [
   "order_receipts",
 ];
 
+const statusFilters = [
+  { id: "all", label: "All" },
+  { id: "active", label: "Active" },
+  { id: "completed", label: "Completed" },
+  { id: "closed", label: "Expired & Cancelled" },
+] as const;
+
 export function CustomerOrdersQuery() {
   const { user } = useAuth();
+  const [filter, setFilter] = useState<(typeof statusFilters)[number]["id"]>("all");
   const userId = user?.id ?? "";
   const placedOrderId = useSearchParams().get("placed") ?? undefined;
   const query = useCustomerOrdersQuery(userId);
@@ -94,6 +102,18 @@ export function CustomerOrdersQuery() {
   }
 
   const orders = query.data.pages.flatMap((page) => page.orders);
+  const visibleOrders = orders.filter(({ status }) => {
+    switch (filter) {
+      case "active":
+        return status === "awaiting_payment" || status === "awaiting_confirmation" || status === "confirmed";
+      case "completed":
+        return status === "completed";
+      case "closed":
+        return status === "expired" || status === "cancelled";
+      default:
+        return true;
+    }
+  });
   const errorMessage =
     query.error instanceof CustomerOrdersQueryError
       ? query.error.message
@@ -120,9 +140,23 @@ export function CustomerOrdersQuery() {
         </div>
       )}
 
-      {orders.length ? (
+      <div role="group" aria-label="Filter orders by status" className="flex flex-wrap gap-2">
+        {statusFilters.map(({ id, label }) => (
+          <Button
+            key={id}
+            type="button"
+            variant={filter === id ? "default" : "outline"}
+            aria-pressed={filter === id}
+            className="min-h-11 rounded-full"
+            onClick={() => setFilter(id)}
+          >
+            {label}
+          </Button>
+        ))}
+      </div>
+      {visibleOrders.length ? (
         <ul className="space-y-4">
-          {orders.map((order) => (
+          {visibleOrders.map((order) => (
             <CustomerOrderCard
               key={order.id}
               order={order}
@@ -130,6 +164,10 @@ export function CustomerOrdersQuery() {
             />
           ))}
         </ul>
+      ) : orders.length ? (
+        <p role="status" className="rounded-xl border bg-card p-5 text-center text-sm text-muted-foreground">
+          No loaded orders match this filter.{query.hasNextPage && " Load older orders to see more."}
+        </p>
       ) : (
         <section className="rounded-xl border bg-card p-8 text-center">
           <h2 className="font-semibold">No orders yet</h2>

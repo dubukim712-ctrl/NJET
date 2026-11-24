@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import Link from 'next/link';
-import { Package } from 'lucide-react';
+import { ArrowRight, Package } from 'lucide-react';
 import { OrderStatusBadge } from '@/components/commerce/OrderStatusBadge';
 import { ProductPrice } from '@/components/shop/ProductPrice';
 import { CustomerOrderReviewActions } from '@/components/dashboard/CustomerOrderReviewActions';
@@ -13,9 +13,11 @@ import { formatPhp } from '@/lib/commerce';
 export function CustomerOrderCard({
   order,
   isPlaced,
+  showDetailsLink = true,
 }: {
   order: CustomerOrder;
   isPlaced: boolean;
+  showDetailsLink?: boolean;
 }) {
   const [downloadError, setDownloadError] = useState<string | null>(null);
   const [downloading, startDownload] = useTransition();
@@ -36,12 +38,13 @@ export function CustomerOrderCard({
     });
   }
 
-  const needsPayment =
+  const noLongerDue = order.status === 'expired' || order.status === 'cancelled';
+  const needsPayment = showDetailsLink && (
     order.status === 'awaiting_payment' ||
     ((order.payment_method === 'online' ||
       (order.payment_method === 'home_credit' &&
         order.home_credit_downpayment_due_minor > 0)) &&
-      order.status === 'awaiting_confirmation');
+      order.status === 'awaiting_confirmation'));
   const reviewItems = order.status === 'completed'
     ? order.items.flatMap((item) =>
         item.productId
@@ -137,26 +140,26 @@ export function CustomerOrderCard({
           <p>
             <span className="text-muted-foreground">Reservation:</span>{' '}
             {formatPhp(order.reservation_due_minor)}
-            {order.payment_method === 'online' ? ' online' : ' at store'}
+            {noLongerDue ? ' (no longer due)' : order.payment_method === 'online' ? ' online' : ' at store'}
           </p>
         )}
         <p>
-          <span className="text-muted-foreground">Due at store:</span>{' '}
+          <span className="text-muted-foreground">{noLongerDue ? "Store payment amount:" : "Due at store:"}</span>{' '}
           {formatPhp(
             order.balance_due_minor +
               (order.payment_method === 'online' ? 0 : order.reservation_due_minor)
-          )}
+          )}{noLongerDue && ' (no longer due)'}
         </p>
         {order.online_due_minor > 0 && (
           <p>
-            <span className="text-muted-foreground">Online payment due:</span>{' '}
-            {formatPhp(order.online_due_minor)}
+            <span className="text-muted-foreground">{noLongerDue ? "Online payment amount:" : "Online payment due:"}</span>{' '}
+            {formatPhp(order.online_due_minor)}{noLongerDue && ' (no longer due)'}
           </p>
         )}
         {order.home_credit_downpayment_due_minor > 0 && (
           <p>
-            <span className="text-muted-foreground">Home Credit downpayment due:</span>{' '}
-            {formatPhp(order.home_credit_downpayment_due_minor)}
+            <span className="text-muted-foreground">{noLongerDue ? "Home Credit downpayment:" : "Home Credit downpayment due:"}</span>{' '}
+            {formatPhp(order.home_credit_downpayment_due_minor)}{noLongerDue && ' (no longer due)'}
           </p>
         )}
       </div>
@@ -201,6 +204,17 @@ export function CustomerOrderCard({
             )}
           </section>
         )}
+      {showDetailsLink && (
+        <div className="mt-3 flex justify-end">
+          <Link
+            href={`/dashboard/orders/${order.id}`}
+            className="inline-flex min-h-11 items-center gap-2 rounded-md px-2 text-sm font-semibold text-primary hover:underline focus-visible:outline-2 focus-visible:outline-ring"
+            aria-label={`View details for order ${order.order_number}`}
+          >
+            View details <ArrowRight className="size-4" aria-hidden="true" />
+          </Link>
+        </div>
+      )}
     </li>
   );
 }

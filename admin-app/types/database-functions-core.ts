@@ -1,4 +1,8 @@
 export type DatabaseCoreFunctions = {
+  customer_recent_service_bikes: {
+    Args: Record<PropertyKey, never>;
+    Returns: { make: string; model: string; serial: string | null }[];
+  };
   save_first_checkout_address: {
     Args: Omit<DatabaseCoreFunctions['save_customer_profile_contact']['Args'], 'p_phone_number'>;
     Returns: boolean;

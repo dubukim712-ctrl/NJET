@@ -5,7 +5,8 @@ import { useCallback, useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
+import type { ComponentProps } from 'react';
+import { CustomerAppointmentBikeFields } from '@/components/dashboard/CustomerAppointmentBikeFields';
 import { RealtimeStatus } from '@/components/realtime/RealtimeStatus';
 import { useServiceAvailabilityRealtime } from '@/components/realtime/useServiceAvailabilityRealtime';
 import { Select } from '@/components/ui/Select';
@@ -26,19 +27,15 @@ import {
 } from '@/lib/validations/service-appointments';
 import { useQueryClient } from '@tanstack/react-query';
 
-const EMPTY_ADDRESS: PhilippineAddressValues = {
-  addressLine1: '',
-  province: '',
-  city: '',
-  barangay: '',
-  postalCode: '',
-};
-
 function fieldError(errors: Record<string, string[] | undefined>, name: string) {
   return errors[name]?.[0];
 }
 
-export function CustomerServiceAppointmentForm() {
+export function CustomerServiceAppointmentForm({ initialPhoneNumber, initialAddress, previousBikes }: {
+  initialPhoneNumber: string;
+  initialAddress: PhilippineAddressValues;
+  previousBikes: ComponentProps<typeof CustomerAppointmentBikeFields>['previousBikes'];
+}) {
   const { user } = useAuth();
   const userId = user?.id ?? '';
   const router = useRouter();
@@ -46,10 +43,12 @@ export function CustomerServiceAppointmentForm() {
   const branchesQuery = useCustomerServiceAppointmentBranchesQuery(userId);
   const invalidate = useInvalidateServiceAppointmentsQuery();
   const [serviceMode, setServiceMode] = useState<'branch_visit' | 'home_service'>('branch_visit');
-  const [branchId, setBranchId] = useState('');
+  const [selectedBranchId, setBranchId] = useState('');
+  const branches = branchesQuery.data ?? [];
+  const branchId = branches.length === 1 ? branches[0].id : selectedBranchId;
   const [appointmentDate, setAppointmentDate] = useState('');
   const [appointmentTime, setAppointmentTime] = useState('');
-  const [address, setAddress] = useState(EMPTY_ADDRESS);
+  const [address, setAddress] = useState(initialAddress);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[] | undefined>>({});
@@ -85,7 +84,6 @@ export function CustomerServiceAppointmentForm() {
       branchId: value('branchId'),
       serviceMode,
       serviceType: value('serviceType'),
-      bikeMake: value('bikeMake'),
       bikeModel: value('bikeModel'),
       bikeSerialNumber: value('bikeSerialNumber'),
       issueDescription: value('issueDescription'),
@@ -167,7 +165,7 @@ export function CustomerServiceAppointmentForm() {
             <div className="grid gap-4 sm:grid-cols-2">
               <Select
                 name="branchId"
-                label="Service branch"
+                label="Service branch" className="min-h-11"
                 helperText="Choose the branch that will handle your request."
                 required
                 value={branchId}
@@ -183,7 +181,7 @@ export function CustomerServiceAppointmentForm() {
               </Select>
               <Select
                 name="serviceType"
-                label="Service type"
+                label="Service type" className="min-h-11"
                 helperText="Choose the main reason for the visit."
               >
                 {SERVICE_APPOINTMENT_TYPES.map((type) => (
@@ -193,7 +191,7 @@ export function CustomerServiceAppointmentForm() {
                 ))}
               </Select>
               <Select
-                label="Service mode"
+                label="Service mode" className="min-h-11"
                 helperText="Choose a branch visit or service at your address."
                 value={serviceMode}
                 onValueChange={(value) => {
@@ -201,7 +199,6 @@ export function CustomerServiceAppointmentForm() {
                     ? 'home_service'
                     : 'branch_visit';
                   setServiceMode(mode);
-                  if (mode === 'branch_visit') setAddress(EMPTY_ADDRESS);
                 }}
               >
                 <option value="branch_visit">Branch visit</option>
@@ -224,35 +221,13 @@ export function CustomerServiceAppointmentForm() {
               />
               <AppointmentContactNumberInput
                 name="contactNumber"
-                label="Contact number"
+                label="Contact number" defaultValue={initialPhoneNumber}
                 helperText="Enter up to 11 digits; staff will use this number to confirm your request."
                 autoComplete="tel"
                 required
                 error={fieldError(fieldErrors, 'contactNumber')}
               />
-              <Input
-                name="bikeMake"
-                label="Bike make"
-                helperText="Enter the manufacturer or brand."
-                required
-                maxLength={80}
-                error={fieldError(fieldErrors, 'bikeMake')}
-              />
-              <Input
-                name="bikeModel"
-                label="Bike model"
-                helperText="Enter the model name or number."
-                required
-                maxLength={100}
-                error={fieldError(fieldErrors, 'bikeModel')}
-              />
-              <Input
-                name="bikeSerialNumber"
-                label="Serial number (optional)"
-                helperText="Optional; it helps staff identify your bike."
-                maxLength={100}
-                error={fieldError(fieldErrors, 'bikeSerialNumber')}
-              />
+              <CustomerAppointmentBikeFields previousBikes={previousBikes} errors={fieldErrors} />
             </div>
             {serviceMode === 'home_service' && (
               <div className="space-y-3">

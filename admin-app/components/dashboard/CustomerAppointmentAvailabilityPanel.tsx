@@ -19,7 +19,7 @@ export function CustomerAppointmentAvailabilityPanel({
   const query = useCustomerServiceAppointmentAvailabilityQuery(userId, branchId, slotStart);
 
   return (
-    <aside className="space-y-4 rounded-xl border bg-card p-5 lg:sticky lg:top-6">
+    <aside className="self-start space-y-4 rounded-xl border bg-card p-5 lg:sticky lg:top-24">
       <header>
         <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">
           Workshop availability

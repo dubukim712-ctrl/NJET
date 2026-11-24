@@ -64,7 +64,6 @@ export function StaffServiceAppointmentForm({
       serviceType: value('serviceType'),
       customerName: value('customerName'),
       contactNumber: value('contactNumber'),
-      bikeMake: value('bikeMake'),
       bikeModel: value('bikeModel'),
       bikeSerialNumber: value('bikeSerialNumber'),
       issueDescription: value('issueDescription'),
@@ -158,8 +157,7 @@ export function StaffServiceAppointmentForm({
         </Select>
         <Input name="customerName" label="Customer name" helperText="Enter the name the customer uses." required maxLength={100} error={fieldErrors.customerName?.[0]} />
         <AppointmentContactNumberInput name="contactNumber" label="Contact number" helperText="Enter up to 11 digits for scheduling and service updates." required error={fieldErrors.contactNumber?.[0]} />
-        <Input name="bikeMake" label="Bike make" helperText="Enter the manufacturer or brand." required maxLength={80} error={fieldErrors.bikeMake?.[0]} />
-        <Input name="bikeModel" label="Bike model" helperText="Enter the model name or number." required maxLength={100} error={fieldErrors.bikeModel?.[0]} />
+        <Input name="bikeModel" label="Product / E-bike name" placeholder="e.g., Avia Cruiser, Mini Cargo, Tiger 215" required maxLength={100} error={fieldErrors.bikeModel?.[0]} />
         <Input name="bikeSerialNumber" label="Serial number (optional)" helperText="Optional; useful for identifying the bike." maxLength={100} error={fieldErrors.bikeSerialNumber?.[0]} />
         <AppointmentDateTimeFields
           date={appointmentDate}

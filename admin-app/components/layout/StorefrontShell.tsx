@@ -236,7 +236,7 @@ export function StorefrontShell({ user, children }: StorefrontShellProps) {
         </div>
       </header>
 
-      <main className="mx-auto min-h-[calc(100dvh-4rem)] max-w-7xl px-4 pt-6 pb-8 sm:px-6 sm:py-8">
+      <main className="mx-auto min-h-[calc(100dvh-4rem)] max-w-7xl px-4 pt-6 pb-[calc(9rem+env(safe-area-inset-bottom))] sm:px-6 sm:pt-8 lg:pb-24">
         <ShopFiltersProvider
           value={{
             open: shopFiltersOpen,

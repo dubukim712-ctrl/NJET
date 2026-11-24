@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Clock3, Mail, MapPin, Phone } from "lucide-react";
+import { CircleHelp, Clock3, Mail, MapPin, Phone } from "lucide-react";
 import { LegalFooterLinks } from "@/components/layout/LegalFooterLinks";
 import type { StorefrontBusinessInfo } from "@/data/commerce/system-settings";
 
@@ -16,6 +16,9 @@ export function StorefrontFooter({
   businessInfoPending: boolean;
   hasBusinessContact: boolean;
 }) {
+  const email = businessInfo?.email ?? "";
+  const domainStart = email.lastIndexOf("@") + 1;
+
   return (
     <footer className="mt-8 border-t border-primary/20 bg-primary text-primary-foreground">
       <div className="mx-auto max-w-7xl px-4 py-9 sm:px-6 sm:py-11 lg:py-12">
@@ -78,7 +81,9 @@ export function StorefrontFooter({
                         <span className="block text-xs text-primary-foreground/70">
                           Email
                         </span>
-                        <span className="break-all">{businessInfo.email}</span>
+                        <span className="break-words">
+                          {email.slice(0, domainStart)}<wbr />{email.slice(domainStart)}
+                        </span>
                       </span>
                     </a>
                   )}
@@ -104,8 +109,12 @@ export function StorefrontFooter({
                   Contact details have not been added yet.
                 </p>
               )}
-              <Link href="/help" className="mt-2 inline-flex min-h-11 items-center text-sm underline-offset-4 hover:underline focus-visible:underline">
-                Help Center
+              <Link
+                href="/help"
+                className="mt-2 flex min-h-11 items-start gap-3 py-3 text-sm underline-offset-4 hover:underline focus-visible:underline"
+              >
+                <CircleHelp className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+                <span>Help Center</span>
               </Link>
             </section>
 

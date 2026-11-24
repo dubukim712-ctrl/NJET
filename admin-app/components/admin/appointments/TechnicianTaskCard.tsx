@@ -1,5 +1,7 @@
 'use client';
 
+import { formatAppointmentBikeName } from '@/lib/appointment-bike-name';
+
 import { Button } from '@/components/ui/Button';
 import { ServiceAppointmentStatusBadge } from '@/components/appointments/ServiceAppointmentStatusBadge';
 import { AssignedServiceAppointmentWorkActions } from '@/components/admin/appointments/AssignedServiceAppointmentWorkActions';
@@ -56,7 +58,7 @@ export function TechnicianTaskCard({
         <div className="min-w-0">
           <dt className="text-xs text-muted-foreground">Bike</dt>
           <dd className="mt-0.5 break-words font-medium">
-            {appointment.bike_make} {appointment.bike_model}
+            {formatAppointmentBikeName(appointment.bike_make, appointment.bike_model)}
             {appointment.bike_serial_number && ` · ${appointment.bike_serial_number}`}
           </dd>
         </div>

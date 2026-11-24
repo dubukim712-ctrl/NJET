@@ -63,6 +63,7 @@ export function AppointmentDateTimeFields({
       />
       <Select
         label={timeLabel}
+        className="min-h-11"
         name="appointmentTime"
         value={time}
         onValueChange={(value) => onTimeChange(value)}

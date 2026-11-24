@@ -83,6 +83,7 @@ export async function getCustomerOrders(
   supabase: SupabaseClient,
   userId: string,
   cursor: CustomerOrdersCursor | null = null,
+  orderId?: string,
 ): Promise<{ data: CustomerOrdersPage | null; error: string | null }> {
   try {
     let query = supabase
@@ -96,7 +97,8 @@ export async function getCustomerOrders(
       .eq('customer_id', userId)
       .order('created_at', { ascending: false })
       .order('id', { ascending: false })
-      .limit(ORDER_PAGE_SIZE + 1);
+      .limit(orderId ? 1 : ORDER_PAGE_SIZE + 1);
+    if (orderId) query = query.eq('id', orderId);
     if (cursor) {
       // Keep the database timestamp precision and use the ID to break ties.
       query = query.or(

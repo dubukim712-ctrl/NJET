@@ -1,5 +1,7 @@
 'use client';
 
+import { formatAppointmentBikeName } from '@/lib/appointment-bike-name';
+
 import { useState, type FormEvent } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { toast } from 'sonner';
@@ -144,7 +146,7 @@ export function StaffServiceAppointmentCard({
           <div><dt className="inline text-muted-foreground">Contact: </dt><dd className="inline">{appointment.contact_number}</dd></div>
           <div><dt className="inline text-muted-foreground">Branch: </dt><dd className="inline">{appointment.branch_name}</dd></div>
           <div><dt className="inline text-muted-foreground">Service: </dt><dd className="inline capitalize">{appointment.service_type} · {appointment.service_mode.replaceAll('_', ' ')}</dd></div>
-          <div><dt className="inline text-muted-foreground">Bike: </dt><dd className="inline">{appointment.bike_make} {appointment.bike_model}{appointment.bike_serial_number ? ` · ${appointment.bike_serial_number}` : ''}</dd></div>
+          <div><dt className="inline text-muted-foreground">Bike: </dt><dd className="inline">{formatAppointmentBikeName(appointment.bike_make, appointment.bike_model)}{appointment.bike_serial_number ? ` · ${appointment.bike_serial_number}` : ''}</dd></div>
           <div><dt className="inline text-muted-foreground">Preferred: </dt><dd className="inline">{displayDate(appointment.preferred_start_at)}</dd></div>
           <div><dt className="inline text-muted-foreground">Scheduled: </dt><dd className="inline">{displayDate(appointment.scheduled_at)}</dd></div>
           <div><dt className="inline text-muted-foreground">Technician: </dt><dd className="inline">{appointment.assigned_technician_name ?? 'Unassigned'}</dd></div>
