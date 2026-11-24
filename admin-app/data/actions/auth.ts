@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/data/supabase/server";
+import { queueWelcomeEmail } from "@/data/email/welcome-email";
 import { getSiteUrl } from "@/lib/site-url";
 import { surfaceHome } from "@/lib/permissions";
 import {
@@ -149,6 +150,7 @@ export async function registerAction(
       };
     }
 
+    if (data.session && data.user) queueWelcomeEmail(data.user);
     return { success: true, data: undefined };
   } catch {
     return { success: false, error: "Something went wrong. Please try again." };

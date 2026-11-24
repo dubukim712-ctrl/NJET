@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/data/supabase/server';
+import { queueWelcomeEmail } from '@/data/email/welcome-email';
 import { surfaceHome } from '@/lib/permissions';
 import {
   resendSignupOtpSchema,
@@ -48,6 +49,7 @@ export async function verifySignupOtpAction(
       .single();
 
     revalidatePath('/', 'layout');
+    if (profile?.scope === 'customer') queueWelcomeEmail(data.user);
     return {
       success: true,
       data: { redirectTo: surfaceHome(profile) },

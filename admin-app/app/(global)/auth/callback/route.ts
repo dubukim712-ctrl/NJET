@@ -2,6 +2,7 @@ import { addSignInNotice } from '@/lib/auth-sign-in-notice';
 import { NextResponse, type NextRequest } from 'next/server';
 import type { EmailOtpType } from '@supabase/supabase-js';
 import { createClient } from '@/data/supabase/server';
+import { queueWelcomeEmail } from '@/data/email/welcome-email';
 import { surfaceHome } from '@/lib/permissions';
 
 function safeNext(value: string | null): string | null {
@@ -95,6 +96,14 @@ export async function GET(request: NextRequest) {
         ) {
           destination = requestedNext;
         }
+      }
+
+      if (user && profile?.scope === 'customer' && requestedNext !== '/reset-password') {
+        // OAuth sign-in also uses this callback. Only welcome newly created Google accounts.
+        const accountAge = Date.now() - Date.parse(user.created_at);
+        const newGoogleAccount = isOAuthCallback && !emailIdentity && googleIdentity &&
+          accountAge >= 0 && accountAge < 5 * 60_000;
+        if ((!code && type === 'signup') || newGoogleAccount) queueWelcomeEmail(user);
       }
 
       const destinationUrl = new URL(destination, origin);

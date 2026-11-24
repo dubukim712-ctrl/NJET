@@ -162,6 +162,7 @@ export type Database = {
           avatar_url: string | null;
           phone_number: string | null;
           phone_verified_at: string | null;
+          welcome_email_sent_at: string | null;
           street_address: string | null;
           province_code: string | null;
           province_name: string | null;
@@ -182,6 +183,7 @@ export type Database = {
           avatar_url?: string | null;
           phone_number?: string | null;
           phone_verified_at?: string | null;
+          welcome_email_sent_at?: string | null;
           street_address?: string | null;
           province_code?: string | null;
           province_name?: string | null;
@@ -202,6 +204,7 @@ export type Database = {
           avatar_url?: string | null;
           phone_number?: string | null;
           phone_verified_at?: string | null;
+          welcome_email_sent_at?: string | null;
           street_address?: string | null;
           province_code?: string | null;
           province_name?: string | null;
@@ -255,7 +258,12 @@ export type Database = {
         ];
       };
     };
-    Functions: DatabaseFunctions;
+    Functions: DatabaseFunctions & {
+      claim_customer_welcome_email: {
+        Args: { p_user_id: string };
+        Returns: boolean;
+      };
+    };
     Enums: {
       [_ in never]: never;
     };
