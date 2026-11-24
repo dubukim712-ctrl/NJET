@@ -4,6 +4,7 @@ import { toUserFriendlyError } from '@/data/supabase/user-friendly-errors';
 
 import type { ActionResult } from '@/data/actions/auth';
 import { requireCustomer, requirePermission } from '@/data/auth/guards';
+import { updateStaffServiceAppointment } from '@/data/appointments/update-schedule';
 import { updateServiceAppointmentNote } from '@/data/appointments/update-note';
 import {
   getCustomerServiceAppointments,
@@ -15,7 +16,6 @@ import {
   serviceAppointmentFiltersSchema,
   serviceAppointmentIdSchema,
   staffServiceAppointmentCreateSchema,
-  staffServiceAppointmentUpdateSchema,
 } from '@/lib/validations/service-appointments';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 
@@ -224,48 +224,8 @@ export async function createStaffServiceAppointmentAction(
   return { success: true, data: { id: data.id } };
 }
 
-export async function updateStaffServiceAppointmentAction(
-  payload: unknown
-): Promise<ActionResult> {
-  const { supabase, profile } = await requirePermission(
-    PERMISSIONS.serviceAppointmentsManage,
-    '/admin/appointments'
-  );
-  const parsed = staffServiceAppointmentUpdateSchema.safeParse(payload);
-  if (!parsed.success) {
-    return {
-      success: false,
-      error: parsed.error.issues[0]?.message ?? 'Please correct the appointment update.',
-      fieldErrors: parsed.error.flatten().fieldErrors,
-    };
-  }
-  const update = parsed.data;
-  if (
-    update.scheduledAt &&
-    Date.parse(update.scheduledAt) <= Date.now() &&
-    !['completed', 'cancelled', 'no_show'].includes(update.status)
-  ) {
-    return { success: false, error: 'Choose a future scheduled time.' };
-  }
-  const { data, error } = await supabase
-    .from('service_appointments')
-    .update({
-      status: update.status,
-      scheduled_at: update.scheduledAt,
-      assigned_technician_id: update.assignedTechnicianId,
-      estimate_minor: update.estimateMinor,
-      final_total_minor: update.finalTotalMinor,
-      updated_by: profile.id,
-    })
-    .eq('id', update.id)
-    .select('id')
-    .maybeSingle();
-  if (error) {
-    console.error('Could not update service appointment.', error);
-    return { success: false, error: toUserFriendlyError(error, 'Could not update the service appointment.') };
-  }
-  if (!data) return { success: false, error: 'Appointment was not found or is outside your branch access.' };
-  return { success: true, data: undefined };
+export async function updateStaffServiceAppointmentAction(payload: unknown): Promise<ActionResult> {
+  return updateStaffServiceAppointment(payload);
 }
 
 export async function updateAssignedServiceAppointmentStatusAction(

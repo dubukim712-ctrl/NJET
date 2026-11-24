@@ -8,6 +8,33 @@ function parseOrigin(value: string | undefined): URL | null {
   }
 }
 
+function isPublicHostname(hostname: string) {
+  return hostname !== 'localhost' &&
+    !hostname.endsWith('.localhost') &&
+    !hostname.startsWith('127.') &&
+    hostname !== '[::1]' &&
+    hostname !== '0.0.0.0';
+}
+
+export function getCustomerEmailSiteUrl() {
+  const override = process.env.CUSTOMER_EMAIL_SITE_URL?.trim();
+  const vercel = process.env.NEXT_PUBLIC_VERCEL_URL?.trim();
+  const candidates = override ? [override] : [
+    process.env.NEXT_PUBLIC_SITE_URL?.trim(),
+    vercel ? 'https://' + vercel : undefined,
+  ];
+
+  for (const candidate of candidates) {
+    const url = parseOrigin(candidate);
+    if (url?.protocol === 'https:' && !url.username && !url.password &&
+        isPublicHostname(url.hostname.replace(/\.$/, ''))) {
+      return url.origin;
+    }
+  }
+
+  throw new Error('Customer emails require a public HTTPS origin in CUSTOMER_EMAIL_SITE_URL or NEXT_PUBLIC_SITE_URL.');
+}
+
 export function getSiteUrl() {
   const isProduction = process.env.NODE_ENV === 'production';
   const explicit = process.env.NEXT_PUBLIC_SITE_URL?.trim();
@@ -23,11 +50,7 @@ export function getSiteUrl() {
     !url.password &&
     (!isProduction || (
       hostname &&
-      hostname !== 'localhost' &&
-      !hostname.endsWith('.localhost') &&
-      !hostname.startsWith('127.') &&
-      hostname !== '[::1]' &&
-      hostname !== '0.0.0.0'
+      isPublicHostname(hostname)
     ))
   ) {
     return url.origin;

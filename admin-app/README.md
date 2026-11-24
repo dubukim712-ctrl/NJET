@@ -21,7 +21,7 @@ Secured authentication and dashboard built with Next.js 16 (App Router), TypeScr
    ```
 
    Apply every migration in filename order, from `20240101000001_create_users_table.sql`
-   through `20240101000114_claim_customer_welcome_email.sql`. Apply migration `00101`
+   through `20240101000116_appointment_status_email_details.sql`. Apply migration `00101`
    before deploying the checkout code that uses submission IDs. Migrations `0004`–`0006` replace
    the legacy capability-based roles with granular permissions; `0007` adds
    controlled audit-log clearing and `0008` disables audit entries for that action.
@@ -66,7 +66,7 @@ staff enters both numbers. Parts and accessories remain quantity-based.
 Transfers reduce source stock at dispatch and add it to destination stock at
 receipt. Inventory movements are visible under `/admin/products`.
 
-3. Set `NEXT_PUBLIC_SITE_URL` to your public HTTPS origin in production, with no path, query, or fragment. On Vercel, `NEXT_PUBLIC_VERCEL_URL` can supply the origin when `NEXT_PUBLIC_SITE_URL` is unset. Keep the localhost origin for local development only.
+3. Set `NEXT_PUBLIC_SITE_URL` to your public HTTPS origin in production, with no path, query, or fragment. On Vercel, `NEXT_PUBLIC_VERCEL_URL` can supply the origin when `NEXT_PUBLIC_SITE_URL` is unset. Keep the localhost origin for local development only. To send customer emails from local development, set CUSTOMER_EMAIL_SITE_URL to the deployed storefront HTTPS origin. Customer emails are skipped when no public HTTPS origin is configured.
 
    In the Supabase dashboard, set **Authentication → URL Configuration**:
 

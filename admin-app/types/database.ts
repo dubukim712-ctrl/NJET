@@ -1,3 +1,5 @@
+import type { AppointmentEmailDetails, AppointmentEmailEvent } from '../data/email/appointment-status-email-content';
+import type { OrderEmailDetails, OrderEmailStatus } from '../data/email/order-status-email-content';
 import type {
   Permission,
   PermissionSurface,
@@ -259,6 +261,14 @@ export type Database = {
       };
     };
     Functions: DatabaseFunctions & {
+      appointment_status_email_details: {
+        Args: { p_id: string; p_event: AppointmentEmailEvent; p_scheduled_at: string | null };
+        Returns: AppointmentEmailDetails[];
+      };
+      order_status_email_details: {
+        Args: { p_order_id: string; p_status: OrderEmailStatus };
+        Returns: OrderEmailDetails[];
+      };
       claim_customer_welcome_email: {
         Args: { p_user_id: string };
         Returns: boolean;

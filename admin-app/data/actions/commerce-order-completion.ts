@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { queueOrderStatusEmail } from '@/data/email/order-status-email';
 import type { ActionResult } from '@/data/actions/auth';
 import { toUserFriendlyError } from '@/data/supabase/user-friendly-errors';
 import { requirePermission } from '@/data/auth/guards';
@@ -29,6 +30,7 @@ export async function completeCommerceOrderWithPaymentAction(
       return { success: false, error: toUserFriendlyError(error, 'Could not complete the order. Review the order and payment details.') };
     }
 
+    queueOrderStatusEmail(parsed.data.orderId, 'completed');
     revalidatePath('/admin/orders');
     revalidatePath('/admin/reports');
     revalidatePath('/dashboard/orders');

@@ -13,12 +13,14 @@ const clientModule = 'data:text/javascript,' + encodeURIComponent(
 const navigationModule = 'data:text/javascript,' + encodeURIComponent(
   'export function redirect(destination) { throw Object.assign(new Error("Test redirect"), { destination }); }',
 );
+const orderEmailModule = 'data:text/javascript,export function queueOrderStatusEmail() {}';
 const cacheModule = 'data:text/javascript,export function revalidatePath() {}';
 
 registerHooks({
   resolve(specifier, context, nextResolve) {
     if (specifier === '@/data/supabase/server') return nextResolve(clientModule, context);
     if (specifier === 'next/navigation') return nextResolve(navigationModule, context);
+    if (specifier === '@/data/email/order-status-email') return nextResolve(orderEmailModule, context);
     if (specifier === 'next/cache') return nextResolve(cacheModule, context);
     if (specifier.startsWith('@/')) {
       return nextResolve(new URL(specifier.slice(2) + '.ts', appRoot).href, context);

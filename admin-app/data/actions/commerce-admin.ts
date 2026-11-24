@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { queueOrderStatusEmail } from '@/data/email/order-status-email';
 import * as stockActions from './commerce-stock-admin';
 import type { ActionResult } from '@/data/actions/auth';
 import { requirePermission } from '@/data/auth/guards';
@@ -29,6 +30,7 @@ async function updateCommerceOrderStatus(
   try {
     const { error } = await supabase.rpc(rpc, { p_order_id: parsed.data.orderId });
     if (error) return failure(error, 'Could not update the order status.');
+    queueOrderStatusEmail(parsed.data.orderId, rpc === 'confirm_commerce_order' ? 'confirmed' : 'cancelled');
     revalidatePath('/admin/orders');
     revalidatePath('/dashboard/orders');
     return { success: true, data: undefined };
@@ -66,6 +68,7 @@ export async function completeHomeCreditCommerceOrderAction(
       p_monthly_payment_minor: parsed.data.monthlyPayment,
     });
     if (error) return failure(error, 'Could not complete the Home Credit order.');
+    queueOrderStatusEmail(parsed.data.orderId, 'completed');
     revalidatePath('/admin/orders');
     revalidatePath('/dashboard/orders');
     return { success: true, data: undefined };

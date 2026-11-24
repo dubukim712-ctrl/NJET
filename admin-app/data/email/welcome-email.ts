@@ -3,7 +3,7 @@ import 'server-only';
 import type { User } from '@supabase/supabase-js';
 import { after } from 'next/server';
 import { createServiceClient } from '@/data/supabase/service';
-import { getSiteUrl } from '@/lib/site-url';
+import { getCustomerEmailSiteUrl } from '@/lib/site-url';
 import { deliverWelcomeEmail } from './welcome-email-delivery';
 
 export function queueWelcomeEmail(user: User) {
@@ -17,7 +17,7 @@ export function queueWelcomeEmail(user: User) {
     recipient: { email, name },
     apiKey: process.env.BREVO_API_KEY?.trim(),
     senderEmail: process.env.BREVO_SENDER_EMAIL?.trim(),
-    getOrigin: getSiteUrl,
+    getOrigin: getCustomerEmailSiteUrl,
     claim: async () => {
       const db = createServiceClient();
       const { data, error } = await db.rpc('claim_customer_welcome_email', {

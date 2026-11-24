@@ -1,3 +1,5 @@
+import { deliverBrevoEmail, escapeEmailHtml } from './brevo-email.mjs';
+
 type WelcomeRecipient = { email: string; name?: string };
 
 export function buildWelcomeEmail(
@@ -6,9 +8,7 @@ export function buildWelcomeEmail(
   siteOrigin: string,
 ) {
   const name = recipient.name?.trim() || 'Valued Customer';
-  const htmlName = name.replace(/[&<>]/g, (char) =>
-    char === '&' ? '&amp;' : char === '<' ? '&lt;' : '&gt;',
-  );
+  const htmlName = escapeEmailHtml(name);
   const links = [
     ['Browse e-bikes', '/shop'],
     ['Book a service appointment', '/dashboard/appointments/new'],
@@ -47,27 +47,14 @@ export async function deliverWelcomeEmail({
   claim: () => Promise<boolean>;
   send?: typeof fetch;
 }) {
-  if (!apiKey || !senderEmail) {
-    console.warn('Welcome email skipped because Brevo configuration is missing.');
-    return;
-  }
-
-  try {
-    const payload = buildWelcomeEmail(recipient, senderEmail, getOrigin());
-    if (!(await claim())) return;
-
-    const response = await send('https://api.brevo.com/v3/smtp/email', {
-      method: 'POST',
-      headers: {
-        accept: 'application/json',
-        'api-key': apiKey,
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify(payload),
-      signal: AbortSignal.timeout(8_000),
-    });
-    if (!response.ok) console.warn('Welcome email rejected by Brevo.', response.status);
-  } catch {
-    console.warn('Welcome email could not be sent.');
-  }
+  return deliverBrevoEmail({
+    label: 'Welcome email',
+    apiKey,
+    senderEmail,
+    send,
+    prepare: async (sender) => {
+      const payload = buildWelcomeEmail(recipient, sender, getOrigin());
+      return await claim() ? payload : null;
+    },
+  });
 }

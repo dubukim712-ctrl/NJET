@@ -2,6 +2,7 @@
 
 import { toUserFriendlyError } from '@/data/supabase/user-friendly-errors';
 
+import { queueAppointmentStatusEmail } from '@/data/email/appointment-status-email';
 import type { ActionResult } from '@/data/actions/auth';
 import { requireCustomer, requirePermission } from '@/data/auth/guards';
 import { PERMISSIONS } from '@/lib/permissions';
@@ -60,5 +61,6 @@ export async function reviewServiceAppointmentCancellationAction(
     console.error('Could not review service appointment cancellation request.', error);
     return { success: false, error: toUserFriendlyError(error, 'Could not review the cancellation request.') };
   }
+  queueAppointmentStatusEmail({ id: parsed.data.requestId, event: parsed.data.decision === 'approve' ? 'approved' : 'rejected' });
   return { success: true, data: undefined };
 }
