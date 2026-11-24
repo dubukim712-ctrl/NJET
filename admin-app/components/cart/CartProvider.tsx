@@ -68,7 +68,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     maxQuantity?: number | null,
     branchId?: string
   ): CartResult => {
-    const result = addCartItem(items, variantId, maxQuantity, branchId);
+    const result = addCartItem(parseCartSnapshot(getCartSnapshot()).items, variantId, maxQuantity, branchId);
     return result.success ? commit(result.items) : result;
   };
 
@@ -77,7 +77,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     quantity: number,
     maxQuantity?: number | null
   ): CartResult => {
-    const result = setCartItemQuantity(items, variantId, quantity, maxQuantity);
+    const result = setCartItemQuantity(parseCartSnapshot(getCartSnapshot()).items, variantId, quantity, maxQuantity);
     return result.success ? commit(result.items) : result;
   };
 

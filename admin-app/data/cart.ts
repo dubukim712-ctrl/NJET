@@ -7,6 +7,7 @@ export interface CartItem {
 export type BranchStockAvailability = {
   available: boolean;
   stock: number | null;
+  branchId?: string;
 };
 
 export type CartMutation =
@@ -16,7 +17,7 @@ export type CartMutation =
 const STORAGE_KEY = 'njet-commerce-cart-v1';
 const EMPTY_CART = '[]';
 const STORAGE_ERROR = '__cart_storage_error__';
-const MAX_QUANTITY = 99;
+export const MAX_CART_QUANTITY = 99;
 const MAX_CART_ITEMS = 30;
 const VARIANT_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const BRANCH_ID = VARIANT_ID;
@@ -27,9 +28,12 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 export function getAvailableQuantityLimit(
-  stockByBranch: readonly BranchStockAvailability[]
+  stockByBranch: readonly BranchStockAvailability[],
+  branchId?: string
 ) {
-  const availableBranches = stockByBranch.filter((branch) => branch.available);
+  const availableBranches = stockByBranch.filter((branch) =>
+    branch.available && (!branchId || branch.branchId === branchId)
+  );
   if (availableBranches.some((branch) => branch.stock === null)) return null;
 
   return availableBranches.reduce(
@@ -41,7 +45,7 @@ export function getAvailableQuantityLimit(
 function stockLimitError(maxQuantity: number) {
   return maxQuantity === 0
     ? 'This item is currently out of stock.'
-    : `Only ${maxQuantity} can be ordered from a single branch.`;
+    : 'Maximum available quantity in cart.';
 }
 
 export function subscribeToCart(listener: () => void) {
@@ -100,7 +104,7 @@ export function parseCartSnapshot(snapshot: string) {
       typeof value.quantity !== 'number' ||
       !Number.isInteger(value.quantity) ||
       value.quantity < 1 ||
-      value.quantity > MAX_QUANTITY ||
+      value.quantity > MAX_CART_QUANTITY ||
       variantIds.has(value.variantId)
     ) {
       return { items: [] as CartItem[], error: 'Saved cart data is invalid.' };
@@ -141,10 +145,10 @@ export function addCartItem(
   ) {
     return { success: false, error: stockLimitError(maxQuantity) };
   }
-  if (existing?.quantity === MAX_QUANTITY) {
+  if (existing?.quantity === MAX_CART_QUANTITY) {
     return {
       success: false,
-      error: `You can add up to ${MAX_QUANTITY} of each item.`,
+      error: `You can add up to ${MAX_CART_QUANTITY} of each item.`,
     };
   }
   if (!existing && items.length >= MAX_CART_ITEMS) {
@@ -173,10 +177,10 @@ export function setCartItemQuantity(
   quantity: number,
   maxQuantity?: number | null
 ): CartMutation {
-  if (!Number.isInteger(quantity) || quantity < 1 || quantity > MAX_QUANTITY) {
+  if (!Number.isInteger(quantity) || quantity < 1 || quantity > MAX_CART_QUANTITY) {
     return {
       success: false,
-      error: `Quantity must be between 1 and ${MAX_QUANTITY}.`,
+      error: `Quantity must be between 1 and ${MAX_CART_QUANTITY}.`,
     };
   }
   const existing = items.find((item) => item.variantId === variantId);
@@ -187,7 +191,7 @@ export function setCartItemQuantity(
     maxQuantity !== undefined &&
     maxQuantity !== null &&
     quantity > existing.quantity &&
-    quantity > maxQuantity
+    existing.quantity >= maxQuantity
   ) {
     return { success: false, error: stockLimitError(maxQuantity) };
   }
@@ -195,7 +199,9 @@ export function setCartItemQuantity(
   return {
     success: true,
     items: items.map((item) =>
-      item.variantId === variantId ? { ...item, quantity } : item
+      item.variantId === variantId
+        ? { ...item, quantity: quantity > existing.quantity ? Math.min(quantity, maxQuantity ?? MAX_CART_QUANTITY) : quantity }
+        : item
     ),
   };
 }

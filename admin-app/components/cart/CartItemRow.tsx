@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/Button";
 import { ProductImage } from "@/components/shop/ProductImage";
 import { ProductPrice } from "@/components/shop/ProductPrice";
 import type { CartVariant } from "@/data/commerce/catalog-client";
-import type { CartItem } from "@/data/cart";
+import { MAX_CART_QUANTITY, type CartItem } from "@/data/cart";
+import { useCartQuantityAvailability } from "@/data/commerce/cart-quantity-availability";
 
 type CartDisplayItem = CartItem & {
   variant: CartVariant | null;
@@ -29,6 +30,12 @@ export function CartItemRow({
     maxQuantity: number | null,
   ) => void;
 }) {
+  const nextQuantity = item.quantity + 1;
+  const needsAvailability = Boolean(item.variant) && item.maxQuantity === null && nextQuantity <= MAX_CART_QUANTITY;
+  const availability = useCartQuantityAvailability(item.variantId, item.branchId, nextQuantity, needsAvailability);
+  const atLimit = nextQuantity > (item.maxQuantity ?? MAX_CART_QUANTITY) || (needsAvailability && availability.data === false);
+  const cannotIncrease = atLimit || (needsAvailability && availability.data !== true);
+
   return (
     <li
       className={
@@ -104,38 +111,35 @@ export function CartItemRow({
                 variant="ghost"
                 size="icon"
                 aria-label="Increase quantity"
-                disabled={
-                  item.quantity >= (item.maxQuantity ?? 99) ||
-                  item.quantity >= 99
-                }
+                disabled={cannotIncrease}
                 onClick={() =>
-                  onQuantityChange(
-                    item.variantId,
-                    item.quantity + 1,
-                    item.maxQuantity,
-                  )
+                  onQuantityChange(item.variantId, nextQuantity, item.maxQuantity ?? nextQuantity)
                 }
               >
                 <Plus className="h-4 w-4" aria-hidden="true" />
               </Button>
             </div>
-            {item.maxQuantity !== null &&
-              item.quantity >= item.maxQuantity && (
+            {needsAvailability && availability.isError && (
+              <button type="button" className="mt-1 text-xs underline" onClick={() => void availability.refetch()}>
+                Retry availability check
+              </button>
+            )}
+            {atLimit && (
                 <p
                   className={`mt-1 text-xs ${
-                    item.quantity > item.maxQuantity
+                    item.maxQuantity !== null && item.quantity > item.maxQuantity
                       ? "text-destructive"
                       : "text-muted-foreground"
                   }`}
                   role={
-                    item.quantity > item.maxQuantity ? "alert" : undefined
+                    item.maxQuantity !== null && item.quantity > item.maxQuantity ? "alert" : undefined
                   }
                 >
                   {outOfStock
                     ? "Currently out of stock. Remove this item or wait for restock."
-                    : item.quantity > item.maxQuantity
-                      ? `Only ${item.maxQuantity} can be ordered from a single branch. Reduce the quantity to continue.`
-                      : "Maximum available from a single branch."}
+                    : item.maxQuantity !== null && item.quantity > item.maxQuantity
+                      ? "Reduce the quantity to continue."
+                      : "Maximum available quantity in cart."}
                 </p>
               )}
           </>

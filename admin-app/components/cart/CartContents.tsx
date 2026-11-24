@@ -44,6 +44,7 @@ export function CartContents({
     maxQuantity: variantById.has(item.variantId)
       ? getAvailableQuantityLimit(
           variantById.get(item.variantId)?.stockByBranch ?? [],
+          item.branchId,
         )
       : null,
   }));
@@ -52,7 +53,7 @@ export function CartContents({
     0,
   );
   const unavailable = cartItems.some((item) => !item.variant);
-  const out = cartItems.some((item) => item.quantity > (item.maxQuantity ?? 0));
+  const out = cartItems.some((item) => item.maxQuantity !== null && item.quantity > item.maxQuantity);
 
   const changeQuantity = (
     variantId: string,
@@ -135,7 +136,7 @@ export function CartContents({
                 key={item.variantId}
                 item={item}
                 compact={compact}
-                outOfStock={out}
+                outOfStock={item.maxQuantity === 0}
                 onRemove={deleteItem}
                 onQuantityChange={changeQuantity}
               />
@@ -151,9 +152,9 @@ export function CartContents({
               Final stock, delivery fees, and payment due are confirmed at
               checkout.
             </p>
-            {(unavailable && out) || loadError ? (
+            {unavailable || out || loadError ? (
               <Button type="button" className="mt-4 w-full" disabled>
-                Remove unavailable items to continue
+                Review unavailable items to continue
               </Button>
             ) : (
               <Button asChild className="mt-4 w-full">

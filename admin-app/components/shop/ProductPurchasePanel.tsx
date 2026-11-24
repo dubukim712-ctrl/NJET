@@ -48,22 +48,13 @@ export function ProductPurchasePanel({
 
   const stockColor = {
     "out-of-stock": "text-destructive",
-    "low-stock": "text-yellow-600",
     "in-stock": "text-green-700",
     default: "text-muted-foreground",
   };
 
-  const stock = selectedVariant?.branchStock?.stock;
-
-  const stockAlert = !selectedVariant?.available
-    ? stockColor["out-of-stock"] // Red when available === false
-    : stock == null
-      ? stockColor["in-stock"] // Green when available === true and stock is null
-      : stock === 0
-        ? stockColor["out-of-stock"]
-        : stock < 3
-          ? stockColor["low-stock"]
-          : stockColor["in-stock"];
+  const stockAlert = selectedVariant?.available
+    ? stockColor["in-stock"]
+    : stockColor["out-of-stock"];
 
   return (
     <section
@@ -97,11 +88,7 @@ export function ProductPurchasePanel({
             disabled={!variant.available}
           >
             {variant.name} -{" "}
-            {variant.available
-              ? variant.branchStock?.stock === null
-                ? "Available"
-                : `${variant.branchStock?.stock ?? 0} in stock`
-              : "Out of stock"}
+            {variant.available ? "Available" : "Out of stock"}
           </option>
         ))}
       </Select>
@@ -113,11 +100,7 @@ export function ProductPurchasePanel({
               listPriceMinor={selectedVariant.list_price_minor}
             />
             <p className={`text-sm ${stockAlert} font-bold`}>
-              {selectedVariant.available
-                ? selectedVariant.branchStock?.stock === null
-                  ? "Available"
-                  : `${selectedVariant.branchStock?.stock ?? 0} stock(s) left`
-                : "Out of stock"}
+              {selectedVariant.available ? "Available" : "Out of stock"}
             </p>
           </div>
           <p className="mt-1 text-xs text-muted-foreground">
