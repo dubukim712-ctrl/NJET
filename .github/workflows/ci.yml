@@ -2,9 +2,14 @@ name: CI Verification
 
 on:
   push:
-    branches: [main, master]
+    branches: [main, staging]
   pull_request:
-    branches: [main, master]
+    branches: [main, staging]
+
+env:
+  NEXT_PUBLIC_SITE_URL: https://example.com
+  NEXT_PUBLIC_SUPABASE_URL: https://supabase.co
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
 
 jobs:
   verify-admin-app:
@@ -21,7 +26,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
           cache-dependency-path: admin-app/package-lock.json
 
@@ -39,7 +44,6 @@ jobs:
 
       - name: Run Automated Tests (Node + PGlite + Playwright)
         env:
-          # Empty credentials ensure Playwright runs signed-out checks and skips live staging writes
           E2E_USER_EMAIL: ""
           E2E_USER_PASSWORD: ""
           E2E_ADMIN_EMAIL: ""
@@ -47,9 +51,4 @@ jobs:
         run: npm test
 
       - name: Verify Production Build
-        env:
-          # Dummy public placeholders if Next.js build validates env presence
-          NEXT_PUBLIC_SITE_URL: https://example.com
-          NEXT_PUBLIC_SUPABASE_URL: https://supabase.co
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
         run: npm run build
