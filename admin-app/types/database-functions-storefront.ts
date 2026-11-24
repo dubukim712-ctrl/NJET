@@ -49,6 +49,10 @@ export type DatabaseStorefrontFunctions = {
     Args: { p_variant_id: string; p_branch_id: string | null; p_quantity: number };
     Returns: boolean;
   };
+  storefront_variant_stock_summary: {
+    Args: { p_variant_ids: string[] };
+    Returns: { variant_id: string; available: boolean; stock: number | null }[];
+  };
   storefront_variant_availability: {
     Args: { p_variant_ids: string[] };
     Returns: {

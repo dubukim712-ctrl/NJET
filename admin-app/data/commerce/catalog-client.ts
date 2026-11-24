@@ -1,5 +1,6 @@
 'use client';
 
+import { useAuth } from '@/components/auth/AuthProvider';
 import { useQuery } from '@tanstack/react-query';
 import { createClient } from '@/data/supabase/client';
 import { cartVariantsQueryKey } from '@/data/commerce/catalog-query-keys';
@@ -134,10 +135,11 @@ export async function getCartVariants(
 }
 
 export function useCartVariantsQuery(variantIds: string[]) {
+  const { user } = useAuth();
   const ids = [...new Set(variantIds)].sort();
 
   return useQuery({
-    queryKey: [...cartVariantsQueryKey, ids],
+    queryKey: [...cartVariantsQueryKey, ids, user?.id ?? null],
     queryFn: async () => {
       const result = await getCartVariants(ids);
       if (result.error) throw new Error(result.error);

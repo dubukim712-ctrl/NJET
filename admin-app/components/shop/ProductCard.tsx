@@ -1,3 +1,7 @@
+'use client';
+
+import { useAuth } from '@/components/auth/AuthProvider';
+import { getStorefrontStockLabel } from '@/data/commerce/storefront-stock-label';
 import Link from 'next/link';
 import { ArrowUpRight, Star } from 'lucide-react';
 import type { CatalogProduct } from '@/data/commerce/catalog';
@@ -13,11 +17,14 @@ export function ProductCard({
   compactOnNarrow?: boolean;
   loading?: 'eager' | 'lazy';
 }) {
+  const { user } = useAuth();
   const startingVariant = product.variants.reduce<(typeof product.variants)[number] | null>(
     (lowest, variant) => !lowest || variant.price_minor < lowest.price_minor ? variant : lowest,
     null
   );
   const { averageRating, reviewCount } = product.ratingSummary;
+  const stockLabel = getStorefrontStockLabel(product.stockSummary, Boolean(user));
+  const showsTotal = Boolean(user) && product.stockSummary.available && product.stockSummary.stock !== null;
 
   return (
     <Link
@@ -28,7 +35,7 @@ export function ProductCard({
               reviewCount === 1 ? 'review' : 'reviews'
             }.`
           : 'No reviews yet.'
-      }`}
+      } ${stockLabel}${showsTotal ? ' across branches.' : '.'}`}
       title="Open product details"
       className={`group block overflow-hidden rounded-xl border bg-card transition-colors hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
         compactOnNarrow ? 'min-[320px]:max-[768px]:rounded-lg' : ''
@@ -110,6 +117,9 @@ export function ProductCard({
               {product.description || 'Ask our team for product details.'}
             </p>
           </div>
+          <p className="text-xs font-medium text-muted-foreground">
+            {stockLabel}{showsTotal && ' across branches'}
+          </p>
           <div
             className={`flex min-h-10 min-w-0 items-center text-sm font-semibold ${
               compactOnNarrow

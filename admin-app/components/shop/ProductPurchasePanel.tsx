@@ -1,5 +1,7 @@
 "use client";
 
+import { useAuth } from "@/components/auth/AuthProvider";
+import { getStorefrontStockLabel } from "@/data/commerce/storefront-stock-label";
 import { useEffect, useMemo, useState } from "react";
 import { AddToCartButton } from "@/components/cart/AddToCartButton";
 import { Select } from "@/components/ui/Select";
@@ -16,6 +18,7 @@ export function ProductPurchasePanel({
   branches: { id: string; name: string }[];
   onImagePathChange: (path: string | null) => void;
 }) {
+  const { user } = useAuth();
   const [branchId, setBranchId] = useState(branches[0]?.id ?? "");
   const [variantId, setVariantId] = useState("");
   const branchVariants = useMemo(
@@ -88,7 +91,7 @@ export function ProductPurchasePanel({
             disabled={!variant.available}
           >
             {variant.name} -{" "}
-            {variant.available ? "Available" : "Out of stock"}
+            {getStorefrontStockLabel(variant.branchStock, Boolean(user))}
           </option>
         ))}
       </Select>
@@ -100,7 +103,7 @@ export function ProductPurchasePanel({
               listPriceMinor={selectedVariant.list_price_minor}
             />
             <p className={`text-sm ${stockAlert} font-bold`}>
-              {selectedVariant.available ? "Available" : "Out of stock"}
+              {getStorefrontStockLabel(selectedVariant.branchStock, Boolean(user))}
             </p>
           </div>
           <p className="mt-1 text-xs text-muted-foreground">

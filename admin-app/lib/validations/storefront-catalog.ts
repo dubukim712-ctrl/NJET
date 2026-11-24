@@ -29,9 +29,11 @@ export const StorefrontBranchOptionsSchema = z.array(z.object({
   name: z.string(),
 }));
 
-export const StorefrontAvailabilityRowsSchema = z.array(z.object({
+const variantAvailability = z.object({
   variant_id: uuid,
-  branch_id: uuid,
   available: z.boolean(),
   stock: z.number().int().nonnegative().nullable(),
-}));
+});
+
+export const StorefrontStockSummaryRowsSchema = z.array(variantAvailability);
+export const StorefrontAvailabilityRowsSchema = z.array(variantAvailability.extend({ branch_id: uuid }));

@@ -4,6 +4,7 @@ import {
   StorefrontAvailabilityRowsSchema,
   StorefrontBranchOptionsSchema,
   StorefrontCatalogRowsSchema,
+  StorefrontStockSummaryRowsSchema,
 } from '@/lib/validations/storefront-catalog';
 import { productRatingSummariesRowsSchema } from '@/lib/validations/product-review';
 import { activeVariantDiscountRowsSchema } from '@/lib/validations/product-discount';
@@ -48,6 +49,7 @@ export type CatalogProduct = Pick<
 > & {
   categoryName: string | null;
   subcategoryName: string | null;
+  stockSummary: { available: boolean; stock: number | null };
   ratingSummary: {
     averageRating: number;
     reviewCount: number;
@@ -98,9 +100,12 @@ export async function getStoreCatalog(slug?: string): Promise<CatalogResult> {
     const rows = parsedRows.data;
     const productIds = [...new Set(rows.map((row) => row.product_id))];
     const variantIds = rows.flatMap((row) => row.variant_id ? [row.variant_id] : []);
-    const [availabilityRows, discountRows, ratingRows] = await Promise.all([
+    const [availabilityRows, stockSummaryRows, discountRows, ratingRows] = await Promise.all([
       slug && variantIds.length
         ? supabase.rpc('storefront_variant_availability', { p_variant_ids: variantIds })
+        : null,
+      !slug && variantIds.length
+        ? supabase.rpc('storefront_variant_stock_summary', { p_variant_ids: variantIds })
         : null,
       variantIds.length
         ? supabase.rpc('active_variant_discounts', {
@@ -115,12 +120,14 @@ export async function getStoreCatalog(slug?: string): Promise<CatalogResult> {
         : null,
     ]);
     if (availabilityRows?.error) throw availabilityRows.error;
+    if (stockSummaryRows?.error) throw stockSummaryRows.error;
     if (discountRows?.error) throw discountRows.error;
     if (ratingRows?.error) throw ratingRows.error;
 
     const parsedAvailability = StorefrontAvailabilityRowsSchema.safeParse(
       availabilityRows?.data ?? []
     );
+    const summaries = StorefrontStockSummaryRowsSchema.safeParse(stockSummaryRows?.data ?? []);
     const parsedDiscounts = activeVariantDiscountRowsSchema.safeParse(
       discountRows?.data ?? []
     );
@@ -129,11 +136,13 @@ export async function getStoreCatalog(slug?: string): Promise<CatalogResult> {
     );
     if (
       !parsedAvailability.success ||
+      !summaries.success ||
       !parsedDiscounts.success ||
       !parsedRatings.success
     ) {
       throw new Error('Storefront catalog data failed validation.');
     }
+    const summaryByVariant = new Map(summaries.data.map((row) => [row.variant_id, row]));
     const ratingsByProduct = new Map(
       parsedRatings.data.map((rating) => [
         rating.product_id,
@@ -181,12 +190,20 @@ export async function getStoreCatalog(slug?: string): Promise<CatalogResult> {
           is_demo: row.is_demo,
           categoryName: row.category_name,
           subcategoryName: row.subcategory_name,
+          stockSummary: { available: false, stock: null },
           ratingSummary,
           variants: [],
         };
         productsById.set(product.id, product);
       }
 
+      const variantSummary = row.variant_id ? summaryByVariant.get(row.variant_id) : undefined;
+      if (variantSummary) {
+        product.stockSummary.available ||= variantSummary.available;
+        if (variantSummary.stock !== null) {
+          product.stockSummary.stock = (product.stockSummary.stock ?? 0) + variantSummary.stock;
+        }
+      }
       if (
         row.variant_id &&
         row.variant_name !== null &&
