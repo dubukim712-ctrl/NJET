@@ -1,5 +1,7 @@
 'use server';
 
+import { toUserFriendlyError } from '@/data/supabase/user-friendly-errors';
+
 import { revalidatePath } from 'next/cache';
 import { getAuthContext } from '@/data/auth/guards';
 import {
@@ -16,10 +18,7 @@ function assignmentErrorMessage(error: {
   if (error.code === 'PGRST202') {
     return 'The permissions migration is missing. Run supabase/migrations/20240101000005_permissions_functions.sql, then refresh this page.';
   }
-  if (error.code === 'P0001') {
-    return error.message;
-  }
-  return 'Could not update the role. Please try again.';
+  return toUserFriendlyError(error, 'Could not update the role. Please try again.');
 }
 
 export async function assignUserRoleAction(
@@ -104,17 +103,14 @@ export async function assignUserBranchAction(
           error: 'The branch assignment migration is missing. Run supabase/migrations/20240101000024_user_branch_assignment.sql, then refresh this page.',
         };
       }
-      if (error.code === 'P0001') {
-        return { success: false, error: error.message };
-      }
-      console.error('Could not update user branch:', error.message);
-      return { success: false, error: 'Could not update the branch. Please try again.' };
+      console.error('Could not update user branch:', error);
+      return { success: false, error: toUserFriendlyError(error, 'Could not update the branch. Please try again.') };
     }
 
     revalidatePath('/admin/users');
     return { success: true, data: undefined };
   } catch (error) {
     console.error('Could not update user branch:', error);
-    return { success: false, error: 'Could not update the branch. Please try again.' };
+    return { success: false, error: toUserFriendlyError(error, 'Could not update the branch. Please try again.') };
   }
 }

@@ -1,5 +1,7 @@
 'use server';
 
+import { toUserFriendlyError } from '@/data/supabase/user-friendly-errors';
+
 import { randomUUID } from 'node:crypto';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
@@ -49,7 +51,7 @@ export async function savePhoneVerificationSettingsAction(
     console.error('Could not save phone verification settings.', error);
     return {
       success: false,
-      error: 'Could not save the checkout verification setting. Please try again.',
+      error: toUserFriendlyError(error, 'Could not save the checkout verification setting. Please try again.'),
     };
   }
 }
@@ -122,7 +124,7 @@ export async function saveOwnershipCertificateTemplateAction(
       success: false,
       error: error instanceof OwnershipCertificateTemplateError
         ? error.message
-        : 'Could not save the ownership certificate template.',
+        : toUserFriendlyError(error, 'Could not save the ownership certificate template.'),
     };
   }
 }
@@ -193,7 +195,7 @@ export async function savePaymentRecipientAction(
     };
   } catch (error) {
     console.error('Could not save payment recipient details.', error);
-    return { success: false, error: 'Could not save payment recipient details.' };
+    return { success: false, error: toUserFriendlyError(error, 'Could not save payment recipient details.') };
   }
 }
 
@@ -244,7 +246,7 @@ export async function deletePaymentRecipientAction(
     };
   } catch (error) {
     console.error('Could not delete a payment recipient.', error);
-    return { success: false, error: 'Could not delete this payment recipient.' };
+    return { success: false, error: toUserFriendlyError(error, 'Could not delete this payment recipient.') };
   }
 }
 

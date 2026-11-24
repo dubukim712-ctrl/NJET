@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import type { ActionResult } from '@/data/actions/auth';
 import { requirePermission } from '@/data/auth/guards';
+import { commerceActionFailure as failure } from '@/data/commerce/action-failure';
 import { PERMISSIONS } from '@/lib/permissions';
 import { variantAdminSchema } from '@/lib/validations/commerce-admin';
 
@@ -35,17 +36,13 @@ export async function saveCommerceVariantAction(payload: unknown): Promise<Actio
           home_credit_downpayment_minor: homeCreditDownpaymentMinor,
           image_path: imagePath,
         });
-    if (result.error) {
-      console.error('Could not save this product variant.', result.error);
-      return { success: false, error: result.error.message };
-    }
+    if (result.error) return failure(result.error, 'Could not save this product variant.');
 
     revalidatePath('/admin/products');
     revalidatePath('/shop');
     revalidatePath('/shop/view-product/[slug]', 'page');
     return { success: true, data: undefined };
   } catch (error) {
-    console.error('Could not save this product variant.', error);
-    return { success: false, error: 'Could not save this product variant.' };
+    return failure(error, 'Could not save this product variant.');
   }
 }

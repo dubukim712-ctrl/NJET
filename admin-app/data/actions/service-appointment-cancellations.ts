@@ -1,5 +1,7 @@
 'use server';
 
+import { toUserFriendlyError } from '@/data/supabase/user-friendly-errors';
+
 import type { ActionResult } from '@/data/actions/auth';
 import { requireCustomer, requirePermission } from '@/data/auth/guards';
 import { PERMISSIONS } from '@/lib/permissions';
@@ -31,7 +33,7 @@ export async function requestServiceAppointmentCancellationAction(
   );
   if (error) {
     console.error('Could not submit service appointment cancellation request.', error);
-    return { success: false, error: error.message };
+    return { success: false, error: toUserFriendlyError(error, 'Could not submit the cancellation request.') };
   }
   return { success: true, data: undefined };
 }
@@ -56,7 +58,7 @@ export async function reviewServiceAppointmentCancellationAction(
   );
   if (error) {
     console.error('Could not review service appointment cancellation request.', error);
-    return { success: false, error: error.message };
+    return { success: false, error: toUserFriendlyError(error, 'Could not review the cancellation request.') };
   }
   return { success: true, data: undefined };
 }

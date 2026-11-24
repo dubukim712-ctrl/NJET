@@ -1,5 +1,7 @@
 'use server';
 
+import { toUserFriendlyError } from '@/data/supabase/user-friendly-errors';
+
 import { randomUUID } from 'node:crypto';
 import { revalidatePath } from 'next/cache';
 import type { ActionResult } from '@/data/actions/auth';
@@ -83,7 +85,7 @@ export async function saveSalesReceiptTemplateAction(
       success: false,
       error: error instanceof SalesReceiptTemplateError
         ? error.message
-        : 'Could not save the sales receipt template.',
+        : toUserFriendlyError(error, 'Could not save the sales receipt template.'),
     };
   }
 }

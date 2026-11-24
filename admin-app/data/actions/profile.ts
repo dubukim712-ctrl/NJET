@@ -1,5 +1,7 @@
 'use server';
 
+import { toUserFriendlyError } from '@/data/supabase/user-friendly-errors';
+
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/data/supabase/server';
 import { updateProfileSchema, changePasswordSchema } from '@/lib/validations/auth';
@@ -61,7 +63,7 @@ export async function updateProfileAction(formData: FormData): Promise<ActionRes
       .eq('id', user.id);
 
     if (error) {
-      return { success: false, error: error.message };
+      return { success: false, error: toUserFriendlyError(error, 'Could not update your profile. Please try again.') };
     }
 
     revalidatePath('/dashboard', 'layout');
@@ -112,7 +114,7 @@ export async function changePasswordAction(formData: FormData): Promise<ActionRe
     });
 
     if (error) {
-      return { success: false, error: error.message };
+      return { success: false, error: toUserFriendlyError(error, 'Could not change your password. Please try again.') };
     }
 
     revalidatePath('/', 'layout');

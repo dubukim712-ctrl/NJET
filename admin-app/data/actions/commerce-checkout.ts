@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import type { ActionResult } from '@/data/actions/auth';
+import { toUserFriendlyError } from '@/data/supabase/user-friendly-errors';
 import { getAuthContext, requireCustomer } from '@/data/auth/guards';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 import {
@@ -93,8 +94,9 @@ export async function createCommerceOrderAction(
       p_coupon_code: input.couponCode,
       p_submission_id: input.submissionId,
     });
-    if (error?.code === 'P0001') {
-      return { success: false, error: error.message };
+    if (error && ['P0001', '23505', '23503', '22P02', '23514', '23502'].includes(error.code)) {
+      console.error('Checkout was rejected.', error);
+      return { success: false, error: toUserFriendlyError(error, 'Could not place this order. Review your checkout details.') };
     }
     if (error) console.error('Could not confirm the checkout RPC result.', error);
     orderId = error ? null : data;
@@ -128,7 +130,7 @@ export async function submitOrderPaymentProofAction(
   const { orderId, objectPath, paymentReference } = validation.data;
   let response: {
     data: { previous_object_path: string | null; expired: boolean }[] | null;
-    error: { message: string } | null;
+    error: { code: string; message: string } | null;
   };
   try {
     response = await supabase.rpc('attach_order_payment_proof', {
@@ -148,11 +150,12 @@ export async function submitOrderPaymentProofAction(
   }
   const { data, error } = response;
   if (error) {
+    console.error('Could not submit order payment proof.', error);
     const cleanupSucceeded = await removeUnlinkedDocuments(supabase, [objectPath]);
     return {
       success: false,
       error: cleanupSucceeded
-        ? error.message
+        ? toUserFriendlyError(error, 'The payment proof could not be attached to this order.')
         : 'Payment proof was not submitted; a private file may remain in storage. Contact the store before retrying.',
     };
   }

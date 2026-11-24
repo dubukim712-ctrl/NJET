@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import type { ActionResult } from '@/data/actions/auth';
+import { toUserFriendlyError } from '@/data/supabase/user-friendly-errors';
 import { requirePermission } from '@/data/auth/guards';
 import { PERMISSIONS } from '@/lib/permissions';
 import { completeOrderWithPaymentSchema } from '@/lib/validations/commerce-admin';
@@ -25,7 +26,7 @@ export async function completeCommerceOrderWithPaymentAction(
     });
     if (error) {
       console.error('Could not complete the order with its payment.', error);
-      return { success: false, error: error.message };
+      return { success: false, error: toUserFriendlyError(error, 'Could not complete the order. Review the order and payment details.') };
     }
 
     revalidatePath('/admin/orders');
@@ -34,6 +35,6 @@ export async function completeCommerceOrderWithPaymentAction(
     return { success: true, data: undefined };
   } catch (error) {
     console.error('Could not complete the order with its payment.', error);
-    return { success: false, error: 'Could not complete the order. Please try again.' };
+    return { success: false, error: toUserFriendlyError(error, 'Could not confirm completion. Check the order before trying again.') };
   }
 }

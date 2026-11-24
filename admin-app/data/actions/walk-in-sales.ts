@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import type { ActionResult } from '@/data/actions/auth';
+import { toUserFriendlyError } from '@/data/supabase/user-friendly-errors';
 import { requirePermission } from '@/data/auth/guards';
 import {
   getWalkInCatalog,
@@ -98,7 +99,7 @@ export async function createWalkInSaleAction(
       console.error('Could not create walk-in sale.', error);
       // SQLSTATE errors report a database rejection. Other failures can lack a commit result.
       return /^[0-9A-Z]{5}$/.test(error.code) && !error.code.startsWith('08') && error.code !== '40003'
-        ? { success: false, error: error.message }
+        ? { success: false, error: toUserFriendlyError(error, 'Could not complete this sale. Review the sale details.') }
         : unconfirmedSale;
     }
     if (!data) return unconfirmedSale;

@@ -1,5 +1,7 @@
 'use server';
 
+import { toUserFriendlyError } from '@/data/supabase/user-friendly-errors';
+
 import type { ActionResult } from '@/data/actions/auth';
 import { requirePermission } from '@/data/auth/guards';
 import { PERMISSIONS } from '@/lib/permissions';
@@ -107,7 +109,7 @@ export async function createServiceAppointmentClosureAction(
     console.error('Could not create service appointment closure.', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Branch closure could not be created.',
+      error: toUserFriendlyError(error, 'Branch closure could not be created.'),
     };
   }
 }
@@ -141,7 +143,7 @@ export async function deleteServiceAppointmentClosureAction(
     console.error('Could not remove service appointment closure.', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Branch closure could not be removed.',
+      error: toUserFriendlyError(error, 'Branch closure could not be removed.'),
     };
   }
 }

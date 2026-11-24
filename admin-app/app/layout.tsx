@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { Toaster } from "sonner";
+import { ToastProvider } from "@/components/ui/Toast";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { CartProvider } from "@/components/cart/CartProvider";
 import { QueryProvider } from "@/components/providers/QueryProvider";
@@ -64,7 +64,7 @@ export default async function RootLayout({
           <CartProvider>
             <QueryProvider>{children}</QueryProvider>
           </CartProvider>
-          <Toaster position="top-right" richColors closeButton />
+          <ToastProvider position="top-right" visibleToasts={3} />
         </AuthProvider>
       </body>
     </html>

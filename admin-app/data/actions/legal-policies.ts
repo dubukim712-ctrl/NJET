@@ -1,5 +1,7 @@
 'use server';
 
+import { toUserFriendlyError } from '@/data/supabase/user-friendly-errors';
+
 import { randomUUID } from 'node:crypto';
 import { revalidatePath } from 'next/cache';
 import type { ActionResult } from '@/data/actions/auth';
@@ -68,7 +70,7 @@ export async function saveStorefrontLegalPolicyAction(
     console.error(`Could not save the ${parsed.data.slug} policy.`, error);
     return {
       success: false,
-      error: 'Could not save this policy. Please try again.',
+      error: toUserFriendlyError(error, 'Could not save this policy. Please try again.'),
     };
   }
 }

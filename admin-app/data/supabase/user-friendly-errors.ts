@@ -1,0 +1,242 @@
+const duplicateMessages: Readonly<Record<string, string>> = {
+  product_subcategories_category_slug_key: 'A subcategory with this name or URL slug already exists under the selected category. Please choose a different name or URL slug.',
+  product_categories_slug_key: 'This main category URL slug is already in use. Choose a different one.',
+  products_slug_key: 'This product URL slug is already in use. Choose a different one.',
+  products_sku_key: 'This product SKU is already in use. Enter a different SKU.',
+  product_variants_sku_key: 'This variant SKU is already in use. Enter a different SKU.',
+  ebike_units_serial_unique: 'This serial number is already registered. Check the number or enter a different one.',
+  ebike_units_motor_unique: 'This motor number is already registered. Check the number or enter a different one.',
+  branches_slug_key: 'This branch URL slug is already in use. Choose a different one.',
+  branches_name_key: 'This branch name is already in use. Choose a different name.',
+  delivery_zones_name_key: 'This delivery zone name is already in use. Choose a different name.',
+  roles_name_key: 'This role name is already in use. Choose a different name.',
+  user_profiles_email_key: 'This email address is already in use.',
+  users_email_key: 'This email address is already in use.',
+  users_phone_key: 'This phone number is already in use.',
+  service_appointment_cancellation_pending_idx: 'A cancellation request is already under staff review.',
+  roles_slug_key: 'This role identifier is already in use. Choose a different name.',
+};
+
+// These exact business-rule messages are safe to show when an order RPC rejects a request.
+const orderRejections = new Set([
+  'A cart item is no longer available.',
+  'A recipient is only valid when a payment is due online.',
+  'A sale item is no longer available.',
+  'Accept the current terms and privacy notice before ordering.',
+  'Add between 1 and 30 items to the sale.',
+  'Add between 1 and 30 items to your cart.',
+  'Add products to the sale before completing it.',
+  'Address details are only used for Home Credit.',
+  'An uploaded document could not be found.',
+  'An uploaded document has invalid file details.',
+  'An uploaded document is invalid.',
+  'Cash tendered must cover the discounted sale total.',
+  'Cash tendered must cover the sale total.',
+  'Choose a delivery zone.',
+  'Choose a valid fulfillment and payment method.',
+  'Choose a valid online payment platform.',
+  'Choose a valid payment method.',
+  'Choose a valid sales channel.',
+  'Choose an active branch you can access.',
+  'Choose an active branch.',
+  'Choose an active pickup branch.',
+  'Choose an active recipient for the selected payment provider.',
+  'Complete the address fields for Home Credit.',
+  'Complete the address fields for this order.',
+  'Complete the address or leave it blank.',
+  'Documents must be JPG, PNG, or WebP images up to 5 MB.',
+  'Enter a valid coupon code.',
+  'Enter a valid customer name and contact number.',
+  'Enter a valid name and contact number.',
+  'Enter the cash tendered amount.',
+  'Enter the online payment provider and reference number.',
+  'Enter valid Home Credit account and financing details before completing the order.',
+  'Enter valid payment details.',
+  'Home Credit is available for store pickup only.',
+  'Insufficient branch stock.',
+  'Inventory records are missing; the order was not cancelled.',
+  'No branch currently has all items available for delivery.',
+  'Online payment is unavailable when the e-bike reservation amount is zero.',
+  'Only confirmed Home Credit orders can be completed here.',
+  'Only confirmed orders can be completed.',
+  'Order documents must be a list of files.',
+  'Payment proof must be a JPG, PNG, or WebP image up to 5 MB.',
+  'Payment reference numbers must be 120 characters or fewer.',
+  'Remove payment details that do not match Home Credit.',
+  'Sign in before placing an order.',
+  'Sign in to submit payment proof.',
+  'Sign in to view this order.',
+  'Sold e-bike unit records are incomplete; the order was not cancelled.',
+  'Staff must verify this order contact number before confirming the order.',
+  'Stock changed before confirmation. Adjust inventory or cancel this order.',
+  'The Home Credit downpayment is too large to process.',
+  'The cart contains a duplicate item.',
+  'The cart contains an invalid item.',
+  'The cart must be a list of items.',
+  'The collection exceeds the order balance.',
+  'The discount cannot reduce the total below the Home Credit downpayment.',
+  'The discount cannot reduce the total below the reservation amount.',
+  'The discounted order total is too large to process.',
+  'The order cannot receive this discount.',
+  'The order total is too large to process.',
+  'The policies changed. Refresh checkout and review the current policies before ordering.',
+  'The postal code is too long.',
+  'The sale contains a duplicate item.',
+  'The sale contains an invalid item.',
+  'The sale total is too large to process.',
+  'The selected branch does not have enough stock for this cart.',
+  'The selected branch does not have enough stock for this sale.',
+  'The selected delivery zone is no longer available.',
+  'The uploaded payment proof could not be verified.',
+  'The uploaded payment proof is invalid.',
+  'There are not enough identified e-bike units to confirm this order.',
+  'This coupon code is invalid or inactive.',
+  'This coupon does not apply to the items in your order.',
+  'This coupon has already been used by this customer.',
+  'This coupon has reached its redemption limit.',
+  'This order can no longer be cancelled.',
+  'This order cannot be completed with a store payment.',
+  'This order is not accepting payment proof.',
+  'This order is not awaiting confirmation.',
+  'Upload no more than six order documents.',
+  'Upload the required payment proof and identity documents.',
+  'Verify the e-bike customer identity documents before confirming.',
+  'Verify the payment proof before confirming.',
+  'You are not allowed to cancel orders.',
+  'You are not allowed to complete orders.',
+  'You are not allowed to confirm orders.',
+  'You are not allowed to create walk-in sales.',
+  'You are not allowed to place storefront orders.',
+  'You are not allowed to view the walk-in catalog.',
+  'You can only access your assigned branch.',
+  'You can only create sales for branches you can access.',
+  'You do not have permission to place customer orders.',
+]);
+
+// Exact RPC messages reviewed for display in account, scheduling, and chat flows.
+const accountAndServiceRejections = new Set([
+  'A cancellation request is already under staff review.',
+  'Appointment requests must start on a 30-minute slot.',
+  'At least one full-access admin is required.',
+  'Chat not found.',
+  'Choose a future preferred appointment time.',
+  'Choose a future scheduled time.',
+  'Choose a preferred appointment time.',
+  'Choose a service date.',
+  'Choose a technician assigned to this branch.',
+  'Choose a time at the start of a 30-minute service slot.',
+  'Choose a valid branch schedule with all seven days.',
+  'Choose a valid chat status.',
+  'Choose a valid delete option.',
+  'Choose an active branch.',
+  'Choose an active service branch.',
+  'Choose approve or reject for this cancellation request.',
+  'Closure times must use 30-minute boundaries.',
+  'Customer and service details cannot be changed after booking.',
+  'Customer roles must include storefront.access.',
+  'Enter a subject and a reason for cancellation.',
+  'Full-access roles always have every permission and cannot be edited.',
+  'Full-access roles cannot have explicit permission rows.',
+  'Guest chat access is invalid or expired.',
+  'Home service appointments cannot be marked ready for pickup.',
+  'Invalid role scope.',
+  'Manage permissions require the matching read permission.',
+  'Message not found.',
+  'Messages must contain between 1 and 4000 characters.',
+  'One or more permissions do not exist.',
+  'Only full-access admins can assign a full-access role.',
+  "Only full-access admins can change a full-access user's role.",
+  'Only non-full-access staff roles can be assigned to a branch.',
+  'Only requested or confirmed appointments can be cancelled.',
+  'Only the sender can delete a message for everyone.',
+  'Permissions must match the role scope.',
+  'Please wait a moment before sending another message.',
+  'Reschedule confirmed appointments before blocking this time.',
+  'Role not found.',
+  'Scheduled appointments must start on a 30-minute slot.',
+  'Sign in or recover guest chat access before sending messages.',
+  'Sign in with a customer account to check service availability.',
+  'Sign in with a customer account to request an appointment.',
+  'Sign in with a customer account to request cancellation.',
+  'Sign in with a customer account to view appointments.',
+  'Sign in with a customer account to view cancellation requests.',
+  'Sign in with a customer or appointment manager account to view service times.',
+  'Staff roles must include admin.access.',
+  'System role details are read-only. Permissions can still be edited.',
+  'System roles cannot be deleted.',
+  'That permission does not match the role scope.',
+  'The baseline access permission cannot be removed.',
+  "The user's current role could not be found.",
+  'This appointment is no longer eligible for cancellation.',
+  'This appointment is not assigned to you or is unavailable.',
+  'This appointment is unavailable.',
+  'This appointment status cannot be changed that way.',
+  'This request is no longer pending or is outside your branch access.',
+  'This request is no longer pending.',
+  'This request is outside your branch access.',
+  'This technician already has an appointment in that 30-minute slot.',
+  'Use lowercase letters, numbers, and underscores for the slug.',
+  'User not found.',
+  'You cannot assign a role with permissions you do not have.',
+  'You cannot change a user whose role has permissions you do not have.',
+  'You cannot change your own role.',
+  'You cannot grant permissions you do not have.',
+  'You cannot manage a role with permissions you do not have.',
+  'You cannot manage this message.',
+  'You cannot move a user between staff and customer roles.',
+  'You cannot send messages in this chat.',
+  'You do not have access to this service branch.',
+  'You do not have permission to assign technicians at this branch.',
+  'You do not have permission to manage customer chats.',
+  'You do not have permission to manage roles.',
+  'You do not have permission to manage users.',
+  'You do not have permission to review cancellation requests.',
+  'You do not have permission to set this appointment status.',
+  'You do not have permission to view service appointment branches.',
+  'You do not have permission to view technician assignments.',
+  'You must be signed in to manage this message.',
+  'You must be signed in.',
+]);
+
+const networkCodes = new Set([
+  '08000', '08001', '08003', '08006', '57014', 'PGRST000', 'PGRST001', 'PGRST002',
+  'PGRST003', 'ETIMEDOUT', 'ECONNRESET', 'ECONNREFUSED', 'ENOTFOUND',
+  'UND_ERR_CONNECT_TIMEOUT', 'UND_ERR_HEADERS_TIMEOUT',
+]);
+
+export function toUserFriendlyError(error: unknown, fallbackMessage: string): string {
+  const fields = error && typeof error === 'object'
+    ? error as { code?: unknown; constraint?: unknown; message?: unknown; cause?: { code?: unknown } }
+    : undefined;
+  const code = typeof fields?.code === 'string' ? fields.code.toUpperCase() : '';
+  const message = typeof fields?.message === 'string' ? fields.message
+    : typeof error === 'string' ? error : '';
+
+  if (code === '23505' || /duplicate key value|violates unique constraint/i.test(message)) {
+    const constraint = typeof fields?.constraint === 'string' ? fields.constraint
+      : /unique constraint\s+"([^"]+)"/i.exec(message)?.[1];
+    return (constraint && Object.hasOwn(duplicateMessages, constraint) && duplicateMessages[constraint])
+      || 'This value is already in use. Check your details and enter a different value.';
+  }
+  if (code === '23503' || /violates foreign key constraint/i.test(message)) {
+    return 'This record cannot be deleted or changed because it is still linked to existing products, orders, or records.';
+  }
+  if (['22P02', '23514', '23502'].includes(code)) {
+    return 'Some details are missing or invalid. Check the required fields and try again.';
+  }
+  if (networkCodes.has(code) || networkCodes.has(String(fields?.cause?.code ?? ''))
+    || /failed to fetch|fetch failed|network\s?error|network request failed|timed?\s*out|timeout/i.test(message)) {
+    return 'The connection was interrupted or took too long. Check whether the change was saved before trying again.';
+  }
+  if (code === '23P01') {
+    return 'This time overlaps with an existing booking or closure. Choose another time.';
+  }
+  if (code === 'EMAIL_EXISTS') return 'This email address is already in use.';
+  if (code === 'PHONE_EXISTS') return 'This phone number is already in use.';
+  if (code === 'SAME_PASSWORD') return 'Choose a password different from your current one.';
+  if (code === 'WEAK_PASSWORD') return 'Choose a stronger password and try again.';
+  if (code === 'P0001' && (orderRejections.has(message) || accountAndServiceRejections.has(message))) {
+    return message;
+  }
+  return fallbackMessage;
+}

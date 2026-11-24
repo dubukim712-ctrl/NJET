@@ -1,5 +1,7 @@
 'use server';
 
+import { toUserFriendlyError } from '@/data/supabase/user-friendly-errors';
+
 import { revalidatePath } from 'next/cache';
 import type { ActionResult } from '@/data/actions/auth';
 import { requireFullAccess } from '@/data/auth/guards';
@@ -88,7 +90,7 @@ export async function saveBusinessSettingsAction(
     console.error('Could not save business information.', error);
     return {
       success: false,
-      error: 'Could not save business information. Please try again.',
+      error: toUserFriendlyError(error, 'Could not save business information. Please try again.'),
     };
   }
 }

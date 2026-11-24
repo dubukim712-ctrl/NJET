@@ -1,7 +1,10 @@
 'use server';
 
+import { toUserFriendlyError } from '@/data/supabase/user-friendly-errors';
+
 import type { ActionResult } from '@/data/actions/auth';
-import { getAuthContext, requireCustomer, requirePermission } from '@/data/auth/guards';
+import { requireCustomer, requirePermission } from '@/data/auth/guards';
+import { updateServiceAppointmentNote } from '@/data/appointments/update-note';
 import {
   getCustomerServiceAppointments,
   getStaffServiceAppointments,
@@ -11,7 +14,6 @@ import {
   customerServiceAppointmentRequestSchema,
   serviceAppointmentFiltersSchema,
   serviceAppointmentIdSchema,
-  serviceAppointmentNoteSchema,
   staffServiceAppointmentCreateSchema,
   staffServiceAppointmentUpdateSchema,
 } from '@/lib/validations/service-appointments';
@@ -69,7 +71,7 @@ export async function requestServiceAppointmentAction(
   });
   if (error) {
     console.error('Could not create service appointment request.', error);
-    return { success: false, error: error.message };
+    return { success: false, error: toUserFriendlyError(error, 'Could not request a service appointment.') };
   }
   return { success: true, data: { id: data } };
 }
@@ -217,7 +219,7 @@ export async function createStaffServiceAppointmentAction(
     .single();
   if (error) {
     console.error('Could not create staff service appointment.', error);
-    return { success: false, error: error.message };
+    return { success: false, error: toUserFriendlyError(error, 'Could not create the service appointment.') };
   }
   return { success: true, data: { id: data.id } };
 }
@@ -260,7 +262,7 @@ export async function updateStaffServiceAppointmentAction(
     .maybeSingle();
   if (error) {
     console.error('Could not update service appointment.', error);
-    return { success: false, error: error.message };
+    return { success: false, error: toUserFriendlyError(error, 'Could not update the service appointment.') };
   }
   if (!data) return { success: false, error: 'Appointment was not found or is outside your branch access.' };
   return { success: true, data: undefined };
@@ -281,36 +283,11 @@ export async function updateAssignedServiceAppointmentStatusAction(
   });
   if (error) {
     console.error('Could not update assigned service appointment.', error);
-    return { success: false, error: error.message };
+    return { success: false, error: toUserFriendlyError(error, 'Could not update your assigned appointment.') };
   }
   return { success: true, data: undefined };
 }
 
-export async function updateServiceAppointmentNoteAction(
-  payload: unknown
-): Promise<ActionResult> {
-  const context = await getAuthContext();
-  if (!context?.profile) {
-    return { success: false, error: 'You must be signed in.' };
-  }
-  if (
-    !hasPermission(context.profile, PERMISSIONS.serviceAppointmentsManage) &&
-    !hasPermission(context.profile, PERMISSIONS.serviceAppointmentsWork)
-  ) {
-    return { success: false, error: 'You do not have permission to update appointment notes.' };
-  }
-  const parsed = serviceAppointmentNoteSchema.safeParse(payload);
-  if (!parsed.success) return { success: false, error: 'The appointment note is invalid.' };
-  const { error } = await context.supabase
-    .from('service_appointment_internal_notes')
-    .upsert({
-      appointment_id: parsed.data.appointmentId,
-      note: parsed.data.note,
-      updated_by: context.profile.id,
-    }, { onConflict: 'appointment_id' });
-  if (error) {
-    console.error('Could not update appointment note.', error);
-    return { success: false, error: 'Appointment notes could not be saved.' };
-  }
-  return { success: true, data: undefined };
+export async function updateServiceAppointmentNoteAction(payload: unknown): Promise<ActionResult> {
+  return updateServiceAppointmentNote(payload);
 }

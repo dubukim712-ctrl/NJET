@@ -1,5 +1,7 @@
 'use server';
 
+import { toUserFriendlyError } from '@/data/supabase/user-friendly-errors';
+
 import { revalidatePath } from 'next/cache';
 import type { ActionResult } from '@/data/actions/auth';
 import { requireCustomer, requireFullAccess, requirePermission } from '@/data/auth/guards';
@@ -189,7 +191,7 @@ export async function saveBranchServiceHoursAction(
     console.error('Could not save branch service hours.', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Branch service hours could not be saved.',
+      error: toUserFriendlyError(error, 'Branch service hours could not be saved.'),
     };
   }
 

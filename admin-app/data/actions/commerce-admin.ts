@@ -1,30 +1,22 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import * as stockActions from './commerce-stock-admin';
 import type { ActionResult } from '@/data/actions/auth';
 import { requirePermission } from '@/data/auth/guards';
+import { commerceActionFailure as failure } from '@/data/commerce/action-failure';
 import { PERMISSIONS } from '@/lib/permissions';
 import { completeHomeCreditOrderSchema } from '@/lib/validations/home-credit-processing';
 import { z } from 'zod';
 import {
   branchAdminSchema,
-  branchTransferAdminSchema,
   deliveryZoneAdminSchema,
-  ebikeInventoryAdminSchema,
-  inventoryAdminSchema,
-  inventoryReceiptAdminSchema,
   productCategoryAdminSchema,
   productAdminSchema,
   subcategoryAdminSchema,
 } from '@/lib/validations/commerce-admin';
 
-function failure(error: unknown, fallback: string): ActionResult {
-  console.error(fallback, error);
-  return { success: false, error: fallback };
-}
-
 const orderIdSchema = z.object({ orderId: z.string().uuid() });
-const transferIdSchema = z.object({ transferId: z.string().uuid() });
 const productImagePathSchema = z.string().regex(/^images\/[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\.(jpg|png|webp)$/);
 
 async function updateCommerceOrderStatus(
@@ -36,7 +28,7 @@ async function updateCommerceOrderStatus(
   if (!parsed.success) return { success: false, error: 'Select a valid order.' };
   try {
     const { error } = await supabase.rpc(rpc, { p_order_id: parsed.data.orderId });
-    if (error) return failure(error, error.message);
+    if (error) return failure(error, 'Could not update the order status.');
     revalidatePath('/admin/orders');
     revalidatePath('/dashboard/orders');
     return { success: true, data: undefined };
@@ -73,7 +65,7 @@ export async function completeHomeCreditCommerceOrderAction(
       p_terms_months: parsed.data.termsMonths,
       p_monthly_payment_minor: parsed.data.monthlyPayment,
     });
-    if (error) return failure(error, error.message);
+    if (error) return failure(error, 'Could not complete the Home Credit order.');
     revalidatePath('/admin/orders');
     revalidatePath('/dashboard/orders');
     return { success: true, data: undefined };
@@ -93,7 +85,7 @@ export async function saveCommerceProductAction(payload: unknown): Promise<Actio
       .select('tracks_serial_inventory')
       .eq('id', categoryId)
       .maybeSingle();
-    if (categoryResult.error) return failure(categoryResult.error, categoryResult.error.message);
+    if (categoryResult.error) return failure(categoryResult.error, 'Could not check the selected main category.');
     if (!categoryResult.data) return { success: false, error: 'Choose a valid main category.' };
     const productType = categoryResult.data.tracks_serial_inventory ? 'ebike' : 'part';
     const result = id
@@ -105,94 +97,13 @@ export async function saveCommerceProductAction(payload: unknown): Promise<Actio
           slug, name, description, category_id: categoryId, product_type: productType,
           subcategory_id: subcategoryId, image_path: imagePath,
         });
-    if (result.error) return failure(result.error, result.error.message);
+    if (result.error) return failure(result.error, 'Could not save this product.');
     revalidatePath('/admin/products');
     revalidatePath('/shop');
     revalidatePath('/shop/view-product/[slug]', 'page');
     return { success: true, data: undefined };
   } catch (error) {
     return failure(error, 'Could not save this product.');
-  }
-}
-
-export async function saveCommerceInventoryAction(payload: unknown): Promise<ActionResult> {
-  const { supabase } = await requirePermission(PERMISSIONS.productsManage, '/admin/products');
-  const parsed = inventoryAdminSchema.safeParse(payload);
-  if (!parsed.success) return { success: false, error: 'Check the stock quantity.', fieldErrors: parsed.error.flatten().fieldErrors };
-  const { branchId, variantId, stock } = parsed.data;
-  try {
-    const { error } = await supabase.rpc('save_batch_inventory', {
-      p_branch_id: branchId, p_variant_id: variantId, p_stock: stock,
-    });
-    if (error) return failure(error, error.message);
-    revalidatePath('/admin/products');
-    revalidatePath('/shop');
-    revalidatePath('/shop/view-product/[slug]', 'page');
-    return { success: true, data: undefined };
-  } catch (error) {
-    return failure(error, 'Could not update stock.');
-  }
-}
-
-export async function createInventoryReceiptAction(payload: unknown): Promise<ActionResult> {
-  const { supabase } = await requirePermission(PERMISSIONS.productsManage, '/admin/products');
-  const parsed = inventoryReceiptAdminSchema.safeParse(payload);
-  if (!parsed.success) {
-    return {
-      success: false,
-      error: 'Check the supplier, date, and received product details.',
-      fieldErrors: parsed.error.flatten().fieldErrors,
-    };
-  }
-  try {
-    const { error } = await supabase.rpc('create_inventory_receipt', {
-      p_branch_id: parsed.data.branchId,
-      p_supplier_name: parsed.data.supplierName,
-      p_document_reference: parsed.data.documentReference,
-      p_received_at: parsed.data.receivedAt,
-      p_shared_cost_minor: parsed.data.sharedCostMinor,
-      p_items: parsed.data.items.map((item) => ({
-        variant_id: item.variantId,
-        quantity: item.quantity,
-        unit_supplier_cost_minor: item.unitSupplierCostMinor,
-        units: item.units.map((unit) => ({
-          serial_number: unit.serialNumber,
-          motor_number: unit.motorNumber,
-        })),
-      })),
-    });
-    if (error) return failure(error, error.message);
-    revalidatePath('/admin/products');
-    revalidatePath('/admin/inventory');
-    revalidatePath('/shop');
-    revalidatePath('/shop/view-product/[slug]', 'page');
-    return { success: true, data: undefined };
-  } catch (error) {
-    return failure(error, 'Could not record this inventory receipt.');
-  }
-}
-
-export async function registerEbikeUnitsAction(payload: unknown): Promise<ActionResult> {
-  const { supabase } = await requirePermission(PERMISSIONS.productsManage, '/admin/products');
-  const parsed = ebikeInventoryAdminSchema.safeParse(payload);
-  if (!parsed.success) return { success: false, error: 'Check each e-bike serial and motor number.', fieldErrors: parsed.error.flatten().fieldErrors };
-  try {
-    const { error } = await supabase.rpc('register_ebike_units', {
-      p_branch_id: parsed.data.branchId,
-      p_variant_id: parsed.data.variantId,
-      p_units: parsed.data.units.map(({ unitId, serialNumber, motorNumber }) => ({
-        unit_id: unitId,
-        serial_number: serialNumber,
-        motor_number: motorNumber,
-      })),
-    });
-    if (error) return failure(error, error.message);
-    revalidatePath('/admin/products');
-    revalidatePath('/shop');
-    revalidatePath('/shop/view-product/[slug]', 'page');
-    return { success: true, data: undefined };
-  } catch (error) {
-    return failure(error, 'Could not save e-bike inventory.');
   }
 }
 
@@ -207,7 +118,7 @@ export async function saveProductSubcategoryAction(payload: unknown): Promise<Ac
       .select('id')
       .eq('id', categoryId)
       .maybeSingle();
-    if (categoryResult.error) return failure(categoryResult.error, categoryResult.error.message);
+    if (categoryResult.error) return failure(categoryResult.error, 'Could not check the selected main category.');
     if (!categoryResult.data) return { success: false, error: 'Choose a valid main category.' };
     const result = id
       ? await supabase.from('product_subcategories').update({
@@ -216,7 +127,7 @@ export async function saveProductSubcategoryAction(payload: unknown): Promise<Ac
       : await supabase.from('product_subcategories').insert({
           category_id: categoryId, name, slug,
         });
-    if (result.error) return failure(result.error, result.error.message);
+    if (result.error) return failure(result.error, 'Could not save this subcategory.');
     revalidatePath('/admin/products');
     revalidatePath('/shop');
     revalidatePath('/shop/view-product/[slug]', 'page');
@@ -237,54 +148,13 @@ export async function saveProductCategoryAction(payload: unknown): Promise<Actio
       : await supabase.from('product_categories').insert({
           tracks_serial_inventory: tracksSerialInventory, name, slug,
         });
-    if (result.error) return failure(result.error, result.error.message);
+    if (result.error) return failure(result.error, 'Could not save this main category.');
     revalidatePath('/admin/products');
     revalidatePath('/shop');
     revalidatePath('/shop/view-product/[slug]', 'page');
     return { success: true, data: undefined };
   } catch (error) {
     return failure(error, 'Could not save this main category.');
-  }
-}
-
-export async function dispatchBranchTransferAction(payload: unknown): Promise<ActionResult> {
-  const { supabase } = await requirePermission(PERMISSIONS.productsManage, '/admin/products');
-  const parsed = branchTransferAdminSchema.safeParse(payload);
-  if (!parsed.success) return { success: false, error: 'Check the transfer details.', fieldErrors: parsed.error.flatten().fieldErrors };
-  try {
-    const { error } = await supabase.rpc('dispatch_branch_transfer', {
-      p_source_branch_id: parsed.data.sourceBranchId,
-      p_destination_branch_id: parsed.data.destinationBranchId,
-      p_items: parsed.data.items.map(({ variantId, quantity, unitIds }) => ({
-        variant_id: variantId, quantity, unit_ids: unitIds,
-      })),
-      p_note: parsed.data.note,
-    });
-    if (error) return failure(error, error.message);
-    revalidatePath('/admin/products');
-    revalidatePath('/shop');
-    revalidatePath('/shop/view-product/[slug]', 'page');
-    return { success: true, data: undefined };
-  } catch (error) {
-    return failure(error, 'Could not dispatch this transfer.');
-  }
-}
-
-export async function receiveBranchTransferAction(payload: unknown): Promise<ActionResult> {
-  const { supabase } = await requirePermission(PERMISSIONS.productsManage, '/admin/products');
-  const parsed = transferIdSchema.safeParse(payload);
-  if (!parsed.success) return { success: false, error: 'Select a valid branch transfer.' };
-  try {
-    const { error } = await supabase.rpc('receive_branch_transfer', {
-      p_transfer_id: parsed.data.transferId,
-    });
-    if (error) return failure(error, error.message);
-    revalidatePath('/admin/products');
-    revalidatePath('/shop');
-    revalidatePath('/shop/view-product/[slug]', 'page');
-    return { success: true, data: undefined };
-  } catch (error) {
-    return failure(error, 'Could not receive this transfer.');
   }
 }
 
@@ -322,7 +192,7 @@ export async function saveCommerceBranchAction(payload: unknown): Promise<Action
       : await supabase.from('branches').insert({
           slug, name, address, latitude, longitude,
         });
-    if (result.error) return failure(result.error, result.error.message);
+    if (result.error) return failure(result.error, 'Could not save this branch.');
     revalidatePath('/admin/branches');
     revalidatePath('/admin/products');
     revalidatePath('/shop');
@@ -346,11 +216,31 @@ export async function saveDeliveryZoneAction(payload: unknown): Promise<ActionRe
       : await supabase.from('delivery_zones').insert({
           name, fee_minor: feeMinor,
         });
-    if (result.error) return failure(result.error, result.error.message);
+    if (result.error) return failure(result.error, 'Could not save this delivery zone.');
     revalidatePath('/admin/delivery-zones');
     revalidatePath('/checkout');
     return { success: true, data: undefined };
   } catch (error) {
     return failure(error, 'Could not save this delivery zone.');
   }
+}
+
+export async function saveCommerceInventoryAction(payload: unknown): Promise<ActionResult> {
+  return stockActions.saveCommerceInventoryAction(payload);
+}
+
+export async function createInventoryReceiptAction(payload: unknown): Promise<ActionResult> {
+  return stockActions.createInventoryReceiptAction(payload);
+}
+
+export async function registerEbikeUnitsAction(payload: unknown): Promise<ActionResult> {
+  return stockActions.registerEbikeUnitsAction(payload);
+}
+
+export async function dispatchBranchTransferAction(payload: unknown): Promise<ActionResult> {
+  return stockActions.dispatchBranchTransferAction(payload);
+}
+
+export async function receiveBranchTransferAction(payload: unknown): Promise<ActionResult> {
+  return stockActions.receiveBranchTransferAction(payload);
 }

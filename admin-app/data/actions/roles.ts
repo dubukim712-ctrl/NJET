@@ -1,5 +1,7 @@
 'use server';
 
+import { toUserFriendlyError } from '@/data/supabase/user-friendly-errors';
+
 import { revalidatePath } from 'next/cache';
 import { getAuthContext } from '@/data/auth/guards';
 import {
@@ -11,9 +13,6 @@ import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 import type { ActionResult } from '@/data/actions/auth';
 
 function roleErrorMessage(error: { code?: string; message: string }): string {
-  if (error.code === '23505') {
-    return 'A role with that slug already exists.';
-  }
   if (error.code === '23514') {
     return 'The role details are not valid.';
   }
@@ -23,10 +22,7 @@ function roleErrorMessage(error: { code?: string; message: string }): string {
   if (error.code === 'PGRST202') {
     return 'The permissions migration is missing. Run supabase/migrations/20240101000005_permissions_functions.sql, then refresh this page.';
   }
-  if (error.code === 'P0001') {
-    return error.message;
-  }
-  return 'Could not save the role. Please try again.';
+  return toUserFriendlyError(error, 'Could not save the role. Please try again.');
 }
 
 function readPermissionKeys(formData: FormData): string[] {

@@ -1,5 +1,7 @@
 'use server';
 
+import { toUserFriendlyError } from '@/data/supabase/user-friendly-errors';
+
 import { createClient } from '@/data/supabase/server';
 import {
   createGuestChatToken,
@@ -145,7 +147,7 @@ export async function sendSupportChatMessageAction(
       ...(guestTokenHash ? { p_guest_token_hash: guestTokenHash } : {}),
     });
     if (error || !data) {
-      return { success: false, error: error?.message ?? 'Message could not be sent.' };
+      return { success: false, error: toUserFriendlyError(error, 'Message could not be sent.') };
     }
     return { success: true, data: { messageId: data } };
   } catch {
@@ -175,7 +177,7 @@ export async function deleteSupportChatMessageAction(
       ...(guestTokenHash ? { p_guest_token_hash: guestTokenHash } : {}),
     });
     if (error) {
-      return { success: false, error: error.message };
+      return { success: false, error: toUserFriendlyError(error, 'Message could not be deleted.') };
     }
     return { success: true, data: undefined };
   } catch {
