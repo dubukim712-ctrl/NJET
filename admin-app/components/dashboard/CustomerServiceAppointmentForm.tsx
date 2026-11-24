@@ -20,6 +20,7 @@ import { ServiceAppointmentsQueryError, useCustomerServiceAppointmentBranchesQue
   useInvalidateServiceAppointmentsQuery } from '@/data/appointments/client';
 import { useCustomerServiceAppointmentSlotsQuery } from '@/data/appointments/availability-client';
 import { customerServiceAvailabilityQueryKey } from '@/data/appointments/query-keys';
+import { appointmentConfirmationPath } from '@/lib/customer-confirmation';
 import { requestServiceAppointmentAction } from '@/data/actions/service-appointments';
 import {
   customerServiceAppointmentRequestSchema,
@@ -112,7 +113,7 @@ export function CustomerServiceAppointmentForm({ initialPhoneNumber, initialAddr
         return;
       }
       await invalidate();
-      router.push('/dashboard/appointments');
+      router.push(appointmentConfirmationPath(result.data.id));
     } catch (submitError) {
       console.error('Could not submit service appointment request.', submitError);
       setError('Your request could not be sent. Please try again.');

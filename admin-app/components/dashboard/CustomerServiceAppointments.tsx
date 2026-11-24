@@ -22,6 +22,7 @@ import type { Database } from '@/types/database';
 
 type CustomerAppointment =
   Database['public']['Functions']['customer_service_appointments']['Returns'][number] & {
+    bike_serial_number?: string | null;
     cancellation_request: {
       subject: string;
       reason: string;
@@ -48,8 +49,11 @@ function formatAppointmentDate(value: string | null) {
   }).format(new Date(value));
 }
 
-function AppointmentCard({ appointment }: { appointment: CustomerAppointment }) {
-  const [showDetails, setShowDetails] = useState(false);
+export function CustomerAppointmentCard({ appointment, defaultExpanded = false }: {
+  appointment: CustomerAppointment;
+  defaultExpanded?: boolean;
+}) {
+  const [showDetails, setShowDetails] = useState(defaultExpanded);
   const detailsId = `appointment-details-${appointment.id}`;
   const serviceType = appointment.service_type.charAt(0).toUpperCase() + appointment.service_type.slice(1);
   const serviceMode = appointment.service_mode === 'home_service' ? 'Home service' : 'Branch visit';
@@ -106,6 +110,9 @@ function AppointmentCard({ appointment }: { appointment: CustomerAppointment }) 
         </button>
       </div>
       <div id={detailsId} hidden={!showDetails} className="mt-2 border-t pt-4">
+        {appointment.bike_serial_number && (
+          <p className="break-words text-sm"><span className="text-muted-foreground">Serial number:</span> {appointment.bike_serial_number}</p>
+        )}
         {address && <p className="break-words text-sm"><span className="text-muted-foreground">Home service address:</span> {address}</p>}
         <p className="mt-3 whitespace-pre-wrap break-words text-sm leading-6">{appointment.issue_description}</p>
         {appointment.status === 'requested' && (
@@ -223,7 +230,7 @@ export function CustomerServiceAppointments() {
       </div>
       {visibleAppointments.length ? (
         <ul className="space-y-4">
-          {visibleAppointments.map((appointment) => <AppointmentCard key={appointment.id} appointment={appointment} />)}
+          {visibleAppointments.map((appointment) => <CustomerAppointmentCard key={appointment.id} appointment={appointment} />)}
         </ul>
       ) : query.data.length ? (
         <p role="status" className="rounded-xl border bg-card p-5 text-center text-sm text-muted-foreground">

@@ -81,6 +81,12 @@ export type DatabaseStorefrontFunctions = {
     };
     Returns: string;
   };
+  customer_service_appointment_detail: {
+    Args: { p_appointment_id: string };
+    Returns: (DatabaseStorefrontFunctions['customer_service_appointments']['Returns'][number] & {
+      bike_serial_number: string | null;
+    })[];
+  };
   customer_service_appointments: {
     Args: Record<PropertyKey, never>;
     Returns: {

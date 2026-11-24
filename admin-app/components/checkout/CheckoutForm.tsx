@@ -139,7 +139,6 @@ export function CheckoutForm({
       identityFiles,
       hasEbike,
       getCheckoutError,
-      paymentProofRequired,
       payload: {
         customerName: text('customerName'),
         contactNumber: text('contactNumber'),

@@ -9,6 +9,7 @@ import { customerProfileQueryKey } from '@/data/commerce/customer-query-keys';
 import { adminOrdersQueryKey } from '@/data/commerce/admin-orders-client';
 import { useInvalidateCustomerOrdersQuery } from '@/data/commerce/customer-orders-client';
 import { uploadOrderDocuments, type UploadedDocument } from '@/data/commerce/documents-client';
+import { orderConfirmationPath } from '@/lib/customer-confirmation';
 import { checkoutSchema, type CheckoutInput } from '@/lib/validations/commerce';
 
 const ambiguousOrderError =
@@ -25,7 +26,6 @@ type Submission = {
   identityFiles: File[];
   hasEbike: boolean;
   getCheckoutError: () => string | null;
-  paymentProofRequired: boolean;
   payload: Omit<CheckoutInput, 'submissionId' | 'documents' | 'termsAccepted' | 'privacyAccepted'> & {
     termsAccepted: boolean;
     privacyAccepted: boolean;
@@ -66,7 +66,7 @@ export function useCheckoutSubmission(clear: () => { success: boolean }) {
   }, [fieldErrors, submissionError]);
 
   async function submit({
-    form, customerId, identityFiles, hasEbike, getCheckoutError, paymentProofRequired, payload,
+    form, customerId, identityFiles, hasEbike, getCheckoutError, payload,
   }: Submission) {
     if (busyRef.current) return;
     formRef.current = form;
@@ -132,8 +132,7 @@ export function useCheckoutSubmission(clear: () => { success: boolean }) {
         queryClient.invalidateQueries({ queryKey: [...customerProfileQueryKey, customerId] }),
       ]);
       if (!clear().success) toast.error('Order placed, but your local cart could not be cleared.');
-      const orderId = encodeURIComponent(result.data.orderId);
-      router.push(paymentProofRequired ? `/dashboard/orders/${orderId}` : `/dashboard/orders?placed=${orderId}`);
+      router.push(orderConfirmationPath(result.data.orderId));
     } catch (submissionError) {
       console.error('Could not complete checkout submission.', submissionError);
       setRetryable(Boolean(attempt.documents));
