@@ -115,6 +115,8 @@ const orderRejections = new Set([
 
 // Exact RPC messages reviewed for display in account, scheduling, and chat flows.
 const accountAndServiceRejections = new Set([
+  'Choose an active subcategory for this main category.',
+  'This time is blocked by a branch closure. Choose another time.',
   'A cancellation request is already under staff review.',
   'Appointment requests must start on a 30-minute slot.',
   'At least one full-access admin is required.',
@@ -219,6 +221,10 @@ export function toUserFriendlyError(error: unknown, fallbackMessage: string): st
       || 'This value is already in use. Check your details and enter a different value.';
   }
   if (code === '23503' || /violates foreign key constraint/i.test(message)) {
+    if (fields?.constraint === 'products_category_subcategory_fkey'
+      || /foreign key constraint "products_category_subcategory_fkey"/i.test(message)) {
+      return 'Choose a subcategory that belongs to the selected main category.';
+    }
     return 'This record cannot be deleted or changed because it is still linked to existing products, orders, or records.';
   }
   if (['22P02', '23514', '23502'].includes(code)) {
