@@ -78,22 +78,25 @@ export function ProductReviewForm({
     <form className="space-y-4" onSubmit={submit}>
       <fieldset>
         <legend className="mb-2 text-sm font-medium">Your rating</legend>
-        <div className="flex gap-1">
-          {[1, 2, 3, 4, 5].map((value) => (
-            <button
-              key={value}
-              type="button"
-              aria-label={`${value} ${value === 1 ? 'star' : 'stars'}`}
-              aria-pressed={rating === value}
-              onClick={() => setRating(value)}
-              className="rounded-sm p-1 text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              <Star
-                className={`size-6 ${value <= rating ? 'fill-current' : ''}`}
-                aria-hidden="true"
-              />
-            </button>
-          ))}
+        <div className="flex flex-wrap items-center gap-x-2">
+          <div className="flex flex-wrap">
+            {[1, 2, 3, 4, 5].map((value) => (
+              <button
+                key={value}
+                type="button"
+                aria-label={`${value} ${value === 1 ? 'star' : 'stars'}`}
+                aria-pressed={rating === value}
+                onClick={() => setRating(value)}
+                className="inline-flex size-11 items-center justify-center rounded-sm text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <Star
+                  className={`size-6 ${value <= rating ? 'fill-current' : ''}`}
+                  aria-hidden="true"
+                />
+              </button>
+            ))}
+          </div>
+          <span className="text-sm text-muted-foreground" role="status">{rating} of 5 stars</span>
         </div>
       </fieldset>
       <label className="block space-y-2 text-sm font-medium">

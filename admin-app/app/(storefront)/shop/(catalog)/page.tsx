@@ -1,3 +1,5 @@
+import { Suspense } from 'react';
+import { ShopCatalogSkeleton } from '@/components/shop/ShopCatalogSkeleton';
 import { ShopCatalogQuery } from '@/components/shop/ShopCatalogQuery';
 
 export const metadata = { title: 'Shop' };
@@ -12,7 +14,9 @@ export default function ShopPage() {
           Browse e-bikes, spare parts, and accessories. Choose a branch to check local availability.
         </p>
       </header>
-      <ShopCatalogQuery />
+      <Suspense fallback={<ShopCatalogSkeleton showHero={false} />}>
+        <ShopCatalogQuery />
+      </Suspense>
     </div>
   );
 }

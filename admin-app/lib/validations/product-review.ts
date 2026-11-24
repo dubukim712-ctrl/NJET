@@ -59,6 +59,9 @@ export const publishedProductReviewsSchema = z.array(z.object({
   comment: z.string().nullable(),
   created_at: z.string().datetime({ offset: true }),
   reviewer_name: z.string().nullable(),
+  is_anonymous: z.boolean(),
+  reviewer_avatar_url: z.string().nullable(),
+  variant_name: z.string().nullable(),
 }));
 
 export const customerOrderItemReviewRowsSchema = z.array(z.object({

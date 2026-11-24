@@ -18,12 +18,15 @@ import type {
   AdminProductReview,
 } from '@/lib/validations/product-review';
 
-type PublishedProductReview = {
+export type PublishedProductReview = {
   review_id: string;
   rating: number;
   comment: string | null;
   created_at: string;
   reviewer_name: string | null;
+  is_anonymous: boolean;
+  reviewer_avatar_url: string | null;
+  variant_name: string | null;
 };
 
 export async function getProductRatingSummaryAction(

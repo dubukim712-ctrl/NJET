@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AddToCartButton } from "@/components/cart/AddToCartButton";
 import { Select } from "@/components/ui/Select";
 import type { CatalogProduct } from "@/data/commerce/catalog";
+import { ProductStockBadge } from "@/components/shop/ProductStockBadge";
 import { ProductPrice } from "@/components/shop/ProductPrice";
 import { formatPhp } from "@/lib/commerce";
 
@@ -48,16 +49,6 @@ export function ProductPurchasePanel({
     setBranchId(nextBranchId);
     setVariantId("");
   };
-
-  const stockColor = {
-    "out-of-stock": "text-destructive",
-    "in-stock": "text-green-700",
-    default: "text-muted-foreground",
-  };
-
-  const stockAlert = selectedVariant?.available
-    ? stockColor["in-stock"]
-    : stockColor["out-of-stock"];
 
   return (
     <section
@@ -102,9 +93,9 @@ export function ProductPurchasePanel({
               priceMinor={selectedVariant.price_minor}
               listPriceMinor={selectedVariant.list_price_minor}
             />
-            <p className={`text-sm ${stockAlert} font-bold`}>
+            <ProductStockBadge available={selectedVariant.available}>
               {getStorefrontStockLabel(selectedVariant.branchStock, Boolean(user))}
-            </p>
+            </ProductStockBadge>
           </div>
           <p className="mt-1 text-xs text-muted-foreground">
             SKU: {selectedVariant.sku}

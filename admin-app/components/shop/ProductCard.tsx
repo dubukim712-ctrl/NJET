@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { ArrowUpRight, Star } from 'lucide-react';
 import type { CatalogProduct } from '@/data/commerce/catalog';
 import { ProductImage } from '@/components/shop/ProductImage';
+import { ProductStockBadge } from '@/components/shop/ProductStockBadge';
+import { getStartingVariant } from '@/data/commerce/storefront-starting-variant';
 import { ProductPrice } from '@/components/shop/ProductPrice';
 
 export function ProductCard({
@@ -18,10 +20,7 @@ export function ProductCard({
   loading?: 'eager' | 'lazy';
 }) {
   const { user } = useAuth();
-  const startingVariant = product.variants.reduce<(typeof product.variants)[number] | null>(
-    (lowest, variant) => !lowest || variant.price_minor < lowest.price_minor ? variant : lowest,
-    null
-  );
+  const startingVariant = getStartingVariant(product);
   const { averageRating, reviewCount } = product.ratingSummary;
   const stockLabel = getStorefrontStockLabel(product.stockSummary, Boolean(user));
   const showsTotal = Boolean(user) && product.stockSummary.available && product.stockSummary.stock !== null;
@@ -91,22 +90,22 @@ export function ProductCard({
             >
               {product.name}
             </h2>
-            <div className="mt-1 flex items-center gap-1.5 text-xs">
-              <span className="inline-flex items-center gap-0.5 text-primary" aria-hidden="true">
-                {[1, 2, 3, 4, 5].map((value) => (
-                  <Star
-                    key={value}
-                    className={`size-3.5 ${averageRating >= value ? 'fill-current' : ''}`}
-                  />
-                ))}
-              </span>
-              <span className="font-medium">
-                {reviewCount ? averageRating.toFixed(1) : 'No reviews'}
-              </span>
-              {reviewCount > 0 && (
+            {reviewCount > 0 ? (
+              <div className="mt-1 flex flex-wrap items-center gap-x-1.5 text-xs">
+                <span className="inline-flex items-center gap-0.5 text-primary" aria-hidden="true">
+                  {[1, 2, 3, 4, 5].map((value) => (
+                    <Star
+                      key={value}
+                      className={`size-3.5 ${averageRating >= value ? 'fill-current' : ''}`}
+                    />
+                  ))}
+                </span>
+                <span className="font-medium">{averageRating.toFixed(1)}</span>
                 <span className="text-muted-foreground">({reviewCount})</span>
-              )}
-            </div>
+              </div>
+            ) : (
+              <p className="mt-1 text-xs text-muted-foreground">No reviews yet</p>
+            )}
             <p
               className={`mt-1 line-clamp-2 min-h-10 text-sm leading-5 text-muted-foreground ${
                 compactOnNarrow
@@ -117,9 +116,9 @@ export function ProductCard({
               {product.description || 'Ask our team for product details.'}
             </p>
           </div>
-          <p className="text-xs font-medium text-muted-foreground">
+          <ProductStockBadge available={product.stockSummary.available}>
             {stockLabel}{showsTotal && ' across branches'}
-          </p>
+          </ProductStockBadge>
           <div
             className={`flex min-h-10 min-w-0 items-center text-sm font-semibold ${
               compactOnNarrow

@@ -2,104 +2,20 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Search } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
 import type { CatalogProduct } from '@/data/commerce/catalog';
 import { ProductCard } from '@/components/shop/ProductCard';
 import { useShopFilters } from '@/components/shop/ShopFiltersContext';
 import { Button } from '@/components/ui/Button';
-import { Select } from '@/components/ui/Select';
-
-type FilterOption = [string, string];
-
-function ShopFiltersPanel({
-  idPrefix,
-  search,
-  onSearchChange,
-  category,
-  onCategoryChange,
-  subcategory,
-  onSubcategoryChange,
-  categories,
-  subcategories,
-  className,
-}: {
-  idPrefix: string;
-  search: string;
-  onSearchChange: (value: string) => void;
-  category: string;
-  onCategoryChange: (value: string) => void;
-  subcategory: string;
-  onSubcategoryChange: (value: string) => void;
-  categories: FilterOption[];
-  subcategories: FilterOption[];
-  className: string;
-}) {
-  const searchId = `${idPrefix}-search`;
-
-  return (
-    <aside
-      id={`${idPrefix}-panel`}
-      aria-labelledby={`${idPrefix}-title`}
-      className={`rounded-xl border bg-card p-4 ${className}`}
-    >
-      <h2 id={`${idPrefix}-title`} className="font-semibold">
-        Find a product
-      </h2>
-      <div className="mt-4 space-y-4">
-        <div>
-          <label htmlFor={searchId} className="mb-1.5 block text-sm font-medium">
-            Search
-          </label>
-          <div className="relative">
-            <Search
-              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-              aria-hidden="true"
-            />
-            <input
-              id={searchId}
-              type="search"
-              value={search}
-              onChange={(event) => onSearchChange(event.target.value)}
-              placeholder="Name or description"
-              className="min-h-11 w-full rounded-md border bg-background pl-9 pr-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            />
-          </div>
-        </div>
-        <Select
-          id={`${idPrefix}-category`}
-          label="Category"
-          value={category}
-          onValueChange={onCategoryChange}
-          className="bg-background"
-        >
-          <option value="all">All categories</option>
-          {categories.map(([id, name]) => (
-            <option key={id} value={id}>
-              {name}
-            </option>
-          ))}
-        </Select>
-        <Select
-          id={`${idPrefix}-subcategory`}
-          label="Subcategory"
-          value={subcategory}
-          onValueChange={onSubcategoryChange}
-          className="bg-background"
-        >
-          <option value="all">All subcategories</option>
-          {subcategories.map(([id, name]) => (
-            <option key={id} value={id}>
-              {name}
-            </option>
-          ))}
-        </Select>
-      </div>
-    </aside>
-  );
-}
+import { ShopFiltersPanel, type ShopSort } from '@/components/shop/ShopFiltersPanel';
+import { getStartingVariant } from '@/data/commerce/storefront-starting-variant';
 
 export function ShopProductBrowser({ products }: { products: CatalogProduct[] }) {
   const { open: filtersOpen, popoverRoot: filterPopoverRoot } = useShopFilters();
+  const params = useSearchParams();
+  const inStockOnly = params.get('inStock') === '1';
+  const sortParam = params.get('sort');
+  const sort: ShopSort = sortParam === 'price-asc' || sortParam === 'price-desc' ? sortParam : 'featured';
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [category, setCategory] = useState('all');
@@ -131,8 +47,8 @@ export function ShopProductBrowser({ products }: { products: CatalogProduct[] })
   }, [category, products]);
 
   const filteredProducts = useMemo(
-    () =>
-      products.filter((product) => {
+    () => {
+      const matches = products.filter((product) => {
         const matchesCategory =
           category === 'all' || (product.category_id ?? 'uncategorized') === category;
         const matchesSubcategory =
@@ -147,12 +63,34 @@ export function ShopProductBrowser({ products }: { products: CatalogProduct[] })
           .filter(Boolean)
           .join(' ')
           .toLowerCase();
-        return matchesCategory && matchesSubcategory && searchableText.includes(debouncedSearch);
-      }),
-    [category, debouncedSearch, products, subcategory]
+        return matchesCategory && matchesSubcategory
+          && (!inStockOnly || product.stockSummary.available)
+          && searchableText.includes(debouncedSearch);
+      });
+      if (sort === 'featured') return matches;
+      return matches
+        .map((product) => ({ product, price: getStartingVariant(product)?.price_minor }))
+        .sort((a, b) => {
+          if (a.price === undefined) return b.price === undefined ? 0 : 1;
+          if (b.price === undefined) return -1;
+          return sort === 'price-asc' ? a.price - b.price : b.price - a.price;
+        })
+        .map(({ product }) => product);
+    },
+    [category, debouncedSearch, inStockOnly, products, sort, subcategory]
   );
 
+  function updateCatalogUrl(changes: Partial<Record<'inStock' | 'sort', string | null>>) {
+    const url = new URL(window.location.href);
+    for (const [key, value] of Object.entries(changes)) {
+      if (value) url.searchParams.set(key, value);
+      else url.searchParams.delete(key);
+    }
+    window.history.replaceState(null, '', url);
+  }
+
   function clearFilters() {
+    updateCatalogUrl({ inStock: null, sort: null });
     setSearch('');
     setDebouncedSearch('');
     setCategory('all');
@@ -161,6 +99,10 @@ export function ShopProductBrowser({ products }: { products: CatalogProduct[] })
   }
 
   const filterPanelProps = {
+    inStockOnly,
+    onInStockChange: (value: boolean) => updateCatalogUrl({ inStock: value ? '1' : null }),
+    sort,
+    onSortChange: (value: ShopSort) => updateCatalogUrl({ sort: value === 'featured' ? null : value }),
     search,
     onSearchChange: setSearch,
     category,
@@ -208,7 +150,7 @@ export function ShopProductBrowser({ products }: { products: CatalogProduct[] })
           <div className="rounded-xl border bg-card px-5 py-12 text-center">
             <h3 className="font-semibold">No matching products</h3>
             <p className="mt-1 text-sm text-muted-foreground">
-              Try another search or choose a different category.
+              Try a different search or change your filters.
             </p>
             <Button type="button" variant="outline" className="mt-4 min-h-11" onClick={clearFilters}>
               Clear filters

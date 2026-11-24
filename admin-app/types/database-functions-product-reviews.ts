@@ -19,6 +19,9 @@ export type DatabaseProductReviewFunctions = {
       comment: string | null;
       created_at: string;
       reviewer_name: string | null;
+      is_anonymous: boolean;
+      reviewer_avatar_url: string | null;
+      variant_name: string | null;
     }[];
   };
   customer_order_item_review_details: {

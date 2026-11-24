@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import { Star } from 'lucide-react';
 import { useState } from 'react';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/components/auth/AuthProvider';
@@ -12,6 +11,9 @@ import {
 } from '@/data/actions/product-reviews';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 import { Button } from '@/components/ui/Button';
+import { ProductReviewCard } from '@/components/shop/ProductReviewCard';
+import { ProductReviewStars } from '@/components/shop/ProductReviewStars';
+import { Select } from '@/components/ui/Select';
 import { ProductReviewForm } from '@/components/shop/ProductReviewForm';
 
 const reviewPageSize = 10;
@@ -59,10 +61,10 @@ export function ProductReviewsSection({ productId }: { productId: string }) {
     enabled: canReview,
     retry: false,
   });
-  const reviewItems = customerReviewItemsQuery.data?.items ?? [];
-  const selectedItem = reviewItems.find((item) => item.orderItemId === selectedOrderItemId)
-    ?? reviewItems.find((item) => !item.review)
-    ?? reviewItems[0]
+  const purchasedItems = customerReviewItemsQuery.data?.items ?? [];
+  const unreviewedItems = purchasedItems.filter((item) => !item.review);
+  const selectedItem = unreviewedItems.find((item) => item.orderItemId === selectedOrderItemId)
+    ?? unreviewedItems[0]
     ?? null;
 
   return (
@@ -77,8 +79,8 @@ export function ProductReviewsSection({ productId }: { productId: string }) {
         {summaryQuery.isPending ? (
           <p className="text-sm text-muted-foreground" role="status">Loading rating…</p>
         ) : summaryQuery.data ? (
-          <div className="flex items-center gap-2" aria-label={`${summaryQuery.data.averageRating} out of 5 stars`}>
-            <StarDisplay rating={summaryQuery.data.averageRating} />
+          <div className="flex flex-wrap items-center gap-2">
+            <ProductReviewStars rating={summaryQuery.data.averageRating} />
             <span className="text-sm font-semibold">{summaryQuery.data.averageRating.toFixed(1)}</span>
             <span className="text-sm text-muted-foreground">
               ({summaryQuery.data.reviewCount} {summaryQuery.data.reviewCount === 1 ? 'review' : 'reviews'})
@@ -137,32 +139,7 @@ export function ProductReviewsSection({ productId }: { productId: string }) {
                 <>
                   <ul className="divide-y rounded-xl border bg-card">
                     {reviewsQuery.data?.pages.flat().map((review) => (
-                      <li key={review.review_id} className="space-y-2 p-4">
-                        <div className="flex flex-wrap items-start justify-between gap-2">
-                          <div className="space-y-1">
-                            <p className="text-sm font-medium">
-                              {review.reviewer_name ?? 'Anonymous'}
-                            </p>
-                            <span aria-label={`${review.rating} out of 5 stars`}>
-                              <StarDisplay rating={review.rating} />
-                            </span>
-                          </div>
-                          <span className="text-xs text-muted-foreground">
-                            Verified buyer ·{' '}
-                            {new Date(review.created_at).toLocaleDateString('en-PH', {
-                              year: 'numeric',
-                              month: 'short',
-                              day: 'numeric',
-                              timeZone: 'UTC',
-                            })}
-                          </span>
-                        </div>
-                        {review.comment && (
-                          <p className="whitespace-pre-line break-words text-sm leading-6">
-                            {review.comment}
-                          </p>
-                        )}
-                      </li>
+                      <ProductReviewCard key={review.review_id} review={review} />
                     ))}
                   </ul>
                   {reviewsQuery.hasNextPage && (
@@ -221,54 +198,35 @@ export function ProductReviewsSection({ productId }: { productId: string }) {
                   Completed order items could not be refreshed; showing saved results.
                 </p>
               )}
-              {!selectedItem ? (
+              {purchasedItems.length > 0 && unreviewedItems.length === 0 ? (
+                <p className="rounded-lg border bg-muted/60 p-3 text-sm" role="status">
+                  Thank you! You have already reviewed all your purchased items for this product.
+                </p>
+              ) : !selectedItem ? (
                 <p className="text-sm text-muted-foreground">
                   Once an online order for this product is completed, you can leave a review.
                 </p>
               ) : (
                 <>
-                  {reviewItems.length > 1 ? (
-                    <label className="block space-y-2 text-sm font-medium">
-                      Purchased item for this review
-                      <select
-                        value={selectedItem.orderItemId}
-                        onChange={(event) => setSelectedOrderItemId(event.target.value)}
-                        className="min-h-10 w-full rounded-md border bg-background px-3 font-normal"
-                      >
-                        {reviewItems.map((item) => (
-                          <option key={item.orderItemId} value={item.orderItemId}>
-                            {item.orderNumber} · {item.variantName} · {item.review
-                              ? item.review.status === 'rejected'
-                                ? 'Needs update'
-                                : item.review.status === 'pending'
-                                  ? 'Awaiting approval'
-                                  : 'Reviewed'
-                              : 'Not reviewed'}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">
-                      Review {selectedItem.variantName} from order {selectedItem.orderNumber}
-                    </p>
-                  )}
-                  {selectedItem.review && (
-                    <p className="rounded-lg bg-secondary/60 p-3 text-sm text-muted-foreground" role="status">
-                      {selectedItem.review.status === 'pending'
-                        ? 'Your review is awaiting approval.'
-                        : selectedItem.review.status === 'published'
-                          ? 'Your review is public. Changes will need approval.'
-                          : 'Your previous review was not approved. You can update it for another review.'}
-                    </p>
-                  )}
+                  <Select
+                    label="Purchased item for this review"
+                    value={selectedItem.orderItemId}
+                    onValueChange={setSelectedOrderItemId}
+                    className="min-h-11"
+                  >
+                    {unreviewedItems.map((item) => (
+                      <option key={item.orderItemId} value={item.orderItemId}>
+                        {item.orderNumber} &middot; {item.variantName}
+                      </option>
+                    ))}
+                  </Select>
                   <ProductReviewForm
-                    key={`${selectedItem.orderItemId}-${selectedItem.review?.id ?? 'new'}`}
+                    key={selectedItem.orderItemId}
                     orderId={selectedItem.orderId}
                     orderItemId={selectedItem.orderItemId}
                     productId={productId}
                     userId={user.id}
-                    review={selectedItem.review}
+                    review={null}
                   />
                 </>
               )}
@@ -277,18 +235,5 @@ export function ProductReviewsSection({ productId }: { productId: string }) {
         </aside>
       </div>
     </section>
-  );
-}
-
-function StarDisplay({ rating }: { rating: number }) {
-  return (
-    <span className="inline-flex items-center gap-0.5 text-primary" aria-hidden="true">
-      {[1, 2, 3, 4, 5].map((value) => (
-        <Star
-          key={value}
-          className={`size-4 ${rating >= value ? 'fill-current' : ''}`}
-        />
-      ))}
-    </span>
   );
 }
