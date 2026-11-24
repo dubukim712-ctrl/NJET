@@ -13,6 +13,10 @@ export const checkoutSchema = z.object({
   branchId: z.string().uuid().nullable(),
   deliveryZoneId: z.string().uuid().nullable(),
   addressLine1: addressField,
+  // Missing codes are supported for older checkout clients.
+  provinceCode: z.string().regex(/^[0-9]{1,20}$/).optional(),
+  cityCode: z.string().regex(/^[0-9]{1,20}$/).optional(),
+  barangayCode: z.string().regex(/^[0-9]{1,20}$/).optional(),
   barangay: addressField,
   city: addressField,
   province: addressField,

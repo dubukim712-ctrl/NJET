@@ -5,6 +5,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { createCommerceOrderAction } from '@/data/actions/commerce-checkout';
+import { customerProfileQueryKey } from '@/data/commerce/customer-query-keys';
 import { adminOrdersQueryKey } from '@/data/commerce/admin-orders-client';
 import { useInvalidateCustomerOrdersQuery } from '@/data/commerce/customer-orders-client';
 import { uploadOrderDocuments, type UploadedDocument } from '@/data/commerce/documents-client';
@@ -128,6 +129,7 @@ export function useCheckoutSubmission(clear: () => { success: boolean }) {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: adminOrdersQueryKey }),
         invalidateCustomerOrders(),
+        queryClient.invalidateQueries({ queryKey: [...customerProfileQueryKey, customerId] }),
       ]);
       if (!clear().success) toast.error('Order placed, but your local cart could not be cleared.');
       const orderId = encodeURIComponent(result.data.orderId);

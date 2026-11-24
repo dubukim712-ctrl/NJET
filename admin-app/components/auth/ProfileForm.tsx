@@ -4,19 +4,31 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'next/navigation';
-import { Link2, Loader2, UserRound } from 'lucide-react';
+import { Link2, UserRound } from 'lucide-react';
 import { toast } from 'sonner';
 import { updateProfileSchema, type UpdateProfileInput } from '@/lib/validations/auth';
-import { updateProfileAction } from '@/data/actions/profile';
-import type { CustomerProfile } from '@/data/actions/profile';
+import { ProfileContactFields } from '@/components/auth/ProfileContactFields';
+import { Button } from '@/components/ui/Button';
+import { resolveCheckoutAddress } from '@/data/commerce/checkout-address';
+import { useInvalidateCheckoutOptionsQuery } from '@/data/commerce/checkout-options-client';
+import { normalizePhilippineMobileNumber } from '@/lib/phone-number';
+import { updateCustomerProfileAction, updateProfileAction, type CustomerProfile } from '@/data/actions/profile';
+import type { UserProfile } from '@/types/database';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { Input } from '@/components/ui/Input';
 import { useInvalidateCustomerProfileQuery } from '@/data/auth/customer-profile-client';
 
-export function ProfileForm({ profile }: { profile: CustomerProfile }) {
+export function ProfileForm({ profile, contact }: {
+  profile: Pick<UserProfile, 'id' | 'full_name' | 'avatar_url'>;
+  contact?: CustomerProfile;
+}) {
   const router = useRouter();
   const { refreshUser } = useAuth();
   const invalidateProfile = useInvalidateCustomerProfileQuery(profile.id);
+  const invalidateCheckout = useInvalidateCheckoutOptionsQuery();
+  const [phoneNumber, setPhoneNumber] = useState(contact?.phone_number ?? '');
+  const [address, setAddress] = useState(() => resolveCheckoutAddress(contact));
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>();
   const [serverError, setServerError] = useState<string | null>(null);
 
   const {
@@ -34,19 +46,28 @@ export function ProfileForm({ profile }: { profile: CustomerProfile }) {
   const onSubmit = async (data: UpdateProfileInput) => {
     setServerError(null);
 
-    const formData = new FormData();
-    formData.set('fullName', data.fullName ?? '');
-    formData.set('avatarUrl', data.avatarUrl ?? '');
+    setFieldErrors(undefined);
 
-    const result = await updateProfileAction(formData);
+    try {
+      const formData = new FormData();
+      formData.set('fullName', data.fullName ?? '');
+      formData.set('avatarUrl', data.avatarUrl ?? '');
+      const result = contact
+        ? await updateCustomerProfileAction({ ...data, phoneNumber, ...resolveCheckoutAddress(), ...address })
+        : await updateProfileAction(formData);
 
-    if (result.success) {
+      if (!result.success) {
+        setServerError(result.error);
+        setFieldErrors(result.fieldErrors);
+        return;
+      }
+
+      if (contact) setPhoneNumber(normalizePhilippineMobileNumber(phoneNumber) ?? '');
+      await Promise.all([refreshUser(), invalidateProfile(), contact && invalidateCheckout()]);
       toast.success('Profile updated.');
-      await Promise.all([refreshUser(), invalidateProfile()]);
       router.refresh();
-    } else {
-      setServerError(result.error);
-      toast.error(result.error);
+    } catch {
+      setServerError('Could not save your profile. Please try again.');
     }
   };
 
@@ -59,7 +80,7 @@ export function ProfileForm({ profile }: { profile: CustomerProfile }) {
         autoComplete="name"
         placeholder="Jane Doe"
         leadingIcon={<UserRound className="h-4 w-4" />}
-        error={errors.fullName?.message}
+        error={errors.fullName?.message ?? fieldErrors?.fullName?.[0]}
         disabled={isSubmitting}
         {...register('fullName')}
       />
@@ -70,10 +91,23 @@ export function ProfileForm({ profile }: { profile: CustomerProfile }) {
         type="url"
         placeholder="https://example.com/avatar.png"
         leadingIcon={<Link2 className="h-4 w-4" />}
-        error={errors.avatarUrl?.message}
+        error={errors.avatarUrl?.message ?? fieldErrors?.avatarUrl?.[0]}
         disabled={isSubmitting}
         {...register('avatarUrl')}
       />
+
+      {contact && (
+        <ProfileContactFields
+          phoneNumber={phoneNumber}
+          address={address}
+          verified={Boolean(contact.phone_number && contact.phone_verified_at
+            && normalizePhilippineMobileNumber(phoneNumber) === contact.phone_number)}
+          fieldErrors={fieldErrors}
+          saving={isSubmitting}
+          onPhoneChange={setPhoneNumber}
+          onAddressChange={setAddress}
+        />
+      )}
 
       {serverError && (
         <div
@@ -84,20 +118,20 @@ export function ProfileForm({ profile }: { profile: CustomerProfile }) {
         </div>
       )}
 
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className="flex h-10 items-center justify-center rounded-md bg-primary px-6 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50"
-      >
-        {isSubmitting ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
-            Saving...
-          </>
-        ) : (
-          'Save changes'
+      <div className="flex flex-wrap gap-2">
+        <Button type="submit" className="min-h-11" loading={isSubmitting}>Save changes</Button>
+        {contact && (Object.values(address).some(Boolean) || contact.street_address) && (
+          <Button
+            type="button"
+            variant="outline"
+            className="min-h-11"
+            disabled={isSubmitting || !Object.values(address).some(Boolean)}
+            onClick={() => setAddress(resolveCheckoutAddress())}
+          >
+            Clear saved address
+          </Button>
         )}
-      </button>
+      </div>
     </form>
   );
 }

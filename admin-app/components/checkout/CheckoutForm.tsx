@@ -8,6 +8,7 @@ import { useCheckoutPricing } from '@/components/checkout/useCheckoutPricing';
 import { CheckoutAuthNotice } from '@/components/checkout/CheckoutAuthNotice';
 import { CheckoutEmptyCart } from '@/components/checkout/CheckoutEmptyCart';
 import { CheckoutFormLayout } from '@/components/checkout/CheckoutFormLayout';
+import type { PhilippineAddressValues } from '@/components/admin/commerce/PhilippineAddressFields';
 import { CheckoutFields } from '@/components/checkout/CheckoutFields';
 import { CheckoutOrderSummary } from '@/components/checkout/CheckoutOrderSummary';
 import { DiscountCodeInput } from '@/components/commerce/DiscountCodeInput';
@@ -25,7 +26,8 @@ export function CheckoutForm({
   customerPhoneNumber,
   customerPhoneVerified,
   initialCustomerName,
-}: CheckoutOptions & { initialCustomerName: string }) {
+  initialAddress,
+}: CheckoutOptions & { initialCustomerName: string; initialAddress: PhilippineAddressValues }) {
   const { user } = useAuth();
   const { items, error: cartError, clear } = useCart();
   const [fulfillment, setFulfillment] = useState<Fulfillment>('pickup');
@@ -145,6 +147,9 @@ export function CheckoutForm({
         branchId: fulfillment === 'pickup' ? activeBranchId : null,
         deliveryZoneId: fulfillment === 'delivery' ? activeZoneId : null,
         addressLine1: text('addressLine1') || null,
+        provinceCode: text('provinceCode') || undefined,
+        cityCode: text('cityCode') || undefined,
+        barangayCode: text('barangayCode') || undefined,
         barangay: text('barangay') || null,
         city: text('city') || null,
         province: text('province') || null,
@@ -195,6 +200,7 @@ export function CheckoutForm({
           cashUnavailable={cashUnavailable}
           homeCreditDownpaymentDue={homeCreditDownpaymentDue}
           initialCustomerName={initialCustomerName}
+          initialAddress={initialAddress}
           initialPhoneNumber={customerPhoneNumber}
           initialVerifiedPhoneNumber={
             customerPhoneVerified ? customerPhoneNumber : null

@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { PhilippineAddressAutofill } from '@/components/admin/commerce/PhilippineAddressAutofill';
 import { Input } from '@/components/ui/Input';
 import {
@@ -19,16 +18,26 @@ export type PhilippineAddressValues = {
   city: string;
   barangay: string;
   postalCode: string;
+  provinceCode?: string;
+  cityCode?: string;
+  barangayCode?: string;
 };
 
 function toOptions(
-  locations: { code: string; name: string }[]
+  locations: { code: string; name: string }[],
+  selectedCode: string,
+  savedName: string,
 ): SearchableSelectOption[] {
-  return locations.map(({ code, name }) => ({ value: code, label: name }));
+  const options = locations.map(({ code, name }) => ({ value: code, label: name }));
+  if (selectedCode && savedName && !options.some(({ value }) => value === selectedCode)) {
+    options.unshift({ value: selectedCode, label: savedName });
+  }
+  return options;
 }
 
 export function PhilippineAddressFields({
   values,
+  title,
   fieldErrors,
   onChange,
   disabled,
@@ -36,21 +45,20 @@ export function PhilippineAddressFields({
   enableLocationAutofill = true,
 }: {
   values: PhilippineAddressValues;
+  title?: string;
   fieldErrors?: Partial<Record<keyof PhilippineAddressValues, string[]>>;
   onChange: (values: PhilippineAddressValues) => void;
   disabled: boolean;
   required?: boolean;
   enableLocationAutofill?: boolean;
 }) {
-  const [provinceCode, setProvinceCode] = useState('');
-  const [cityCode, setCityCode] = useState('');
-  const [barangayCode, setBarangayCode] = useState('');
+  const { provinceCode = '', cityCode = '', barangayCode = '' } = values;
   const provincesQuery = usePhilippineProvincesQuery();
   const citiesQuery = usePhilippineCitiesQuery(provinceCode);
   const barangaysQuery = usePhilippineBarangaysQuery(cityCode);
-  const provinces = toOptions(provincesQuery.data ?? []);
-  const cities = toOptions(citiesQuery.data ?? []);
-  const barangays = toOptions(barangaysQuery.data ?? []);
+  const provinces = toOptions(provincesQuery.data ?? [], provinceCode, values.province);
+  const cities = toOptions(citiesQuery.data ?? [], cityCode, values.city);
+  const barangays = toOptions(barangaysQuery.data ?? [], barangayCode, values.barangay);
   const provinceLoading = provincesQuery.isFetching;
   const cityLoading = Boolean(provinceCode) && citiesQuery.isFetching;
   const barangayLoading = Boolean(cityCode) && barangaysQuery.isFetching;
@@ -60,12 +68,12 @@ export function PhilippineAddressFields({
 
   const selectedProvince = (code: string) => {
     if (code === provinceCode) return;
-    setProvinceCode(code);
-    setCityCode('');
-    setBarangayCode('');
     const province = provinces.find((option) => option.value === code);
     onChange({
       ...values,
+      provinceCode: code,
+      cityCode: '',
+      barangayCode: '',
       province: province?.label ?? '',
       city: '',
       barangay: '',
@@ -74,10 +82,8 @@ export function PhilippineAddressFields({
 
   const selectedCity = (code: string) => {
     if (code === cityCode) return;
-    setCityCode(code);
-    setBarangayCode('');
     const city = cities.find((option) => option.value === code);
-    onChange({ ...values, city: city?.label ?? '', barangay: '' });
+    onChange({ ...values, cityCode: code, barangayCode: '', city: city?.label ?? '', barangay: '' });
   };
 
   const retryButton = (label: string, onRetry: () => void) => (
@@ -95,7 +101,7 @@ export function PhilippineAddressFields({
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h3 className="text-sm font-semibold">
-            {required ? 'Address' : 'Address (optional)'}
+            {title ?? (required ? 'Address' : 'Address (optional)')}
           </h3>
           <p className="text-sm text-muted-foreground">
             {required
@@ -108,11 +114,11 @@ export function PhilippineAddressFields({
             provinces={provinces}
             disabled={disabled || provinceLoading || Boolean(provinceError)}
             onAddressFound={(location) => {
-              setProvinceCode(location.provinceCode);
-              setCityCode(location.cityCode);
-              setBarangayCode(location.barangayCode);
               onChange({
                 ...values,
+                provinceCode: location.provinceCode,
+                cityCode: location.cityCode,
+                barangayCode: location.barangayCode,
                 province: location.province,
                 city: location.city,
                 barangay: location.barangay,
@@ -165,8 +171,7 @@ export function PhilippineAddressFields({
           required={required}
           onChange={(code) => {
             const barangay = barangays.find((option) => option.value === code);
-            setBarangayCode(code);
-            onChange({ ...values, barangay: barangay?.label ?? '' });
+            onChange({ ...values, barangayCode: code, barangay: barangay?.label ?? '' });
           }}
         />
         <Input

@@ -113,6 +113,24 @@ export async function createCommerceOrderAction(
     };
   }
 
+  if (input.provinceCode && input.cityCode && input.barangayCode) {
+    try {
+      const { error } = await supabase.rpc('save_first_checkout_address', {
+        p_street_address: input.addressLine1,
+        p_province_code: input.provinceCode,
+        p_province_name: input.province,
+        p_city_code: input.cityCode,
+        p_city_name: input.city,
+        p_barangay_code: input.barangayCode,
+        p_barangay_name: input.barangay,
+        p_postal_code: input.postalCode,
+      });
+      if (error) console.error('Could not save the first checkout address.', error.code);
+    } catch {
+      console.error('Could not save the first checkout address.');
+    }
+  }
+
   revalidatePath('/dashboard/orders');
   revalidatePath('/admin/orders');
   return { success: true, data: { orderId } };

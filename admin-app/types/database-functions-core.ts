@@ -1,4 +1,29 @@
 export type DatabaseCoreFunctions = {
+  save_first_checkout_address: {
+    Args: Omit<DatabaseCoreFunctions['save_customer_profile_contact']['Args'], 'p_phone_number'>;
+    Returns: boolean;
+  };
+  save_customer_profile: {
+    Args: DatabaseCoreFunctions['save_customer_profile_contact']['Args'] & {
+      p_full_name: string | null;
+      p_avatar_url: string | null;
+    };
+    Returns: boolean;
+  };
+  save_customer_profile_contact: {
+    Args: {
+      p_phone_number: string | null;
+      p_street_address: string | null;
+      p_province_code: string | null;
+      p_province_name: string | null;
+      p_city_code: string | null;
+      p_city_name: string | null;
+      p_barangay_code: string | null;
+      p_barangay_name: string | null;
+      p_postal_code: string | null;
+    };
+    Returns: boolean;
+  };
   current_user_has_permission: {
     Args: { p_key: string };
     Returns: boolean;

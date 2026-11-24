@@ -24,6 +24,7 @@ interface CheckoutFieldsProps extends Omit<
 > {
   fieldErrors?: Record<string, string[]>;
   initialCustomerName: string;
+  initialAddress: PhilippineAddressValues;
   initialPhoneNumber: string | null;
   initialVerifiedPhoneNumber: string | null;
   fulfillment: Fulfillment;
@@ -50,13 +51,7 @@ interface CheckoutFieldsProps extends Omit<
 
 export function CheckoutFields(props: CheckoutFieldsProps) {
   const errorFor = (name: string) => props.fieldErrors?.[name]?.join(" ");
-  const [address, setAddress] = useState<PhilippineAddressValues>({
-    addressLine1: "",
-    province: "",
-    city: "",
-    barangay: "",
-    postalCode: "",
-  });
+  const [address, setAddress] = useState(props.initialAddress);
   const providerRecipients = props.paymentRecipients.filter(
     (recipient) => recipient.provider === props.paymentProvider,
   );
@@ -108,6 +103,9 @@ export function CheckoutFields(props: CheckoutFieldsProps) {
             ["city", address.city],
             ["barangay", address.barangay],
             ["postalCode", address.postalCode],
+            ["provinceCode", address.provinceCode ?? ""],
+            ["cityCode", address.cityCode ?? ""],
+            ["barangayCode", address.barangayCode ?? ""],
           ] as const
         ).map(([name, value]) => (
           <input key={name} type="hidden" name={name} value={value} />

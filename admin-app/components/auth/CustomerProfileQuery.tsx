@@ -82,7 +82,7 @@ export function CustomerProfileQuery() {
         </p>
       )}
       <div className="mt-5">
-        <ProfileForm profile={query.data} />
+        <ProfileForm key={userId} profile={query.data} contact={query.data} />
       </div>
     </section>
   );

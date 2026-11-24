@@ -1,5 +1,6 @@
 'use client';
 
+import type { PhilippineAddressValues } from '@/components/admin/commerce/PhilippineAddressFields';
 import { CheckoutForm } from '@/components/checkout/CheckoutForm';
 import { Button } from '@/components/ui/Button';
 import {
@@ -10,9 +11,11 @@ import {
 export function CheckoutOptionsQuery({
   userId,
   initialCustomerName,
+  initialAddress,
 }: {
   userId: string;
   initialCustomerName: string;
+  initialAddress: PhilippineAddressValues;
 }) {
   const query = useCheckoutOptionsQuery(userId);
 
@@ -61,7 +64,7 @@ export function CheckoutOptionsQuery({
           Could not refresh checkout options. Cached options are still shown.
         </p>
       )}
-      <CheckoutForm {...query.data} initialCustomerName={initialCustomerName} />
+      <CheckoutForm {...query.data} initialCustomerName={initialCustomerName} initialAddress={initialAddress} />
     </div>
   );
 }

@@ -11,6 +11,7 @@ export type InputProps = Omit<InputHTMLAttributes<HTMLInputElement>, "size"> & {
   error?: ReactNode;
   leadingIcon?: ReactNode;
   trailingIcon?: ReactNode;
+  rightAdornment?: ReactNode;
   containerClassName?: string;
 };
 
@@ -22,6 +23,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
     error,
     leadingIcon,
     trailingIcon,
+    rightAdornment,
     containerClassName = "",
     className = "",
     required,
@@ -34,8 +36,9 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
   const inputId = id ?? generatedId;
   const helperId = helperText ? `${inputId}-help` : undefined;
   const errorId = error ? `${inputId}-error` : undefined;
+  const adornmentId = rightAdornment ? `${inputId}-adornment` : undefined;
   const describedBy =
-    [ariaDescribedBy, helperId, errorId].filter(Boolean).join(" ") || undefined;
+    [ariaDescribedBy, adornmentId, helperId, errorId].filter(Boolean).join(" ") || undefined;
 
   return (
     <div className={`min-w-0 space-y-1.5 ${containerClassName}`}>
@@ -66,8 +69,8 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
           aria-describedby={describedBy}
           aria-invalid={error ? true : inputProps["aria-invalid"]}
           className={`block min-h-11 w-full min-w-0 rounded-md border bg-card py-2 text-base leading-5 text-foreground outline-none transition placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30 disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground md:text-sm ${
-            leadingIcon ? "pl-10 pr-3" : "px-3"
-          } ${trailingIcon ? "pr-10" : ""} ${
+            leadingIcon ? "pl-10" : "pl-3"
+          } ${rightAdornment ? "pr-28" : trailingIcon ? "pr-10" : "pr-3"} ${
             error
               ? "border-destructive focus-visible:border-destructive focus-visible:ring-destructive/25"
               : "border-border"
@@ -76,7 +79,11 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
           ref={ref}
           required={required}
         />
-        {trailingIcon && (
+        {rightAdornment ? (
+          <span id={adornmentId} className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+            {rightAdornment}
+          </span>
+        ) : trailingIcon && (
           <span
             aria-hidden="true"
             className="pointer-events-none absolute inset-y-0 right-0 flex w-10 items-center justify-center text-muted-foreground"

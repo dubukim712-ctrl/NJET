@@ -1,6 +1,7 @@
 import { CheckoutAuthNotice } from '@/components/checkout/CheckoutAuthNotice';
 import { CheckoutOptionsQuery } from '@/components/checkout/CheckoutOptionsQuery';
 import { getAuthContext } from '@/data/auth/guards';
+import { resolveCheckoutAddress, savedAddressColumns } from '@/data/commerce/checkout-address';
 import { resolveCheckoutCustomerName } from '@/data/commerce/checkout-customer-name';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 
@@ -11,6 +12,10 @@ export default async function CheckoutPage() {
   const hasCustomerAccess = Boolean(
     auth && hasPermission(auth.profile, PERMISSIONS.storefrontAccess)
   );
+
+  const { data: savedAddress } = auth && hasCustomerAccess
+    ? await auth.supabase.from('users').select(savedAddressColumns).eq('id', auth.user.id).maybeSingle()
+    : { data: null };
 
   return (
     <div className="mx-auto max-w-7xl space-y-6">
@@ -26,6 +31,7 @@ export default async function CheckoutPage() {
         <CheckoutOptionsQuery
           key={auth.user.id}
           userId={auth.user.id}
+          initialAddress={resolveCheckoutAddress(savedAddress)}
           initialCustomerName={resolveCheckoutCustomerName(auth.profile?.full_name, auth.user.user_metadata)}
         />
       )}

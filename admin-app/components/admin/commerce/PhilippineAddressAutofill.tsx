@@ -183,7 +183,7 @@ export function PhilippineAddressAutofill({
         type="button"
         onClick={findAddress}
         disabled={disabled || loading || provinces.length === 0}
-        className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border px-3 py-2 text-sm font-medium hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
+        className="inline-flex min-h-11 shrink-0 whitespace-nowrap items-center justify-center gap-2 rounded-md border px-3 py-2 text-sm font-medium hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
       >
         {loading
           ? <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
