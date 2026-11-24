@@ -20,6 +20,7 @@ import {
   type LucideIcon,
   LayoutDashboard,
   MessageSquareText,
+  CircleHelp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { hasPermission, PERMISSIONS } from "@/lib/permissions";
@@ -62,6 +63,12 @@ const ADMIN_NAVIGATION: NavGroup[] = [
   {
     name: "Support",
     items: [
+      {
+        name: "Staff Guide",
+        href: "/admin/help",
+        icon: CircleHelp,
+        permission: PERMISSIONS.adminAccess,
+      },
       {
         name: "Customer chats",
         href: "/admin/chats",

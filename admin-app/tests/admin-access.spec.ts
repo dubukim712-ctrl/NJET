@@ -27,6 +27,7 @@ const adminRoutes = [
   { path: "/admin/audit-logs", heading: "Audit Logs" },
   { path: "/admin/profile", heading: "Profile" },
   { path: "/admin/settings", heading: "Settings" },
+  { path: "/admin/help", heading: "Staff Guide" },
 ] as const;
 
 const sweepTimeout = 180_000;
@@ -67,6 +68,16 @@ test("full-access admin can render every static admin route in order", async ({ 
       const destination = "destination" in route ? route.destination : route.path;
       await expectRendered(page, route.path, route.heading, destination);
       expect(pageErrors, "Uncaught browser errors").toEqual([]);
+
+      if (route.path === "/admin/help") {
+        await expect(page.getByRole("link", { name: "Staff Guide" }).filter({ visible: true }))
+          .toHaveAttribute("href", "/admin/help");
+        const main = page.getByRole("main");
+        await main.getByRole("searchbox", { name: "Search help guides" }).fill("serial motor number");
+        await expect(main.getByText("Receive or transfer stock", { exact: true })).toBeVisible();
+        await expect(main.getByText("Reply to a customer chat", { exact: true })).toHaveCount(0);
+        expect(pageErrors, "Uncaught browser errors after filtering").toEqual([]);
+      }
 
       if (route.path === "/admin/roles" || route.path === "/admin/audit-logs") {
         const main = page.getByRole("main");

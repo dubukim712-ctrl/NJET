@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Clock3, Mail, MapPin, Phone } from "lucide-react";
 import { LegalFooterLinks } from "@/components/layout/LegalFooterLinks";
 import type { StorefrontBusinessInfo } from "@/data/commerce/system-settings";
@@ -103,6 +104,9 @@ export function StorefrontFooter({
                   Contact details have not been added yet.
                 </p>
               )}
+              <Link href="/help" className="mt-2 inline-flex min-h-11 items-center text-sm underline-offset-4 hover:underline focus-visible:underline">
+                Help Center
+              </Link>
             </section>
 
             <section>
