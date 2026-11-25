@@ -1,5 +1,7 @@
 'use client';
 
+import { ChevronRight } from 'lucide-react';
+import { isPastConfirmedTask } from '@/lib/technician-task-order';
 import { formatAppointmentBikeName } from '@/lib/appointment-bike-name';
 
 import { Button } from '@/components/ui/Button';
@@ -7,35 +9,38 @@ import { ServiceAppointmentStatusBadge } from '@/components/appointments/Service
 import { AssignedServiceAppointmentWorkActions } from '@/components/admin/appointments/AssignedServiceAppointmentWorkActions';
 import type { StaffServiceAppointment } from '@/data/appointments/queries';
 
-function formatTaskDate(value: string | null) {
-  return value
-    ? new Intl.DateTimeFormat('en-PH', {
-        dateStyle: 'medium',
-        timeStyle: 'short',
-        timeZone: 'Asia/Manila',
-      }).format(new Date(value))
-    : 'Not scheduled';
-}
+const taskDateFormat = new Intl.DateTimeFormat('en-PH', {
+  dateStyle: 'medium',
+  timeStyle: 'short',
+  timeZone: 'Asia/Manila',
+});
+
+const serviceLabels = {
+  maintenance: 'Maintenance',
+  repair: 'Repair',
+  inspection: 'Inspection',
+  other: 'Other service',
+};
 
 export function TechnicianTaskCard({
   appointment,
   userId,
+  referenceTime,
   onView,
 }: {
   appointment: StaffServiceAppointment;
   userId: string;
+  referenceTime: number;
   onView: () => void;
 }) {
   const taskDate = appointment.scheduled_at ?? appointment.preferred_start_at;
+  const pastConfirmed = isPastConfirmedTask(appointment, referenceTime);
 
   return (
-    <article className="flex h-full min-w-0 flex-col rounded-xl border bg-card p-5 sm:p-6">
-      <header className="flex min-w-0 items-start justify-between gap-3">
+    <article className="flex h-full min-w-0 flex-col gap-4 rounded-xl border bg-card p-4 sm:p-5">
+      <header className="flex min-w-0 flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-wide text-primary">
-            Service task
-          </p>
-          <h2 className="mt-1 break-words font-semibold">
+          <h2 className="break-words text-lg font-semibold">
             {appointment.appointment_number}
           </h2>
           <p className="mt-1 break-words text-sm text-muted-foreground">
@@ -45,36 +50,43 @@ export function TechnicianTaskCard({
         <ServiceAppointmentStatusBadge status={appointment.status} />
       </header>
 
-      <div className="mt-4 flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2">
         <span className="rounded-md bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
-          {appointment.service_type}
+          {serviceLabels[appointment.service_type]}
         </span>
-        <span className="rounded-md bg-primary/10 px-2.5 py-1 text-xs font-medium capitalize text-primary">
-          {appointment.service_mode.replaceAll('_', ' ')}
+        <span className="rounded-md bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
+          {appointment.service_mode === 'home_service' ? 'Home service' : 'Branch visit'}
         </span>
+        {pastConfirmed && (
+          <span className="rounded-md bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-900 dark:bg-amber-950 dark:text-amber-200">
+            Past scheduled time
+          </span>
+        )}
       </div>
 
-      <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+      <dl className="grid gap-3 text-sm sm:grid-cols-2">
+        <div className="min-w-0 sm:col-span-2">
+          <dt className="text-xs text-muted-foreground">
+            {appointment.scheduled_at ? 'Scheduled time' : 'Requested time'} (Philippine time)
+          </dt>
+          <dd className="mt-0.5 break-words font-medium">
+            <time dateTime={taskDate}>{taskDateFormat.format(new Date(taskDate))}</time>
+          </dd>
+        </div>
         <div className="min-w-0">
           <dt className="text-xs text-muted-foreground">Bike</dt>
           <dd className="mt-0.5 break-words font-medium">
             {formatAppointmentBikeName(appointment.bike_make, appointment.bike_model)}
-            {appointment.bike_serial_number && ` · ${appointment.bike_serial_number}`}
+            {appointment.bike_serial_number && (
+              <span className="mt-1 block text-sm font-normal text-muted-foreground">
+                Serial number {appointment.bike_serial_number}
+              </span>
+            )}
           </dd>
         </div>
         <div className="min-w-0">
-          <dt className="text-xs text-muted-foreground">
-            {appointment.scheduled_at ? 'Scheduled' : 'Preferred'}
-          </dt>
-          <dd className="mt-0.5 break-words font-medium">
-            {formatTaskDate(taskDate)}
-          </dd>
-        </div>
-        <div className="min-w-0 sm:col-span-2">
           <dt className="text-xs text-muted-foreground">Branch</dt>
-          <dd className="mt-0.5 break-words font-medium">
-            {appointment.branch_name}
-          </dd>
+          <dd className="mt-0.5 break-words font-medium">{appointment.branch_name}</dd>
         </div>
       </dl>
 
@@ -83,19 +95,16 @@ export function TechnicianTaskCard({
           appointment={appointment}
           userId={userId}
           canWork
+          primaryOnly
         />
         <Button
           type="button"
-          variant={
-            appointment.status === 'confirmed' || appointment.status === 'in_service'
-              ? 'outline'
-              : 'default'
-          }
-          className="w-full"
+          variant="outline"
+          className="min-h-11 w-full gap-2"
           aria-label={`View task details for ${appointment.appointment_number}`}
           onClick={onView}
         >
-          View
+          View details <ChevronRight className="size-4" aria-hidden="true" />
         </Button>
       </div>
     </article>

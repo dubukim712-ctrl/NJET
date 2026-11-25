@@ -1,3 +1,4 @@
+import { ACTIVE_TASK_STATUSES } from '@/lib/technician-task-order';
 import type { createClient } from '@/data/supabase/server';
 import type { Database } from '@/types/database';
 import type { ServiceAppointmentFilters } from '@/lib/validations/service-appointments';
@@ -30,6 +31,7 @@ export type StaffServiceAppointment = Pick<
   | 'preferred_start_at'
   | 'scheduled_at'
   | 'status'
+  | 'updated_at'
   | 'assigned_technician_id'
   | 'estimate_minor'
   | 'final_total_minor'
@@ -97,7 +99,7 @@ export async function getStaffServiceAppointments(
   supabase: SupabaseClient,
   filters: ServiceAppointmentFilters,
   canManage: boolean,
-  assignedTechnicianId: string | null = null
+  assignedTask?: { technicianId: string; group: 'active' | 'completed' }
 ): Promise<{ data: StaffServiceAppointment[] | null; error: string | null }> {
   try {
     let query = supabase
@@ -106,22 +108,29 @@ export async function getStaffServiceAppointments(
         id, appointment_number, customer_name, contact_number, branch_id, branch_name,
         service_mode, service_type, bike_make, bike_model, bike_serial_number,
         issue_description, address_line1, barangay, city, province, postal_code,
-        preferred_start_at, scheduled_at, status, assigned_technician_id,
+        preferred_start_at, scheduled_at, status, updated_at, assigned_technician_id,
         estimate_minor, final_total_minor,
         pending_cancellations:service_appointment_cancellation_requests()
       `)
-      .order('scheduled_at', { ascending: filters.view !== 'history', nullsFirst: filters.view !== 'history' })
-      .order('created_at', { ascending: false })
-      .limit(100); // shortcut: My Tasks searches this bounded slice; add pagination if task volume exceeds it.
+      .limit(100);
 
-    if (assignedTechnicianId) {
-      const recentCompletedSince = new Date(
-        Date.now() - 30 * 24 * 60 * 60 * 1000
-      ).toISOString();
+    if (assignedTask?.group === 'completed') {
       query = query
-        .eq('assigned_technician_id', assignedTechnicianId)
-        .or(`status.in.(requested,confirmed,in_service,ready_for_pickup),and(status.eq.completed,updated_at.gte.${recentCompletedSince})`);
+        .eq('assigned_technician_id', assignedTask.technicianId)
+        .eq('status', 'completed')
+        .gte('updated_at', new Date(Date.now() - 30 * 86_400_000).toISOString())
+        .order('updated_at', { ascending: false });
+    } else {
+      if (assignedTask) {
+        query = query
+          .eq('assigned_technician_id', assignedTask.technicianId)
+          .in('status', ACTIVE_TASK_STATUSES);
+      }
+      query = query
+        .order('scheduled_at', { ascending: filters.view !== 'history', nullsFirst: filters.view !== 'history' })
+        .order('created_at', { ascending: false });
     }
+    query = query.order('id');
     const now = new Date();
     const nowIso = now.toISOString();
     const conditions: string[] = [];

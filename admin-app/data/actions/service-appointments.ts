@@ -104,16 +104,15 @@ export async function getMyAssignedServiceAppointmentsAction(): Promise<
     '/admin/my-tasks'
   );
   await requirePermission(PERMISSIONS.serviceAppointmentsWork, '/admin/my-tasks');
-  const result = await getStaffServiceAppointments(
-    supabase,
-    { status: '', branchId: '', date: '', search: '' },
-    false,
-    profile.id
-  );
-  if (!result.data) {
-    return { success: false, error: result.error ?? 'Assigned tasks are unavailable.' };
+  const filters = { status: '', branchId: '', date: '', search: '' } as const;
+  const [active, completed] = await Promise.all([
+    getStaffServiceAppointments(supabase, filters, false, { technicianId: profile.id, group: 'active' }),
+    getStaffServiceAppointments(supabase, filters, false, { technicianId: profile.id, group: 'completed' }),
+  ]);
+  if (!active.data || !completed.data) {
+    return { success: false, error: active.error ?? completed.error ?? 'Assigned tasks are unavailable.' };
   }
-  return { success: true, data: result.data };
+  return { success: true, data: [...active.data, ...completed.data] };
 }
 
 export async function getStaffServiceAppointmentOptionsAction(): Promise<

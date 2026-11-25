@@ -15,23 +15,16 @@ import {
   useMyAssignedServiceAppointmentsQuery,
 } from '@/data/appointments/client';
 import type { StaffServiceAppointment } from '@/data/appointments/queries';
-import type { ServiceAppointmentStatus } from '@/types/commerce-tables';
+import { ACTIVE_TASK_STATUSES, compareTechnicianTasks } from '@/lib/technician-task-order';
 
 type TaskFilter = 'all' | 'active' | 'in_service' | 'ready_for_pickup' | 'completed';
 
-const ACTIVE_STATUSES: ServiceAppointmentStatus[] = [
-  'requested',
-  'confirmed',
-  'in_service',
-  'ready_for_pickup',
-];
-
 const FILTERS: { id: TaskFilter; label: string }[] = [
-  { id: 'all', label: 'All tasks' },
   { id: 'active', label: 'Active' },
   { id: 'in_service', label: 'In progress' },
   { id: 'ready_for_pickup', label: 'Ready for pickup' },
   { id: 'completed', label: 'Completed' },
+  { id: 'all', label: 'All tasks' },
 ];
 
 const REALTIME_TABLES = [
@@ -56,15 +49,16 @@ function matchesSearch(appointment: StaffServiceAppointment, search: string) {
 
 function matchesFilter(appointment: StaffServiceAppointment, filter: TaskFilter) {
   if (filter === 'all') return true;
-  if (filter === 'active') return ACTIVE_STATUSES.includes(appointment.status);
+  if (filter === 'active') return ACTIVE_TASK_STATUSES.includes(appointment.status);
   return appointment.status === filter;
 }
 
 export function TechnicianMyTasks({ userId }: { userId: string }) {
-  const [filter, setFilter] = useState<TaskFilter>('all');
+  const [filter, setFilter] = useState<TaskFilter>('active');
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
   const [openAppointmentId, setOpenAppointmentId] = useState<string | null>(null);
+  const [now, setNow] = useState(0);
   const appointmentsQuery = useMyAssignedServiceAppointmentsQuery(userId);
   const invalidateAppointments = useInvalidateServiceAppointmentsQuery();
   const invalidateOnRealtimeChange = useCallback(() => {
@@ -84,20 +78,26 @@ export function TechnicianMyTasks({ userId }: { userId: string }) {
     return () => window.clearTimeout(timer);
   }, [searchInput]);
 
+  useEffect(() => {
+    const initial = window.setTimeout(() => setNow(Date.now()), 0);
+    const interval = window.setInterval(() => setNow(Date.now()), 30_000);
+    return () => {
+      window.clearTimeout(initial);
+      window.clearInterval(interval);
+    };
+  }, []);
+
   const tasks = appointmentsQuery.data ?? EMPTY_TASKS;
   const selectedAppointment = tasks.find((task) => task.id === openAppointmentId) ?? null;
   const visibleTasks = useMemo(
     () => tasks
       .filter((task) => matchesFilter(task, filter) && matchesSearch(task, search))
-      .sort(
-        (a, b) =>
-          Number(a.status === 'completed') - Number(b.status === 'completed'),
-      ),
+      .sort(compareTechnicianTasks),
     [tasks, filter, search],
   );
   const filterCounts = useMemo(() => ({
     all: tasks.length,
-    active: tasks.filter((task) => ACTIVE_STATUSES.includes(task.status)).length,
+    active: tasks.filter((task) => ACTIVE_TASK_STATUSES.includes(task.status)).length,
     in_service: tasks.filter((task) => task.status === 'in_service').length,
     ready_for_pickup: tasks.filter((task) => task.status === 'ready_for_pickup').length,
     completed: tasks.filter((task) => task.status === 'completed').length,
@@ -128,12 +128,12 @@ export function TechnicianMyTasks({ userId }: { userId: string }) {
           maxLength={100}
           onChange={(event) => setSearchInput(event.currentTarget.value)}
         />
-        <div className="flex gap-2 overflow-x-auto pb-1" role="group" aria-label="Filter tasks by status">
+        <div className="flex flex-wrap gap-2" role="group" aria-label="Filter tasks by status">
           {FILTERS.map(({ id, label }) => (
             <Button
               key={id}
               type="button"
-              size="sm"
+              className="min-h-11"
               variant={filter === id ? 'default' : 'outline'}
               aria-pressed={filter === id}
               onClick={() => {
@@ -177,6 +177,7 @@ export function TechnicianMyTasks({ userId }: { userId: string }) {
                   key={appointment.id}
                   appointment={appointment}
                   userId={userId}
+                  referenceTime={now}
                   onView={() => setOpenAppointmentId(appointment.id)}
                 />
               ))}
@@ -184,7 +185,7 @@ export function TechnicianMyTasks({ userId }: { userId: string }) {
           ) : (
             <div className="rounded-xl border bg-card p-8 text-center">
               <h2 className="font-semibold">
-                {search ? 'No matching tasks' : 'No tasks in this view'}
+                {search ? 'No matching tasks' : filter === 'active' ? 'No active tasks' : 'No tasks in this view'}
               </h2>
               <p className="mt-2 text-sm text-muted-foreground">
                 {search
@@ -210,7 +211,6 @@ export function TechnicianMyTasks({ userId }: { userId: string }) {
                 cardOpen
                 onCardOpenChange={() => setOpenAppointmentId(null)}
                 hideSummary
-                hideWorkActions
               />
             )}
           </Modal>

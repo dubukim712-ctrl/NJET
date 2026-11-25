@@ -12,10 +12,12 @@ export function AssignedServiceAppointmentWorkActions({
   appointment,
   userId,
   canWork,
+  primaryOnly = false,
 }: {
   appointment: StaffServiceAppointment;
   userId: string;
   canWork: boolean;
+  primaryOnly?: boolean;
 }) {
   const [savingStatus, setSavingStatus] = useState<ServiceAppointmentStatus | null>(null);
   const [error, setError] = useState('');
@@ -30,7 +32,7 @@ export function AssignedServiceAppointmentWorkActions({
           : { label: 'Finish repair', status: 'completed' }
         : null;
 
-  if (!isAssignedWorker) return null;
+  if (!isAssignedWorker || (!primaryAction && appointment.status !== 'ready_for_pickup')) return null;
 
   async function updateStatus(status: ServiceAppointmentStatus) {
     setError('');
@@ -63,7 +65,7 @@ export function AssignedServiceAppointmentWorkActions({
       {primaryAction && (
         <Button
           type="button"
-          className="w-full"
+          className="min-h-11 w-full"
           loading={savingStatus === primaryAction.status}
           disabled={savingStatus !== null}
           onClick={() => { void updateStatus(primaryAction.status); }}
@@ -71,7 +73,7 @@ export function AssignedServiceAppointmentWorkActions({
           {primaryAction.label}
         </Button>
       )}
-      {appointment.status === 'confirmed' && (
+      {!primaryOnly && appointment.status === 'confirmed' && (
         <Button
           type="button"
           size="sm"

@@ -1,9 +1,20 @@
-﻿import assert from 'node:assert/strict';
+import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createClient } from '@supabase/supabase-js';
-import { getStaffServiceAppointments } from '../data/appointments/queries.ts';
+import { registerHooks } from 'node:module';
 
-async function captureQueueQuery(view, { canManage = true, search = '' } = {}) {
+const hooks = registerHooks({
+  resolve(specifier, context, nextResolve) {
+    if (specifier === '@/lib/technician-task-order') {
+      return nextResolve(new URL('../lib/technician-task-order.ts', import.meta.url).href, context);
+    }
+    return nextResolve(specifier, context);
+  },
+});
+const { getStaffServiceAppointments } = await import('../data/appointments/queries.ts');
+hooks.deregister();
+
+async function captureQueueQuery(view, { canManage = true, search = '', assignedTask } = {}) {
   const urls = [];
   const client = createClient('https://example.test', 'test-key', {
     auth: { persistSession: false, autoRefreshToken: false },
@@ -14,7 +25,7 @@ async function captureQueueQuery(view, { canManage = true, search = '' } = {}) {
   });
   assert.deepEqual(await getStaffServiceAppointments(client, {
     view, status: '', branchId: '', date: '', search,
-  }, canManage), { data: [], error: null });
+  }, canManage, assignedTask), { data: [], error: null });
   assert.equal(urls.length, 1);
   return urls[0].searchParams;
 }
@@ -44,4 +55,19 @@ test('today and upcoming divide scheduled work at midnight in Philippine time', 
   const history = await captureQueueQuery('history');
   assert.equal(history.get('status'), 'in.(completed,cancelled,no_show)');
   assert.match(history.get('order'), /^scheduled_at\.desc/);
+});
+
+test('assigned active work and recent completions use separate bounded queries', async () => {
+  const technicianId = '00000000-0000-4000-8000-000000000001';
+  const active = await captureQueueQuery(undefined, { assignedTask: { technicianId, group: 'active' } });
+  assert.equal(active.get('assigned_technician_id'), 'eq.' + technicianId);
+  assert.equal(active.get('status'), 'in.(requested,confirmed,in_service,ready_for_pickup)');
+  assert.equal(active.get('limit'), '100');
+
+  const completed = await captureQueueQuery(undefined, { assignedTask: { technicianId, group: 'completed' } });
+  assert.equal(completed.get('assigned_technician_id'), 'eq.' + technicianId);
+  assert.equal(completed.get('status'), 'eq.completed');
+  assert.match(completed.get('updated_at'), /^gte\./);
+  assert.match(completed.get('order'), /^updated_at.desc/);
+  assert.equal(completed.get('limit'), '100');
 });
