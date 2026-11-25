@@ -21,7 +21,7 @@ Secured authentication and dashboard built with Next.js 16 (App Router), TypeScr
    ```
 
    Apply every migration in filename order, from `20240101000001_create_users_table.sql`
-   through `20240101000132_warranty_return_saved_row.sql`. Apply migration `00101`
+   through `20240101000133_current_storefront_legal_policy.sql`. Apply migration `00101`
    before deploying the checkout code that uses submission IDs. Migrations `0004`–`0006` replace
    the legacy capability-based roles with granular permissions; `0007` adds
    controlled audit-log clearing and `0008` disables audit entries for that action.
@@ -197,3 +197,9 @@ create trigger audit_my_table_changes
 - `user_profiles` uses `security_invoker = true`, so the view respects the caller's RLS.
 - `public.audit_logs` is readable only by users with `audit_logs.read`; clients have no direct insert, update, or delete grants. Full-access admins use the `clear_audit_logs()` RPC; clear/delete operations are not recorded.
 - All form input is validated with Zod before reaching Supabase.
+
+### Authenticated release verification
+
+The GitHub CI workflow reports skipped credentialed Playwright tests on normal PRs and pushes.
+On staging pushes or a manual workflow run, the authenticated release job starts disposable Supabase, replays the migration chain, and seeds separate customer, staff, and admin accounts.
+It exercises the warranty exchange, return disposition, and access checks, and fails if the release scenario skips.

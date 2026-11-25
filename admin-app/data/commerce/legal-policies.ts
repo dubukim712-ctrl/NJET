@@ -24,11 +24,7 @@ async function getCurrentLegalPolicy(
   slug: LegalPolicySlug
 ): Promise<LegalPolicy> {
   const { data, error } = await supabase
-    .from('storefront_legal_policy_versions')
-    .select('slug, version, intro, sections, created_at')
-    .eq('slug', slug)
-    .order('id', { ascending: false })
-    .limit(1)
+    .rpc('current_storefront_legal_policy', { p_slug: slug })
     .maybeSingle();
   if (error) throw error;
   if (!data) return DEFAULT_LEGAL_POLICIES[slug];
@@ -66,11 +62,7 @@ export async function getCurrentLegalPolicyVersions(
   const results = await Promise.all(
     LEGAL_POLICY_SLUGS.map((slug) =>
       supabase
-        .from('storefront_legal_policy_versions')
-        .select('version')
-        .eq('slug', slug)
-        .order('id', { ascending: false })
-        .limit(1)
+        .rpc('current_storefront_legal_policy', { p_slug: slug })
         .maybeSingle()
     )
   );

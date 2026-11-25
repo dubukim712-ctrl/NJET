@@ -5,16 +5,19 @@ on:
     branches: [main, staging]
   pull_request:
     branches: [main, staging]
+  workflow_dispatch:
 
-env:
-  NEXT_PUBLIC_SITE_URL: https://example.com
-  NEXT_PUBLIC_SUPABASE_URL: https://supabase.co
-  NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
+permissions:
+  contents: read
 
 jobs:
   verify-admin-app:
     name: Lint, Typecheck, Test & Build
     runs-on: ubuntu-latest
+    env:
+      NEXT_PUBLIC_SITE_URL: https://example.com
+      NEXT_PUBLIC_SUPABASE_URL: https://supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
     defaults:
       run:
         working-directory: admin-app
@@ -50,5 +53,70 @@ jobs:
           E2E_ADMIN_PASSWORD: ""
         run: npm test
 
+      - name: Summarize browser coverage
+        if: always()
+        run: node scripts/summarize-playwright.mjs
+
       - name: Verify Production Build
         run: npm run build
+
+  verify-release:
+    name: Authenticated warranty release verification
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/staging')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: admin-app
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: admin-app/package-lock.json
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+
+      - name: Ensure PostgreSQL client is available
+        run: command -v psql || (sudo apt-get update && sudo apt-get install -y postgresql-client)
+
+      - name: Replay migrations on disposable Supabase
+        run: |
+          supabase init
+          supabase start
+          supabase db reset --no-seed
+
+      - name: Seed separate customer, staff, and admin accounts
+        run: |
+          set -a
+          source <(supabase status --output env)
+          set +a
+          : "${API_URL:?Missing local API URL}"
+          : "${ANON_KEY:?Missing local anon key}"
+          : "${SERVICE_ROLE_KEY:?Missing local service role key}"
+          : "${DB_URL:?Missing local database URL}"
+          echo "::add-mask::$ANON_KEY"
+          echo "::add-mask::$SERVICE_ROLE_KEY"
+          node scripts/seed-release-warranty.mjs
+          {
+            echo "NEXT_PUBLIC_SUPABASE_URL=$API_URL"
+            echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=$ANON_KEY"
+            echo "NEXT_PUBLIC_SITE_URL=http://localhost:3000"
+            echo "SUPABASE_SERVICE_ROLE_KEY=$SERVICE_ROLE_KEY"
+          } >> "$GITHUB_ENV"
+
+      - name: Verify authenticated warranty lifecycle and access
+        env:
+          E2E_RELEASE: "1"
+        run: npx playwright test tests/warranty-release.spec.ts
+
+      - name: Require the release scenario to pass without skips
+        if: always()
+        env:
+          E2E_RELEASE: "1"
+        run: node scripts/summarize-playwright.mjs

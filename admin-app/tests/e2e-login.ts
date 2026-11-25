@@ -1,6 +1,6 @@
 import { expect, type Page } from "@playwright/test";
 
-export function e2eCredentials(role: "USER" | "ADMIN") {
+export function e2eCredentials(role: "USER" | "ADMIN" | "STAFF" | "WRONG_STAFF" | "OTHER_USER") {
   const email = process.env[`E2E_${role}_EMAIL`]?.trim();
   const password = process.env[`E2E_${role}_PASSWORD`];
   return email && password?.trim() ? { email, password } : null;

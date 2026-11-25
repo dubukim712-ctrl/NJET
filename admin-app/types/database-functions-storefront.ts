@@ -7,6 +7,10 @@ import type {
 } from './commerce-tables';
 
 export type DatabaseStorefrontFunctions = {
+  current_storefront_legal_policy: {
+    Args: { p_slug: string };
+    Returns: { slug: string; version: string; intro: string; sections: Json; created_at: string }[];
+  };
   storefront_catalog_page: {
     Args: {
       p_search: string; p_category: string | null; p_subcategory: string | null;
