@@ -50,9 +50,6 @@ const review = z.discriminatedUnion('kind', [
     decision: z.enum(['covered_repair', 'replacement_approved', 'paid_repair', 'further_review']),
     note: z.string().trim().min(1).max(1500),
   }),
-  z.object({
-    kind: z.literal('handover'), appointmentId: z.uuid(), serial, handoverOn: z.iso.date(),
-  }),
 ]);
 
 export async function saveStaffWarrantyAction(input: unknown): Promise<ActionResult> {
@@ -63,16 +60,11 @@ export async function saveStaffWarrantyAction(input: unknown): Promise<ActionRes
   const p_appointment_id = value.appointmentId;
   const result = value.kind === 'link'
     ? await supabase.rpc('link_service_warranty_unit', { p_appointment_id, p_serial: value.serial })
-    : value.kind === 'review'
-      ? await supabase.rpc('review_service_warranty', { p_appointment_id, p_decision: value.decision, p_note: value.note })
-      : await supabase.rpc('record_service_warranty_replacement', {
-        p_appointment_id, p_serial: value.serial, p_handover_on: value.handoverOn,
-      });
+    : await supabase.rpc('review_service_warranty', { p_appointment_id, p_decision: value.decision, p_note: value.note });
   if (result.error) {
     const message = {
       link: 'Could not verify the serial against this customer\u0027s completed purchases.',
       review: 'Could not save the decision. Check the appointment status and verified bike.',
-      handover: 'Could not record the replacement. Check the approval, date, and replacement serial.',
     }[value.kind];
     return failure(result.error, message);
   }
