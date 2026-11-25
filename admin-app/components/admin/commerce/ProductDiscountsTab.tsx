@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Pencil, Plus } from 'lucide-react';
 import { ProductDiscountEditor } from '@/components/admin/commerce/ProductDiscountEditor';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
+import { getDiscountStatus } from '@/lib/product-discount-status';
 import type { ProductDiscountAdminRow } from '@/lib/validations/product-discount';
 import type { Database } from '@/types/database';
 
@@ -26,6 +27,26 @@ export function ProductDiscountsTab({
   canManageProducts: boolean;
 }) {
   const [selected, setSelected] = useState<ProductDiscountAdminRow | null | undefined>();
+  const [now, setNow] = useState<number | null>(null);
+
+  useEffect(() => {
+    const boundaries = discounts
+      .filter((discount) => discount.active)
+      .flatMap((discount) => [discount.starts_at, discount.ends_at])
+      .flatMap((date) => date ? [Date.parse(date)] : []);
+
+    const refresh = () => {
+      const current = Date.now();
+      setNow(current);
+      const next = Math.min(...boundaries.filter((boundary) => boundary > current));
+      if (Number.isFinite(next)) {
+        timer = window.setTimeout(refresh, Math.min(next - current, 2_147_483_647));
+      }
+    };
+    let timer = window.setTimeout(refresh, 0);
+    return () => window.clearTimeout(timer);
+  }, [discounts]);
+
   const productById = new Map(products.map((product) => [product.id, product]));
   const variantById = new Map(variants.map((variant) => [variant.id, variant]));
   const categoryById = new Map(categories.map((category) => [category.id, category]));
@@ -49,6 +70,7 @@ export function ProductDiscountsTab({
       {discounts.length ? (
         <ul className="divide-y rounded-xl border bg-card">
           {discounts.map((discount) => {
+            const status = now === null ? null : getDiscountStatus(discount, now);
             const targets = discount.targets.map((target) =>
               target.product_variant_id
                 ? variantById.get(target.product_variant_id)?.name ?? 'Removed variant'
@@ -64,13 +86,13 @@ export function ProductDiscountsTab({
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <h3 className="font-semibold">{discount.name}</h3>
-                    <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                      discount.active
+                    {status && <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                      status === 'Active'
                         ? 'bg-primary/10 text-primary'
                         : 'bg-muted text-muted-foreground'
                     }`}>
-                      {discount.active ? 'Active' : 'Inactive'}
-                    </span>
+                      {status}
+                    </span>}
                   </div>
                   <p className="mt-1 text-sm text-muted-foreground">
                     {discount.discount_type === 'percentage'

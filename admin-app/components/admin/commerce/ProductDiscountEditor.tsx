@@ -257,7 +257,7 @@ export function ProductDiscountEditor({
           defaultChecked={discount?.active ?? true}
           className="size-4 accent-primary"
         />
-        Discount is active
+        Enable discount during its scheduled dates
       </label>
       {error && <p className="text-sm text-destructive" role="alert">{error}</p>}
       <div className="flex flex-col-reverse justify-end gap-2 sm:flex-row">

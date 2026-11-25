@@ -1,17 +1,14 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react';
-import { ArrowLeft, MessageCircle, Search, Users } from 'lucide-react';
+import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import { ArrowLeft, MessageCircle, Search } from 'lucide-react';
 import { createClient } from '@/data/supabase/client';
 import { listSupportChatThreadsAction } from '@/data/actions/support-chat';
 import { ChatConversation } from '@/components/support-chat/ChatConversation';
+import { StaffChatEmptyState } from '@/components/support-chat/StaffChatEmptyState';
 import type { SupportChatThread } from '@/types/support-chat';
 
-interface StaffChatInboxProps {
-  userId: string;
-}
-
-export function StaffChatInbox({ userId }: StaffChatInboxProps) {
+export function StaffChatInbox({ userId }: { userId: string }) {
   const [threads, setThreads] = useState<SupportChatThread[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showMobileConversation, setShowMobileConversation] = useState(false);
@@ -94,21 +91,22 @@ export function StaffChatInbox({ userId }: StaffChatInboxProps) {
     return () => clearInterval(timer);
   }, [loadThreads, realtime]);
 
-  const selectedThread = useMemo(
-    () => threads.find((thread) => thread.id === selectedId) ?? null,
-    [selectedId, threads],
-  );
+  const selectedThread = threads.find((thread) => thread.id === selectedId);
+  const mobileConversationOpen = showMobileConversation && Boolean(selectedThread);
 
   const searchSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    const nextSearch = searchInput.trim();
+    if (nextSearch === search) return;
     setThreads([]);
     setSelectedId(null);
     setShowMobileConversation(false);
     setLoading(true);
-    setSearch(searchInput.trim());
+    setSearch(nextSearch);
   };
 
   const changeStatus = (next: 'all' | 'open' | 'resolved') => {
+    if (next === status) return;
     setThreads([]);
     setSelectedId(null);
     setShowMobileConversation(false);
@@ -137,7 +135,7 @@ export function StaffChatInbox({ userId }: StaffChatInboxProps) {
 
   return (
     <div className="mx-auto max-w-7xl max-lg:fixed max-lg:inset-x-0 max-lg:top-16 max-lg:bottom-0 max-lg:z-30 max-lg:flex max-lg:flex-col max-lg:overflow-hidden max-lg:bg-background max-lg:p-4">
-      <header className={`${showMobileConversation ? 'max-lg:hidden' : ''} mb-6 flex shrink-0 flex-col gap-3 border-b pb-5 sm:mb-8 sm:flex-row sm:items-end sm:justify-between`}>
+      <header className={`${mobileConversationOpen ? 'max-lg:hidden' : ''} mb-6 flex shrink-0 flex-col gap-3 border-b pb-5 sm:mb-8 sm:flex-row sm:items-end sm:justify-between`}>
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
             Customer support
@@ -153,7 +151,7 @@ export function StaffChatInbox({ userId }: StaffChatInboxProps) {
       </header>
 
       <div className="grid gap-4 lg:grid-cols-[minmax(17rem,0.8fr)_minmax(0,1.5fr)] max-lg:flex max-lg:min-h-0 max-lg:flex-1 max-lg:flex-col">
-        <section className={`${showMobileConversation ? 'hidden lg:flex' : 'flex'} min-h-[26rem] flex-col overflow-hidden rounded-2xl border bg-card max-lg:min-h-0 max-lg:flex-1 lg:max-h-[min(74dvh,52rem)]`}>
+        <section className={`${mobileConversationOpen ? 'hidden lg:flex' : 'flex'} min-h-[26rem] flex-col overflow-hidden rounded-2xl border bg-card max-lg:min-h-0 max-lg:flex-1 lg:max-h-[min(74dvh,52rem)]`}>
           <div className="border-b p-3 sm:p-4">
             <form onSubmit={searchSubmit} className="flex gap-2">
               <label className="sr-only" htmlFor="chat-search">Search chats</label>
@@ -203,13 +201,7 @@ export function StaffChatInbox({ userId }: StaffChatInboxProps) {
               ))}
             </div>
           ) : threads.length === 0 ? (
-            <div className="m-auto max-w-xs px-5 py-10 text-center">
-              <Users className="mx-auto size-7 text-muted-foreground" aria-hidden="true" />
-              <p className="mt-3 font-medium">No conversations found</p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                New customer messages will appear here.
-              </p>
-            </div>
+            <StaffChatEmptyState search={search} status={status} />
           ) : (
             <ul className="min-h-0 flex-1 space-y-1 overflow-y-auto p-2">
               {threads.map((thread) => {
@@ -266,7 +258,7 @@ export function StaffChatInbox({ userId }: StaffChatInboxProps) {
           )}
         </section>
 
-        <div className={`min-w-0 ${showMobileConversation ? 'max-lg:flex max-lg:min-h-0 max-lg:flex-1 max-lg:flex-col' : 'hidden lg:block'}`}>
+        <div className={`min-w-0 ${mobileConversationOpen ? 'max-lg:flex max-lg:min-h-0 max-lg:flex-1 max-lg:flex-col' : 'hidden lg:block'}`}>
           {selectedThread ? (
             <>
               <button
@@ -289,7 +281,7 @@ export function StaffChatInbox({ userId }: StaffChatInboxProps) {
                 mode="staff"
                 userId={userId}
                 status={selectedThread.status}
-                onStatusChange={updateStatus}
+                onStatusChange={selectedThread.last_sender_role ? updateStatus : undefined}
                 fillHeight
               />
             </>
