@@ -157,21 +157,6 @@ export async function registerAction(
   }
 }
 
-export async function logoutAction(): Promise<ActionResult> {
-  const supabase = await createClient();
-
-  try {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      return { success: false, error: error.message };
-    }
-    revalidatePath("/", "layout");
-    return { success: true, data: undefined };
-  } catch {
-    return { success: false, error: "Something went wrong. Please try again." };
-  }
-}
-
 export async function forgotPasswordAction(
   formData: FormData,
 ): Promise<ActionResult> {

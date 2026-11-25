@@ -69,7 +69,11 @@ export function StaffWarrantyExchange({ appointmentId, userId, originalSerial, e
     const command = { ...Object.fromEntries(new FormData(event.currentTarget)), operation };
     if (operation === 'handover') {
       setFeedback(null);
-      setConfirmation({ ...command, expectedReplacementUnitId: query.data?.exchange?.replacement_unit_id });
+      setConfirmation({
+        ...command,
+        expectedReplacementUnitId: query.data?.exchange?.replacement_unit_id,
+        expectedReservationToken: query.data?.exchange?.reservation_token,
+      });
     } else void run(command);
   }
 
@@ -122,13 +126,17 @@ export function StaffWarrantyExchange({ appointmentId, userId, originalSerial, e
           )}
         </form>
       ) : (
-        <form key={exchange.replacement_unit_id} onSubmit={(event) => submit(event, 'handover')} className="space-y-3">
+        <form key={exchange.reservation_token} onSubmit={(event) => submit(event, 'handover')} className="space-y-3">
           <DatePicker name="handoverOn" label="Actual replacement handover date" required disabled={saving} />
           <div className="flex flex-wrap gap-2">
             <Button type="submit" className="min-h-11" loading={saving}>Complete handover</Button>
             <Button type="button" variant="outline" className="min-h-11" disabled={saving} onClick={() => {
               setFeedback(null);
-              setConfirmation({ operation: 'release', expectedReplacementUnitId: exchange.replacement_unit_id });
+              setConfirmation({
+                operation: 'release',
+                expectedReplacementUnitId: exchange.replacement_unit_id,
+                expectedReservationToken: exchange.reservation_token,
+              });
             }}>Release reservation</Button>
           </div>
           <p className="text-sm text-muted-foreground">Confirm any warranty terms for the replacement separately.</p>

@@ -1,5 +1,4 @@
 import type { ReturnDisposition, ReturnReason } from '@/lib/warranty-returns';
-import type { DatabaseStorefrontFunctions } from './database-functions-storefront';
 
 export type WarrantyDecision = 'under_review' | 'covered_repair' | 'replacement_approved' | 'paid_repair' | 'further_review';
 
@@ -10,8 +9,6 @@ export type WarrantyUnit = {
   handover_on: string | null;
   wheel_count: number | null;
 };
-
-export type CustomerWarrantyBike = WarrantyUnit & { deadline: string | null };
 
 export type WarrantyDetails = {
   appointment_id: string;
@@ -33,6 +30,7 @@ export type WarrantyDetails = {
 
 export type WarrantyExchange = {
   replacement_unit_id: string | null;
+  reservation_token: string | null;
   appointment_id: string;
   appointment_number: string;
   customer_name: string;
@@ -81,17 +79,12 @@ export type ServiceWarrantyFunctions = {
     Args: { p_appointment_id: string }; Returns: { serial: string; motor: string }[];
   };
   manage_service_warranty_exchange: {
-    Args: { p_appointment_id: string; p_operation: WarrantyExchangeOperation; p_value: string | null; p_handover_on: string | null; p_original_serial: string | null; p_expected_replacement_unit_id: string | null };
+    Args: { p_appointment_id: string; p_operation: WarrantyExchangeOperation; p_value: string | null; p_handover_on: string | null; p_original_serial: string | null; p_expected_replacement_unit_id: string | null; p_expected_reservation_token: string | null };
     Returns: undefined;
   };
   order_warranty_units: { Args: { p_order_id: string }; Returns: WarrantyUnit[] };
   record_ebike_warranty_handover: {
     Args: { p_order_id: string; p_unit_id: string; p_handover_on: string; p_wheel_count: number }; Returns: undefined;
-  };
-  customer_warranty_bikes: { Args: Record<PropertyKey, never>; Returns: CustomerWarrantyBike[] };
-  request_service_warranty_appointment: {
-    Args: { p_booking: DatabaseStorefrontFunctions['request_service_appointment']['Args']; p_unit_id: string | null };
-    Returns: string;
   };
   start_service_warranty_review: { Args: { p_appointment_id: string }; Returns: string };
   service_warranty_details: { Args: { p_appointment_id: string }; Returns: WarrantyDetails[] };
@@ -99,8 +92,5 @@ export type ServiceWarrantyFunctions = {
     Args: { p_appointment_id: string; p_decision: Exclude<WarrantyDecision, 'under_review'>; p_note: string }; Returns: undefined;
   };
   link_service_warranty_unit: { Args: { p_appointment_id: string; p_serial: string }; Returns: undefined };
-  record_service_warranty_replacement: {
-    Args: { p_appointment_id: string; p_serial: string; p_handover_on: string }; Returns: undefined;
-  };
   staff_warranty_appointment_ids: { Args: { p_appointment_ids: string[] }; Returns: { appointment_id: string }[] };
 };
