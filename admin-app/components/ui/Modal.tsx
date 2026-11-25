@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import { useEffect, useId, useRef, type ReactNode } from 'react';
-import { X } from 'lucide-react';
+import { useEffect, useId, useRef, type ReactNode } from "react";
+import { X } from "lucide-react";
 
 interface ModalProps {
   open: boolean;
   title: string;
   onClose: () => void;
   children: ReactNode;
-  size?: 'default' | 'wide';
+  size?: "default" | "wide";
 }
 
 export function Modal({
@@ -16,11 +16,11 @@ export function Modal({
   title,
   onClose,
   children,
-  size = 'default',
+  size = "default",
 }: ModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const titleId = useId();
-  const width = size === 'wide' ? 'max-w-3xl' : 'max-w-xl';
+  const width = size === "wide" ? "max-w-3xl" : "max-w-xl";
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -36,6 +36,7 @@ export function Modal({
       aria-labelledby={titleId}
       onClose={onClose}
       onCancel={(event) => {
+        if (event.target !== event.currentTarget) return;
         event.preventDefault();
         onClose();
       }}
