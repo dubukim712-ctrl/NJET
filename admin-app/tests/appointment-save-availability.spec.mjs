@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { isClosedStaffAppointment, requiresFutureAppointmentSlot } from '../lib/staff-appointment-editing.ts';
 import { getScheduleBlockingReason } from '../components/admin/appointments/schedule-save-availability.ts';
 
 const available = {
@@ -41,4 +42,20 @@ test('unscheduled requests may stay unscheduled but still require complete date 
     checkingSlots: true,
   }), null);
   assert.match(getScheduleBlockingReason({ ...available, time: '' }), /both a scheduled date and time/);
+});
+
+test('only a newly chosen past slot blocks active appointment updates', () => {
+  const saved = '2026-11-25T03:00:00Z';
+  const newPastSlot = '2026-11-25T11:30:00+08:00';
+  const futureSlot = '2026-11-26T11:00:00+08:00';
+  const now = Date.parse('2026-11-25T05:00:00Z');
+  assert.equal(requiresFutureAppointmentSlot(saved, '2026-11-25T11:00:00+08:00', 'in_service', now), false);
+  assert.equal(requiresFutureAppointmentSlot(saved, newPastSlot, 'confirmed', now), true);
+  assert.equal(requiresFutureAppointmentSlot(null, newPastSlot, 'confirmed', now), true);
+  assert.equal(requiresFutureAppointmentSlot(saved, futureSlot, 'confirmed', now), false);
+});
+
+test('completed, cancelled and no-show records are treated as closed', () => {
+  for (const status of ['completed', 'cancelled', 'no_show']) assert.equal(isClosedStaffAppointment(status), true);
+  for (const status of ['requested', 'confirmed', 'in_service', 'ready_for_pickup']) assert.equal(isClosedStaffAppointment(status), false);
 });

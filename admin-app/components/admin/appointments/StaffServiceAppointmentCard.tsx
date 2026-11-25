@@ -15,7 +15,9 @@ import {
   updateServiceAppointmentNoteAction,
 } from '@/data/actions/service-appointments';
 import { reviewServiceAppointmentCancellationAction } from '@/data/actions/service-appointment-cancellations';
-import { formatPhp } from '@/lib/commerce';
+import { StaffAppointmentDetails } from '@/components/admin/appointments/StaffAppointmentDetails';
+import { StaffCancelAppointment } from '@/components/admin/appointments/StaffCancelAppointment';
+import { formatStaffAppointmentDate, isClosedStaffAppointment } from '@/lib/staff-appointment-editing';
 import type { StaffServiceAppointment } from '@/data/appointments/queries';
 import type { ServiceAppointmentStatus } from '@/types/commerce-tables';
 
@@ -28,16 +30,6 @@ const nextStatuses: Record<ServiceAppointmentStatus, ServiceAppointmentStatus[]>
   cancelled: [],
   no_show: [],
 };
-
-function displayDate(value: string | null) {
-  return value
-    ? new Intl.DateTimeFormat('en-PH', {
-        dateStyle: 'medium',
-        timeStyle: 'short',
-        timeZone: 'Asia/Manila',
-      }).format(new Date(value))
-    : 'Not scheduled';
-}
 
 export function StaffServiceAppointmentCard({
   appointment,
@@ -63,7 +55,7 @@ export function StaffServiceAppointmentCard({
   const [error, setError] = useState('');
   const [savingNote, setSavingNote] = useState(false);
   const [savingCancellation, setSavingCancellation] = useState<'approve' | 'reject' | null>(null);
-  const [noteSaved, setNoteSaved] = useState(false);
+  const [editingNote, setEditingNote] = useState(false);
   const invalidate = useInvalidateServiceAppointmentsQuery();
 
   async function saveNote(event: FormEvent<HTMLFormElement>) {
@@ -81,7 +73,7 @@ export function StaffServiceAppointmentCard({
         setError(result.error);
         return;
       }
-      setNoteSaved(true);
+      setEditingNote(false);
       await invalidate();
       toast.success('Appointment note saved.');
     } catch (saveError) {
@@ -120,14 +112,7 @@ export function StaffServiceAppointmentCard({
     }
   }
 
-  const address = [
-    appointment.address_line1,
-    appointment.barangay,
-    appointment.city,
-    appointment.province,
-    appointment.postal_code,
-  ].filter(Boolean).join(', ');
-
+  const closed = isClosedStaffAppointment(appointment.status);
   const summarySlot = appointment.scheduled_at ?? (appointment.status === 'requested' ? appointment.preferred_start_at : null);
   const pastConfirmed = appointment.status === 'confirmed' && appointment.scheduled_at &&
     Date.parse(appointment.scheduled_at) < referenceTime;
@@ -138,7 +123,7 @@ export function StaffServiceAppointmentCard({
         <p className="mt-1 text-sm text-muted-foreground">
           {summarySlot ? (
             <>
-              {appointment.scheduled_at ? 'Scheduled' : 'Requested time'}: <time dateTime={summarySlot}>{displayDate(summarySlot)}</time>
+              {appointment.scheduled_at ? 'Scheduled' : 'Requested time'}: <time dateTime={summarySlot}>{formatStaffAppointmentDate(summarySlot)}</time>
               {' (Philippine time)'}
             </>
           ) : 'No scheduled time'}
@@ -163,34 +148,8 @@ export function StaffServiceAppointmentCard({
     </summary>
   );
   const cardContent = (
-    <div className={hideSummary ? 'space-y-4' : 'mt-4 border-t pt-4'}>
-        <dl className="grid gap-2 text-sm sm:grid-cols-2">
-          <div><dt className="inline text-muted-foreground">Contact: </dt><dd className="inline">{appointment.contact_number}</dd></div>
-          <div><dt className="inline text-muted-foreground">Branch: </dt><dd className="inline">{appointment.branch_name}</dd></div>
-          <div><dt className="inline text-muted-foreground">Service: </dt><dd className="inline capitalize">{appointment.service_type} · {appointment.service_mode.replaceAll('_', ' ')}</dd></div>
-          <div><dt className="inline text-muted-foreground">Bike: </dt><dd className="inline">{formatAppointmentBikeName(appointment.bike_make, appointment.bike_model)}{appointment.bike_serial_number ? ` · ${appointment.bike_serial_number}` : ''}</dd></div>
-          <div><dt className="inline text-muted-foreground">Preferred: </dt><dd className="inline">{displayDate(appointment.preferred_start_at)}</dd></div>
-          <div><dt className="inline text-muted-foreground">Scheduled: </dt><dd className="inline">{displayDate(appointment.scheduled_at)}</dd></div>
-          <div><dt className="inline text-muted-foreground">Technician: </dt><dd className="inline">{appointment.assigned_technician_name ?? 'Unassigned'}</dd></div>
-          {address && <div className="sm:col-span-2"><dt className="inline text-muted-foreground">Home address: </dt><dd className="inline">{address}</dd></div>}
-          <div className="sm:col-span-2"><dt className="inline text-muted-foreground">Service notes: </dt><dd className="inline whitespace-pre-wrap">{appointment.issue_description}</dd></div>
-          {(appointment.estimate_minor !== null || appointment.final_total_minor !== null) && (
-            <div className="sm:col-span-2">
-              <dt className="inline text-muted-foreground">Estimate / final: </dt>
-              <dd className="inline">{appointment.estimate_minor === null ? '—' : formatPhp(appointment.estimate_minor)} / {appointment.final_total_minor === null ? '—' : formatPhp(appointment.final_total_minor)}</dd>
-            </div>
-          )}
-        </dl>
-
-        {canManage && (
-          <StaffAppointmentManageForm
-            key={`${appointment.status}-${appointment.scheduled_at}-${appointment.assigned_technician_id}-${appointment.estimate_minor}-${appointment.final_total_minor}`}
-            appointment={appointment}
-            userId={userId}
-            statusOptions={[appointment.status, ...nextStatuses[appointment.status]]}
-          />
-        )}
-
+    <div className={hideSummary ? 'space-y-4' : 'mt-4 space-y-4 border-t pt-4'}>
+        <StaffAppointmentDetails appointment={appointment} />
         {canManage && appointment.cancellation_request && (
         <section className="mt-4 space-y-3 rounded-lg border border-amber-500/30 bg-amber-500/5 p-4">
           <div>
@@ -223,6 +182,23 @@ export function StaffServiceAppointmentCard({
         </section>
         )}
 
+        {canManage && !closed && (
+          <>
+            <StaffAppointmentManageForm
+              key={[appointment.status, appointment.scheduled_at, appointment.assigned_technician_id,
+                appointment.estimate_minor, appointment.final_total_minor].join(':')}
+              appointment={appointment}
+              userId={userId}
+              statusOptions={[appointment.status, ...nextStatuses[appointment.status]].filter(
+                (status) => status !== 'cancelled' && (status !== 'ready_for_pickup' || appointment.service_mode === 'branch_visit')
+              )}
+            />
+            {!appointment.cancellation_request && ['requested', 'confirmed'].includes(appointment.status) && (
+              <StaffCancelAppointment appointmentId={appointment.id} reference={appointment.appointment_number} />
+            )}
+          </>
+        )}
+
         {!hideWorkActions && (
           <AssignedServiceAppointmentWorkActions
             appointment={appointment}
@@ -231,23 +207,30 @@ export function StaffServiceAppointmentCard({
           />
         )}
 
-        {(canManage || canWork) && (
-        <form onSubmit={saveNote} className="mt-4 space-y-2 border-t pt-4">
-          <Textarea
-            name="note"
-            key={`${appointment.id}-${appointment.internal_note}`}
-            label="Internal staff note"
-            helperText="Visible to authorized staff only; customers cannot see this note."
-            defaultValue={appointment.internal_note}
-            maxLength={4000}
-            rows={3}
-          />
-          <div className="flex items-center gap-3">
-            <Button type="submit" variant="outline" loading={savingNote}>Save note</Button>
-            {noteSaved && <span className="text-sm text-muted-foreground" role="status">Saved</span>}
-          </div>
-        </form>
-        )}
+        <section className="space-y-3 border-t pt-4">
+          <h3 className="font-semibold">Internal notes</h3>
+          {editingNote ? (
+            <form onSubmit={saveNote} className="space-y-2">
+              <Textarea name="note" key={appointment.id + '-' + appointment.internal_note}
+                label="Internal staff note" helperText="Visible to authorized staff only."
+                defaultValue={appointment.internal_note} maxLength={4000} rows={3} />
+              <div className="flex flex-wrap gap-2">
+                <Button type="submit" className="min-h-11" loading={savingNote}>Save note</Button>
+                <Button type="button" variant="outline" className="min-h-11" disabled={savingNote}
+                  onClick={() => setEditingNote(false)}>Discard changes</Button>
+              </div>
+            </form>
+          ) : (
+            <>
+              <p className="whitespace-pre-wrap break-words text-sm text-muted-foreground">{appointment.internal_note || 'No internal notes yet.'}</p>
+              {(canManage || canWork) && (
+                <Button type="button" variant="outline" className="min-h-11" onClick={() => { setError(''); setEditingNote(true); }}>
+                  {appointment.internal_note ? 'Edit internal note' : 'Add internal note'}
+                </Button>
+              )}
+            </>
+          )}
+        </section>
         {error && <p className="mt-3 text-sm text-destructive" role="alert">{error}</p>}
       </div>
   );
@@ -264,7 +247,7 @@ export function StaffServiceAppointmentCard({
       }}
     >
       {cardSummary}
-      {cardContent}
+      {cardOpen && cardContent}
     </details>
   );
 }

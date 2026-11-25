@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { getScheduleBlockingReason } from "@/components/admin/appointments/schedule-save-availability";
+import { formatStaffAppointmentDate } from '@/lib/staff-appointment-editing';
 import { AppointmentDateTimeFields } from "@/components/appointments/AppointmentDateTimeFields";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -49,10 +50,11 @@ export function StaffAppointmentManageForm({
   );
   const [date, setDate] = useState(initialDateTime.date);
   const [time, setTime] = useState(initialDateTime.time);
-  const [status, setStatus] = useState(appointment.status);
+  const [status, setStatus] = useState<ServiceAppointmentStatus>(appointment.status === "requested" ? "confirmed" : appointment.status);
   const [assignedTechnicianId, setAssignedTechnicianId] = useState(
     appointment.assigned_technician_id ?? "",
   );
+  const [rescheduling, setRescheduling] = useState(false);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
   const invalidate = useInvalidateServiceAppointmentsQuery();
@@ -60,47 +62,44 @@ export function StaffAppointmentManageForm({
     userId,
     appointment.branch_id,
   );
-  const slotsQuery = useStaffServiceAppointmentSlotsQuery(
-    userId,
-    appointment.branch_id,
-    date,
-  );
-  const scheduleRequired = status !== "requested" && status !== "cancelled";
-  const availableTimes = slotsQuery.data?.times ?? [];
+  const needsInitialBooking = !appointment.scheduled_at;
+  const showSlotPicker = (needsInitialBooking || rescheduling) && status !== 'no_show' && status !== 'completed';
+  const scheduledDate = showSlotPicker ? date : initialDateTime.date;
+  const scheduledTime = showSlotPicker ? time : initialDateTime.time;
+  const slotsQuery = useStaffServiceAppointmentSlotsQuery(userId, appointment.branch_id, showSlotPicker ? date : '');
   const keepCurrentTime = Boolean(
-    appointment.scheduled_at && time && date === initialDateTime.date && time === initialDateTime.time,
+    appointment.scheduled_at && scheduledTime &&
+    scheduledDate === initialDateTime.date && scheduledTime === initialDateTime.time,
   );
-  const timeOptions = [
-    ...new Set([...availableTimes, ...(keepCurrentTime ? [time] : [])]),
-  ].sort();
-  const timeHelperText = !date
-    ? "Choose a date to see times within branch hours and closures."
-    : slotsQuery.isPending
-      ? "Loading this branch’s service times..."
-      : slotsQuery.isError
-        ? "Service times could not be loaded."
-        : !slotsQuery.data?.hoursConfigured
-          ? "Service hours are not configured for this branch."
-          : !slotsQuery.data.branchOpen
-            ? "This branch is closed on the selected weekday."
-            : availableTimes.length
-              ? "Times follow branch service hours; closure periods are excluded."
-              : "No service slots are available on this date.";
+  const checkingSlots = showSlotPicker && (slotsQuery.isPending || slotsQuery.isFetching);
+  const availableTimes = slotsQuery.data?.times ?? [];
+  const timeOptions = [...new Set([...availableTimes, ...(keepCurrentTime ? [scheduledTime] : [])])].sort();
+  const timeHelperText = keepCurrentTime
+    ? 'Current booking. Choose another available time to change it.'
+    : !date
+      ? 'Choose a date to see available times.'
+      : checkingSlots
+        ? 'Loading service times...'
+        : slotsQuery.isError
+          ? 'Service times could not be loaded.'
+          : !slotsQuery.data?.hoursConfigured
+            ? 'Service hours are not configured for this branch.'
+            : !slotsQuery.data.branchOpen
+              ? 'The branch is closed on the selected day.'
+              : availableTimes.length
+                ? 'Choose an available time in Philippine time.'
+                : 'No service slots are available on this date.';
+  const blockingReason = getScheduleBlockingReason({
+    date: scheduledDate, time: scheduledTime, scheduleRequired: true, keepCurrentTime,
+    checkingSlots, slotsFailed: slotsQuery.isError, availableTimes, emptySlotsReason: timeHelperText,
+  });
 
-  const checkingSlots = slotsQuery.isPending || slotsQuery.isFetching;
-  const changedSlot = Boolean(date && !keepCurrentTime);
-  const blockingReason = status === "cancelled"
-    ? "Use the cancellation action to cancel this appointment."
-    : getScheduleBlockingReason({
-        date,
-        time,
-        scheduleRequired,
-        keepCurrentTime,
-        checkingSlots,
-        slotsFailed: slotsQuery.isError,
-        availableTimes,
-        emptySlotsReason: timeHelperText,
-      });
+  function toggleRescheduling() {
+    setRescheduling(!rescheduling);
+    setDate(initialDateTime.date);
+    setTime(initialDateTime.time);
+    setError('');
+  }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -115,11 +114,13 @@ export function StaffAppointmentManageForm({
       status,
       scheduledAt: keepCurrentTime
         ? appointment.scheduled_at
-        : date && time ? `${date}T${time}:00+08:00` : null,
+        : scheduledDate && scheduledTime ? `${scheduledDate}T${scheduledTime}:00+08:00` : null,
       assignedTechnicianId:
         String(form.get("assignedTechnicianId") ?? "") || null,
       estimateMinor: estimate ? Math.round(Number(estimate) * 100) : null,
-      finalTotalMinor: total ? Math.round(Number(total) * 100) : null,
+      finalTotalMinor: status === "completed"
+        ? total ? Math.round(Number(total) * 100) : null
+        : appointment.final_total_minor,
     });
     if (!parsed.success) {
       setError(
@@ -151,57 +152,55 @@ export function StaffAppointmentManageForm({
       onSubmit={submit}
       className="grid gap-4 border-t p-4 sm:grid-cols-2"
     >
-      <Select
-        name="status"
-        label="Status"
-        helperText="Choose an allowed next step for this appointment."
-        value={status}
-        onValueChange={(value) => {
-          const next = statusOptions.find(
-            (option) => option === value,
-          );
-          if (next) setStatus(next);
-        }}
-      >
-        {statusOptions.map((option) => (
-          <option key={option} value={option}>
-            {option.replaceAll("_", " ")}
-          </option>
-        ))}
-      </Select>
-      <AppointmentDateTimeFields
-        date={date}
-        time={time}
-        onDateChange={(value) => {
-          setDate(value);
-          setTime("");
-        }}
-        onTimeChange={setTime}
-        dateLabel="Scheduled date (Philippine time)"
-        timeLabel="Scheduled time"
-        dateHelperText={
-          appointment.status === "requested" && !appointment.scheduled_at
-            ? "Prefilled from the customer’s preferred date; adjust if needed."
-            : "Update the confirmed service date."
-        }
-        timeHelperText={timeHelperText}
-        timeOptions={timeOptions}
-        timeDisabled={
-          !date ||
-          checkingSlots ||
-          slotsQuery.isError ||
-          !timeOptions.length
-        }
-        required={scheduleRequired}
-      />
+      <div className="space-y-2 sm:col-span-2">
+        <h3 className="font-semibold">{appointment.status === 'requested' ? 'Confirm booking' : 'Update appointment'}</h3>
+        {appointment.scheduled_at && (
+          <p className="text-sm text-muted-foreground">Current booking: {formatStaffAppointmentDate(appointment.scheduled_at)} (Philippine time)</p>
+        )}
+        {appointment.status === 'confirmed' && status === 'confirmed' && (
+          <Button type="button" variant="outline" className="min-h-11" onClick={toggleRescheduling}>
+            {rescheduling ? 'Keep current booking' : 'Reschedule'}
+          </Button>
+        )}
+      </div>
+      {appointment.status !== 'requested' && (
+        <Select label="Status" value={status} onValueChange={(value) => {
+          const next = statusOptions.find((option) => option === value);
+          if (!next) return;
+          setStatus(next);
+          if (next !== 'confirmed' && rescheduling) toggleRescheduling();
+        }}>
+          {statusOptions.map((option) => (
+            <option key={option} value={option}>{option.charAt(0).toUpperCase() + option.slice(1).replaceAll('_', ' ')}</option>
+          ))}
+        </Select>
+      )}
+      {showSlotPicker && (
+        <AppointmentDateTimeFields
+          date={date}
+          time={time}
+          onDateChange={(value) => {
+            setDate(value);
+            setTime(value === initialDateTime.date && appointment.scheduled_at ? initialDateTime.time : '');
+          }}
+          onTimeChange={setTime}
+          dateLabel="Scheduled date (Philippine time)"
+          timeLabel="Scheduled time"
+          dateHelperText={needsInitialBooking ? "Start with the customer's preferred date." : 'Choose a date for the new slot.'}
+          timeHelperText={timeHelperText}
+          timeOptions={timeOptions}
+          timeDisabled={!date || checkingSlots || slotsQuery.isError || !timeOptions.length}
+        />
+      )}
       <Select
         name="assignedTechnicianId"
         label="Technician"
-        helperText="Assign an eligible technician at this branch, or unassign them."
+        helperText="Choose an eligible technician at this branch."
+        required
         value={assignedTechnicianId}
         onValueChange={(value) => setAssignedTechnicianId(value)}
       >
-        <option value="">Unassigned</option>
+        <option value="">Choose a technician</option>
         {appointment.assigned_technician_id &&
           !technicianQuery.data?.technicians.some(
             (tech) => tech.id === appointment.assigned_technician_id,
@@ -221,15 +220,16 @@ export function StaffAppointmentManageForm({
           {technicianQuery.error instanceof ServiceAppointmentsQueryError
             ? technicianQuery.error.message
             : "Technician options could not be loaded."}{" "}
-          <button
+          <Button
             type="button"
-            className="underline"
+            variant="link"
+            className="min-h-11"
             onClick={() => {
               void technicianQuery.refetch();
             }}
           >
             Try again
-          </button>
+          </Button>
         </p>
       )}
       <Input
@@ -245,19 +245,21 @@ export function StaffAppointmentManageForm({
             : (appointment.estimate_minor / 100).toFixed(2)
         }
       />
-      <Input
-        name="finalTotal"
-        label="Final total (PHP)"
-        helperText="Enter the final amount when service is complete."
-        type="number"
-        min="0"
-        step="0.01"
-        defaultValue={
-          appointment.final_total_minor === null
-            ? ""
-            : (appointment.final_total_minor / 100).toFixed(2)
-        }
-      />
+      {status === 'completed' && (
+        <Input
+          name="finalTotal"
+          label="Final total (PHP)"
+          helperText="Enter the final amount when service is complete."
+          type="number"
+          min="0"
+          step="0.01"
+          defaultValue={
+            appointment.final_total_minor === null
+              ? ""
+              : (appointment.final_total_minor / 100).toFixed(2)
+          }
+        />
+      )}
       {error && (
         <p className="text-sm text-destructive sm:col-span-2" role="alert">
           {error}
@@ -267,13 +269,13 @@ export function StaffAppointmentManageForm({
         {blockingReason && (
           <p className="text-sm text-muted-foreground" role="status">{blockingReason}</p>
         )}
-        {changedSlot && slotsQuery.isError && !checkingSlots && (
+        {showSlotPicker && date && slotsQuery.isError && !checkingSlots && (
           <Button type="button" variant="outline" className="min-h-11" onClick={() => void slotsQuery.refetch()}>
             Retry availability check
           </Button>
         )}
         <Button type="submit" className="min-h-11 w-full" loading={saving} disabled={Boolean(blockingReason)}>
-          Save changes
+          {appointment.status === "requested" ? "Confirm appointment" : rescheduling ? "Save new schedule" : "Save changes"}
         </Button>
       </div>
     </form>
