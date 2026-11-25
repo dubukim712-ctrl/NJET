@@ -56,6 +56,7 @@ export function useStaffServiceAppointmentsQuery(
 ) {
   return useQuery({
     queryKey: [...staffServiceAppointmentsQueryKey, userId, filters],
+    refetchInterval: filters.view && filters.view !== 'history' ? 60_000 : false,
     queryFn: async () => {
       const result = await getStaffServiceAppointmentsAction(filters);
       if (!result.success) throw new ServiceAppointmentsQueryError(result.error);

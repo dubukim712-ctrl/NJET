@@ -1,3 +1,4 @@
+import { getOrderView, ORDER_VIEW_STATUSES } from '@/lib/order-queue';
 import type { createClient } from '@/data/supabase/server';
 import type { Database } from '@/types/database';
 import type { OrderFilters } from '@/lib/validations/order-filters';
@@ -77,6 +78,10 @@ export async function getCommerceOrders(
         `order_number.ilike.%${searchTerm}%,customer_name.ilike.%${searchTerm}%,contact_number.ilike.%${searchTerm}%`
       );
     }
+    const view = getOrderView(filters);
+    const viewStatuses = ORDER_VIEW_STATUSES[view];
+    if (viewStatuses.length) orderQuery = orderQuery.in('status', viewStatuses);
+    if (view === 'attention') orderQuery = orderQuery.order('status');
     if (filters.status) orderQuery = orderQuery.eq('status', filters.status);
     const branchId = branchScope ?? filters.branch;
     if (branchId) orderQuery = orderQuery.eq('branch_id', branchId);
@@ -84,7 +89,7 @@ export async function getCommerceOrders(
     let branchesQuery = supabase.from('branches').select('id, name');
     if (branchScope) branchesQuery = branchesQuery.eq('id', branchScope);
     const [orderResult, branchResult] = await Promise.all([
-      orderQuery.order('created_at', { ascending: false }).limit(50),
+      orderQuery.order('created_at', { ascending: false }).order('id', { ascending: false }).limit(50),
       branchesQuery.order('name').limit(200),
     ]);
     if (orderResult.error) throw orderResult.error;
@@ -159,7 +164,6 @@ export async function getCommerceOrders(
     if (certificatesResult.error) throw certificatesResult.error;
     if (receiptsResult.error) throw receiptsResult.error;
     if (homeCreditDetailsResult.error) throw homeCreditDetailsResult.error;
-
     const recipientIds = [...new Set(
       orders.map((order) => order.payment_recipient_id).filter(
         (id): id is string => Boolean(id)
@@ -180,7 +184,6 @@ export async function getCommerceOrders(
         recipientNameById.set(recipient.id, recipient.recipient_name);
       }
     }
-
     let signedByPath = new Map<string, string>();
     if (documentsResult.data.length) {
       const { data, error } = await supabase.storage
@@ -236,7 +239,6 @@ export async function getCommerceOrders(
         );
       }
     }
-
     return {
       data: orders.map((order) => ({
         ...order,

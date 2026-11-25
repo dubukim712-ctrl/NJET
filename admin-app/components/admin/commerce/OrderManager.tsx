@@ -14,6 +14,7 @@ import {
 import { OrderStatusBadge } from "@/components/commerce/OrderStatusBadge";
 import { OrdersFilters } from "@/components/admin/commerce/OrdersFilters";
 import { Button } from "@/components/ui/Button";
+import { getOrderNextStep, getOrderView } from "@/lib/order-queue";
 import { formatPhp } from "@/lib/commerce";
 import type { OrderFilters } from "@/lib/validations/order-filters";
 
@@ -97,7 +98,9 @@ export function OrderManager({
           <p className="rounded-xl border bg-card p-6 text-sm text-muted-foreground">
             {filters.q || filters.status || (!branchLocked && filters.branch)
               ? "No orders match the selected filters."
-              : "No orders have been placed yet."}
+              : getOrderView(filters) === "attention"
+                ? "No orders need attention."
+                : "No orders in this view."}
           </p>
         )}
         {orders.map((order) => {
@@ -108,6 +111,7 @@ export function OrderManager({
                 (order.payment_method === "online"
                   ? 0
                   : order.reservation_due_minor);
+          const nextStep = getOrderNextStep(order);
           const isExpanded = expandedOrderId === order.id;
           const detailsId = `order-details-${order.id}`;
           return (
@@ -115,48 +119,51 @@ export function OrderManager({
               key={order.id}
               className="rounded-xl border bg-card p-4 sm:p-5"
             >
-              <header className="grid gap-3 sm:flex sm:flex-wrap sm:items-center sm:justify-between">
+              <header className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
                 <div className="min-w-0">
-                  <h2 className="text-lg font-semibold">
-                    {order.order_number}
-                  </h2>
+                  <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                    <h2 className="text-lg font-semibold">{order.order_number}</h2>
+                    <p className="break-words text-sm">{order.customer_name}</p>
+                  </div>
                   <p className="mt-1 break-words text-sm text-muted-foreground">
-                    {new Date(order.created_at).toLocaleString("en-PH")} ·{" "}
-                    {order.customer_name} · {order.contact_number}
+                    {order.fulfillment === "pickup" ? "Pickup" : "Delivery"}
+                    {order.branch_name ? " / " + order.branch_name : ""}
                   </p>
+                  <p className="mt-1 text-sm font-semibold">{formatPhp(order.total_minor)}</p>
+                  {nextStep && <p className="mt-1 text-sm text-muted-foreground">{nextStep}</p>}
                 </div>
-                <div className="flex min-w-0 flex-wrap items-center gap-2">
-                  <span
-                    className={`rounded-full px-3 py-1 text-xs font-medium ${
-                      order.order_source === "walk_in"
-                        ? "bg-violet-100 text-violet-900 dark:bg-violet-900/30 dark:text-violet-200"
-                        : "bg-secondary text-secondary-foreground"
-                    }`}
+                <div className="min-w-0 space-y-1 sm:text-right">
+                  <div className="flex min-w-0 flex-wrap items-center gap-2 sm:justify-end">
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs font-medium ${
+                        order.order_source === "walk_in"
+                          ? "bg-violet-100 text-violet-900 dark:bg-violet-900/30 dark:text-violet-200"
+                          : "bg-secondary text-secondary-foreground"
+                      }`}
+                    >
+                      {order.order_source === "walk_in" ? "Walk-in" : "Online"}
+                    </span>
+                    <OrderStatusBadge status={order.status} />
+                  </div>
+                  <Button
+                    variant="link"
+                    size="sm"
+                    type="button"
+                    aria-expanded={isExpanded}
+                    aria-controls={isExpanded ? detailsId : undefined}
+                    onClick={() =>
+                      setExpandedOrderId(isExpanded ? null : order.id)
+                    }
+                    className="min-h-11 w-full justify-between px-0 text-sm font-medium sm:w-auto sm:gap-2"
                   >
-                    {order.order_source === "walk_in" ? "Walk-in" : "Online"}
-                  </span>
-                  <OrderStatusBadge status={order.status} />
+                    {isExpanded ? "Hide details" : "View details"}
+                    <ChevronDown
+                      aria-hidden="true"
+                      className={`size-4 transition-transform ${isExpanded ? "rotate-180" : ""}`}
+                    />
+                  </Button>
                 </div>
               </header>
-              <div className="mt-2 sm:flex sm:justify-end">
-                <Button
-                  variant="link"
-                  size="sm"
-                  type="button"
-                  aria-expanded={isExpanded}
-                  aria-controls={isExpanded ? detailsId : undefined}
-                  onClick={() =>
-                    setExpandedOrderId(isExpanded ? null : order.id)
-                  }
-                  className="min-h-11 w-full justify-between px-0 text-sm font-medium sm:w-auto sm:gap-2"
-                >
-                  {isExpanded ? "Hide details" : "View details"}
-                  <ChevronDown
-                    aria-hidden="true"
-                    className={`size-4 transition-transform ${isExpanded ? "rotate-180" : ""}`}
-                  />
-                </Button>
-              </div>
               {isExpanded && (
                 <OrderDetailsPanel
                   order={order}

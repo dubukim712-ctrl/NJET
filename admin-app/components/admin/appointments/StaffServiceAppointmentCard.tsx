@@ -46,6 +46,7 @@ export function StaffServiceAppointmentCard({
   canWork,
   cardOpen,
   onCardOpenChange,
+  referenceTime = 0,
   hideSummary = false,
   hideWorkActions = false,
 }: {
@@ -55,6 +56,7 @@ export function StaffServiceAppointmentCard({
   canWork: boolean;
   cardOpen: boolean;
   onCardOpenChange: (open: boolean) => void;
+  referenceTime?: number;
   hideSummary?: boolean;
   hideWorkActions?: boolean;
 }) {
@@ -126,12 +128,32 @@ export function StaffServiceAppointmentCard({
     appointment.postal_code,
   ].filter(Boolean).join(', ');
 
+  const summarySlot = appointment.scheduled_at ?? (appointment.status === 'requested' ? appointment.preferred_start_at : null);
+  const pastConfirmed = appointment.status === 'confirmed' && appointment.scheduled_at &&
+    Date.parse(appointment.scheduled_at) < referenceTime;
   const cardSummary = (
     <summary className="flex cursor-pointer list-none flex-wrap items-start justify-between gap-3 [&::-webkit-details-marker]:hidden">
-      <div>
-        <h2 className="font-semibold">{appointment.appointment_number} · {appointment.customer_name}</h2>
+      <div className="min-w-0">
+        <h2 className="break-words font-semibold">{appointment.appointment_number} {' / '} {appointment.customer_name}</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {summarySlot ? (
+            <>
+              {appointment.scheduled_at ? 'Scheduled' : 'Requested time'}: <time dateTime={summarySlot}>{displayDate(summarySlot)}</time>
+              {' (Philippine time)'}
+            </>
+          ) : 'No scheduled time'}
+        </p>
+        <p className="mt-1 break-words text-sm text-muted-foreground">
+          {[
+            appointment.branch_name,
+            appointment.service_mode === 'home_service' ? 'Home service' : 'Branch visit',
+            formatAppointmentBikeName(appointment.bike_make, appointment.bike_model),
+          ].filter(Boolean).join(' / ')}
+        </p>
       </div>
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-2">
+        {appointment.cancellation_request && <span className="rounded-full bg-amber-100 px-2 py-1 text-xs font-medium text-amber-900">Cancellation requested</span>}
+        {pastConfirmed && <span className="rounded-full bg-amber-100 px-2 py-1 text-xs font-medium text-amber-900">Past scheduled time</span>}
         <ServiceAppointmentStatusBadge status={appointment.status} />
         <ChevronDown
           className="h-5 w-5 shrink-0 text-muted-foreground transition-transform group-open:rotate-180"

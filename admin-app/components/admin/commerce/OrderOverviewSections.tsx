@@ -12,6 +12,8 @@ export function OrderOverviewSections({
   order: StaffOrder;
   storeDue: number;
 }) {
+  const paymentClosed = order.status === "expired" || order.status === "cancelled";
+  const proofSubmitted = order.documents.some((document) => document.kind === "payment_proof");
   return (
     <div className="grid gap-4 lg:grid-cols-2">
       <section className="space-y-2">
@@ -38,6 +40,13 @@ export function OrderOverviewSections({
       </section>
       <section className="space-y-2 text-sm">
         <h3 className="font-semibold">Fulfillment &amp; payment</h3>
+        <DetailRow label="Contact number" value={order.contact_number} />
+        <DetailRow label="Placed at" value={new Date(order.created_at).toLocaleString('en-PH', {
+          dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Manila',
+        }) + ' (Philippine time)'} />
+        {paymentClosed && (
+          <DetailRow label="Payment" value={order.status === 'expired' ? 'Payment window expired' : 'Order cancelled'} />
+        )}
         {order.fulfillment === 'pickup' ? (
           <DetailRow label="Pickup at" value={order.branch_name} />
         ) : (
@@ -83,12 +92,12 @@ export function OrderOverviewSections({
             )}`}
           />
         )}
-        {order.reservation_due_minor > 0 && (
+        {!paymentClosed && order.reservation_due_minor > 0 && (
           <DetailRow
             label="Reservation"
             value={`${formatPhp(order.reservation_due_minor)}${
               order.payment_method === 'online'
-                ? order.status === 'awaiting_payment'
+                ? !proofSubmitted
                   ? ' · payment proof pending'
                   : ' · online proof submitted'
                 : order.payment_method === 'home_credit'
@@ -97,11 +106,11 @@ export function OrderOverviewSections({
             }`}
           />
         )}
-        {order.home_credit_downpayment_due_minor > 0 && (
+        {!paymentClosed && order.home_credit_downpayment_due_minor > 0 && (
           <DetailRow
             label="Home Credit downpayment"
             value={`${formatPhp(order.home_credit_downpayment_due_minor)}${
-              order.status === 'awaiting_payment'
+              !proofSubmitted
                 ? ' · payment proof pending'
                 : ' · online proof submitted'
             }`}
@@ -110,7 +119,7 @@ export function OrderOverviewSections({
         {order.homeCreditDetails && (
           <HomeCreditOrderSummary details={order.homeCreditDetails} totalMinor={order.total_minor} />
         )}
-        {order.payment_method === 'home_credit' ? (
+        {!paymentClosed && (order.payment_method === 'home_credit' ? (
           !order.homeCreditDetails && (
             <DetailRow
               label="Home Credit balance before processing"
@@ -119,7 +128,7 @@ export function OrderOverviewSections({
           )
         ) : (
           <DetailRow label="Due at store" value={formatPhp(storeDue)} />
-        )}
+        ))}
       </section>
     </div>
   );

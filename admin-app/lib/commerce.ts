@@ -42,16 +42,19 @@ export function parsePhpAmount(value: string): number | null {
 }
 
 export function buildOrdersHref({
+  view,
   search,
   status,
   branchId,
 }: {
+  view?: string;
   search?: string;
   status?: string;
   branchId?: string;
 }) {
   const params = new URLSearchParams();
   if (search?.trim()) params.set('q', search.trim());
+  if (view) params.set('view', view);
   if (status) params.set('status', status);
   if (branchId) params.set('branch', branchId);
 

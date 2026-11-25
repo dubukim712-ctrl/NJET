@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { ORDER_VIEWS } from '@/lib/order-queue';
 import type { OrderStatus } from '@/types/commerce-tables';
 
 export const ORDER_FILTER_STATUSES = [
@@ -12,6 +13,7 @@ export const ORDER_FILTER_STATUSES = [
 
 export const orderFiltersSchema = z
   .object({
+    view: z.enum(ORDER_VIEWS).optional().catch(undefined),
     q: z.string().trim().max(100).catch(''),
     status: z
       .union([z.enum(ORDER_FILTER_STATUSES), z.literal('')])

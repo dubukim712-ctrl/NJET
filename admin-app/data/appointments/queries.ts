@@ -107,9 +107,10 @@ export async function getStaffServiceAppointments(
         service_mode, service_type, bike_make, bike_model, bike_serial_number,
         issue_description, address_line1, barangay, city, province, postal_code,
         preferred_start_at, scheduled_at, status, assigned_technician_id,
-        estimate_minor, final_total_minor
+        estimate_minor, final_total_minor,
+        pending_cancellations:service_appointment_cancellation_requests()
       `)
-      .order('scheduled_at', { ascending: true, nullsFirst: true })
+      .order('scheduled_at', { ascending: filters.view !== 'history', nullsFirst: filters.view !== 'history' })
       .order('created_at', { ascending: false })
       .limit(100); // shortcut: My Tasks searches this bounded slice; add pagination if task volume exceeds it.
 
@@ -121,13 +122,41 @@ export async function getStaffServiceAppointments(
         .eq('assigned_technician_id', assignedTechnicianId)
         .or(`status.in.(requested,confirmed,in_service,ready_for_pickup),and(status.eq.completed,updated_at.gte.${recentCompletedSince})`);
     }
+    const now = new Date();
+    const nowIso = now.toISOString();
+    const conditions: string[] = [];
+    if (filters.view === 'attention') {
+      query = query.eq('pending_cancellations.status', 'pending');
+      conditions.push(
+        'status.eq.requested',
+        'and(status.eq.confirmed,scheduled_at.lt.' + nowIso + ')',
+        ...(canManage ? ['pending_cancellations.not.is.null'] : []),
+      );
+    } else if (filters.view === 'today' || filters.view === 'upcoming') {
+      const date = new Intl.DateTimeFormat('sv-SE', { timeZone: 'Asia/Manila' }).format(now);
+      const midnight = new Date(date + 'T00:00:00+08:00');
+      const tomorrow = new Date(midnight.getTime() + 86_400_000).toISOString();
+      query = query.in('status', ['confirmed', 'in_service', 'ready_for_pickup']);
+      query = filters.view === 'today'
+        ? query.gte('scheduled_at', midnight.toISOString()).lt('scheduled_at', tomorrow)
+        : query.gte('scheduled_at', tomorrow);
+    } else if (filters.view === 'history') {
+      query = query.in('status', ['completed', 'cancelled', 'no_show']);
+    }
     if (filters.status) query = query.eq('status', filters.status);
     if (filters.branchId) query = query.eq('branch_id', filters.branchId);
     const searchTerm = filters.search.replace(/[%,()_"\\]/g, ' ').trim();
     if (searchTerm) {
-      query = query.or(
+      const searchCondition = (
         `appointment_number.ilike.%${searchTerm}%,customer_name.ilike.%${searchTerm}%,contact_number.ilike.%${searchTerm}%,bike_make.ilike.%${searchTerm}%,bike_model.ilike.%${searchTerm}%,bike_serial_number.ilike.%${searchTerm}%,branch_name.ilike.%${searchTerm}%`
       );
+      if (conditions.length) {
+        query = query.or('and(or(' + conditions.join(',') + '),or(' + searchCondition + '))');
+      } else {
+        query = query.or(searchCondition);
+      }
+    } else if (conditions.length) {
+      query = query.or(conditions.join(','));
     }
     if (filters.date) {
       const start = new Date(`${filters.date}T00:00:00+08:00`);
@@ -188,6 +217,11 @@ export async function getStaffServiceAppointments(
         request,
       ])
     );
+    if (filters.view === 'attention') {
+      const priority = (appointment: (typeof appointments)[number]) =>
+        cancellationRequestByAppointment.has(appointment.id) ? 0 : appointment.status === 'requested' ? 1 : 2;
+      appointments.sort((a, b) => priority(a) - priority(b));
+    }
     return {
       data: appointments.map((appointment) => ({
         ...appointment,

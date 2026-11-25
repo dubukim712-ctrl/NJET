@@ -14,6 +14,7 @@ import {
 } from "@/data/appointments/client";
 import { RealtimeStatus } from "@/components/realtime/RealtimeStatus";
 import { useRealtimeChanges } from "@/components/realtime/useRealtimeChanges";
+import { StaffAppointmentQueueFilters } from "./StaffAppointmentQueueFilters";
 import { StaffServiceAppointmentCard } from "@/components/admin/appointments/StaffServiceAppointmentCard";
 import { StaffServiceAppointmentsSkeleton } from "@/components/admin/appointments/StaffServiceAppointmentsSkeleton";
 import { StaffServiceAppointmentManagementTabs } from "@/components/admin/appointments/StaffServiceAppointmentManagementTabs";
@@ -28,6 +29,7 @@ import {
 import type { RealtimeTable } from "@/types/realtime";
 
 const EMPTY_FILTERS: ServiceAppointmentFilters = {
+  view: "attention",
   status: "",
   branchId: "",
   date: "",
@@ -78,7 +80,7 @@ export function StaffServiceAppointments({
     !appointmentsQuery.data &&
     appointmentsQuery.isPending;
 
-  function updateFilter(field: keyof ServiceAppointmentFilters, value: string) {
+  function updateFilter(field: Exclude<keyof ServiceAppointmentFilters, "view">, value: string) {
     setOpenAppointmentId(null);
     setFilters((current) => ({ ...current, [field]: value }));
   }
@@ -126,6 +128,14 @@ export function StaffServiceAppointments({
         hidden={selectedTab !== "appointments"}
       >
         <div className="space-y-4">
+          <StaffAppointmentQueueFilters
+            view={filters.view ?? "attention"}
+            onChange={(view) => {
+              if (filters.view === view) return;
+              setOpenAppointmentId(null);
+              setFilters((current) => ({ ...current, view, status: "", date: "" }));
+            }}
+          />
           <div className="grid gap-3 rounded-xl border bg-card p-4 sm:grid-cols-2">
             <Input
               label="Search appointments"
@@ -176,7 +186,10 @@ export function StaffServiceAppointments({
               name="scheduledDateFilter"
               helperText="Filter by scheduled date in Philippine time."
               value={filters.date}
-              onChange={(value) => updateFilter("date", value)}
+              onChange={(date) => {
+                setOpenAppointmentId(null);
+                setFilters((current) => ({ ...current, date, view: date ? "all" : current.view }));
+              }}
             />
           </div>
 
@@ -237,6 +250,7 @@ export function StaffServiceAppointments({
                     <StaffServiceAppointmentCard
                       key={appointment.id}
                       appointment={appointment}
+                      referenceTime={appointmentsQuery.dataUpdatedAt}
                       userId={userId}
                       canManage={canManage}
                       canWork={canWork}
@@ -252,7 +266,11 @@ export function StaffServiceAppointments({
                 </div>
               ) : (
                 <div className="rounded-xl border bg-card p-8 text-center">
-                  <h2 className="font-semibold">No appointments found</h2>
+                  <h2 className="font-semibold">
+                    {filters.view === "attention" && !filters.search && !filters.branchId && !filters.status
+                      ? "No appointments need attention"
+                      : "No appointments match these filters"}
+                  </h2>
                   <p className="mt-2 text-sm text-muted-foreground">
                     Try changing the filters or check again later.
                   </p>

@@ -4,6 +4,7 @@ import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 import { orderFiltersSchema } from '@/lib/validations/order-filters';
 
 export type OrdersSearchParams = {
+  view?: string | string[];
   q?: string | string[];
   status?: string | string[];
   branch?: string | string[];
@@ -20,6 +21,7 @@ export async function OrdersContent({
 }) {
   const params = await searchParams;
   const filters = orderFiltersSchema.parse({
+    view: firstSearchParam(params.view),
     q: firstSearchParam(params.q),
     status: firstSearchParam(params.status),
     branch: firstSearchParam(params.branch),

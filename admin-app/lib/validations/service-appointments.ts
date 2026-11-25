@@ -156,7 +156,11 @@ export const staffServiceAppointmentUpdateSchema = z.object({
   }
 });
 
+export const STAFF_APPOINTMENT_VIEWS = ['attention', 'today', 'upcoming', 'history', 'all'] as const;
+export type StaffAppointmentView = (typeof STAFF_APPOINTMENT_VIEWS)[number];
+
 export const serviceAppointmentFiltersSchema = z.object({
+  view: z.enum(STAFF_APPOINTMENT_VIEWS).optional(),
   status: z.union([z.enum(SERVICE_APPOINTMENT_STATUSES), z.literal('')]).catch(''),
   branchId: z.union([z.string().uuid(), z.literal('')]).catch(''),
   date: z.union([z.iso.date(), z.literal('')]).catch(''),

@@ -8,6 +8,8 @@ import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import type { OrderBranchOption } from '@/data/commerce/admin-orders';
 import { buildOrdersHref } from '@/lib/commerce';
+import { getOrderView, ORDER_VIEW_STATUSES, type OrderView } from '@/lib/order-queue';
+import { OrderQueueViews } from './OrderQueueViews';
 import {
   ORDER_FILTER_STATUSES,
   type OrderFilters,
@@ -25,6 +27,8 @@ export function OrdersFilters({
   branchLocked?: boolean;
 }) {
   const router = useRouter();
+  const view = getOrderView(filters);
+  const availableStatuses = view === "all" ? ORDER_FILTER_STATUSES : ORDER_VIEW_STATUSES[view];
   const [searchValue, setSearchValue] = useState(filters.q);
   const [statusValue, setStatusValue] = useState(filters.status);
   const [branchValue, setBranchValue] = useState(filters.branch);
@@ -47,9 +51,10 @@ export function OrdersFilters({
     setBranchValue(filters.branch);
   }, [filters]);
 
-  const applyFilters = (search: string, status: string, branchId: string) => {
+  const applyFilters = (search: string, status: string, branchId: string, nextView: OrderView) => {
     router.replace(
       buildOrdersHref({
+        view: nextView,
         search,
         status,
         branchId,
@@ -61,98 +66,114 @@ export function OrdersFilters({
   const scheduleSearch = (search: string) => {
     if (debounceTimer.current) clearTimeout(debounceTimer.current);
     debounceTimer.current = setTimeout(() => {
-      applyFilters(search, statusValue, branchValue);
+      applyFilters(search, statusValue, branchValue, view);
       debounceTimer.current = null;
     }, FILTER_DEBOUNCE_MS);
   };
 
-  const applySelection = (status: string, branchId: string) => {
+  const applySelection = (status: string, branchId: string, nextView = view) => {
     if (debounceTimer.current) {
       clearTimeout(debounceTimer.current);
       debounceTimer.current = null;
     }
-    applyFilters(searchValue, status, branchId);
+    applyFilters(searchValue, status, branchId, nextView);
   };
 
   return (
-    <form
-      onSubmit={(event) => event.preventDefault()}
-      className="grid gap-3 rounded-xl border bg-card p-4 sm:grid-cols-2 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,1fr)_auto]"
-    >
-      <Input
-        id="q"
-        name="q"
-        label="Search orders"
-        type="search"
-        value={searchValue}
-        onChange={(event) => {
-          const nextSearch = event.target.value;
-          setSearchValue(nextSearch);
-          scheduleSearch(nextSearch);
+    <>
+      <OrderQueueViews
+        view={view}
+        onChange={(nextView) => {
+          if (nextView === view) return;
+          setStatusValue('');
+          applySelection('', branchValue, nextView);
         }}
-        placeholder="Order no., customer, or phone"
-        maxLength={100}
-        leadingIcon={<Search className="h-4 w-4" />}
       />
-
-      <Select
-        id="status"
-        name="status"
-        label="Status"
-        value={statusValue}
-        onValueChange={(value) => {
-          const nextStatus = value as OrderFilters['status'];
-          setStatusValue(nextStatus);
-          applySelection(nextStatus, branchValue);
-        }}
+      <form
+        onSubmit={(event) => event.preventDefault()}
+        className="grid gap-3 rounded-xl border bg-card p-4 sm:grid-cols-2 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,1fr)_auto]"
       >
-        <option value="">All statuses</option>
-        {ORDER_FILTER_STATUSES.map((status) => (
-          <option key={status} value={status}>
-            {status.replaceAll('_', ' ').replace(/^\w/, (letter) => letter.toUpperCase())}
-          </option>
-        ))}
-      </Select>
+        <Input
+          id="q"
+          name="q"
+          label="Search orders"
+          type="search"
+          value={searchValue}
+          onChange={(event) => {
+            const nextSearch = event.target.value;
+            setSearchValue(nextSearch);
+            scheduleSearch(nextSearch);
+          }}
+          placeholder="Order no., customer, or phone"
+          maxLength={100}
+          leadingIcon={<Search className="h-4 w-4" />}
+        />
 
-      <Select
-        id="branch"
-        name="branch"
-        label="Branch"
-        value={branchValue}
-        disabled={branchLocked}
-        onValueChange={(value) => {
-          const nextBranch = value;
-          setBranchValue(nextBranch);
-          applySelection(statusValue, nextBranch);
-        }}
-      >
-        {!branchLocked && <option value="">All branches</option>}
-        {branches.map((branch) => (
-          <option key={branch.id} value={branch.id}>
-            {branch.name}
-          </option>
-        ))}
-      </Select>
+        <Select
+          id="status"
+          name="status"
+          label="Status"
+          value={statusValue}
+          onValueChange={(value) => {
+            const nextStatus = value as OrderFilters['status'];
+            setStatusValue(nextStatus);
+            applySelection(nextStatus, branchValue);
+          }}
+        >
+          <option value="">All statuses</option>
+          {availableStatuses.map((status) => (
+            <option key={status} value={status}>
+              {status.replaceAll('_', ' ').replace(/^\w/, (letter) => letter.toUpperCase())}
+            </option>
+          ))}
+        </Select>
 
-      {hasFilters ? (
-        <div className="space-y-2">
-          <span
-            aria-hidden="true"
-            className="hidden text-sm font-medium sm:block sm:invisible"
-          >
-            Clear
-          </span>
-          <Link
-            href="/admin/orders"
-            onClick={() => {
-              if (debounceTimer.current) clearTimeout(debounceTimer.current);
-            }}
-            className="flex h-11 w-full items-center justify-center rounded-md border border-input px-5 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground lg:w-auto"
-          >
-            Clear
-          </Link>
-        </div>
-      ) : null}
-    </form>
+        <Select
+          id="branch"
+          name="branch"
+          label="Branch"
+          value={branchValue}
+          disabled={branchLocked}
+          onValueChange={(value) => {
+            const nextBranch = value;
+            setBranchValue(nextBranch);
+            applySelection(statusValue, nextBranch);
+          }}
+        >
+          {!branchLocked && <option value="">All branches</option>}
+          {branches.map((branch) => (
+            <option key={branch.id} value={branch.id}>
+              {branch.name}
+            </option>
+          ))}
+        </Select>
+
+        {hasFilters ? (
+          <div className="space-y-2">
+            <span
+              aria-hidden="true"
+              className="hidden text-sm font-medium sm:block sm:invisible"
+            >
+              Clear
+            </span>
+            <Link
+              href={buildOrdersHref({ view })}
+              onClick={() => {
+                if (debounceTimer.current) {
+                  clearTimeout(debounceTimer.current);
+                  debounceTimer.current = null;
+                }
+                setSearchValue('');
+                setStatusValue('');
+                if (!branchLocked) setBranchValue('');
+              }}
+              className="flex h-11 w-full items-center justify-center rounded-md border border-input px-5 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground lg:w-auto"
+            >
+              Clear
+            </Link>
+          </div>
+        ) : null}
+      </form>
+    </>
   );
 }
