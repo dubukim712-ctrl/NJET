@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/Button';
-import { StaffWarrantyExchange } from './StaffWarrantyExchange';
+import { DatePicker } from '@/components/ui/DatePicker';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Textarea } from '@/components/ui/Textarea';
@@ -14,7 +14,7 @@ import { canStartStaffWarrantyReview, warrantyDecisions } from '@/lib/service-wa
 import type { ServiceAppointmentStatus } from '@/types/commerce-tables';
 
 const decisions = ['covered_repair', 'replacement_approved', 'paid_repair', 'further_review'] as const;
-type Mode = 'link' | 'review';
+type Mode = 'link' | 'review' | 'handover';
 
 export function StaffWarrantyPanel({ appointmentId, userId, status, existing }: {
   appointmentId: string;
@@ -79,6 +79,7 @@ export function StaffWarrantyPanel({ appointmentId, userId, status, existing }: 
   );
   const canReview = canStartStaffWarrantyReview(status) && !details.replacement_serial;
   const canLink = !details.unit_id && (details.decision === 'under_review' || details.decision === 'further_review');
+  const canRecord = details.decision === 'replacement_approved' && !details.replacement_serial;
 
   function open(next: Mode) {
     setFeedback('');
@@ -112,13 +113,10 @@ export function StaffWarrantyPanel({ appointmentId, userId, status, existing }: 
   return (
     <div className="space-y-3">
       <WarrantySummary details={details} />
-      {details.decision === 'replacement_approved' && (
-        <StaffWarrantyExchange appointmentId={appointmentId} userId={userId} originalSerial={details.original_serial} existingHandover={Boolean(details.replacement_handover_on)}
-          onChanged={() => void query.refetch()} />
-      )}
       <div className="flex flex-wrap gap-2">
         {canLink && <Button type="button" variant="outline" className="min-h-11" disabled={saving} onClick={() => open('link')}>Verify purchased bike</Button>}
         {canReview && <Button type="button" variant="outline" className="min-h-11" disabled={saving} onClick={() => open('review')}>Record decision</Button>}
+        {canRecord && <Button type="button" className="min-h-11" disabled={saving} onClick={() => open('handover')}>Record replacement handover</Button>}
       </div>
       {mode && (
         <form key={mode} onSubmit={submit} className="space-y-3 rounded-xl border p-4">
@@ -132,8 +130,16 @@ export function StaffWarrantyPanel({ appointmentId, userId, status, existing }: 
               <Textarea name="note" label="Decision and charges" helperText="Explain the finding and any charges. The customer can see this note." required maxLength={1500} />
             </>
           ) : (
-            <Input name="serial" label="Original serial number"
-              defaultValue={details.original_serial ?? ''} required maxLength={100} />
+            <>
+              <Input name="serial" label={mode === 'link' ? 'Original serial number' : 'Replacement serial number'}
+                defaultValue={mode === 'link' ? details.original_serial ?? '' : ''} required maxLength={100} />
+              {mode === 'handover' && (
+                <>
+                  <DatePicker name="handoverOn" label="Replacement handover date" required />
+                  <p className="text-sm text-muted-foreground">Record this after the manual exchange. This log does not update stock or ownership documents.</p>
+                </>
+              )}
+            </>
           )}
           <div className="flex flex-wrap gap-2">
             <Button type="submit" className="min-h-11" loading={saving}>Save</Button>

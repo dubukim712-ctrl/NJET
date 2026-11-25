@@ -21,7 +21,7 @@ Secured authentication and dashboard built with Next.js 16 (App Router), TypeScr
    ```
 
    Apply every migration in filename order, from `20240101000001_create_users_table.sql`
-   through `20240101000127_warranty_return_dispositions.sql`. Apply migration `00101`
+   through `20240101000123_staff_initiated_warranty_reviews.sql`. Apply migration `00101`
    before deploying the checkout code that uses submission IDs. Migrations `0004`–`0006` replace
    the legacy capability-based roles with granular permissions; `0007` adds
    controlled audit-log clearing and `0008` disables audit entries for that action.

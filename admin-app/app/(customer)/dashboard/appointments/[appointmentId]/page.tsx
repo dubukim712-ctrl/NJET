@@ -1,4 +1,3 @@
-import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { WarrantySummary } from '@/components/appointments/WarrantySummary';
@@ -22,9 +21,6 @@ export default async function CustomerAppointmentDetailsPage({ params }: {
     supabase.rpc('customer_service_appointment_cancellation_requests').eq('appointment_id', id.data).maybeSingle(),
     supabase.rpc('service_warranty_details', { p_appointment_id: id.data }).maybeSingle(),
   ]);
-  const exchange = warranty.data?.replacement_handover_on
-    ? await supabase.rpc('service_warranty_exchange_details', { p_appointment_id: id.data }).maybeSingle()
-    : null;
   if (error) throw new Error('Appointment cancellation details could not be loaded.');
 
   return (
@@ -33,11 +29,6 @@ export default async function CustomerAppointmentDetailsPage({ params }: {
       <h1 className="text-3xl font-semibold tracking-tight">Appointment details</h1>
       {warranty.data && <WarrantySummary details={warranty.data} inspectionConfirmed={appointment.status === "confirmed"} />}
       {warranty.error && <p className="text-sm text-muted-foreground">Warranty assessment details could not be loaded.</p>}
-      {exchange?.data?.completed_at && (
-        <Button asChild variant="outline" className="min-h-11">
-          <a href={`/dashboard/appointments/${id.data}/exchange-record`}>Download exchange record</a>
-        </Button>
-      )}
       <ul aria-label="Appointment details">
         <CustomerAppointmentCard appointment={{ ...appointment, cancellation_request: data }} defaultExpanded />
       </ul>
