@@ -132,7 +132,7 @@ type EbikeUnit = {
   branch_id: string;
   serial_number: string | null;
   motor_number: string | null;
-  status: 'needs_identification' | 'in_stock' | 'in_transit' | 'sold';
+  status: 'needs_identification' | 'in_stock' | 'in_transit' | 'sold' | 'warranty_reserved' | 'warranty_replacement';
   order_item_id: string | null;
   transfer_id: string | null;
   created_at: string;
@@ -145,7 +145,8 @@ type InventoryMovement = {
   quantity_delta: number;
   movement_type: 'opening_balance' | 'adjustment' | 'order_confirmed'
     | 'order_cancelled' | 'serial_identified' | 'serial_stock_received'
-    | 'stock_received' | 'transfer_dispatched' | 'transfer_received';
+    | 'stock_received' | 'transfer_dispatched' | 'transfer_received'
+    | 'warranty_return_received' | 'warranty_replacement_reserved' | 'warranty_reservation_released' | 'warranty_replacement_handed_over';
   reference_id: string | null;
   note: string | null;
   actor_id: string | null;

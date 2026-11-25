@@ -81,6 +81,49 @@ export const adminHelpTopics = [
     ],
   },
   {
+    id: 'warranty-returns',
+    label: 'Warranty Reviews, Exchanges & Returns',
+    guides: [
+      {
+        title: 'Record the original e-bike handover',
+        keywords: 'completed order warranty handovers original purchase wheel count serial deadline',
+        steps: [
+          'In Orders (/admin/orders), open View details on the completed sale and expand Warranty handovers.',
+          'Select the Purchased bike and verify its serial. Set Verified wheel count and the Actual handover date to the day the customer received the bike. Click Record handover.',
+          'The standard reporting window runs from handover. It is 7 days for two-wheel units and 3 calendar months for three- or four-wheel units.',
+        ],
+      },
+      {
+        title: 'Review warranty coverage during service',
+        keywords: 'inspection technician branch home service verify purchased bike decision covered repair paid repair',
+        steps: [
+          'Customers book a regular service appointment. Follow the usual inspection for a Branch visit or Home service. In Service appointments (/admin/appointments), staff with appointment management access can click Start warranty review when the appointment is In service, Ready for pickup, or Completed.',
+          'Use Verify purchased bike to enter the Original serial number and click Save. Review the original purchase, handover, and request timing. The timing is based on when the appointment was requested. Consider the inspection findings and policy before deciding coverage.',
+          'Click Record decision, select a Warranty decision, and explain the finding and any charges in Decision and charges. Click Save. The customer can read this note. Verify the purchased bike before selecting Replacement approved.',
+        ],
+      },
+      {
+        title: 'Receive the original bike and hand over a replacement',
+        keywords: 'replacement approved warranty exchange receive original unit reserve replacement serial release reservation stock handover',
+        steps: [
+          'Staff need appointment and inventory management access for the appointment branch. After approving a replacement, use Warranty exchange to confirm the original serial and enter Returned condition. Click Receive original unit when the bike is physically returned. Keep it separate from sellable stock while it is at the branch.',
+          'Choose an Available replacement serial for the same variant at the appointment branch and click Reserve replacement. If none is available, keep the return on record while waiting for eligible stock. Reserve only the bike you plan to hand over.',
+          'Once the customer receives that bike, set Actual replacement handover date and click Complete handover, then confirm. Use Release reservation if you need to free up the reserved unit before handover.',
+          'The customer can use Download exchange record from their appointment details. The original sale and documents retain their original serial. The exchange records both serials and leaves the original warranty dates in place. Confirm any replacement coverage separately.',
+        ],
+      },
+      {
+        title: 'Track a returned bike in Non-sellable stock',
+        keywords: 'damaged defective condition quarantine stock reason disposition repair supplier write off',
+        steps: [
+          'With inventory management access, open Products & stock (/admin/products) and choose Non-sellable stock. The returned bike appears after Receive original unit, even while waiting for a replacement.',
+          'Find the bike by checking the serial and branch. Use the service reference to find the appointment. Click Update return and choose a Return reason and Disposition, such as Held at branch, Sent for repair, Returned to supplier, or Written off.',
+          'Use Staff note (optional) if needed and click Save return update. Each update records who made it and when. These updates leave the returned bike outside sellable stock.',
+        ],
+      },
+    ],
+  },
+  {
     id: 'admin-operations',
     label: 'Admin Catalog, Stock, Reports & Settings',
     guides: [

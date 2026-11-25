@@ -12,6 +12,10 @@ const LABELS: Record<Movement["movement_type"], string> = {
   stock_received: "Stock received",
   transfer_dispatched: "Transfer dispatched",
   transfer_received: "Transfer received",
+  warranty_return_received: "Warranty return received",
+  warranty_replacement_reserved: "Replacement reserved",
+  warranty_reservation_released: "Replacement reservation released",
+  warranty_replacement_handed_over: "Replacement handed over",
 };
 
 export function InventoryMovementLog({

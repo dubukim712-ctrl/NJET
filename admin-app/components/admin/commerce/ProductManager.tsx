@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, type KeyboardEvent } from 'react';
+import { WarrantyReturnsTab } from '@/components/admin/commerce/WarrantyReturnsTab';
 import { ProductCatalogTab } from '@/components/admin/commerce/ProductCatalogTab';
 import { ProductEditor } from '@/components/admin/commerce/ProductEditor';
 import { ProductStockTab } from '@/components/admin/commerce/ProductStockTab';
@@ -28,6 +29,7 @@ const PRODUCT_TABS = [
   { id: 'reviews', label: 'Reviews' },
   { id: 'variants', label: 'Variants' },
   { id: 'stock', label: 'Stock' },
+  { id: 'non-sellable', label: 'Non-sellable stock' },
   { id: 'discounts', label: 'Discounts' },
 ] as const;
 
@@ -80,8 +82,9 @@ export function ProductManager({
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const selectedTab = activeTab === 'reviews' && !canModerateProductReviews
     ? 'catalog'
-    : activeTab;
-  const tabs = PRODUCT_TABS.filter((tab) => tab.id !== 'reviews' || canModerateProductReviews);
+    : activeTab === 'non-sellable' && !canManageProducts ? 'catalog' : activeTab;
+  const tabs = PRODUCT_TABS.filter((tab) => (tab.id !== 'reviews' || canModerateProductReviews)
+    && (tab.id !== 'non-sellable' || canManageProducts));
 
   function handleTabKeyDown(event: KeyboardEvent<HTMLButtonElement>, index: number) {
     let nextIndex: number;
@@ -209,6 +212,12 @@ export function ProductManager({
           />
         )}
       </section>
+      {canManageProducts && (
+        <section id="product-non-sellable-panel" role="tabpanel" aria-labelledby="product-non-sellable-tab"
+          tabIndex={0} hidden={selectedTab !== 'non-sellable'}>
+          {selectedTab === 'non-sellable' && <WarrantyReturnsTab userId={userId} />}
+        </section>
+      )}
       <section
         id="product-discounts-panel"
         role="tabpanel"

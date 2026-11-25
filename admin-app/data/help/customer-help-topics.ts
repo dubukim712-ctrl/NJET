@@ -108,7 +108,26 @@ export const customerHelpTopics = [
         steps: [
           'Open Appointments and choose Book service. Select a Service branch and Service type, then choose Branch visit or Home service.',
           'Choose a date and time. The available slots reflect branch hours and closures. For Home service, enter the requested address.',
-          'Add your contact and bike details, describe the issue, and click Send appointment request. Staff will confirm the schedule and any home-service coverage or travel charge.',
+          'Enter your Contact number, Product / E-bike name, and Serial number if you have it. If you see Use a purchased or previously serviced bike, select your bike to fill in its details.',
+          'Describe the issue and click Send appointment request. Staff will confirm the schedule and any home-service availability or travel charge.',
+        ],
+      },
+      {
+        title: 'What if my bike might qualify for warranty service?',
+        keywords: 'warranty assessment inspection coverage repair replacement handover deadline 7 days 3 months',
+        steps: [
+          'Use Book service and choose the service type that matches your issue. Describe what happened and have your receipt or warranty card and bike serial ready for the branch visit or home service.',
+          'The standard window for reporting an issue starts when you received the bike. It is 7 days for a two-wheel e-bike and 3 calendar months for a three- or four-wheel e-bike. Staff can still review your case after that window.',
+          'Staff assess the bike during service and explain whether they can offer a covered repair, replacement, or paid repair. Open your appointment details to see the Warranty assessment when staff have recorded it.',
+        ],
+      },
+      {
+        title: 'Where do I get my warranty exchange record?',
+        keywords: 'replacement approved reserved stock handover returned bike original serial ownership certificate download',
+        steps: [
+          'Replacement approved means staff agreed to a replacement. Staff will arrange the exchange once an eligible unit is available.',
+          'After you receive the replacement and staff record the handover, open Appointments, select the appointment, and choose Download exchange record. It lists both serial numbers and references your original order.',
+          'Keep the exchange record with your original sales receipt and ownership certificate. Ask staff which warranty terms apply to the replacement.',
         ],
       },
       {
