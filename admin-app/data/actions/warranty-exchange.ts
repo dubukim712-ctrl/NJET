@@ -11,8 +11,8 @@ import type { WarrantyExchange } from '@/types/service-warranty';
 const schema = z.discriminatedUnion('operation', [
   z.object({ appointmentId: z.uuid(), operation: z.literal('receive'), originalSerial: z.string().trim().min(1).max(100), value: z.string().trim().min(1).max(1500) }),
   z.object({ appointmentId: z.uuid(), operation: z.literal('reserve'), value: z.string().trim().min(1).max(100) }),
-  z.object({ appointmentId: z.uuid(), operation: z.literal('release') }),
-  z.object({ appointmentId: z.uuid(), operation: z.literal('handover'), handoverOn: z.iso.date() }),
+  z.object({ appointmentId: z.uuid(), operation: z.literal('release'), expectedReplacementUnitId: z.uuid() }),
+  z.object({ appointmentId: z.uuid(), operation: z.literal('handover'), expectedReplacementUnitId: z.uuid(), handoverOn: z.iso.date() }),
 ]);
 
 export async function getStaffWarrantyExchangeAction(appointmentId: string): Promise<ActionResult<{
@@ -41,6 +41,7 @@ export async function manageWarrantyExchangeAction(payload: unknown): Promise<Ac
     p_operation: input.operation,
     p_value: 'value' in input ? input.value : null,
     p_handover_on: 'handoverOn' in input ? input.handoverOn : null,
+    p_expected_replacement_unit_id: 'expectedReplacementUnitId' in input ? input.expectedReplacementUnitId : null,
     p_original_serial: 'originalSerial' in input ? input.originalSerial : null,
   });
   if (error) return { success: false, error: toUserFriendlyError(error, 'Could not save the exchange. Check the current step, serial and branch stock.') };

@@ -32,6 +32,7 @@ export type WarrantyDetails = {
 };
 
 export type WarrantyExchange = {
+  replacement_unit_id: string | null;
   appointment_id: string;
   appointment_number: string;
   customer_name: string;
@@ -80,7 +81,7 @@ export type ServiceWarrantyFunctions = {
     Args: { p_appointment_id: string }; Returns: { serial: string; motor: string }[];
   };
   manage_service_warranty_exchange: {
-    Args: { p_appointment_id: string; p_operation: WarrantyExchangeOperation; p_value: string | null; p_handover_on: string | null; p_original_serial: string | null };
+    Args: { p_appointment_id: string; p_operation: WarrantyExchangeOperation; p_value: string | null; p_handover_on: string | null; p_original_serial: string | null; p_expected_replacement_unit_id: string | null };
     Returns: undefined;
   };
   order_warranty_units: { Args: { p_order_id: string }; Returns: WarrantyUnit[] };

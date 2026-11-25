@@ -21,3 +21,11 @@ Keep this app organized so a beginner can read it.
 - UI elements MUST be responsive; mobile-first layouts are mandatory.
 - Apply caching on modules if needed.
 - Keep edits minimal and scoped only to requested files.
+
+#### Engineering Discipline & Simplicity Rules
+
+- **Prefer simple, direct solutions**: Solve the stated requirement with the smallest, clearest code change possible. Do not introduce speculative abstractions, unused interfaces, wrapper layers, or premature generalization.
+- **Keep existing patterns**: Match the repository's established conventions, file layout, naming, and validation patterns rather than inventing new frameworks or helpers.
+- **Preserve safety and correctness**: Never skip input validation, authorization/RLS checks, row locks, transaction safety, or error handling for the sake of brevity.
+- **Delete dead or redundant code**: When replacing behavior or fixing a bug, remove obsolete code paths rather than leaving unused fallbacks behind.
+- **Minimal diff footprint**: Touch only the files required for the task and keep edits focused, readable, and easy to verify.

@@ -10,7 +10,7 @@ export type CrmCustomer = {
   open_follow_ups: number;
 };
 
-export type CrmBike = { name: string; variant: string; serial: string | null };
+export type CrmBike = { name: string; variant: string; serial: string | null; replacement?: boolean };
 export type CrmActivity = {
   id: string;
   kind: 'Order' | 'Service' | 'Chat';

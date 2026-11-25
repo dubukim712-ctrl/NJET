@@ -90,6 +90,7 @@ export function CrmCustomerActivity({ activity, notes }: { activity: CrmActivity
             {bikes.map(({ bike, entry }, index) => (
               <li key={entry.id + ':' + index} className="break-words py-3 text-sm">
                 <p className="font-medium">{bike.name} / {bike.variant}</p>
+                {bike.replacement && <p className="text-muted-foreground">Warranty replacement. Coverage requires staff review</p>}
                 {bike.serial && <p className="text-muted-foreground">Serial number {bike.serial}</p>}
                 <Link className="inline-flex min-h-11 items-center underline" href={activityHref(entry)}>{entry.reference}</Link>
               </li>

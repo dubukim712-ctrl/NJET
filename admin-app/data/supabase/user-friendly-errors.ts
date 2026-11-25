@@ -115,6 +115,7 @@ const orderRejections = new Set([
 
 // Exact RPC messages reviewed for display in account, scheduling, and chat flows.
 const accountAndServiceRejections = new Set([
+  'The replacement reservation changed. Reload the exchange and review the current serial before continuing.',
   'Approve the replacement and verify the original purchase first.',
   'Choose a customer appointment from an accessible branch.',
   'Choose a handover date between reservation and today.',

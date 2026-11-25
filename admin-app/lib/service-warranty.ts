@@ -31,3 +31,5 @@ export function formatWarrantyTimestamp(timestamp: string) {
 export function canStartStaffWarrantyReview(status: ServiceAppointmentStatus) {
   return status === 'in_service' || status === 'ready_for_pickup' || status === 'completed';
 }
+
+export const warrantyReservationChanged = 'The replacement reservation changed. Reload the exchange and review the current serial before continuing.';

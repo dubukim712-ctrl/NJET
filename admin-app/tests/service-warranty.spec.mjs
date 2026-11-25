@@ -152,22 +152,44 @@ test('warranty assessment preserves the original purchase and exchanges a reserv
     await db.exec(await migration(name));
   }
 
-  const variant = id(10), newUnit = id(11);
+  await db.exec(`
+    create table public.roles (id uuid primary key, scope text);
+    alter table public.users add column role_id uuid, add column email text, add column phone_number text,
+      add column phone_verified_at timestamptz, add column street_address text, add column barangay_name text,
+      add column city_name text, add column province_name text, add column postal_code text;
+    alter table public.orders add column branch_name text;
+    alter table public.order_items add column variant_name text;
+    alter table public.service_appointments add column scheduled_at timestamptz, add column preferred_start_at timestamptz;
+    create table public.crm_follow_ups (customer_id uuid, branch_id uuid, status text);
+    create table public.support_chat_threads (id uuid, status text, last_message_at timestamptz, customer_user_id uuid);
+    create table public.support_chat_messages (thread_id uuid, sender_role text);
+    create function public.crm_can_access_customer(c uuid) returns boolean language sql stable as $$
+      select public.current_user_has_permission('crm.read') $$;
+    insert into public.roles values (gen_random_uuid(), 'customer');
+    update public.users set role_id = (select id from public.roles) where full_name = 'Customer';
+  `);
+  for (const name of ['20240101000127_warranty_return_dispositions.sql',
+    '20240101000128_bind_warranty_exchange_reservation.sql', '20240101000129_warranty_replacement_lookup.sql']) {
+    await db.exec(await migration(name));
+  }
+  await db.exec('grant execute on function public.crm_customers(uuid,text,integer), public.crm_customer_activity(uuid) to authenticated');
+
+  const variant = id(10), newUnit = id(11), alternateUnit = id(12);
   await db.query('insert into public.branches values ($1)', [branch]);
   await db.query('update public.ebike_units set variant_id=$1,branch_id=$2 where id=$3', [variant, branch, unit]);
-  await db.query("insert into public.ebike_units (id,serial_number,status,variant_id,branch_id,motor_number) values ($1,'IN-STOCK','in_stock',$2,$3,'MOTOR')",
-    [newUnit, variant, branch]);
-  await db.query('insert into public.branch_inventory values ($1,$2,1)', [branch, variant]);
+  await db.query("insert into public.ebike_units (id,serial_number,status,variant_id,branch_id,motor_number) values ($1,'IN-STOCK','in_stock',$2,$3,'MOTOR'),($4,'ALTERNATE','in_stock',$2,$3,'MOTOR-2')",
+    [newUnit, variant, branch, alternateUnit]);
+  await db.query('insert into public.branch_inventory values ($1,$2,2)', [branch, variant]);
   await db.query("update public.service_appointments set status='completed', branch_name='Main Branch', customer_name='Customer' where id=$1",
     [standardAppointment]);
   await db.query("update public.service_warranty_cases set unit_id=$2, original_order_id=$3, original_serial='OLD-SERIAL', decision='replacement_approved' where appointment_id=$1",
     [standardAppointment, unit, order]);
 
-  const manage = (operation, value = null, date = null, serial = null) => db.query(
-    'select public.manage_service_warranty_exchange($1,$2,$3,$4,$5)', [standardAppointment, operation, value, date, serial],
+  const manage = (operation, value = null, date = null, serial = null, expected = null) => db.query(
+    'select public.manage_service_warranty_exchange($1,$2,$3,$4,$5,$6)', [standardAppointment, operation, value, date, serial, expected],
   );
   const exchangeDetails = 'select * from public.service_warranty_exchange_details($1)';
-  const manager = 'service_appointments.manage,products.manage';
+  const manager = 'service_appointments.manage,products.manage,orders.read,crm.read';
   await db.exec('set role authenticated');
   await act(id(3), 'service_appointments.manage', branch);
   await assert.rejects(manage('receive', 'Damage noted', null, 'OLD-SERIAL'), /service and inventory permissions/);
@@ -178,19 +200,30 @@ test('warranty assessment preserves the original purchase and exchanges a reserv
   await manage('receive', 'Damage noted', null, 'old-serial');
   await manage('receive', 'Damage noted', null, 'old-serial');
   const options = 'select * from public.service_warranty_replacement_options($1)';
-  assert.deepEqual((await db.query(options, [standardAppointment])).rows, [{ serial: 'IN-STOCK', motor: 'MOTOR' }]);
+  assert.deepEqual((await db.query(options, [standardAppointment])).rows, [{ serial: 'ALTERNATE', motor: 'MOTOR-2' }, { serial: 'IN-STOCK', motor: 'MOTOR' }]);
   await assert.rejects(manage('reserve', 'OLD-SERIAL'), /in-stock serial/);
   await manage('reserve', 'IN-STOCK');
   await manage('reserve', 'IN-STOCK');
   await act(id(1), 'storefront.access', '');
   assert.deepEqual((await db.query(exchangeDetails, [standardAppointment])).rows, []);
   await act(id(3), manager, branch);
-  await manage('release');
-  await manage('release');
-  await manage('reserve', 'IN-STOCK');
-  await assert.rejects(manage('handover', null, '9999-01-01'), /between reservation and today/);
-  await manage('handover', null, today);
-  await manage('handover', null, today);
+  const crmSearch = "select id from public.crm_customers(null,'ALTERNATE',0)";
+  assert.deepEqual((await db.query(crmSearch)).rows, []);
+  await act(id(2), manager, branch); // Another staff session replaces the reservation.
+  await manage('release', null, null, null, newUnit);
+  await manage('reserve', 'ALTERNATE');
+  await act(id(3), manager, branch);
+  await assert.rejects(manage('release', null, null, null, newUnit), /Reload the exchange/);
+  await assert.rejects(manage('handover', null, today, null, newUnit), /Reload the exchange/);
+  await assert.rejects(manage('handover', null, today), /Reload the exchange/);
+  await assert.rejects(manage('handover', null, '9999-01-01', null, alternateUnit), /between reservation and today/);
+  assert.equal((await db.query(exchangeDetails, [standardAppointment])).rows[0].replacement_unit_id, alternateUnit);
+  await manage('handover', null, today, null, alternateUnit);
+  await manage('handover', null, today, null, alternateUnit);
+  assert.deepEqual((await db.query(crmSearch)).rows, [{ id: id(1) }]);
+  const [purchase] = (await db.query("select reference, bikes from public.crm_customer_activity($1) where kind = 'Order'", [id(1)])).rows;
+  assert.equal(purchase.reference, 'NJET-000001');
+  assert.deepEqual(purchase.bikes.map((bike) => [bike.serial, bike.replacement]), [['OLD-SERIAL', false], ['ALTERNATE', true]]);
   await assert.rejects(db.query(replacement, [standardAppointment, 'MANUAL', today]), /permission denied/);
 
   await act(id(2), 'storefront.access', '');
@@ -198,18 +231,32 @@ test('warranty assessment preserves the original purchase and exchanges a reserv
   await act(id(1), 'storefront.access', '');
   const [exchange] = (await db.query(exchangeDetails, [standardAppointment])).rows;
   assert.equal(exchange.original_serial, 'OLD-SERIAL');
-  assert.equal(exchange.replacement_serial, 'IN-STOCK');
+  assert.equal(exchange.replacement_serial, 'ALTERNATE');
+  assert.equal(exchange.replacement_unit_id, null);
   assert.equal(exchange.returned_condition, null);
   await db.exec('reset role');
-  assert.deepEqual((await db.query('select stock from public.branch_inventory')).rows, [{ stock: 0 }]);
+  const followUpId = id(13);
+  await db.query("insert into public.service_appointments (id, customer_id, branch_id, status) values ($1,$2,$3,'in_service')",
+    [followUpId, id(1), branch]);
+  await db.exec('set role authenticated');
+  await act(id(3), manager, id(8));
+  await assert.rejects(db.query('select public.link_service_warranty_unit($1,$2)', [followUpId, 'ALTERNATE']), /completed purchase/);
+  await act(id(3), manager, branch);
+  await db.query(start, [followUpId]);
+  await db.query('select public.link_service_warranty_unit($1,$2)', [followUpId, 'alternate']);
+  assert.deepEqual((await db.query('select timing, order_number, unit_id from public.service_warranty_details($1)', [followUpId])).rows,
+    [{ timing: 'needs_review', order_number: 'NJET-000001', unit_id: alternateUnit }]);
+  await assert.rejects(db.query(review, [followUpId]), /not eligible/);
+  await db.exec('reset role');
+  assert.deepEqual((await db.query('select stock from public.branch_inventory')).rows, [{ stock: 1 }]);
   assert.deepEqual((await db.query('select serial_number, status, order_item_id from public.ebike_units order by serial_number')).rows, [
-    { serial_number: 'IN-STOCK', status: 'warranty_replacement', order_item_id: null },
+    { serial_number: 'ALTERNATE', status: 'warranty_replacement', order_item_id: null },
+    { serial_number: 'IN-STOCK', status: 'in_stock', order_item_id: null },
     { serial_number: 'OLD-SERIAL', status: 'sold', order_item_id: item },
   ]);
   assert.deepEqual((await db.query('select quantity_delta from public.inventory_movements order by id')).rows.map(row => row.quantity_delta),
     [0, -1, 1, -1, 0]);
 
-  await db.exec(await migration('20240101000127_warranty_return_dispositions.sql'));
   await db.query("update public.service_appointments set appointment_number = 'SVC-000009' where id = $1", [standardAppointment]);
   const returns = 'select * from public.list_warranty_returns(null, null)';
   const recordReturn = (reason, disposition, note, previous = null) => db.query(
@@ -244,6 +291,6 @@ test('warranty assessment preserves the original purchase and exchanges a reserv
     [returned.received_at, returned.appointment_id])).rows, []);
   await db.exec('reset role');
   assert.equal((await db.query('select count(*)::integer as count from public.warranty_return_updates')).rows[0].count, 2);
-  assert.equal((await db.query('select stock from public.branch_inventory')).rows[0].stock, 0);
+  assert.equal((await db.query('select stock from public.branch_inventory')).rows[0].stock, 1);
   assert.equal((await db.query("select status from public.ebike_units where serial_number = 'OLD-SERIAL'")).rows[0].status, 'sold');
 });

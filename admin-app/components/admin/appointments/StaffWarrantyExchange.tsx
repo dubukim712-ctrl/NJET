@@ -8,6 +8,7 @@ import { DatePicker } from '@/components/ui/DatePicker';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Textarea } from '@/components/ui/Textarea';
+import { warrantyReservationChanged } from '@/lib/service-warranty';
 import { getStaffWarrantyExchangeAction, manageWarrantyExchangeAction } from '@/data/actions/warranty-exchange';
 import { useInvalidateAdminProductsQuery } from '@/data/commerce/admin-products-client';
 import { useInvalidateInventoryValuationQuery } from '@/data/commerce/inventory-valuation-client';
@@ -46,6 +47,10 @@ export function StaffWarrantyExchange({ appointmentId, userId, originalSerial, e
       const result = await manageWarrantyExchangeAction({ ...command, appointmentId });
       if (!result.success) {
         setFeedback({ error: true, message: result.error });
+        if (result.error === warrantyReservationChanged) {
+          setConfirmation(null);
+          await query.refetch();
+        }
         return;
       }
       setConfirmation(null);
@@ -64,7 +69,7 @@ export function StaffWarrantyExchange({ appointmentId, userId, originalSerial, e
     const command = { ...Object.fromEntries(new FormData(event.currentTarget)), operation };
     if (operation === 'handover') {
       setFeedback(null);
-      setConfirmation(command);
+      setConfirmation({ ...command, expectedReplacementUnitId: query.data?.exchange?.replacement_unit_id });
     } else void run(command);
   }
 
@@ -117,13 +122,13 @@ export function StaffWarrantyExchange({ appointmentId, userId, originalSerial, e
           )}
         </form>
       ) : (
-        <form key="handover" onSubmit={(event) => submit(event, 'handover')} className="space-y-3">
+        <form key={exchange.replacement_unit_id} onSubmit={(event) => submit(event, 'handover')} className="space-y-3">
           <DatePicker name="handoverOn" label="Actual replacement handover date" required disabled={saving} />
           <div className="flex flex-wrap gap-2">
             <Button type="submit" className="min-h-11" loading={saving}>Complete handover</Button>
             <Button type="button" variant="outline" className="min-h-11" disabled={saving} onClick={() => {
               setFeedback(null);
-              setConfirmation({ operation: 'release' });
+              setConfirmation({ operation: 'release', expectedReplacementUnitId: exchange.replacement_unit_id });
             }}>Release reservation</Button>
           </div>
           <p className="text-sm text-muted-foreground">Confirm any warranty terms for the replacement separately.</p>
