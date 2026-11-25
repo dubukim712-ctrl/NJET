@@ -1,7 +1,7 @@
 const PRODUCT_CARDS = ['first', 'second', 'third'] as const;
 const FILTERS = ['search', 'category', 'subcategory'] as const;
 
-export function ShopCatalogSkeleton({ showHero = true }: { showHero?: boolean }) {
+export function ShopCatalogSkeleton({ showHero = true, showFilters = true }: { showHero?: boolean; showFilters?: boolean }) {
   return (
     <div
       className={showHero ? 'mx-auto max-w-7xl space-y-8' : 'space-y-8'}
@@ -20,8 +20,8 @@ export function ShopCatalogSkeleton({ showHero = true }: { showHero?: boolean })
         </header>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-8">
-        <aside className="h-fit rounded-xl border bg-card p-4">
+      <div className={showFilters ? "grid gap-6 lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-8" : undefined}>
+        {showFilters && <aside className="h-fit rounded-xl border bg-card p-4">
           <div className="h-5 w-32 animate-pulse rounded bg-muted" />
           <div className="mt-4 space-y-4">
             {FILTERS.map((filter) => (
@@ -31,16 +31,16 @@ export function ShopCatalogSkeleton({ showHero = true }: { showHero?: boolean })
               </div>
             ))}
           </div>
-        </aside>
+        </aside>}
 
         <section>
-          <div className="mb-4 flex items-end justify-between gap-3">
+          {showFilters && <div className="mb-4 flex items-end justify-between gap-3">
             <div className="space-y-2">
               <div className="h-3 w-20 animate-pulse rounded bg-muted" />
               <div className="h-8 w-36 animate-pulse rounded bg-muted" />
             </div>
             <div className="h-5 w-16 animate-pulse rounded bg-muted" />
-          </div>
+          </div>}
           <div className="grid gap-4 min-[321px]:max-[768px]:grid-cols-2 min-[321px]:max-[768px]:gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {PRODUCT_CARDS.map((card) => (
               <article key={card} className="overflow-hidden rounded-xl border bg-card min-[321px]:max-[768px]:rounded-lg">

@@ -2,8 +2,9 @@
 
 import { z } from 'zod';
 import type { ActionResult } from '@/data/actions/auth';
-import { getStoreCatalog } from '@/data/commerce/catalog';
-import type { CatalogData } from '@/data/commerce/catalog';
+import { shopCatalogFiltersSchema } from '@/lib/validations/storefront-catalog-page';
+import { getShopCatalogPage, getStoreCatalog } from '@/data/commerce/catalog';
+import type { CatalogData, ShopCatalogPage } from '@/data/commerce/catalog';
 
 const catalogRequestSchema = z.object({
   slug: z
@@ -27,4 +28,12 @@ export async function getStoreCatalogAction(
     return { success: false, error: result.error };
   }
   return { success: true, data: result.data };
+}
+
+export async function getShopCatalogPageAction(input: unknown): Promise<ActionResult<ShopCatalogPage>> {
+  const parsed = shopCatalogFiltersSchema.safeParse(input);
+  if (!parsed.success) return { success: false, error: 'Choose valid catalog filters and try again.' };
+  const data = await getShopCatalogPage(parsed.data);
+  if (!data) return { success: false, error: 'The catalog could not be loaded. Please try again later.' };
+  return { success: true, data };
 }

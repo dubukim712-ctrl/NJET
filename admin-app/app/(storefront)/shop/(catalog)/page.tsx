@@ -1,6 +1,6 @@
 import { Suspense } from 'react';
 import { ShopCatalogSkeleton } from '@/components/shop/ShopCatalogSkeleton';
-import { ShopCatalogQuery } from '@/components/shop/ShopCatalogQuery';
+import { ShopProductBrowser } from '@/components/shop/ShopProductBrowser';
 
 export const metadata = { title: 'Shop' };
 
@@ -15,7 +15,7 @@ export default function ShopPage() {
         </p>
       </header>
       <Suspense fallback={<ShopCatalogSkeleton showHero={false} />}>
-        <ShopCatalogQuery />
+        <ShopProductBrowser />
       </Suspense>
     </div>
   );

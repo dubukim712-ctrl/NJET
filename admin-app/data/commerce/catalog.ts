@@ -1,13 +1,7 @@
+import { shopCatalogPageSchema, shopPageSize, type ShopCatalogFilters } from '@/lib/validations/storefront-catalog-page';
 import { unstable_rethrow } from 'next/navigation';
 import { createClient } from '@/data/supabase/server';
-import {
-  StorefrontAvailabilityRowsSchema,
-  StorefrontBranchOptionsSchema,
-  StorefrontCatalogRowsSchema,
-  StorefrontStockSummaryRowsSchema,
-} from '@/lib/validations/storefront-catalog';
-import { productRatingSummariesRowsSchema } from '@/lib/validations/product-review';
-import { activeVariantDiscountRowsSchema } from '@/lib/validations/product-discount';
+import { StorefrontBranchOptionsSchema } from '@/lib/validations/storefront-catalog';
 import type { Database } from '@/types/database';
 
 type Product = Database['public']['Tables']['products']['Row'];
@@ -78,172 +72,49 @@ function catalogErrorDetails(error: unknown) {
   };
 }
 
+export type ShopCatalogPage = {
+  products: CatalogProduct[];
+  total: number;
+  facets: { category_id: string; category_name: string; subcategory_id: string; subcategory_name: string }[];
+};
+
+async function readCatalogPage(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  filters: ShopCatalogFilters,
+  pageSize: number,
+  slug?: string,
+): Promise<ShopCatalogPage> {
+  const result = await supabase.rpc('storefront_catalog_page', {
+    p_search: filters.search, p_category: filters.category, p_subcategory: filters.subcategory,
+    p_in_stock: filters.inStock, p_sort: filters.sort, p_page: filters.page, p_page_size: pageSize,
+    ...(slug === undefined ? {} : { p_slug: slug }),
+  });
+  if (result.error) throw result.error;
+  return shopCatalogPageSchema.parse(result.data);
+}
+
+export async function getShopCatalogPage(filters: ShopCatalogFilters): Promise<ShopCatalogPage | null> {
+  try {
+    return await readCatalogPage(await createClient(), filters, shopPageSize);
+  } catch (error) {
+    unstable_rethrow(error);
+    console.error('Could not load the storefront catalog page.', catalogErrorDetails(error));
+    return null;
+  }
+}
+
 export async function getStoreCatalog(slug?: string): Promise<CatalogResult> {
   try {
     const supabase = await createClient();
-    const [catalogResult, branchResult] = await Promise.all([
-      supabase.rpc('storefront_catalog', {
-        p_slug: slug ?? null,
-        p_variant_ids: null,
-      }),
+    const [page, branches] = await Promise.all([
+      readCatalogPage(supabase, { search: '', category: null, subcategory: null, inStock: false, sort: 'featured', page: 1 }, slug ? 1 : 3, slug),
       supabase.rpc('storefront_branch_options'),
     ]);
-    if (catalogResult.error) throw catalogResult.error;
-    if (branchResult.error) throw branchResult.error;
-
-    const parsedRows = StorefrontCatalogRowsSchema.safeParse(catalogResult.data);
-    const parsedBranches = StorefrontBranchOptionsSchema.safeParse(branchResult.data);
-    if (!parsedRows.success || !parsedBranches.success) {
-      throw new Error('Storefront catalog response failed validation.');
-    }
-
-    const rows = parsedRows.data;
-    const productIds = [...new Set(rows.map((row) => row.product_id))];
-    const variantIds = rows.flatMap((row) => row.variant_id ? [row.variant_id] : []);
-    const [availabilityRows, stockSummaryRows, discountRows, ratingRows] = await Promise.all([
-      slug && variantIds.length
-        ? supabase.rpc('storefront_variant_availability', { p_variant_ids: variantIds })
-        : null,
-      !slug && variantIds.length
-        ? supabase.rpc('storefront_variant_stock_summary', { p_variant_ids: variantIds })
-        : null,
-      variantIds.length
-        ? supabase.rpc('active_variant_discounts', {
-            p_variant_ids: variantIds,
-            p_channel: 'storefront',
-          })
-        : null,
-      productIds.length
-        ? supabase.rpc('published_product_rating_summaries', {
-            p_product_ids: productIds,
-          })
-        : null,
-    ]);
-    if (availabilityRows?.error) throw availabilityRows.error;
-    if (stockSummaryRows?.error) throw stockSummaryRows.error;
-    if (discountRows?.error) throw discountRows.error;
-    if (ratingRows?.error) throw ratingRows.error;
-
-    const parsedAvailability = StorefrontAvailabilityRowsSchema.safeParse(
-      availabilityRows?.data ?? []
-    );
-    const summaries = StorefrontStockSummaryRowsSchema.safeParse(stockSummaryRows?.data ?? []);
-    const parsedDiscounts = activeVariantDiscountRowsSchema.safeParse(
-      discountRows?.data ?? []
-    );
-    const parsedRatings = productRatingSummariesRowsSchema.safeParse(
-      ratingRows?.data ?? []
-    );
-    if (
-      !parsedAvailability.success ||
-      !summaries.success ||
-      !parsedDiscounts.success ||
-      !parsedRatings.success
-    ) {
-      throw new Error('Storefront catalog data failed validation.');
-    }
-    const summaryByVariant = new Map(summaries.data.map((row) => [row.variant_id, row]));
-    const ratingsByProduct = new Map(
-      parsedRatings.data.map((rating) => [
-        rating.product_id,
-        {
-          averageRating: rating.average_rating,
-          reviewCount: rating.review_count,
-        },
-      ])
-    );
-    const discountsByVariant = new Map(
-      parsedDiscounts.data.map((discount) => [discount.variant_id, discount])
-    );
-
-    const stockByVariant = new Map<
-      string,
-      CatalogVariant['stockByBranch']
-    >();
-    for (const stock of parsedAvailability.data) {
-      const entries = stockByVariant.get(stock.variant_id) ?? [];
-      entries.push({
-        branchId: stock.branch_id,
-        stock: stock.stock,
-        available: stock.available,
-      });
-      stockByVariant.set(stock.variant_id, entries);
-    }
-
-    const productsById = new Map<string, CatalogProduct>();
-    for (const row of rows) {
-      let product = productsById.get(row.product_id);
-      if (!product) {
-        const ratingSummary = ratingsByProduct.get(row.product_id);
-        if (!ratingSummary) {
-          throw new Error('Storefront rating summary response was incomplete.');
-        }
-        product = {
-          id: row.product_id,
-          slug: row.product_slug,
-          name: row.product_name,
-          description: row.product_description,
-          product_type: row.product_type,
-          category_id: row.category_id,
-          subcategory_id: row.subcategory_id,
-          image_path: row.product_image_path,
-          is_demo: row.is_demo,
-          categoryName: row.category_name,
-          subcategoryName: row.subcategory_name,
-          stockSummary: { available: false, stock: null },
-          ratingSummary,
-          variants: [],
-        };
-        productsById.set(product.id, product);
-      }
-
-      const variantSummary = row.variant_id ? summaryByVariant.get(row.variant_id) : undefined;
-      if (variantSummary) {
-        product.stockSummary.available ||= variantSummary.available;
-        if (variantSummary.stock !== null) {
-          product.stockSummary.stock = (product.stockSummary.stock ?? 0) + variantSummary.stock;
-        }
-      }
-      if (
-        row.variant_id &&
-        row.variant_name !== null &&
-        row.sku !== null &&
-        row.price_minor !== null &&
-        row.reservation_minor !== null &&
-        row.home_credit_downpayment_minor !== null
-      ) {
-        const discount = discountsByVariant.get(row.variant_id);
-        product.variants.push({
-          id: row.variant_id,
-          product_id: row.product_id,
-          name: row.variant_name,
-          sku: row.sku,
-          price_minor: discount?.unit_price_minor ?? row.price_minor,
-          list_price_minor: discount?.list_price_minor ?? row.price_minor,
-          discount_unit_minor: discount?.discount_unit_minor ?? 0,
-          discount_name: discount?.discount_name ?? null,
-          reservation_minor: row.reservation_minor,
-          home_credit_downpayment_minor: row.home_credit_downpayment_minor,
-          image_path: row.variant_image_path,
-          specifications: row.specifications,
-          stockByBranch: stockByVariant.get(row.variant_id) ?? [],
-        });
-      }
-    }
-
-    return {
-      data: {
-        branches: parsedBranches.data,
-        products: [...productsById.values()],
-      },
-      error: null,
-    };
+    if (branches.error) throw branches.error;
+    return { data: { products: page.products, branches: StorefrontBranchOptionsSchema.parse(branches.data) }, error: null };
   } catch (error) {
     unstable_rethrow(error);
     console.error('Could not load the storefront catalog.', catalogErrorDetails(error));
-    return {
-      data: null,
-      error: 'The catalog could not be loaded. Please try again later.',
-    };
+    return { data: null, error: 'The catalog could not be loaded. Please try again later.' };
   }
 }

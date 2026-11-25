@@ -1,117 +1,88 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useSearchParams } from 'next/navigation';
-import type { CatalogProduct } from '@/data/commerce/catalog';
+import { StorefrontCatalogQueryError, useShopCatalogPage } from '@/data/commerce/storefront-catalog-client';
+import { shopCatalogFiltersSchema, shopPageSize } from '@/lib/validations/storefront-catalog-page';
+import { ShopCatalogSkeleton } from '@/components/shop/ShopCatalogSkeleton';
 import { ProductCard } from '@/components/shop/ProductCard';
 import { useShopFilters } from '@/components/shop/ShopFiltersContext';
 import { Button } from '@/components/ui/Button';
 import { ShopFiltersPanel, type ShopSort } from '@/components/shop/ShopFiltersPanel';
-import { getStartingVariant } from '@/data/commerce/storefront-starting-variant';
 
-export function ShopProductBrowser({ products }: { products: CatalogProduct[] }) {
+type CatalogParam = 'q' | 'category' | 'subcategory' | 'inStock' | 'sort' | 'page';
+
+function updateCatalogUrl(changes: Partial<Record<CatalogParam, string | null>>, replace = false) {
+  const url = new URL(window.location.href);
+  if (!('page' in changes)) url.searchParams.delete('page');
+  for (const [key, value] of Object.entries(changes)) {
+    if (value) url.searchParams.set(key, value);
+    else url.searchParams.delete(key);
+  }
+  if (url.href === window.location.href) return;
+  if (replace) window.history.replaceState(null, '', url);
+  else window.history.pushState(null, '', url);
+}
+
+export function ShopProductBrowser() {
   const { open: filtersOpen, popoverRoot: filterPopoverRoot } = useShopFilters();
   const params = useSearchParams();
-  const inStockOnly = params.get('inStock') === '1';
-  const sortParam = params.get('sort');
-  const sort: ShopSort = sortParam === 'price-asc' || sortParam === 'price-desc' ? sortParam : 'featured';
-  const [search, setSearch] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [category, setCategory] = useState('all');
-  const [subcategory, setSubcategory] = useState('all');
-  const resultsHeadingRef = useRef<HTMLHeadingElement>(null);
-
-  useEffect(() => {
-    const timeout = window.setTimeout(() => setDebouncedSearch(search.trim().toLowerCase()), 250);
-    return () => window.clearTimeout(timeout);
-  }, [search]);
-
-  const categories = useMemo(() => {
-    const byId = new Map<string, string>();
-    for (const product of products) {
-      const id = product.category_id ?? 'uncategorized';
-      byId.set(id, product.categoryName ?? 'Uncategorized');
-    }
-    return [...byId].sort((a, b) => a[1].localeCompare(b[1]));
-  }, [products]);
-
-  const subcategories = useMemo(() => {
-    const byId = new Map<string, string>();
-    for (const product of products) {
-      if (category !== 'all' && (product.category_id ?? 'uncategorized') !== category) continue;
-      const id = product.subcategory_id ?? 'uncategorized';
-      byId.set(id, product.subcategoryName ?? 'Uncategorized');
-    }
-    return [...byId].sort((a, b) => a[1].localeCompare(b[1]));
-  }, [category, products]);
-
-  const filteredProducts = useMemo(
-    () => {
-      const matches = products.filter((product) => {
-        const matchesCategory =
-          category === 'all' || (product.category_id ?? 'uncategorized') === category;
-        const matchesSubcategory =
-          subcategory === 'all' ||
-          (product.subcategory_id ?? 'uncategorized') === subcategory;
-        const searchableText = [
-          product.name,
-          product.description,
-          product.categoryName,
-          product.subcategoryName,
-        ]
-          .filter(Boolean)
-          .join(' ')
-          .toLowerCase();
-        return matchesCategory && matchesSubcategory
-          && (!inStockOnly || product.stockSummary.available)
-          && searchableText.includes(debouncedSearch);
-      });
-      if (sort === 'featured') return matches;
-      return matches
-        .map((product) => ({ product, price: getStartingVariant(product)?.price_minor }))
-        .sort((a, b) => {
-          if (a.price === undefined) return b.price === undefined ? 0 : 1;
-          if (b.price === undefined) return -1;
-          return sort === 'price-asc' ? a.price - b.price : b.price - a.price;
-        })
-        .map(({ product }) => product);
-    },
-    [category, debouncedSearch, inStockOnly, products, sort, subcategory]
-  );
-
-  function updateCatalogUrl(changes: Partial<Record<'inStock' | 'sort', string | null>>) {
-    const url = new URL(window.location.href);
-    for (const [key, value] of Object.entries(changes)) {
-      if (value) url.searchParams.set(key, value);
-      else url.searchParams.delete(key);
-    }
-    window.history.replaceState(null, '', url);
+  const committedSearch = params.get('q')?.trim().slice(0, 120) ?? '';
+  const [draft, setDraft] = useState({ urlSearch: committedSearch, value: committedSearch });
+  if (draft.urlSearch !== committedSearch) {
+    setDraft({ urlSearch: committedSearch, value: committedSearch });
   }
 
+  useEffect(() => {
+    if (draft.urlSearch !== committedSearch || draft.value.trim() === committedSearch) return;
+    const timer = window.setTimeout(() => updateCatalogUrl({ q: draft.value.trim() || null }, true), 250);
+    return () => window.clearTimeout(timer);
+  }, [committedSearch, draft]);
+
+  const filters = shopCatalogFiltersSchema.parse({
+    search: committedSearch,
+    category: shopCatalogFiltersSchema.shape.category.catch(null).parse(params.get('category')),
+    subcategory: shopCatalogFiltersSchema.shape.subcategory.catch(null).parse(params.get('subcategory')),
+    inStock: params.get('inStock') === '1',
+    sort: shopCatalogFiltersSchema.shape.sort.catch('featured').parse(params.get('sort')),
+    page: shopCatalogFiltersSchema.shape.page.catch(1).parse(Number(params.get('page'))),
+  });
+  const query = useShopCatalogPage(filters);
+  const resultsHeadingRef = useRef<HTMLHeadingElement>(null);
+  const facets = query.data?.facets ?? [];
+  const categories = [...new Map(facets.map((facet) => [facet.category_id, facet.category_name])).entries()];
+  const subcategories = [...new Map(facets
+    .filter((facet) => !filters.category || facet.category_id === filters.category)
+    .map((facet) => [facet.subcategory_id, facet.subcategory_name])).entries()]
+    .sort((a, b) => a[1].localeCompare(b[1]));
+  const loading = query.isPending || query.isPlaceholderData;
+  const products = loading ? [] : query.data?.products ?? [];
+  const total = query.data?.total ?? 0;
+  const pageCount = Math.ceil(total / shopPageSize);
+
   function clearFilters() {
-    updateCatalogUrl({ inStock: null, sort: null });
-    setSearch('');
-    setDebouncedSearch('');
-    setCategory('all');
-    setSubcategory('all');
+    setDraft({ urlSearch: committedSearch, value: '' });
+    updateCatalogUrl({ q: null, category: null, subcategory: null, inStock: null, sort: null });
+    resultsHeadingRef.current?.focus();
+  }
+
+  function goToPage(page: number) {
+    updateCatalogUrl({ page: page > 1 ? String(page) : null });
     resultsHeadingRef.current?.focus();
   }
 
   const filterPanelProps = {
-    inStockOnly,
+    inStockOnly: filters.inStock,
     onInStockChange: (value: boolean) => updateCatalogUrl({ inStock: value ? '1' : null }),
-    sort,
+    sort: filters.sort,
     onSortChange: (value: ShopSort) => updateCatalogUrl({ sort: value === 'featured' ? null : value }),
-    search,
-    onSearchChange: setSearch,
-    category,
-    onCategoryChange: (value: string) => {
-      setCategory(value);
-      setSubcategory('all');
-    },
-    subcategory,
-    onSubcategoryChange: setSubcategory,
+    search: draft.value,
+    onSearchChange: (value: string) => setDraft({ urlSearch: committedSearch, value: value.slice(0, 120) }),
+    category: filters.category ?? 'all',
+    onCategoryChange: (value: string) => updateCatalogUrl({ category: value === 'all' ? null : value, subcategory: null }),
+    subcategory: filters.subcategory ?? 'all',
+    onSubcategoryChange: (value: string) => updateCatalogUrl({ subcategory: value === 'all' ? null : value }),
     categories,
     subcategories,
   };
@@ -133,12 +104,20 @@ export function ShopProductBrowser({ products }: { products: CatalogProduct[] })
             <h2 ref={resultsHeadingRef} tabIndex={-1} className="mt-1 text-2xl font-semibold tracking-tight">Products</h2>
           </div>
           <p className="text-sm text-muted-foreground" aria-live="polite">
-            {filteredProducts.length} {filteredProducts.length === 1 ? 'item' : 'items'}
+            {loading ? 'Loading products...' : query.data && `${total} ${total === 1 ? 'item' : 'items'}`}
           </p>
         </div>
-        {filteredProducts.length ? (
+        {query.isError && (
+          <div role="alert" className="mb-4 space-y-2 rounded-xl border border-destructive/30 p-4">
+            <p>{query.error instanceof StorefrontCatalogQueryError ? query.error.message : 'The catalog could not be loaded.'}</p>
+            <Button variant="outline" className="min-h-11" onClick={() => void query.refetch()}>Try again</Button>
+          </div>
+        )}
+        {loading ? (
+          <ShopCatalogSkeleton showHero={false} showFilters={false} />
+        ) : products.length ? (
           <div className="grid gap-4 min-[321px]:max-[768px]:grid-cols-2 min-[321px]:max-[768px]:gap-3 sm:grid-cols-2 xl:grid-cols-3">
-            {filteredProducts.map((product) => (
+            {products.map((product) => (
               <ProductCard
                 key={product.id}
                 product={product}
@@ -146,16 +125,26 @@ export function ShopProductBrowser({ products }: { products: CatalogProduct[] })
               />
             ))}
           </div>
-        ) : (
+        ) : query.data && (
           <div className="rounded-xl border bg-card px-5 py-12 text-center">
-            <h3 className="font-semibold">No matching products</h3>
+            <h3 className="font-semibold">{total > 0 ? 'No products on this page' : 'No matching products'}</h3>
             <p className="mt-1 text-sm text-muted-foreground">
               Try a different search or change your filters.
             </p>
-            <Button type="button" variant="outline" className="mt-4 min-h-11" onClick={clearFilters}>
-              Clear filters
+            <Button type="button" variant="outline" className="mt-4 min-h-11"
+              onClick={total > 0 ? () => goToPage(1) : clearFilters}>
+              {total > 0 ? 'Go to first page' : 'Clear filters'}
             </Button>
           </div>
+        )}
+        {!loading && pageCount > 1 && filters.page <= pageCount && (
+          <nav aria-label="Catalog pages" className="mt-6 flex flex-wrap items-center justify-between gap-2">
+            <Button variant="outline" className="min-h-11" disabled={filters.page === 1}
+              onClick={() => goToPage(filters.page - 1)}>Previous</Button>
+            <span className="text-sm text-muted-foreground">Page {filters.page} of {pageCount}</span>
+            <Button variant="outline" className="min-h-11" disabled={filters.page >= pageCount}
+              onClick={() => goToPage(filters.page + 1)}>Next</Button>
+          </nav>
         )}
       </section>
       {filtersOpen &&
