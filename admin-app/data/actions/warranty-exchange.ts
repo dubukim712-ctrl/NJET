@@ -45,7 +45,13 @@ export async function manageWarrantyExchangeAction(payload: unknown): Promise<Ac
     p_expected_reservation_token: 'expectedReservationToken' in input ? input.expectedReservationToken : null,
     p_original_serial: 'originalSerial' in input ? input.originalSerial : null,
   });
-  if (error) return { success: false, error: toUserFriendlyError(error, 'Could not save the exchange. Check the current step, serial and branch stock.') };
+  if (error) {
+    console.error('Warranty exchange RPC rejected the operation.', { operation: input.operation, code: error.code });
+    const message = error.code === 'PGRST202'
+      ? 'This deployment and the warranty database are out of sync. Open the latest deployment or ask your administrator to check the warranty migrations.'
+      : toUserFriendlyError(error, 'Could not save the exchange. Check the current step, serial and branch stock.');
+    return { success: false, error: message };
+  }
   revalidatePath('/dashboard/appointments/' + input.appointmentId);
   return { success: true, data: undefined };
 }

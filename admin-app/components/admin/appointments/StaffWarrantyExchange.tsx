@@ -110,7 +110,7 @@ export function StaffWarrantyExchange({ appointmentId, userId, originalSerial, e
         <p className="text-sm text-muted-foreground">Staff with service and inventory permissions can process this exchange.</p>
       ) : !exchange ? (
         <form key="receive" onSubmit={(event) => submit(event, 'receive')} className="space-y-3">
-          <p className="text-sm text-muted-foreground">Receive the original unit and keep it separate from sellable stock.</p>
+          <p className="text-sm text-muted-foreground">Receive the original unit and keep it separate from sellable stock. After you save the return, eligible replacement serials will appear here.</p>
           <Input name="originalSerial" label="Confirm original serial" helperText={originalSerial ? 'Expected serial: ' + originalSerial : undefined}
             maxLength={100} required disabled={saving} />
           <Textarea name="value" label="Returned condition" maxLength={1500} required disabled={saving} />
