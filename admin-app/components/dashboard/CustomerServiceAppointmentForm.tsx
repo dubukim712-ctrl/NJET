@@ -44,6 +44,7 @@ export function CustomerServiceAppointmentForm({ initialPhoneNumber, initialAddr
   const branchesQuery = useCustomerServiceAppointmentBranchesQuery(userId);
   const invalidate = useInvalidateServiceAppointmentsQuery();
   const [serviceMode, setServiceMode] = useState<'branch_visit' | 'home_service'>('branch_visit');
+  const [serviceType, setServiceType] = useState('maintenance');
   const [selectedBranchId, setBranchId] = useState('');
   const branches = branchesQuery.data ?? [];
   const branchId = branches.length === 1 ? branches[0].id : selectedBranchId;
@@ -84,7 +85,7 @@ export function CustomerServiceAppointmentForm({ initialPhoneNumber, initialAddr
     const parsed = customerServiceAppointmentRequestSchema.safeParse({
       branchId: value('branchId'),
       serviceMode,
-      serviceType: value('serviceType'),
+      serviceType,
       bikeModel: value('bikeModel'),
       bikeSerialNumber: value('bikeSerialNumber'),
       issueDescription: value('issueDescription'),
@@ -184,6 +185,7 @@ export function CustomerServiceAppointmentForm({ initialPhoneNumber, initialAddr
                 name="serviceType"
                 label="Service type" className="min-h-11"
                 helperText="Choose the main reason for the visit."
+                value={serviceType} onValueChange={setServiceType}
               >
                 {SERVICE_APPOINTMENT_TYPES.map((type) => (
                   <option key={type} value={type}>

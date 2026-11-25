@@ -1,7 +1,7 @@
 import type { ProductType } from '@/types/commerce-tables';
 
 export const TERMS_VERSION = 'NJET-TERMS-2026-1';
-export const RETURN_POLICY_VERSION = 'NJET-RETURNS-2026-1';
+export const RETURN_POLICY_VERSION = 'NJET-RETURNS-2026-2';
 export const PRIVACY_VERSION = 'NJET-PRIVACY-2026-1';
 
 const PRODUCT_TYPE_LABELS: Record<ProductType, string> = {

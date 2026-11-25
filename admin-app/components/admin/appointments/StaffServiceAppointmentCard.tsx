@@ -16,6 +16,8 @@ import {
 } from '@/data/actions/service-appointments';
 import { reviewServiceAppointmentCancellationAction } from '@/data/actions/service-appointment-cancellations';
 import { StaffAppointmentDetails } from '@/components/admin/appointments/StaffAppointmentDetails';
+import { canStartStaffWarrantyReview } from '@/lib/service-warranty';
+import { StaffWarrantyPanel } from '@/components/admin/appointments/StaffWarrantyPanel';
 import { StaffCancelAppointment } from '@/components/admin/appointments/StaffCancelAppointment';
 import { formatStaffAppointmentDate, isClosedStaffAppointment } from '@/lib/staff-appointment-editing';
 import type { StaffServiceAppointment } from '@/data/appointments/queries';
@@ -137,6 +139,7 @@ export function StaffServiceAppointmentCard({
         </p>
       </div>
       <div className="flex flex-wrap items-center gap-2">
+        {appointment.warranty_assessment && <span className="rounded-full bg-primary/10 px-2 py-1 text-xs font-medium text-primary">Warranty assessment</span>}
         {appointment.cancellation_request && <span className="rounded-full bg-amber-100 px-2 py-1 text-xs font-medium text-amber-900">Cancellation requested</span>}
         {pastConfirmed && <span className="rounded-full bg-amber-100 px-2 py-1 text-xs font-medium text-amber-900">Past scheduled time</span>}
         <ServiceAppointmentStatusBadge status={appointment.status} />
@@ -150,6 +153,10 @@ export function StaffServiceAppointmentCard({
   const cardContent = (
     <div className={hideSummary ? 'space-y-4' : 'mt-4 space-y-4 border-t pt-4'}>
         <StaffAppointmentDetails appointment={appointment} />
+        {canManage && (appointment.warranty_assessment || canStartStaffWarrantyReview(appointment.status)) && (
+          <StaffWarrantyPanel appointmentId={appointment.id} userId={userId} status={appointment.status}
+            existing={Boolean(appointment.warranty_assessment)} />
+        )}
         {canManage && appointment.cancellation_request && (
         <section className="mt-4 space-y-3 rounded-lg border border-amber-500/30 bg-amber-500/5 p-4">
           <div>

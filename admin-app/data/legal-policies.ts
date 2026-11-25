@@ -3,14 +3,12 @@ import {
   RETURN_POLICY_VERSION,
   TERMS_VERSION,
 } from '@/lib/commerce';
-
 export type LegalPolicySlug = 'terms' | 'return-policy' | 'privacy';
 export const LEGAL_POLICY_SLUGS: LegalPolicySlug[] = [
   'terms',
   'return-policy',
   'privacy',
 ];
-
 export type LegalSection = {
   id: string;
   title: string;
@@ -18,7 +16,6 @@ export type LegalSection = {
   paragraphs: string[];
   bullets?: string[];
 };
-
 export type LegalPolicy = {
   slug: LegalPolicySlug;
   title: string;
@@ -27,7 +24,6 @@ export type LegalPolicy = {
   intro: string;
   sections: LegalSection[];
 };
-
 export const TERMS_POLICY: LegalPolicy = {
     slug: 'terms',
     title: 'Terms & Conditions',
@@ -135,12 +131,11 @@ export const TERMS_POLICY: LegalPolicy = {
       },
     ],
 };
-
 export const RETURN_POLICY: LegalPolicy = {
     slug: 'return-policy',
     title: 'Return & Refund Policy',
     version: RETURN_POLICY_VERSION,
-    lastUpdated: 'November 15, 2026',
+    lastUpdated: 'November 25, 2026',
     intro: 'This policy explains how to report order problems and request an assessment, service, return, or refund from Noel & Jane E-bike Trading (NJET).',
     sections: [
       {
@@ -175,7 +170,7 @@ export const RETURN_POLICY: LegalPolicy = {
         title: 'Warranty coverage',
         summary: 'Use the warranty card issued for your exact e-bike or accessory.',
         paragraphs: [
-          'Warranty periods and covered parts vary by product and are stated on the warranty card or written purchase agreement issued for your unit. Review that document when you buy the item and keep it with your receipt.',
+          'The standard e-bike service assessment window starts at handover. Report the issue when booking service within 7 days for a two-wheel e-bike or 3 calendar months for a three- or four-wheel e-bike, even if the appointment is later. Staff inspect the unit before deciding on repair or replacement. You can still request review after the deadline. Keep your receipt and the written warranty issued for your unit.',
           'Accident, misuse, neglect, modification, unauthorized repair, or maintenance outside the manufacturer’s instructions may affect warranty coverage to the extent allowed by the written warranty and applicable law. The warranty document also explains coverage for chargers, batteries, and accessories.',
         ],
       },
@@ -208,7 +203,6 @@ export const RETURN_POLICY: LegalPolicy = {
       },
     ],
 };
-
 export const PRIVACY_POLICY: LegalPolicy = {
     slug: 'privacy',
     title: 'Privacy Policy',

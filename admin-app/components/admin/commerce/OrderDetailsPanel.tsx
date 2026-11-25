@@ -7,6 +7,7 @@ import {
   confirmCommerceOrderAction,
 } from "@/data/actions/commerce-admin";
 import { markOrderPhoneManuallyVerifiedAction } from "@/data/actions/phone-verification";
+import { OrderWarrantyHandover } from '@/components/admin/commerce/OrderWarrantyHandover';
 import { CompletedOrderDocuments } from "@/components/admin/commerce/CompletedOrderDocuments";
 import { OrderPrivateDocuments } from "@/components/admin/commerce/OrderPrivateDocuments";
 import { OrderOverviewSections } from "@/components/admin/commerce/OrderOverviewSections";
@@ -123,6 +124,10 @@ export function OrderDetailsPanel({
           canManage={canManage}
           onDataChanged={onDataChanged}
         />
+      )}
+
+      {canManage && order.status === 'completed' && order.items.some((item) => item.product_type === 'ebike') && (
+        <OrderWarrantyHandover orderId={order.id} />
       )}
 
       {canManage && (

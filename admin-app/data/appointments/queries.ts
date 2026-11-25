@@ -38,6 +38,7 @@ export type StaffServiceAppointment = Pick<
 > & {
   internal_note: string;
   assigned_technician_name: string | null;
+  warranty_assessment?: boolean;
   cancellation_request: {
     id: string;
     subject: string;
@@ -189,7 +190,7 @@ export async function getStaffServiceAppointments(
         )
       ),
     ];
-    const [notesResult, techniciansResult, cancellationRequestsResult] = await Promise.all([
+    const [notesResult, techniciansResult, cancellationRequestsResult, warrantyResult] = await Promise.all([
       supabase
         .from('service_appointment_internal_notes')
         .select('appointment_id, note')
@@ -206,11 +207,15 @@ export async function getStaffServiceAppointments(
             .eq('status', 'pending')
             .in('appointment_id', ids)
         : Promise.resolve({ data: [], error: null }),
+      canManage
+        ? supabase.rpc('staff_warranty_appointment_ids', { p_appointment_ids: ids })
+        : Promise.resolve({ data: [], error: null }),
     ]);
     if (notesResult.error) throw notesResult.error;
     if (techniciansResult.error) throw techniciansResult.error;
     if (cancellationRequestsResult.error) throw cancellationRequestsResult.error;
 
+    const warrantyIds = new Set(warrantyResult.data?.map((entry) => entry.appointment_id) ?? []);
     const noteById = new Map(
       notesResult.data.map((entry) => [entry.appointment_id, entry.note])
     );
@@ -235,6 +240,7 @@ export async function getStaffServiceAppointments(
       data: appointments.map((appointment) => ({
         ...appointment,
         internal_note: noteById.get(appointment.id) ?? '',
+        warranty_assessment: warrantyIds.has(appointment.id),
         assigned_technician_name: appointment.assigned_technician_id
           ? nameById.get(appointment.assigned_technician_id) ?? null
           : null,
