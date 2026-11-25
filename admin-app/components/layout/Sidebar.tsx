@@ -45,12 +45,13 @@ interface NavItem {
 }
 
 interface NavGroup {
-  name?: string;
+  name: string;
   items: NavItem[];
 }
 
 const ADMIN_NAVIGATION: NavGroup[] = [
   {
+    name: "Overview",
     items: [
       {
         name: "Dashboard",
@@ -61,25 +62,14 @@ const ADMIN_NAVIGATION: NavGroup[] = [
     ],
   },
   {
-    name: "Support",
+    name: "Sales & Inventory",
     items: [
       {
-        name: "Staff Guide",
-        href: "/admin/help",
-        icon: CircleHelp,
-        permission: PERMISSIONS.adminAccess,
+        name: "Orders",
+        href: "/admin/orders",
+        icon: ClipboardList,
+        permission: PERMISSIONS.ordersRead,
       },
-      {
-        name: "Customer chats",
-        href: "/admin/chats",
-        icon: MessageSquareText,
-        permission: PERMISSIONS.supportChatManage,
-      },
-    ],
-  },
-  {
-    name: "Commerce",
-    items: [
       {
         name: "Products & stock",
         href: "/admin/products",
@@ -93,17 +83,16 @@ const ADMIN_NAVIGATION: NavGroup[] = [
         permission: PERMISSIONS.productsManage,
       },
       {
-        name: "Orders",
-        href: "/admin/orders",
-        icon: ClipboardList,
-        permission: PERMISSIONS.ordersRead,
-      },
-      {
         name: "Sales report",
         href: "/admin/reports",
         icon: ChartNoAxesColumnIncreasing,
         permission: PERMISSIONS.ordersRead,
       },
+    ],
+  },
+  {
+    name: "Workshop",
+    items: [
       {
         name: "Service appointments",
         href: "/admin/appointments",
@@ -122,7 +111,24 @@ const ADMIN_NAVIGATION: NavGroup[] = [
     ],
   },
   {
-    name: "Locations",
+    name: "Customers & Support",
+    items: [
+      {
+        name: "Customer CRM",
+        href: "/admin/crm",
+        icon: Users,
+        permission: PERMISSIONS.crmRead,
+      },
+      {
+        name: "Customer chats",
+        href: "/admin/chats",
+        icon: MessageSquareText,
+        permission: PERMISSIONS.supportChatManage,
+      },
+    ],
+  },
+  {
+    name: "Locations & Delivery",
     items: [
       {
         name: "Branches",
@@ -139,7 +145,7 @@ const ADMIN_NAVIGATION: NavGroup[] = [
     ],
   },
   {
-    name: "Team & Security",
+    name: "Administration",
     items: [
       {
         name: "Users",
@@ -159,27 +165,28 @@ const ADMIN_NAVIGATION: NavGroup[] = [
         icon: ScrollText,
         permission: PERMISSIONS.auditLogsRead,
       },
-    ],
-  },
-  {
-    name: "Storefront",
-    items: [
-      {
-        name: "Storefront preview",
-        href: "/",
-        icon: ShoppingBag,
-        permission: PERMISSIONS.storefrontAccess,
-      },
-    ],
-  },
-  {
-    name: "Global",
-    items: [
       {
         name: "Settings",
         href: "/admin/settings",
         icon: Settings,
         fullAccessOnly: true,
+      },
+    ],
+  },
+  {
+    name: "Resources",
+    items: [
+      {
+        name: "Staff Guide",
+        href: "/admin/help",
+        icon: CircleHelp,
+        permission: PERMISSIONS.adminAccess,
+      },
+      {
+        name: "Storefront preview",
+        href: "/",
+        icon: ShoppingBag,
+        permission: PERMISSIONS.storefrontAccess,
       },
     ],
   },
@@ -251,14 +258,9 @@ export function Sidebar({ user, className, onNavigate }: SidebarProps) {
       aria-label="Sidebar navigation"
     >
       <nav className="min-h-0 flex-1 space-y-4 overflow-y-auto p-3">
-        {!collapsed && (
-          <p className="px-3 pb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Administration
-          </p>
-        )}
         {visibleGroups.map((group) => (
-          <div key={group.name ?? "dashboard"} className="space-y-1">
-            {!collapsed && group.name && (
+          <div key={group.name} className="space-y-1">
+            {!collapsed && (
               <p className="px-3 pb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 {group.name}
               </p>

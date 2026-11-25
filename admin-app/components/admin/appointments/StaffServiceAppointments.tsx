@@ -48,17 +48,19 @@ const MANAGED_APPOINTMENT_REALTIME_TABLES: RealtimeTable[] = [
 
 export function StaffServiceAppointments({
   userId,
+  initialSearch = "",
   canManage,
   canWork,
 }: {
   userId: string;
+  initialSearch?: string;
   canManage: boolean;
   canWork: boolean;
 }) {
   const [activeTab, setActiveTab] =
     useState<StaffAppointmentsTab>("appointments");
-  const [filters, setFilters] = useState(EMPTY_FILTERS);
-  const [searchValue, setSearchValue] = useState("");
+  const [filters, setFilters] = useState(() => initialSearch ? { ...EMPTY_FILTERS, view: "all" as const, search: initialSearch } : EMPTY_FILTERS);
+  const [searchValue, setSearchValue] = useState(initialSearch);
   const [openAppointmentId, setOpenAppointmentId] = useState<string | null>(
     null,
   );

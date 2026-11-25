@@ -15,6 +15,8 @@ export const PERMISSIONS = {
   branchesManage: 'branches.manage',
   deliveryZonesRead: 'delivery_zones.read',
   deliveryZonesManage: 'delivery_zones.manage',
+  crmRead: 'crm.read',
+  crmManage: 'crm.manage',
   ordersRead: 'orders.read',
   ordersManage: 'orders.manage',
   serviceAppointmentsRead: 'service_appointments.read',

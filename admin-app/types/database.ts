@@ -14,6 +14,7 @@ import type { ReceiptTables } from './receipt-tables';
 import type { SupportChatTables } from './support-chat-tables';
 import type { ProductDiscountTables } from './product-discount-tables';
 import type { ProductReviewTables } from './product-review-tables';
+import type { CrmTables } from './crm';
 import type { DatabaseFunctions } from './database-functions';
 
 export type {
@@ -238,7 +239,7 @@ export type Database = {
         ];
       };
     } & CommerceTables & AdminNotificationTables & ReceiptTables & SupportChatTables
-      & ProductDiscountTables & ProductReviewTables;
+      & ProductDiscountTables & ProductReviewTables & CrmTables;
     Views: {
       user_profiles: {
         Row: UserProfile;
