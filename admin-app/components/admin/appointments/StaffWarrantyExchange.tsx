@@ -55,7 +55,12 @@ export function StaffWarrantyExchange({ appointmentId, userId, originalSerial, e
       }
       setConfirmation(null);
       setFeedback({ error: false, message: 'Exchange updated.' });
-      await Promise.all([query.refetch(), invalidateProducts(), invalidateValuation()]);
+      const changesStock = command.operation === 'reserve' || command.operation === 'release';
+      await Promise.all([
+        query.refetch(),
+        invalidateProducts(changesStock ? 'inventory' : 'admin'),
+        ...(changesStock ? [invalidateValuation()] : []),
+      ]);
       onChanged();
     } catch {
       setFeedback({ error: true, message: 'Could not save the exchange. Check the latest record before trying again.' });

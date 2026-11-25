@@ -10,7 +10,7 @@ import {
   buildOwnershipCertificateFromTemplate,
   OwnershipCertificateTemplateError,
 } from '@/data/commerce/ownership-certificate';
-import type { createClient } from '@/data/supabase/server';
+import { reconcileOrderPdfAttachment, removeUnattachedOrderPdf } from '@/data/commerce/order-pdf-attachment';
 import { PERMISSIONS } from '@/lib/permissions';
 import {
   orderCertificateSchema,
@@ -21,7 +21,6 @@ const CERTIFICATE_BUCKET = 'njet-order-certificates';
 const CERTIFICATE_TEMPLATE_BUCKET = 'njet-certificate-templates';
 const SAMPLE_CERTIFICATE_TEMPLATE_VERSION = 'sample-v1';
 const CERTIFICATE_MAX_SIZE = 2 * 1024 * 1024;
-type SupabaseClient = Awaited<ReturnType<typeof createClient>>;
 
 function rpcError(
   error: { code?: string; message: string },
@@ -34,25 +33,6 @@ function rpcError(
   if (error.code === 'P0001') return error.message;
   console.error(fallback, error.message);
   return fallback;
-}
-
-async function removeUnattachedCertificate(
-  supabase: SupabaseClient,
-  objectPath: string
-): Promise<boolean> {
-  try {
-    const { error } = await supabase.storage
-      .from(CERTIFICATE_BUCKET)
-      .remove([objectPath]);
-    if (error) {
-      console.error('Could not remove an unattached certificate file.', error);
-      return false;
-    }
-    return true;
-  } catch (error) {
-    console.error('Could not remove an unattached certificate file.', error);
-    return false;
-  }
 }
 
 export async function saveOrderInvoiceAction(
@@ -209,38 +189,35 @@ export async function generateOrderCertificateAction(
     if (uploadResult.error) throw uploadResult.error;
     uploadedPath = objectPath;
 
-    const saveResult = await supabase.rpc('save_order_certificate', {
-      p_order_id: order.id,
-      p_object_path: objectPath,
-      p_file_size: bytes.byteLength,
-      p_template_version: templateVersion,
-      p_certificate_number: parsed.data.certificateNumber,
-    });
-    if (saveResult.error) {
-      const cleanupSucceeded = await removeUnattachedCertificate(
-        supabase,
-        uploadedPath
-      );
-      uploadedPath = null;
-      return {
-        success: false,
-        error: cleanupSucceeded
-          ? rpcError(
-              saveResult.error,
-              'Could not attach the certificate.',
-              '20240101000074_order_certificate_number.sql'
-            )
-          : 'The certificate could not be attached and its temporary file could not be removed. Contact an administrator.',
-      };
+    const attachment = await reconcileOrderPdfAttachment(
+      () => supabase.rpc('save_order_certificate', {
+        p_order_id: order.id,
+        p_object_path: objectPath,
+        p_file_size: bytes.byteLength,
+        p_template_version: templateVersion,
+        p_certificate_number: parsed.data.certificateNumber,
+      }),
+      () => supabase.from('order_certificates').select('object_path').eq('order_id', order.id).maybeSingle(),
+      objectPath,
+    );
+    uploadedPath = null;
+    if (attachment.status === 'uncertain') {
+      revalidatePath('/admin/orders');
+      revalidatePath('/dashboard/orders');
+      return { success: false, error: 'Could not confirm the certificate attachment. Reload the order and check its documents before trying again.' };
+    }
+    if (attachment.status === 'rejected') {
+      const removed = await removeUnattachedOrderPdf(supabase, CERTIFICATE_BUCKET, objectPath);
+      const message = rpcError(attachment.error, 'Could not attach the certificate.', '20240101000074_order_certificate_number.sql');
+      return { success: false, error: removed ? message : message + ' The temporary file could not be removed.' };
     }
 
-    uploadedPath = null;
     revalidatePath('/admin/orders');
     revalidatePath('/dashboard/orders');
 
     if (previousResult.data?.object_path) {
-      const removed = await removeUnattachedCertificate(
-        supabase,
+      const removed = await removeUnattachedOrderPdf(
+        supabase, CERTIFICATE_BUCKET,
         previousResult.data.object_path
       );
       if (!removed) {
@@ -254,7 +231,7 @@ export async function generateOrderCertificateAction(
     return { success: true, data: {} };
   } catch (error) {
     const cleanupSucceeded = uploadedPath
-      ? await removeUnattachedCertificate(supabase, uploadedPath)
+      ? await removeUnattachedOrderPdf(supabase, CERTIFICATE_BUCKET, uploadedPath)
       : true;
     console.error('Could not generate the ownership certificate.', error);
     const errorMessage = error instanceof OwnershipCertificateTemplateError

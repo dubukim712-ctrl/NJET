@@ -6,7 +6,7 @@ import { requirePermission } from '@/data/auth/guards';
 import { toUserFriendlyError } from '@/data/supabase/user-friendly-errors';
 import { PERMISSIONS } from '@/lib/permissions';
 import { returnDispositions, returnReasons } from '@/lib/warranty-returns';
-import type { WarrantyReturn } from '@/types/service-warranty';
+import type { WarrantyReturn, WarrantyReturnSaved } from '@/types/service-warranty';
 
 const cursorSchema = z.object({ receivedAt: z.iso.datetime({ offset: true }), appointmentId: z.uuid() });
 type Cursor = z.infer<typeof cursorSchema>;
@@ -39,15 +39,15 @@ export async function listWarrantyReturnsAction(cursor: Cursor | null): Promise<
   };
 }
 
-export async function recordWarrantyReturnAction(input: unknown): Promise<ActionResult> {
+export async function recordWarrantyReturnAction(input: unknown): Promise<ActionResult<WarrantyReturnSaved>> {
   const { supabase } = await requirePermission(PERMISSIONS.productsManage, '/admin/products');
   const parsed = updateSchema.safeParse(input);
   if (!parsed.success) return { success: false, error: 'Choose a reason and disposition. Keep notes to 1,000 characters.' };
   const { appointmentId, reason, disposition, note, previousId } = parsed.data;
-  const { data, error } = await supabase.rpc('record_warranty_return_update', {
+  const { data, error } = await supabase.rpc('record_warranty_return_update_and_read', {
     p_appointment_id: appointmentId, p_reason: reason, p_disposition: disposition, p_note: note, p_previous_id: previousId,
-  });
+  }).maybeSingle();
   if (error) return { success: false, error: toUserFriendlyError(error, 'Could not save the return update.') };
   if (!data) return { success: false, error: 'Someone updated this return. Refresh the list before saving again.' };
-  return { success: true, data: undefined };
+  return { success: true, data };
 }

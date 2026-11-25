@@ -73,3 +73,11 @@ test('preserves reviewed appointment conflicts and hides unexpected RPC text', (
   assert.equal(toUserFriendlyError({ code: '23P01', constraint: 'internal_slot_constraint' }, fallback),
     'This time overlaps with an existing booking or closure. Choose another time.');
 });
+
+test('explains coupon conflicts and preserves only reviewed discount RPC messages', () => {
+  assert.equal(toUserFriendlyError({ code: '23505', message: 'violates unique constraint "product_discounts_coupon_code_idx"' }, fallback),
+    'That coupon code is already in use.');
+  const message = 'This coupon has reached its redemption limit.';
+  assert.equal(toUserFriendlyError({ code: 'P0001', message }, fallback), message);
+  assert.equal(toUserFriendlyError({ code: 'P0001', message: 'SELECT code FROM internal_discount_table' }, fallback), fallback);
+});

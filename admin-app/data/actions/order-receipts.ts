@@ -14,34 +14,15 @@ import {
   loadSalesReceiptImage,
   SalesReceiptImageError,
 } from '@/data/commerce/sales-receipt-images';
+import { toUserFriendlyError } from '@/data/supabase/user-friendly-errors';
 import { PERMISSIONS } from '@/lib/permissions';
 import { orderDocumentIdSchema } from '@/lib/validations/order-documents';
-import type { createClient } from '@/data/supabase/server';
+import { reconcileOrderPdfAttachment, removeUnattachedOrderPdf } from '@/data/commerce/order-pdf-attachment';
 
 const RECEIPT_TEMPLATE_BUCKET = 'njet-sales-receipt-templates';
 const RECEIPT_BUCKET = 'njet-order-receipts';
 const PRODUCT_IMAGE_BUCKET = 'njet-product-images';
 const RECEIPT_MAX_SIZE = 2 * 1024 * 1024;
-type SupabaseClient = Awaited<ReturnType<typeof createClient>>;
-
-async function removeUnattachedReceipt(
-  supabase: SupabaseClient,
-  objectPath: string
-): Promise<boolean> {
-  try {
-    const { error } = await supabase.storage
-      .from(RECEIPT_BUCKET)
-      .remove([objectPath]);
-    if (error) {
-      console.error('Could not remove an unattached sales receipt.', error);
-      return false;
-    }
-    return true;
-  } catch (error) {
-    console.error('Could not remove an unattached sales receipt.', error);
-    return false;
-  }
-}
 
 export async function generateOrderReceiptAction(
   payload: unknown
@@ -181,7 +162,8 @@ export async function generateOrderReceiptAction(
       }
     }
 
-    if (!templateResult.data) {
+    const template = templateResult.data;
+    if (!template) {
       return {
         success: false,
         error: 'Upload a sales receipt template in Settings > Documents before generating a receipt.',
@@ -207,7 +189,7 @@ export async function generateOrderReceiptAction(
     );
     const { data: templateFile, error: templateError } = await supabase.storage
       .from(RECEIPT_TEMPLATE_BUCKET)
-      .download(templateResult.data.object_path);
+      .download(template.object_path);
     if (templateError || !templateFile) {
       throw new SalesReceiptTemplateError(
         'The configured sales receipt template could not be downloaded.'
@@ -242,63 +224,43 @@ export async function generateOrderReceiptAction(
     if (uploadResult.error) throw uploadResult.error;
     uploadedPath = objectPath;
 
-    const saveResult = await supabase.rpc('save_order_receipt', {
-      p_order_id: order.id,
-      p_object_path: objectPath,
-      p_file_size: bytes.byteLength,
-      p_template_version: templateResult.data.template_version,
-    });
-    if (saveResult.error) {
-      const cleanupSucceeded = await removeUnattachedReceipt(supabase, objectPath);
-      uploadedPath = null;
-      if (saveResult.error.code === 'PGRST202') {
-        return {
-          success: false,
-          error: 'The sales receipt migration is missing. Run supabase/migrations/20240101000073_sales_receipt_templates.sql, then refresh this page.',
-        };
-      }
-      return {
-        success: false,
-        error: cleanupSucceeded
-          ? saveResult.error.code === 'P0001'
-            ? saveResult.error.message
-            : 'Could not attach the sales receipt.'
-          : 'The receipt could not be attached and its temporary file could not be removed. Contact an administrator.',
-      };
+    const attachment = await reconcileOrderPdfAttachment(
+      () => supabase.rpc('save_order_receipt', {
+        p_order_id: order.id,
+        p_object_path: objectPath,
+        p_file_size: bytes.byteLength,
+        p_template_version: template.template_version,
+      }),
+      () => supabase.from('order_receipts').select('object_path').eq('order_id', order.id).maybeSingle(),
+      objectPath,
+    );
+    uploadedPath = null;
+    if (attachment.status === 'uncertain') {
+      revalidatePath('/admin/orders');
+      revalidatePath('/dashboard/orders');
+      return { success: false, error: 'Could not confirm the receipt attachment. Reload the order and check its documents before trying again.' };
+    }
+    if (attachment.status === 'rejected') {
+      const removed = await removeUnattachedOrderPdf(supabase, RECEIPT_BUCKET, objectPath);
+      const message = attachment.error.code === 'PGRST202'
+        ? 'The sales receipt migration is missing. Run supabase/migrations/20240101000073_sales_receipt_templates.sql, then refresh this page.'
+        : toUserFriendlyError(attachment.error, 'Could not attach the sales receipt.');
+      return { success: false, error: removed ? message : message + ' The temporary file could not be removed.' };
     }
 
-    uploadedPath = null;
     revalidatePath('/admin/orders');
     revalidatePath('/dashboard/orders');
 
-    if (previousResult.data?.object_path) {
-      const removed = await removeUnattachedReceipt(
-        supabase,
-        previousResult.data.object_path
-      );
-      if (!removed) {
-        return {
-          success: true,
-          data: {
-            warning: [
-              'The new sales receipt is attached, but the previous file could not be removed.',
-              ...(!variantImage ? ['No product or variant image is configured for this receipt.'] : []),
-            ].join(' '),
-          },
-        };
-      }
+    const warnings = [];
+    if (previousResult.data?.object_path &&
+      !await removeUnattachedOrderPdf(supabase, RECEIPT_BUCKET, previousResult.data.object_path)) {
+      warnings.push('The new sales receipt is attached, but the previous file could not be removed.');
     }
-
-    const missingImages = [
-      ...(!variantImage ? ['No product or variant image is configured for this receipt.'] : []),
-    ];
-    return {
-      success: true,
-      data: missingImages.length ? { warning: missingImages.join(' ') } : {},
-    };
+    if (!variantImage) warnings.push('No product or variant image is configured for this receipt.');
+    return { success: true, data: warnings.length ? { warning: warnings.join(' ') } : {} };
   } catch (error) {
     const cleanupSucceeded = uploadedPath
-      ? await removeUnattachedReceipt(supabase, uploadedPath)
+      ? await removeUnattachedOrderPdf(supabase, RECEIPT_BUCKET, uploadedPath)
       : true;
     console.error('Could not generate the sales receipt.', error);
     const message = error instanceof SalesReceiptTemplateError ||

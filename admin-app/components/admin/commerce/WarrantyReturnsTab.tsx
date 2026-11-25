@@ -1,6 +1,6 @@
 'use client';
 
-import { useInfiniteQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/Button';
 import { listWarrantyReturnsAction } from '@/data/actions/warranty-returns';
 import { WarrantyReturnCard } from './WarrantyReturnCard';
@@ -8,8 +8,10 @@ import { WarrantyReturnCard } from './WarrantyReturnCard';
 type Cursor = Parameters<typeof listWarrantyReturnsAction>[0];
 
 export function WarrantyReturnsTab({ userId }: { userId: string }) {
+  const client = useQueryClient();
+  const queryKey = ['warranty-returns', userId] as const;
   const query = useInfiniteQuery({
-    queryKey: ['warranty-returns', userId],
+    queryKey,
     initialPageParam: null as Cursor,
     queryFn: async ({ pageParam }) => {
       const result = await listWarrantyReturnsAction(pageParam);
@@ -36,7 +38,16 @@ export function WarrantyReturnsTab({ userId }: { userId: string }) {
       {query.isSuccess && rows.length === 0 && (
         <p className="rounded-xl border bg-card p-4 text-sm text-muted-foreground">Returned units appear here after staff record their receipt in a warranty exchange.</p>
       )}
-      {rows.map((row) => <WarrantyReturnCard key={row.appointment_id} row={row} onSaved={() => query.refetch()} />)}
+      {rows.map((row) => (
+        <WarrantyReturnCard key={row.appointment_id} row={row} onSaved={(saved) => {
+          client.setQueryData<typeof query.data>(queryKey, (current) => current && {
+            ...current,
+            pages: current.pages.map((page) => page.rows.some((item) => item.appointment_id === row.appointment_id)
+              ? { ...page, rows: page.rows.map((item) => item.appointment_id === row.appointment_id ? { ...item, ...saved } : item) }
+              : page),
+          });
+        }} />
+      ))}
       {query.hasNextPage && (
         <Button variant="outline" className="min-h-11" loading={query.isFetchingNextPage}
           onClick={() => void query.fetchNextPage()}>Load older returns</Button>

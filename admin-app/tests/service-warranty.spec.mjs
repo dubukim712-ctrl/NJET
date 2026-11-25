@@ -163,7 +163,7 @@ test('warranty assessment preserves the original purchase and exchanges a reserv
   `);
   for (const name of ['20240101000127_warranty_return_dispositions.sql',
     '20240101000128_bind_warranty_exchange_reservation.sql', '20240101000129_warranty_replacement_lookup.sql',
-    '20240101000130_warranty_reservation_token.sql']) {
+    '20240101000130_warranty_reservation_token.sql', '20240101000132_warranty_return_saved_row.sql']) {
     await db.exec(await migration(name));
   }
   await db.exec('grant execute on function public.crm_customers(uuid,text,integer), public.crm_customer_activity(uuid) to authenticated');
@@ -262,7 +262,7 @@ test('warranty assessment preserves the original purchase and exchanges a reserv
   await db.query("update public.service_appointments set appointment_number = 'SVC-000009' where id = $1", [standardAppointment]);
   const returns = 'select * from public.list_warranty_returns(null, null)';
   const recordReturn = (reason, disposition, note, previous = null) => db.query(
-    'select public.record_warranty_return_update($1,$2,$3,$4,$5) as saved',
+    'select * from public.record_warranty_return_update_and_read($1,$2,$3,$4,$5)',
     [standardAppointment, reason, disposition, note, previous],
   );
   await db.exec('set role authenticated');
@@ -282,12 +282,14 @@ test('warranty assessment preserves the original purchase and exchanges a reserv
   const [held] = (await db.query(returns)).rows;
   assert.equal(held.reason, 'damaged');
   assert.equal(held.recorded_by, 'Staff');
-  assert.deepEqual((await recordReturn('damaged', 'written_off', '')).rows, [{ saved: false }]);
+  assert.deepEqual((await recordReturn('damaged', 'written_off', '')).rows, []);
   await assert.rejects(recordReturn('damaged', 'sellable', '', held.update_id), /check constraint/);
-  await recordReturn('damaged', 'returned_to_supplier', 'Pickup confirmed', held.update_id);
+  const [savedRow] = (await recordReturn('damaged', 'returned_to_supplier', 'Pickup confirmed', held.update_id)).rows;
   const [returned] = (await db.query(returns)).rows;
   assert.equal(returned.disposition, 'returned_to_supplier');
   assert.equal(returned.note, 'Pickup confirmed');
+  assert.equal(savedRow.update_id, returned.update_id);
+  assert.equal(savedRow.recorded_by, 'Staff');
   assert.deepEqual((await db.query('select * from public.list_warranty_returns($1,$2)',
     [returned.received_at, returned.appointment_id])).rows, []);
   await db.exec('reset role');

@@ -8,9 +8,12 @@ import { Textarea } from '@/components/ui/Textarea';
 import { recordWarrantyReturnAction } from '@/data/actions/warranty-returns';
 import { formatWarrantyTimestamp } from '@/lib/service-warranty';
 import { returnDispositions, returnReasons } from '@/lib/warranty-returns';
-import type { WarrantyReturn } from '@/types/service-warranty';
+import type { WarrantyReturn, WarrantyReturnSaved } from '@/types/service-warranty';
 
-export function WarrantyReturnCard({ row, onSaved }: { row: WarrantyReturn; onSaved: () => Promise<unknown> }) {
+export function WarrantyReturnCard({ row, onSaved }: {
+  row: WarrantyReturn;
+  onSaved: (saved: WarrantyReturnSaved) => void;
+}) {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState<{ error: boolean; message: string } | null>(null);
@@ -29,12 +32,11 @@ export function WarrantyReturnCard({ row, onSaved }: { row: WarrantyReturn; onSa
       });
       if (!result.success) {
         setFeedback({ error: true, message: result.error });
-        await onSaved();
         return;
       }
       setEditing(false);
       setFeedback({ error: false, message: 'Return update saved.' });
-      await onSaved();
+      onSaved(result.data);
     } catch {
       setFeedback({ error: true, message: 'Could not confirm the update. Refresh the list before trying again.' });
     } finally {

@@ -64,13 +64,15 @@ export type WarrantyReturn = {
   update_id: string | null;
 };
 
+export type WarrantyReturnSaved = Pick<WarrantyReturn, 'reason' | 'disposition' | 'note' | 'recorded_at' | 'recorded_by' | 'update_id'>;
+
 export type ServiceWarrantyFunctions = {
   list_warranty_returns: {
     Args: { p_before_at: string | null; p_before_id: string | null }; Returns: WarrantyReturn[];
   };
-  record_warranty_return_update: {
+  record_warranty_return_update_and_read: {
     Args: { p_appointment_id: string; p_reason: ReturnReason; p_disposition: ReturnDisposition; p_note: string; p_previous_id: string | null };
-    Returns: boolean;
+    Returns: WarrantyReturnSaved[];
   };
   service_warranty_exchange_details: {
     Args: { p_appointment_id: string }; Returns: WarrantyExchange[];

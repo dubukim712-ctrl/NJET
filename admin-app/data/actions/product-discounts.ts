@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import type { ActionResult } from '@/data/actions/auth';
 import type { createClient } from '@/data/supabase/server';
 import { getAuthContext, requirePermission } from '@/data/auth/guards';
+import { toUserFriendlyError } from '@/data/supabase/user-friendly-errors';
 import { PERMISSIONS, hasPermission } from '@/lib/permissions';
 import {
   discountPreviewSchema,
@@ -46,9 +47,7 @@ export async function saveProductDiscountAction(payload: unknown): Promise<Actio
       console.error('Could not save product discount.', error);
       return {
         success: false,
-        error: error.code === '23505'
-          ? 'That coupon code is already in use.'
-          : error.message,
+        error: toUserFriendlyError(error, 'Could not save this discount. Please try again.'),
       };
     }
 
@@ -93,7 +92,7 @@ export async function previewProductDiscountAction(
       p_phone: input.channel === 'walk_in' ? input.phone : null,
     });
     if (error) {
-      return { success: false, error: error.message };
+      return { success: false, error: toUserFriendlyError(error, 'The coupon could not be checked. Try again.') };
     }
     const rows = discountQuoteRowsSchema.safeParse(data);
     if (!rows.success || rows.data.length !== input.items.length) {

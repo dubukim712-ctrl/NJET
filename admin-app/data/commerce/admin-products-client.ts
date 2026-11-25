@@ -33,18 +33,20 @@ export function useCommerceManagementQuery(
     },
     retry: false,
     staleTime: 30_000,
-    gcTime: Infinity,
+    gcTime: 5 * 60_000,
   });
 }
 
 export function useInvalidateAdminProductsQuery() {
   const queryClient = useQueryClient();
   return useCallback(
-    async () => {
+    async (scope: 'inventory' | 'admin' = 'inventory') => {
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: adminProductsQueryKey }),
-        queryClient.invalidateQueries({ queryKey: storefrontCatalogQueryKey }),
-        queryClient.invalidateQueries({ queryKey: cartVariantsQueryKey }),
+        ...(scope === 'inventory' ? [
+          queryClient.invalidateQueries({ queryKey: storefrontCatalogQueryKey }),
+          queryClient.invalidateQueries({ queryKey: cartVariantsQueryKey }),
+        ] : []),
       ]);
     },
     [queryClient]
