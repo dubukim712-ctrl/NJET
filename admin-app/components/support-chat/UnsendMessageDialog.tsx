@@ -1,5 +1,7 @@
 'use client';
 
+import { Button } from '@/components/ui/Button';
+
 import { useId } from 'react';
 import { Modal } from '@/components/ui/Modal';
 
@@ -37,7 +39,7 @@ export function UnsendMessageDialog({
               value="for_everyone"
               checked={scope === 'for_everyone'}
               onChange={() => onScopeChange('for_everyone')}
-              className="mt-1 size-4 accent-primary"
+              className="mt-1 size-4 text-base accent-primary"
             />
             <span>
               <span className="font-semibold">Unsend for everyone</span>
@@ -54,7 +56,7 @@ export function UnsendMessageDialog({
             value="for_you"
             checked={scope === 'for_you'}
             onChange={() => onScopeChange('for_you')}
-            className="mt-1 size-4 accent-primary"
+            className="mt-1 size-4 text-base accent-primary"
           />
           <span>
             <span className="font-semibold">Unsend for you</span>
@@ -64,20 +66,20 @@ export function UnsendMessageDialog({
           </span>
         </label>
         <div className="flex justify-end gap-3 border-t pt-4">
-          <button
+          <Button variant="ghost" size={null}
             type="button"
             onClick={onClose}
             className="min-h-11 rounded-lg px-4 text-sm font-medium text-primary hover:bg-accent"
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button size={null}
             type="button"
             onClick={onConfirm}
-            className="min-h-11 rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
+            className="min-h-11 rounded-lg px-4 font-semibold"
           >
             Remove
-          </button>
+          </Button>
         </div>
       </div>
     </Modal>

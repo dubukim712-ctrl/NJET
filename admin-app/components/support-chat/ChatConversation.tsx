@@ -8,6 +8,8 @@ import {
   type KeyboardEvent,
 } from 'react';
 import { AlertCircle, Check, LoaderCircle, Send } from 'lucide-react';
+import { Button } from '@/components/ui/Button';
+import { Textarea } from '@/components/ui/Textarea';
 import { createClient } from '@/data/supabase/client';
 import {
   deleteSupportChatMessageAction,
@@ -215,11 +217,11 @@ export function ChatConversation({
           </a>
         )}
         {mode === 'staff' && onStatusChange && (
-          <button
+          <Button variant={null} size={null}
             type="button"
             onClick={toggleStatus}
             disabled={updatingStatus}
-            className="inline-flex min-h-9 items-center gap-2 rounded-full border px-3 text-sm font-medium hover:bg-accent disabled:opacity-60"
+            className="min-h-9 gap-2 rounded-full border px-3 hover:bg-accent disabled:opacity-60"
           >
             {updatingStatus ? (
               <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
@@ -227,7 +229,7 @@ export function ChatConversation({
               <Check className="size-4" aria-hidden="true" />
             ) : null}
             {status === 'open' ? 'Resolve chat' : 'Reopen chat'}
-          </button>
+          </Button>
         )}
       </header>
 
@@ -235,9 +237,9 @@ export function ChatConversation({
         <div role="alert" className="flex items-start gap-2 border-b bg-destructive/5 px-4 py-2 text-sm text-destructive">
           <AlertCircle className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
           <span>{error}</span>
-          <button type="button" className="ml-auto underline" onClick={() => void loadLatest()}>
+          <Button variant={null} size={null} type="button" className="ml-auto self-start text-inherit underline" onClick={() => void loadLatest()}>
             Retry
-          </button>
+          </Button>
         </div>
       )}
 
@@ -257,9 +259,9 @@ export function ChatConversation({
         />
       )}
 
-      <form onSubmit={send} className="flex items-end gap-2 border-t bg-card/60 p-3 sm:gap-3 sm:p-4">
+      <form onSubmit={send} className="flex shrink-0 items-end gap-2 border-t bg-card/60 px-3 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:gap-3 sm:px-4 sm:pt-4 sm:pb-[max(1rem,env(safe-area-inset-bottom))]">
         <label className="sr-only" htmlFor={`chat-message-${threadId}`}>Write a message</label>
-        <textarea
+        <Textarea containerClassName="flex-1"
           id={`chat-message-${threadId}`}
           value={body}
           onChange={(event) => setBody(event.target.value)}
@@ -267,16 +269,16 @@ export function ChatConversation({
           maxLength={4000}
           rows={2}
           placeholder="Write a message…"
-          className="max-h-40 min-h-11 flex-1 resize-y rounded-xl border bg-background px-3 py-2.5 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="max-h-40 min-h-11! resize-y rounded-xl! bg-background! py-2.5!"
         />
-        <button
+        <Button size={null}
           type="submit"
           disabled={sending || !body.trim()}
-          className="inline-flex size-11 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground transition-colors hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-50"
+          className="size-11 shrink-0 rounded-xl"
           aria-label="Send message"
         >
           {sending ? <LoaderCircle className="size-4 animate-spin" /> : <Send className="size-4" />}
-        </button>
+        </Button>
       </form>
     </section>
   );

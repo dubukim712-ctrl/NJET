@@ -1,15 +1,18 @@
 'use client';
-
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { ArrowLeft, MessageCircle, Search } from 'lucide-react';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
 import { createClient } from '@/data/supabase/client';
 import { listSupportChatThreadsAction } from '@/data/actions/support-chat';
 import { MessengerBadge } from '@/components/support-chat/MessengerBadge';
 import { ChatConversation } from '@/components/support-chat/ChatConversation';
 import { StaffChatEmptyState } from '@/components/support-chat/StaffChatEmptyState';
+import { useChatViewport } from '@/components/support-chat/useChatViewport';
 import type { SupportChatThread } from '@/types/support-chat';
 
 export function StaffChatInbox({ userId }: { userId: string }) {
+  const viewportRef = useChatViewport();
   const [threads, setThreads] = useState<SupportChatThread[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showMobileConversation, setShowMobileConversation] = useState(false);
@@ -21,7 +24,6 @@ export function StaffChatInbox({ userId }: { userId: string }) {
   const [hasMore, setHasMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [realtime, setRealtime] = useState<'connecting' | 'connected' | 'offline'>('connecting');
-
   const loadThreads = useCallback(async (
     append = false,
     cursor?: { lastMessageAt: string; threadId: string },
@@ -135,7 +137,7 @@ export function StaffChatInbox({ userId }: { userId: string }) {
   };
 
   return (
-    <div className="mx-auto max-w-7xl max-lg:fixed max-lg:inset-x-0 max-lg:top-16 max-lg:bottom-0 max-lg:z-30 max-lg:flex max-lg:flex-col max-lg:overflow-hidden max-lg:bg-background max-lg:p-4">
+    <div ref={viewportRef} className="mx-auto max-w-7xl max-lg:fixed max-lg:inset-x-0 max-lg:top-16 max-lg:bottom-[var(--chat-viewport-bottom,0px)] max-lg:max-h-[calc(100dvh-4rem)] max-lg:z-30 max-lg:flex max-lg:flex-col max-lg:overflow-hidden max-lg:bg-background max-lg:p-4">
       <header className={`${mobileConversationOpen ? 'max-lg:hidden' : ''} mb-6 flex shrink-0 flex-col gap-3 border-b pb-5 sm:mb-8 sm:flex-row sm:items-end sm:justify-between`}>
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
@@ -156,24 +158,24 @@ export function StaffChatInbox({ userId }: { userId: string }) {
           <div className="border-b p-3 sm:p-4">
             <form onSubmit={searchSubmit} className="flex gap-2">
               <label className="sr-only" htmlFor="chat-search">Search chats</label>
-              <input
+              <Input containerClassName="flex-1"
                 id="chat-search"
                 value={searchInput}
                 onChange={(event) => setSearchInput(event.target.value)}
                 placeholder="Search name, contact, message"
-                className="min-h-10 min-w-0 flex-1 rounded-lg border bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="min-h-10! rounded-lg! bg-background!"
               />
-              <button
+              <Button variant={null} size={null}
                 type="submit"
                 aria-label="Search chats"
                 className="inline-flex size-10 shrink-0 items-center justify-center rounded-lg border hover:bg-accent"
               >
                 <Search className="size-4" aria-hidden="true" />
-              </button>
+              </Button>
             </form>
             <div className="mt-3 flex gap-1 rounded-lg bg-muted p-1" aria-label="Filter chats">
               {(['open', 'resolved', 'all'] as const).map((filter) => (
-                <button
+                <Button variant={null} size={null}
                   type="button"
                   key={filter}
                   onClick={() => changeStatus(filter)}
@@ -181,7 +183,7 @@ export function StaffChatInbox({ userId }: { userId: string }) {
                   className={`min-h-9 flex-1 rounded-md px-2 text-xs font-medium capitalize ${status === filter ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                 >
                   {filter}
-                </button>
+                </Button>
               ))}
             </div>
           </div>
@@ -189,9 +191,9 @@ export function StaffChatInbox({ userId }: { userId: string }) {
           {error && (
             <div role="alert" className="px-4 py-3 text-sm text-destructive">
               {error}{' '}
-              <button type="button" className="underline" onClick={() => void loadThreads()}>
+              <Button variant={null} size={null} type="button" className="text-inherit underline" onClick={() => void loadThreads()}>
                 Retry
-              </button>
+              </Button>
             </div>
           )}
 
@@ -209,14 +211,14 @@ export function StaffChatInbox({ userId }: { userId: string }) {
                 const active = thread.id === selectedId;
                 return (
                   <li key={thread.id}>
-                    <button
+                    <Button variant={null} size={null}
                       type="button"
                       onClick={() => {
                         setSelectedId(thread.id);
                         setShowMobileConversation(true);
                       }}
                       aria-current={active ? 'true' : undefined}
-                      className={`w-full rounded-xl p-3 text-left transition-colors ${active ? 'bg-primary/10' : 'hover:bg-muted'}`}
+                      className={`block w-full whitespace-normal rounded-xl p-3 text-left text-base font-normal ${active ? 'bg-primary/10' : 'hover:bg-muted'}`}
                     >
                       <div className="flex items-start justify-between gap-3">
                         <span className="truncate font-semibold">{thread.customer_name}</span>
@@ -239,20 +241,20 @@ export function StaffChatInbox({ userId }: { userId: string }) {
                       <span className={`mt-2 inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${thread.status === 'open' ? 'bg-emerald-500/10 text-emerald-700' : 'bg-muted text-muted-foreground'}`}>
                         {thread.status}
                       </span>
-                    </button>
+                    </Button>
                   </li>
                 );
               })}
               {hasMore && (
                 <li className="p-2">
-                  <button
+                  <Button variant={null} size={null}
                     type="button"
                     onClick={loadMore}
                     disabled={loadingMore}
                     className="min-h-10 w-full rounded-lg border text-sm font-medium hover:bg-accent disabled:opacity-60"
                   >
                     {loadingMore ? 'Loading…' : 'Load older conversations'}
-                  </button>
+                  </Button>
                 </li>
               )}
             </ul>
@@ -262,14 +264,14 @@ export function StaffChatInbox({ userId }: { userId: string }) {
         <div className={`min-w-0 ${mobileConversationOpen ? 'max-lg:flex max-lg:min-h-0 max-lg:flex-1 max-lg:flex-col' : 'hidden lg:block'}`}>
           {selectedThread ? (
             <>
-              <button
+              <Button variant={null} size={null}
                 type="button"
                 onClick={() => setShowMobileConversation(false)}
-                className="mb-3 inline-flex min-h-10 items-center gap-2 rounded-lg px-2 text-sm font-medium hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring lg:hidden"
+                className="mb-3 min-h-10 justify-start gap-2 rounded-lg px-2 hover:bg-accent lg:hidden"
               >
                 <ArrowLeft className="size-4" aria-hidden="true" />
                 Back to inbox
-              </button>
+              </Button>
               <div className="mb-3 shrink-0 rounded-xl border bg-card px-4 py-3">
                 <h2 className="flex flex-wrap items-center gap-2 font-semibold">{selectedThread.customer_name}{selectedThread.channel === "messenger" && <MessengerBadge />}</h2>
                 {selectedThread.channel === 'web' && <p className="mt-1 break-all text-sm text-muted-foreground">

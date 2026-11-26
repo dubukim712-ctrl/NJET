@@ -85,7 +85,7 @@ function NativeMultiSelect(props: MultiSelectProps) {
           onChange={props.onChange}
           aria-describedby={getDescription(props["aria-describedby"], helperText || error ? descriptionId : undefined)}
           aria-invalid={error ? true : props["aria-invalid"]}
-          className={`w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground shadow-sm outline-none transition placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-50 ${
+          className={`w-full rounded-md border border-input bg-background px-3 py-2 text-base text-foreground shadow-sm md:pointer-fine:text-sm outline-none transition placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-50 ${
             leadingIcon ? "pl-10" : ""
           } ${error ? "border-destructive focus-visible:border-destructive focus-visible:ring-destructive/20" : ""} ${className}`}
         >
@@ -213,7 +213,7 @@ function SingleSelect(props: SingleSelectProps) {
             aria-label={accessibilityProps["aria-label"]}
             aria-required={required}
             title={accessibilityProps.title}
-            className={`flex min-h-10 w-full items-center justify-between gap-2 rounded-md border border-input bg-background px-3 py-2 text-left text-sm text-foreground shadow-sm outline-none transition focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-50 ${
+            className={`flex min-h-10 w-full items-center justify-between gap-2 rounded-md border border-input bg-background px-3 py-2 text-left text-base text-foreground shadow-sm md:pointer-fine:text-sm outline-none transition focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-50 ${
               leadingIcon ? "pl-10" : ""
             } ${error ? "border-destructive focus-visible:border-destructive focus-visible:ring-destructive/20" : ""} ${className}`}
           >

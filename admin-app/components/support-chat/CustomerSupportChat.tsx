@@ -2,6 +2,8 @@
 
 import { useEffect, useState, type FormEvent } from 'react';
 import { ArrowLeft, LifeBuoy, LoaderCircle, Mail, MessageCircle, Phone } from 'lucide-react';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
 import Link from 'next/link';
 import {
   requestGuestChatEmailAccessAction,
@@ -38,19 +40,16 @@ export function CustomerSupportChat({
   const [recoveryEmail, setRecoveryEmail] = useState(initialRecovery?.email ?? '');
   const [recoveryName, setRecoveryName] = useState(initialRecovery?.name ?? '');
   const [code, setCode] = useState('');
-  const [notice, setNotice] = useState<string | null>(
-    initialRecovery ? 'If a code can be sent, it will arrive shortly.' : null,
-  );
+  const [notice, setNotice] = useState<string | null>(initialRecovery ? 'If a code can be sent, it will arrive shortly.' : null);
   const [error, setError] = useState(initialError);
   const [busy, setBusy] = useState(false);
   const [resendAvailableAt, setResendAvailableAt] = useState<number | null>(
     initialRecovery ? initialRecovery.requestedAt + RESEND_COOLDOWN_SECONDS * 1000 : null,
   );
   const [clockNow, setClockNow] = useState(initialRecovery?.requestedAt ?? 0);
-  const resendCooldownSeconds =
-    resendAvailableAt === null
-      ? 0
-      : Math.max(0, Math.ceil((resendAvailableAt - clockNow) / 1000));
+  const resendCooldownSeconds = resendAvailableAt === null
+    ? 0
+    : Math.max(0, Math.ceil((resendAvailableAt - clockNow) / 1000));
   const startResendCooldown = (requestedAt: number) => { setClockNow(requestedAt); setResendAvailableAt(requestedAt + RESEND_COOLDOWN_SECONDS * 1000); };
 
   useEffect(() => {
@@ -142,12 +141,8 @@ export function CustomerSupportChat({
       </Link>
 
       <header className="mb-6 mt-5 border-l-4 border-primary pl-4 sm:mb-8 sm:mt-7 sm:pl-6">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
-          NJET customer care
-        </p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">
-          Let’s talk.
-        </h1>
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">NJET customer care</p>
+        <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">Let’s talk.</h1>
         <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground sm:text-base">
           Message our team about a product, order, or service. Your conversation stays here so you can return to it later.
         </p>
@@ -179,10 +174,7 @@ export function CustomerSupportChat({
             </div>
           </div>
           <form onSubmit={verifyRecovery} className="mt-6 space-y-4">
-            <label className="block text-sm font-medium" htmlFor="recovery-code">
-              Recovery code
-            </label>
-            <input
+            <Input label="Recovery code"
               id="recovery-code"
               inputMode="numeric"
               autoComplete="one-time-code"
@@ -191,20 +183,20 @@ export function CustomerSupportChat({
               required
               value={code}
               onChange={(event) => setCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
-              className="min-h-12 w-full rounded-lg border bg-background px-3 text-lg tracking-[0.3em] outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="min-h-12 rounded-lg! bg-background! md:pointer-fine:text-lg! tracking-[0.3em]"
             />
             {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
             {notice && <p role="status" className="text-sm text-muted-foreground">{notice}</p>}
             <div className="flex flex-wrap gap-3">
-              <button
+              <Button size={null}
                 type="submit"
                 disabled={busy || code.length !== 6}
-                className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-primary px-4 font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+                className="min-h-11 gap-2 rounded-lg px-4 text-base disabled:opacity-60"
               >
                 {busy && <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />}
                 Verify and continue
-              </button>
-              <button
+              </Button>
+              <Button variant={null} size={null}
                 type="button"
                 onClick={() => void requestRecovery()}
                 disabled={busy || resendCooldownSeconds > 0}
@@ -217,7 +209,7 @@ export function CustomerSupportChat({
                         resendCooldownSeconds % 60,
                       ).padStart(2, '0')}`
                     : 'Send another code'}
-              </button>
+              </Button>
             </div>
           </form>
         </section>
@@ -235,73 +227,61 @@ export function CustomerSupportChat({
                 </p>
               </div>
             </div>
-
             <div className="mt-6 space-y-4">
-              <div>
-                <label htmlFor="chat-name" className="mb-1.5 block text-sm font-medium">Your name</label>
-                <input
-                  id="chat-name"
-                  required
-                  maxLength={120}
-                  autoComplete="name"
-                  value={name}
-                  onChange={(event) => setName(event.target.value)}
-                  className="min-h-11 w-full rounded-lg border bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                />
-              </div>
-
+              <Input label="Your name"
+                id="chat-name"
+                required
+                maxLength={120}
+                autoComplete="name"
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                className="rounded-lg! bg-background!"
+              />
               <fieldset>
                 <legend className="mb-2 text-sm font-medium">How can we reach you?</legend>
                 <div className="grid grid-cols-2 gap-2">
-                  <button
+                  <Button variant={null} size={null}
                     type="button"
                     onClick={() => { setContactMethod('email'); setContact(''); }}
                     aria-pressed={contactMethod === 'email'}
-                    className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border text-sm font-medium ${contactMethod === 'email' ? 'border-primary bg-primary/5 text-primary' : 'text-muted-foreground'}`}
+                    className={`min-h-10 gap-2 rounded-lg border ${contactMethod === 'email' ? 'border-primary bg-primary/5 text-primary' : 'text-muted-foreground'}`}
                   >
                     <Mail className="size-4" aria-hidden="true" /> Email
-                  </button>
-                  <button
+                  </Button>
+                  <Button variant={null} size={null}
                     type="button"
                     onClick={() => { setContactMethod('phone'); setContact(''); }}
                     aria-pressed={contactMethod === 'phone'}
-                    className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border text-sm font-medium ${contactMethod === 'phone' ? 'border-primary bg-primary/5 text-primary' : 'text-muted-foreground'}`}
+                    className={`min-h-10 gap-2 rounded-lg border ${contactMethod === 'phone' ? 'border-primary bg-primary/5 text-primary' : 'text-muted-foreground'}`}
                   >
                     <Phone className="size-4" aria-hidden="true" /> Phone
-                  </button>
+                  </Button>
                 </div>
               </fieldset>
-
-              <div>
-                <label htmlFor="chat-contact" className="mb-1.5 block text-sm font-medium">
-                  {contactMethod === 'email' ? 'Email address' : 'Phone number'}
-                </label>
-                <input
-                  id="chat-contact"
-                  required
-                  type={contactMethod === 'email' ? 'email' : 'tel'}
-                  autoComplete={contactMethod === 'email' ? 'email' : 'tel'}
-                  value={contact}
-                  onChange={(event) => setContact(event.target.value)}
-                  placeholder={contactMethod === 'email' ? 'you@example.com' : '+63 9xx xxx xxxx'}
-                  className="min-h-11 w-full rounded-lg border bg-background px-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                />
-                <p className="mt-1.5 text-xs leading-5 text-muted-foreground">
-                  Email chats start after verification and can be reopened on another device. Phone chats stay on this browser.
-                </p>
-              </div>
+              <Input
+                label={contactMethod === 'email' ? 'Email address' : 'Phone number'}
+                helperText="Email chats start after verification and can be reopened on another device. Phone chats stay on this browser."
+                id="chat-contact"
+                required
+                type={contactMethod === 'email' ? 'email' : 'tel'}
+                autoComplete={contactMethod === 'email' ? 'email' : 'tel'}
+                value={contact}
+                onChange={(event) => setContact(event.target.value)}
+                placeholder={contactMethod === 'email' ? 'you@example.com' : '+63 9xx xxx xxxx'}
+                className="rounded-lg! bg-background!"
+              />
             </div>
 
             {error && <p role="alert" className="mt-4 text-sm text-destructive">{error}</p>}
             {notice && <p role="status" className="mt-4 text-sm text-muted-foreground">{notice}</p>}
-            <button
+            <Button size={null}
               type="submit"
               disabled={busy}
-              className="mt-6 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-primary px-4 font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60 sm:w-auto"
+              className="mt-6 min-h-11 w-full gap-2 rounded-lg px-4 text-base disabled:opacity-60 sm:w-auto"
             >
               {busy ? <LoaderCircle className="size-4 animate-spin" aria-hidden="true" /> : <MessageCircle className="size-4" aria-hidden="true" />}
               Start chat
-            </button>
+            </Button>
           </form>
 
           <aside className="flex gap-3 rounded-2xl bg-primary p-5 text-primary-foreground lg:block lg:self-start lg:p-6">

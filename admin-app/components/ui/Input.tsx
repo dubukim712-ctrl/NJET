@@ -68,7 +68,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
           {...inputProps}
           aria-describedby={describedBy}
           aria-invalid={error ? true : inputProps["aria-invalid"]}
-          className={`block min-h-11 w-full min-w-0 rounded-md border bg-card py-2 text-base leading-5 text-foreground outline-none transition placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30 disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground md:text-sm ${
+          className={`block min-h-11 w-full min-w-0 rounded-md border bg-card py-2 text-base leading-5 text-foreground outline-none transition placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30 disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground md:pointer-fine:text-sm ${
             leadingIcon ? "pl-10" : "pl-3"
           } ${rightAdornment ? "pr-28" : trailingIcon ? "pr-10" : "pr-3"} ${
             error

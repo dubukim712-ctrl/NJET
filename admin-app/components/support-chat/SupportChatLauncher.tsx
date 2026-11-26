@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { ArrowUpRight, LoaderCircle, MessageCircle, MessageSquareText } from 'lucide-react';
+import { Button } from '@/components/ui/Button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,15 +40,15 @@ export function SupportChatLauncher() {
   return (
     <DropdownMenu open={open} onOpenChange={toggleChannels} modal={false}>
       <DropdownMenuTrigger asChild>
-        <button
+        <Button size={null}
           type="button"
           aria-busy={checking}
-          className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] right-4 z-40 inline-flex min-h-12 items-center gap-2 rounded-full bg-primary px-4 font-semibold text-primary-foreground shadow-lg transition-transform hover:-translate-y-0.5 hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 lg:bottom-6 lg:right-6"
+          className="fixed bottom-[calc(5rem+env(safe-area-inset-bottom))] right-4 z-40 min-h-12 gap-2 rounded-full px-4 text-base font-semibold shadow-lg transition-transform hover:-translate-y-0.5 lg:bottom-6 lg:right-6"
         >
           {checking ? <LoaderCircle className="size-5 animate-spin" aria-hidden="true" />
             : <MessageCircle className="size-5" aria-hidden="true" />}
           Chat with us
-        </button>
+        </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
         side="top"

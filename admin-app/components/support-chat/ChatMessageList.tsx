@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { MoreVertical } from 'lucide-react';
+import { Button } from '@/components/ui/Button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -97,14 +98,14 @@ export function ChatMessageList({
   return (
     <div ref={listRef} className="flex min-h-0 flex-1 flex-col overflow-y-auto px-3 py-4 sm:px-5">
       {hasOlder && (
-        <button
+        <Button variant={null} size={null}
           type="button"
           onClick={onLoadOlder}
           disabled={loadingOlder}
           className="mx-auto mb-4 min-h-10 rounded-full border px-4 text-sm font-medium text-muted-foreground hover:bg-accent disabled:opacity-60"
         >
           {loadingOlder ? 'Loading…' : 'Load earlier messages'}
-        </button>
+        </Button>
       )}
       {messages.length === 0 ? (
         <div className="m-auto max-w-xs py-12 text-center">
@@ -137,14 +138,14 @@ export function ChatMessageList({
                 onOpenChange={(open) => setOpenMenuId(open ? message.id : null)}
               >
                 <DropdownMenuTrigger asChild>
-                  <button
+                  <Button variant={null} size={null}
                     type="button"
                     aria-label="More message actions"
                     title="More message actions"
                     className="inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-opacity hover:bg-accent hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:pointer-fine:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 data-[state=open]:opacity-100"
                   >
                     <MoreVertical className="size-4" aria-hidden="true" />
-                  </button>
+                  </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align={mine ? 'end' : 'start'} sideOffset={4}>
                   <DropdownMenuItem className="min-h-11" onSelect={() => showUnsendDialog(message, mine)}>
@@ -178,7 +179,7 @@ export function ChatMessageList({
                     )}
                     <div className={`flex items-center gap-1 ${mine ? 'justify-end' : 'justify-start'}`}>
                       {mine && menu}
-                      <button
+                      <Button variant={null} size={null}
                         type="button"
                         aria-label={shownTimestampId === message.id ? 'Hide message timestamp' : 'Show message timestamp'}
                         aria-expanded={shownTimestampId === message.id}
@@ -199,16 +200,16 @@ export function ChatMessageList({
                             setOpenMenuId(message.id);
                           }
                         }}
-                        className={`w-fit min-w-0 max-w-full select-none rounded-2xl px-4 py-3 text-left ${mine ? 'rounded-br-sm bg-primary text-primary-foreground' : 'rounded-bl-sm border bg-card text-card-foreground'}`}
+                        className={`block w-fit min-w-0 max-w-full select-none whitespace-normal rounded-2xl px-4 py-3 text-left font-normal ${mine ? 'rounded-br-sm bg-primary text-primary-foreground' : 'rounded-bl-sm border bg-card text-card-foreground'}`}
                       >
                         {message.deleted_at ? (
-                          <p className="text-sm italic opacity-75">Message deleted</p>
+                          <span className="block text-sm italic opacity-75">Message deleted</span>
                         ) : (
-                          <p className="whitespace-pre-wrap [overflow-wrap:anywhere] text-sm leading-6">
+                          <span className="block whitespace-pre-wrap [overflow-wrap:anywhere] text-sm leading-6">
                             {message.body}
-                          </p>
+                          </span>
                         )}
-                      </button>
+                      </Button>
                       {!mine && menu}
                     </div>
                     {shownTimestampId === message.id && (
