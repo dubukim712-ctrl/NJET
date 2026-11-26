@@ -46,6 +46,7 @@ export function ChatConversation({
   const [loadingOlder, setLoadingOlder] = useState(false);
   const [hasOlder, setHasOlder] = useState(false);
   const [sending, setSending] = useState(false);
+  const [sentMessageId, setSentMessageId] = useState<string | null>(null);
   const [updatingStatus, setUpdatingStatus] = useState(false);
   const [body, setBody] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -157,6 +158,7 @@ export function ChatConversation({
       setError(result.error);
     } else {
       setBody('');
+      setSentMessageId(result.data.messageId);
       await loadLatest();
     }
     setSending(false);
@@ -250,6 +252,7 @@ export function ChatConversation({
       ) : (
         <ChatMessageList
           messages={messages}
+          sentMessageId={sentMessageId}
           mode={mode}
           userId={userId}
           hasOlder={hasOlder}

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { MoreVertical } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import {
@@ -15,6 +15,7 @@ import type { SupportChatMessage } from '@/types/support-chat';
 
 interface ChatMessageListProps {
   messages: SupportChatMessage[];
+  sentMessageId: string | null;
   mode: 'customer' | 'staff';
   userId: string | null;
   hasOlder: boolean;
@@ -36,6 +37,7 @@ function relativeAge(value: string, now: number) {
 
 export function ChatMessageList({
   messages,
+  sentMessageId,
   mode,
   userId,
   hasOlder,
@@ -49,19 +51,40 @@ export function ChatMessageList({
   const [unsendTarget, setUnsendTarget] = useState<{ id: string; canUnsendForEveryone: boolean } | null>(null);
   const [unsendScope, setUnsendScope] = useState<UnsendScope>('for_everyone');
   const listRef = useRef<HTMLDivElement>(null);
+  const nearBottom = useRef(true);
+  const lastScrolledSend = useRef<string | null>(null);
   const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const holdTriggered = useRef(false);
   const latestId = messages[messages.length - 1]?.id;
+  const visibleSentId = sentMessageId && messages.some(({ id }) => id === sentMessageId)
+    ? sentMessageId
+    : null;
 
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 60_000);
     return () => clearInterval(timer);
   }, []);
 
+  useLayoutEffect(() => {
+    const list = listRef.current;
+    const sent = visibleSentId !== null && visibleSentId !== lastScrolledSend.current;
+    if (!list || (!sent && !nearBottom.current)) return;
+
+    lastScrolledSend.current = visibleSentId;
+    nearBottom.current = true;
+    list.scrollTop = list.scrollHeight;
+  }, [latestId, visibleSentId]);
+
   useEffect(() => {
     const list = listRef.current;
-    if (list) list.scrollTop = list.scrollHeight;
-  }, [latestId]);
+    if (!list) return;
+
+    const observer = new ResizeObserver(() => {
+      if (nearBottom.current) list.scrollTop = list.scrollHeight;
+    });
+    observer.observe(list);
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => () => {
     if (holdTimer.current) clearTimeout(holdTimer.current);
@@ -96,7 +119,13 @@ export function ChatMessageList({
   };
 
   return (
-    <div ref={listRef} className="flex min-h-0 flex-1 flex-col overflow-y-auto px-3 py-4 sm:px-5">
+    <div
+      ref={listRef}
+      onScroll={({ currentTarget: list }) => {
+        nearBottom.current = list.scrollHeight - list.clientHeight - list.scrollTop <= 120;
+      }}
+      className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-y-contain px-3 py-4 sm:px-5"
+    >
       {hasOlder && (
         <Button variant={null} size={null}
           type="button"
