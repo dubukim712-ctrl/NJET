@@ -17,6 +17,7 @@ import {
   setSupportChatStatusAction,
 } from '@/data/actions/support-chat';
 import { ChatMessageList } from '@/components/support-chat/ChatMessageList';
+import { messengerUrl } from '@/lib/support-chat/messenger-link';
 import type { SupportChatMessage } from '@/types/support-chat';
 
 interface ChatConversationProps {
@@ -203,6 +204,16 @@ export function ChatConversation({
             {realtimeState === 'connected' ? 'Live updates on' : 'Reconnecting…'}
           </p>
         </div>
+        {mode === 'customer' && messengerUrl && (
+          <a
+            href={messengerUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex min-h-10 items-center text-xs font-medium text-primary underline underline-offset-4"
+          >
+            Prefer Messenger?
+          </a>
+        )}
         {mode === 'staff' && onStatusChange && (
           <button
             type="button"
