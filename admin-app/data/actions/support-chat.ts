@@ -9,6 +9,7 @@ import {
   setGuestChatToken,
 } from '@/data/support-chat/guest-session';
 import { getAuthContext } from '@/data/auth/guards';
+import { sendMessengerReply } from '@/data/support-chat/messenger';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 import {
   startGuestPhoneChatSchema,
@@ -99,7 +100,7 @@ export async function loadSupportChatMessagesAction(
 
     let query = supabase
       .from('support_chat_messages')
-      .select('id, sender_role, sender_user_id, sender_name, body, deleted_at, created_at')
+      .select('id, sender_role, sender_user_id, sender_name, body, deleted_at, created_at, external_message_id')
       .eq('thread_id', validation.data.threadId)
       .order('created_at', { ascending: false })
       .order('id', { ascending: false })
@@ -139,6 +140,18 @@ export async function sendSupportChatMessageAction(
     const guestTokenHash = authData.user ? null : await getGuestChatTokenHash();
     if (!authData.user && !guestTokenHash) {
       return { success: false, error: 'Start a chat or recover guest access first.' };
+    }
+
+    if (authData.user) {
+      const context = await getAuthContext();
+      if (context?.profile && hasPermission(context.profile, PERMISSIONS.supportChatManage)) {
+        const { data: thread, error } = await context.supabase.from('support_chat_threads')
+          .select('id, channel, messenger_psid').eq('id', validation.data.threadId).maybeSingle();
+        if (error) return { success: false, error: 'The conversation could not be loaded.' };
+        if (thread?.channel === 'messenger') {
+          return await sendMessengerReply(thread, context.profile, validation.data.body);
+        }
+      }
     }
 
     const { data, error } = await supabase.rpc('support_chat_send_message', {

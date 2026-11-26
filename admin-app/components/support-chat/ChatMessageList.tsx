@@ -83,7 +83,7 @@ export function ChatMessageList({
   };
 
   const showUnsendDialog = (message: SupportChatMessage, mine: boolean) => {
-    const canUnsendForEveryone = mine && !message.deleted_at;
+    const canUnsendForEveryone = mine && !message.deleted_at && !message.external_message_id;
     setUnsendScope(canUnsendForEveryone ? 'for_everyone' : 'for_you');
     setUnsendTarget({ id: message.id, canUnsendForEveryone });
   };

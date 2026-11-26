@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { ArrowLeft, MessageCircle, Search } from 'lucide-react';
 import { createClient } from '@/data/supabase/client';
 import { listSupportChatThreadsAction } from '@/data/actions/support-chat';
+import { MessengerBadge } from '@/components/support-chat/MessengerBadge';
 import { ChatConversation } from '@/components/support-chat/ChatConversation';
 import { StaffChatEmptyState } from '@/components/support-chat/StaffChatEmptyState';
 import type { SupportChatThread } from '@/types/support-chat';
@@ -227,7 +228,7 @@ export function StaffChatInbox({ userId }: { userId: string }) {
                         </time>
                       </div>
                       <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                        {thread.guest_email ?? thread.guest_phone ?? (thread.customer_kind === 'account' ? 'Account customer' : 'Guest')}
+                        {thread.channel === 'messenger' ? <MessengerBadge /> : (thread.guest_email ?? thread.guest_phone ?? (thread.customer_kind === 'account' ? 'Account customer' : 'Guest'))}
                       </p>
                       <p className="mt-2 flex items-center gap-1.5 truncate text-sm text-muted-foreground">
                         <MessageCircle className="size-3.5 shrink-0" aria-hidden="true" />
@@ -270,10 +271,10 @@ export function StaffChatInbox({ userId }: { userId: string }) {
                 Back to inbox
               </button>
               <div className="mb-3 shrink-0 rounded-xl border bg-card px-4 py-3">
-                <h2 className="font-semibold">{selectedThread.customer_name}</h2>
-                <p className="mt-1 break-all text-sm text-muted-foreground">
-                  {selectedThread.guest_email ?? selectedThread.guest_phone ?? 'Account customer'}
-                </p>
+                <h2 className="flex flex-wrap items-center gap-2 font-semibold">{selectedThread.customer_name}{selectedThread.channel === "messenger" && <MessengerBadge />}</h2>
+                {selectedThread.channel === 'web' && <p className="mt-1 break-all text-sm text-muted-foreground">
+                  {selectedThread.guest_email ?? selectedThread.guest_phone ?? (selectedThread.customer_kind === 'account' ? 'Account customer' : 'Guest')}
+                </p>}
               </div>
               <ChatConversation
                 key={selectedThread.id}

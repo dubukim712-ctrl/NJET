@@ -1,5 +1,6 @@
 export type SupportChatMessage = {
   id: string;
+  external_message_id?: string | null;
   sender_role: 'customer' | 'staff';
   sender_user_id: string | null;
   sender_name: string;
@@ -10,6 +11,7 @@ export type SupportChatMessage = {
 
 export type SupportChatThread = {
   id: string;
+  channel: 'web' | 'messenger';
   customer_kind: 'account' | 'guest';
   customer_name: string;
   guest_email: string | null;

@@ -2,6 +2,9 @@ export type SupportChatTables = {
   support_chat_threads: {
     Row: {
       id: string;
+      channel: 'web' | 'messenger';
+      messenger_psid: string | null;
+      messenger_avatar_url: string | null;
       customer_kind: 'account' | 'guest';
       customer_user_id: string | null;
       customer_name: string;
@@ -17,6 +20,9 @@ export type SupportChatTables = {
     };
     Insert: {
       id?: string;
+      channel?: 'web' | 'messenger';
+      messenger_psid?: string | null;
+      messenger_avatar_url?: string | null;
       customer_kind: 'account' | 'guest';
       customer_user_id?: string | null;
       customer_name: string;
@@ -32,6 +38,9 @@ export type SupportChatTables = {
     };
     Update: {
       id?: string;
+      channel?: 'web' | 'messenger';
+      messenger_psid?: string | null;
+      messenger_avatar_url?: string | null;
       customer_kind?: 'account' | 'guest';
       customer_user_id?: string | null;
       customer_name?: string;
@@ -50,6 +59,7 @@ export type SupportChatTables = {
   support_chat_messages: {
     Row: {
       id: string;
+      external_message_id: string | null;
       thread_id: string;
       sender_role: 'customer' | 'staff';
       sender_user_id: string | null;
@@ -61,6 +71,7 @@ export type SupportChatTables = {
     };
     Insert: {
       id?: string;
+      external_message_id?: string | null;
       thread_id: string;
       sender_role: 'customer' | 'staff';
       sender_user_id?: string | null;
@@ -72,6 +83,7 @@ export type SupportChatTables = {
     };
     Update: {
       id?: string;
+      external_message_id?: string | null;
       thread_id?: string;
       sender_role?: 'customer' | 'staff';
       sender_user_id?: string | null;

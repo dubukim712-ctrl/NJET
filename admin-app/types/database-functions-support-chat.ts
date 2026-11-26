@@ -77,6 +77,7 @@ export type DatabaseSupportChatFunctions = {
     };
     Returns: {
       id: string;
+      channel: 'web' | 'messenger';
       customer_kind: 'account' | 'guest';
       customer_name: string;
       guest_email: string | null;
@@ -88,6 +89,10 @@ export type DatabaseSupportChatFunctions = {
       last_sender_role: 'customer' | 'staff' | null;
       last_sender_name: string | null;
     }[];
+  };
+  support_chat_receive_messenger: {
+    Args: { p_psid: string; p_mid: string; p_body: string; p_name: string; p_avatar: string | null };
+    Returns: undefined;
   };
   support_chat_unread_count: {
     Args: Record<PropertyKey, never>;

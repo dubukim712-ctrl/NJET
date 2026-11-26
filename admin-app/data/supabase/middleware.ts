@@ -80,6 +80,11 @@ function insufficientRedirect(
 }
 
 export async function updateSession(request: NextRequest) {
+  if (request.nextUrl.pathname === "/api/webhooks/messenger"
+    && (request.method === "GET" || request.method === "POST")) {
+    return NextResponse.next();
+  }
+
   let supabaseResponse = NextResponse.next({ request });
   const { url, key } = getSupabaseConfig();
 
