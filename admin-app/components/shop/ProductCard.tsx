@@ -8,6 +8,7 @@ import type { CatalogProduct } from '@/data/commerce/catalog';
 import { ProductImage } from '@/components/shop/ProductImage';
 import { ProductStockBadge } from '@/components/shop/ProductStockBadge';
 import { getStartingVariant } from '@/data/commerce/storefront-starting-variant';
+import { featuredProductDescription, featuredSpecification, isSrpLabel } from '@/lib/storefront-featured-copy';
 import { formatPhp } from '@/lib/commerce';
 import { ProductPrice } from '@/components/shop/ProductPrice';
 
@@ -16,24 +17,31 @@ export function ProductCard({
   compactOnNarrow = false,
   loading,
   featuredBranches,
+  stockBranchName,
 }: {
   product: CatalogProduct;
   compactOnNarrow?: boolean;
   loading?: 'eager' | 'lazy';
   featuredBranches?: { id: string; name: string }[];
+  stockBranchName?: string;
 }) {
   const { user } = useAuth();
   const startingVariant = getStartingVariant(product);
-  const specs = featuredBranches ? Object.entries(startingVariant?.specifications ?? {}).slice(0, 2) : [];
+  const specifications = Object.entries(startingVariant?.specifications ?? {});
+  const usefulSpecs = specifications.filter(([label]) => /motor|power|range/i.test(label));
+  const specs = (usefulSpecs.length ? usefulSpecs : specifications.filter(([label]) => !isSrpLabel(label))).slice(0, 2);
+  const srp = specifications.find(([label]) => isSrpLabel(label));
+  if (srp) specs.push(srp);
   const stockedBranches = featuredBranches?.filter((branch) => product.variants.some(
     (variant) => variant.stockByBranch.some((stock) => stock.branchId === branch.id && stock.available),
   )) ?? [];
-  const monthly = featuredBranches && startingVariant && !product.is_demo && startingVariant.price_minor > 0
+  const monthly = product.product_type === 'ebike' && startingVariant && !product.is_demo && startingVariant.price_minor > 0
     ? Math.round(Math.max(0, startingVariant.price_minor - startingVariant.home_credit_downpayment_minor) / 24)
     : null;
   const { averageRating, reviewCount } = product.ratingSummary;
   const stockLabel = getStorefrontStockLabel(product.stockSummary, Boolean(user));
   const showsTotal = Boolean(user) && product.stockSummary.available && product.stockSummary.stock !== null;
+  const stockContext = stockBranchName ? ` at ${stockBranchName}` : showsTotal ? ' across branches' : '';
 
   return (
     <Link
@@ -44,7 +52,7 @@ export function ProductCard({
               reviewCount === 1 ? 'review' : 'reviews'
             }.`
           : 'No reviews yet.'
-      } ${stockLabel}${showsTotal ? ' across branches.' : '.'}`}
+      } ${stockLabel}${stockContext}.`}
       title="Open product details"
       className={`group block overflow-hidden rounded-xl border bg-card transition-colors hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
         compactOnNarrow ? 'min-[320px]:max-[768px]:rounded-lg' : ''
@@ -110,8 +118,7 @@ export function ProductCard({
                     />
                   ))}
                 </span>
-                <span className="font-medium">{averageRating.toFixed(1)}</span>
-                <span className="text-muted-foreground">({reviewCount})</span>
+                <span className="whitespace-nowrap"><span className="font-medium">{averageRating.toFixed(1)}</span>{' '}<span className="text-muted-foreground">({reviewCount})</span></span>
               </div>
             ) : (
               <p className="mt-1 text-xs text-muted-foreground">No reviews yet</p>
@@ -123,16 +130,11 @@ export function ProductCard({
                   : ''
               }`}
             >
-              {product.description || 'Ask our team for product details.'}
+              {featuredProductDescription(product.description)}
             </p>
           </div>
-          {specs.length > 0 && (
-            <p className="line-clamp-2 text-xs text-muted-foreground">
-              {specs.map(([label, value]) => `${label} ${value}`).join(' · ')}
-            </p>
-          )}
           <ProductStockBadge available={product.stockSummary.available}>
-            {stockLabel}{showsTotal && ' across branches'}
+            {stockLabel}{stockContext}
           </ProductStockBadge>
           {stockedBranches.length > 0 && (
             <p className="text-xs leading-5 text-muted-foreground">In stock at {stockedBranches.map((branch) => branch.name).join(', ')}</p>
@@ -159,8 +161,13 @@ export function ProductCard({
               </div>
             )}
           </div>
+          {specs.length > 0 && (
+            <p className="line-clamp-2 text-xs text-muted-foreground">
+              {specs.map(([label, value]) => featuredSpecification(label, value)).join(' · ')}
+            </p>
+          )}
           {monthly !== null && (
-            <p className="text-xs font-medium text-primary">{formatPhp(monthly)}/mo estimated over 24 months before interest and fees</p>
+            <p className="text-xs font-medium text-primary">Est. {formatPhp(monthly)}/mo · 24 months before fees and interest</p>
           )}
         </div>
       </article>

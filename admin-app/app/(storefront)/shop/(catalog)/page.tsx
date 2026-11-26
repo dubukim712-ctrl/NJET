@@ -1,10 +1,12 @@
+import { getPublicStorefrontInfo } from '@/data/commerce/storefront-home';
 import { Suspense } from 'react';
 import { ShopCatalogSkeleton } from '@/components/shop/ShopCatalogSkeleton';
 import { ShopProductBrowser } from '@/components/shop/ShopProductBrowser';
 
 export const metadata = { title: 'Shop' };
 
-export default function ShopPage() {
+export default async function ShopPage() {
+  const { branches } = await getPublicStorefrontInfo();
   return (
     <div className="mx-auto max-w-7xl space-y-8">
       <header className="rounded-2xl bg-primary px-5 py-8 text-primary-foreground sm:px-10 sm:py-12">
@@ -15,7 +17,7 @@ export default function ShopPage() {
         </p>
       </header>
       <Suspense fallback={<ShopCatalogSkeleton showHero={false} />}>
-        <ShopProductBrowser />
+        <ShopProductBrowser branches={(branches.data ?? []).map(({ id, name }) => ({ id, name }))} />
       </Suspense>
     </div>
   );

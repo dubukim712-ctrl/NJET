@@ -8,6 +8,7 @@ import type {
   RoleScope,
   UserProfile,
 } from './rbac';
+import type { CustomerReleaseTables } from './customer-releases';
 import type { CommerceTables } from './commerce-tables';
 import type { AdminNotificationTables } from './admin-notifications';
 import type { ReceiptTables } from './receipt-tables';
@@ -238,7 +239,7 @@ export type Database = {
           },
         ];
       };
-    } & CommerceTables & AdminNotificationTables & ReceiptTables & SupportChatTables
+    } & CommerceTables & CustomerReleaseTables & AdminNotificationTables & ReceiptTables & SupportChatTables
       & ProductDiscountTables & ProductReviewTables & CrmTables;
     Views: {
       user_profiles: {

@@ -1,146 +1,90 @@
-"use client";
-
+import Image from 'next/image';
+import Link from 'next/link';
+import { Clock3, Mail, Phone } from 'lucide-react';
+import { LegalFooterLinks } from '@/components/layout/LegalFooterLinks';
+import type { StorefrontBusinessInfo } from '@/data/commerce/system-settings';
+import { defaultBusinessHours, footerBranchName, orderStorefrontBranches } from '@/lib/storefront-branches';
 import { serviceBookingPath, serviceSignInPath } from '@/lib/storefront-service';
-import Link from "next/link";
-import { CircleHelp, Clock3, Mail, MapPin, Phone } from "lucide-react";
-import { LegalFooterLinks } from "@/components/layout/LegalFooterLinks";
-import type { StorefrontBusinessInfo } from "@/data/commerce/system-settings";
+import { facebookUrl, messengerUrl } from '@/lib/support-chat/messenger-link';
 
-export function StorefrontFooter({
-  businessInfo,
-  branches,
-  canBook,
-}: {
+const heading = 'text-sm font-semibold';
+const links = 'mt-3 flex flex-col items-start gap-2.5 text-sm leading-5 [&_a]:underline-offset-4 [&_a:hover]:underline';
+
+export function StorefrontFooter({ businessInfo, branches, canBook }: {
   businessInfo: StorefrontBusinessInfo | null;
   branches: { id: string; name: string; address: string }[];
   canBook: boolean;
 }) {
-  const hasBusinessContact = Boolean(businessInfo?.phone || businessInfo?.email || businessInfo?.address);
-  const email = businessInfo?.email ?? "";
-  const domainStart = email.lastIndexOf("@") + 1;
+  const phone = businessInfo?.phone?.trim() || '09380754139';
+  const email = businessInfo?.email?.trim();
+  const hours = businessInfo?.businessHours?.trim() || defaultBusinessHours;
 
   return (
     <footer className="mt-8 border-t border-primary/20 bg-primary text-primary-foreground">
-      <div className="mx-auto max-w-7xl px-4 py-9 sm:px-6 sm:py-11 lg:py-12">
-        <div className="grid gap-8 md:grid-cols-[minmax(12rem,0.85fr)_minmax(0,1.5fr)] md:gap-10">
-          <section className="max-w-sm">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary-foreground/70">
-              Thanks for riding with us
-            </p>
-            <h2 className="mt-3 text-2xl font-semibold tracking-tight">
-              {businessInfo?.businessName || "NJET"}
-            </h2>
-            <Link href="/#business-contact" className="mt-3 inline-flex min-h-10 items-center text-sm underline underline-offset-4">Find an NJET branch</Link>
+      <div className="mx-auto max-w-7xl px-4 py-9 sm:px-6 sm:py-11">
+        <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:gap-x-8 lg:grid-cols-[1.1fr_1.15fr_1fr_1fr]">
+          <section className="col-span-2 sm:col-span-1">
+            <Link href="/" className="inline-flex items-center gap-2 text-lg font-semibold">
+              {businessInfo?.logoUrl && <Image src={businessInfo.logoUrl} alt="" width={40} height={40} unoptimized className="size-10 shrink-0 rounded-md object-contain" />}
+              {businessInfo?.businessName || 'NJET'}
+            </Link>
+            <p className="mt-3 text-sm leading-6">Serving Cavite e-bike riders since 2023</p>
+            {(facebookUrl || messengerUrl) && (
+              <nav aria-label="NJET social links" className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-sm underline-offset-4 [&_a:hover]:underline">
+                {facebookUrl && <a href={facebookUrl} target="_blank" rel="noopener noreferrer">Facebook</a>}
+                {messengerUrl && <a href={messengerUrl} target="_blank" rel="noopener noreferrer">Messenger</a>}
+              </nav>
+            )}
           </section>
 
-          <div className="grid gap-8 sm:grid-cols-2 sm:gap-6 lg:grid-cols-2 xl:grid-cols-4">
-            <section>
-              <h3 className="text-xs font-semibold uppercase tracking-[0.16em] text-primary-foreground/70">
-                Contact
-              </h3>
-              {hasBusinessContact && (
-                <address className="mt-4 space-y-4 not-italic">
-                  {businessInfo?.phone && (
-                    <a
-                      className="flex items-start gap-3 text-sm transition-colors hover:text-white"
-                      href={`tel:${businessInfo.phone.replace(/[^+0-9]/g, "")}`}
-                    >
-                      <Phone
-                        className="mt-0.5 size-4 shrink-0"
-                        aria-hidden="true"
-                      />
-                      <span className="min-w-0">
-                        <span className="block text-xs text-primary-foreground/70">
-                          Call
-                        </span>
-                        <span className="break-words">{businessInfo.phone}</span>
-                      </span>
-                    </a>
-                  )}
-                  {businessInfo?.email && (
-                    <a
-                      className="flex items-start gap-3 text-sm transition-colors hover:text-white"
-                      href={`mailto:${businessInfo.email}`}
-                    >
-                      <Mail
-                        className="mt-0.5 size-4 shrink-0"
-                        aria-hidden="true"
-                      />
-                      <span className="min-w-0">
-                        <span className="block text-xs text-primary-foreground/70">
-                          Email
-                        </span>
-                        <span className="break-words">
-                          {email.slice(0, domainStart)}<wbr />{email.slice(domainStart)}
-                        </span>
-                      </span>
-                    </a>
-                  )}
-                  {businessInfo?.address && (
-                    <div className="flex items-start gap-3 text-sm">
-                      <MapPin
-                        className="mt-0.5 size-4 shrink-0"
-                        aria-hidden="true"
-                      />
-                      <span className="min-w-0">
-                        <span className="block text-xs text-primary-foreground/70">
-                          Address
-                        </span>
-                        <span className="break-words">
-                          {businessInfo.address}
-                        </span>
-                      </span>
-                    </div>
-                  )}
-                </address>
+          <section className="col-span-2 min-w-0 sm:col-span-1">
+            <h2 className={heading}>Contact &amp; Hours</h2>
+            <address className={`${links} not-italic`}>
+              <a href={`tel:${phone.replace(/[^+0-9]/g, '')}`} className="flex items-start gap-2">
+                <Phone className="mt-0.5 size-4 shrink-0" aria-hidden="true" />{phone}
+              </a>
+              {email && <a href={`mailto:${email}`} className="flex min-w-0 items-start gap-2">
+                <Mail className="mt-0.5 size-4 shrink-0" aria-hidden="true" /><span className="break-all">{email}</span>
+              </a>}
+            </address>
+            <p className="mt-3 flex items-start gap-2 text-sm leading-5">
+              <Clock3 className="mt-0.5 size-4 shrink-0" aria-hidden="true" />{hours}
+            </p>
+          </section>
+
+          <section>
+            <h2 className={heading}>Quick Links &amp; Branches</h2>
+            <nav aria-label="Shop and branches" className={links}>
+              <Link href="/shop">Catalog</Link>
+              <Link href="/#service-center">Parts &amp; Service</Link>
+              <Link href="/#installments">Installments</Link>
+              {orderStorefrontBranches(branches).map((branch) => (
+                <Link key={branch.id} href={{ pathname: '/', query: { branch: branch.id }, hash: 'branches' }}>
+                  {footerBranchName(branch)}
+                </Link>
+              ))}
+            </nav>
+          </section>
+
+          <section>
+            <h2 className={heading}>My Account &amp; Help</h2>
+            <nav aria-label="Customer account and help" className={links}>
+              {canBook ? (
+                <><Link href="/dashboard">My dashboard</Link><Link href="/dashboard/orders">Orders &amp; certificates</Link></>
+              ) : (
+                <><Link href="/login">Sign in</Link><Link href="/register">Join</Link></>
               )}
-              <Link
-                href="/help"
-                className="mt-2 flex min-h-11 items-start gap-3 py-3 text-sm underline-offset-4 hover:underline focus-visible:underline"
-              >
-                <CircleHelp className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
-                <span>Help Center</span>
+              <Link href={canBook ? serviceBookingPath : serviceSignInPath}>
+                {canBook ? 'Book a Service Checkup' : 'Sign in to Book Service'}
               </Link>
-            </section>
-
-            <section>
-              <h3 className="text-xs font-semibold uppercase tracking-[0.16em] text-primary-foreground/70">
-                Business hours
-              </h3>
-              {businessInfo?.businessHours && (
-                <div className="mt-4 flex items-start gap-3">
-                  <Clock3
-                    className="mt-0.5 size-4 shrink-0"
-                    aria-hidden="true"
-                  />
-                  <p className="whitespace-pre-line text-sm leading-6">
-                    {businessInfo.businessHours}
-                  </p>
-                </div>
-              )}
-              {branches.length > 0 && <ul className="mt-4 space-y-2 text-sm leading-5">
-                {branches.map((branch) => <li key={branch.id}><strong>{branch.name}</strong><br />{branch.address}</li>)}
-              </ul>}
-            </section>
-
-            <section>
-              <h3 className="text-xs font-semibold uppercase tracking-[0.16em] text-primary-foreground/70">My Account</h3>
-              <nav aria-label="Customer account" className="mt-4 flex flex-col items-start gap-3 text-sm [&_a:hover]:underline">
-                {canBook ? (
-                  <><Link href="/dashboard">My dashboard</Link><Link href="/dashboard/orders">Orders &amp; certificates</Link></>
-                ) : (
-                  <><Link href="/login">Sign in</Link><Link href="/register">Join</Link></>
-                )}
-                <Link href={canBook ? serviceBookingPath : serviceSignInPath}>{canBook ? 'Book a Service Checkup' : 'Sign in to Book Service'}</Link>
-              </nav>
-            </section>
+              <Link href="/help">Help Center</Link>
+            </nav>
             <LegalFooterLinks />
-          </div>
+          </section>
         </div>
-
-        <div className="mt-8 border-t border-primary-foreground/15 pt-4 text-xs text-primary-foreground/70">
-          © 2026 {businessInfo?.businessName || "NJET"}. All rights reserved.
-        </div>
+        <p className="mt-8 border-t border-primary-foreground/25 pt-4 text-xs">
+          © 2026 {businessInfo?.businessName || 'NJET'}. All rights reserved.
+        </p>
       </div>
     </footer>
   );

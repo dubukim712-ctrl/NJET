@@ -36,7 +36,7 @@ export function ProductReviewCard({ review }: { review: PublishedProductReview }
           {comment ? (
             <p className="whitespace-pre-line break-words text-sm leading-6">{comment}</p>
           ) : (
-            <p className="text-sm text-muted-foreground">Rated without a written comment</p>
+            <p className="text-sm text-muted-foreground">Rating only</p>
           )}
         </div>
       </div>

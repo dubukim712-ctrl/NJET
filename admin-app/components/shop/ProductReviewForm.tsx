@@ -2,7 +2,8 @@
 
 import { useState, type FormEvent } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { Star } from 'lucide-react';
+import { Textarea } from '@/components/ui/Textarea';
+import { Check, Star } from 'lucide-react';
 import { submitProductReviewAction } from '@/data/actions/order-product-reviews';
 import { Button } from '@/components/ui/Button';
 
@@ -81,7 +82,7 @@ export function ProductReviewForm({
         <div className="flex flex-wrap items-center gap-x-2">
           <div className="flex flex-wrap">
             {[1, 2, 3, 4, 5].map((value) => (
-              <button
+              <Button variant={null} size={null}
                 key={value}
                 type="button"
                 aria-label={`${value} ${value === 1 ? 'star' : 'stars'}`}
@@ -93,32 +94,23 @@ export function ProductReviewForm({
                   className={`size-6 ${value <= rating ? 'fill-current' : ''}`}
                   aria-hidden="true"
                 />
-              </button>
+              </Button>
             ))}
           </div>
           <span className="text-sm text-muted-foreground" role="status">{rating} of 5 stars</span>
         </div>
       </fieldset>
-      <label className="block space-y-2 text-sm font-medium">
-        Review (optional)
-        <textarea
-          value={comment}
-          onChange={(event) => setComment(event.target.value)}
-          maxLength={2000}
-          rows={4}
-          className="w-full rounded-md border bg-background px-3 py-2 text-sm font-normal"
-          placeholder="What should other customers know?"
-        />
-      </label>
-      <label className="flex items-start gap-2 text-sm">
-        <input
-          type="checkbox"
-          checked={isAnonymous}
-          onChange={(event) => setIsAnonymous(event.target.checked)}
-          className="mt-0.5 size-4 accent-primary"
-        />
-        <span>Review anonymously (hide your account name from other customers)</span>
-      </label>
+      <Textarea label="Review (optional)" value={comment}
+        onChange={(event) => setComment(event.target.value)} maxLength={2000} rows={4}
+        placeholder="What should other customers know?" />
+      <Button type="button" variant="outline" size={null} aria-pressed={isAnonymous}
+        className="min-h-11 w-full justify-start gap-2 whitespace-normal px-3 py-2 text-left"
+        onClick={() => setIsAnonymous(!isAnonymous)}>
+        <span className="grid size-4 shrink-0 place-items-center rounded border border-current" aria-hidden="true">
+          {isAnonymous && <Check className="size-3" />}
+        </span>
+        Review anonymously (hide your account name from other customers)
+      </Button>
       {error && <p className="text-sm text-destructive" role="alert">{error}</p>}
       {saved && (
         <p className="text-sm text-primary" role="status">

@@ -15,6 +15,7 @@ Keep this app organized so a beginner can read it.
 - Stack: Next.js (App Router), TypeScript, Tailwind CSS. _(Update if using different tools)_
 - Route paths and entry points go in `app/`. Valid public paths MUST contain a `page.tsx`.
 - Shared visual pieces go in `components/`.
+- Always use reusable components if applicable.
 - Data fetching, `localStorage`, and external APIs go in `data/`.
 - One job per file; no file over 300 lines.
 - Before writing anything new, check `components/` and `data/` to see if it already exists.

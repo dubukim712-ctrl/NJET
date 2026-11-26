@@ -11,7 +11,7 @@ import { useShopFilters } from '@/components/shop/ShopFiltersContext';
 import { Button } from '@/components/ui/Button';
 import { ShopFiltersPanel, type ShopSort } from '@/components/shop/ShopFiltersPanel';
 
-type CatalogParam = 'q' | 'category' | 'subcategory' | 'inStock' | 'sort' | 'page';
+type CatalogParam = 'q' | 'category' | 'subcategory' | 'branch' | 'inStock' | 'sort' | 'page';
 
 function updateCatalogUrl(changes: Partial<Record<CatalogParam, string | null>>, replace = false) {
   const url = new URL(window.location.href);
@@ -25,7 +25,7 @@ function updateCatalogUrl(changes: Partial<Record<CatalogParam, string | null>>,
   else window.history.pushState(null, '', url);
 }
 
-export function ShopProductBrowser() {
+export function ShopProductBrowser({ branches }: { branches: { id: string; name: string }[] }) {
   const { open: filtersOpen, popoverRoot: filterPopoverRoot } = useShopFilters();
   const params = useSearchParams();
   const committedSearch = params.get('q')?.trim().slice(0, 120) ?? '';
@@ -40,10 +40,12 @@ export function ShopProductBrowser() {
     return () => window.clearTimeout(timer);
   }, [committedSearch, draft]);
 
+  const selectedBranch = branches.find(({ id }) => id === params.get('branch'));
   const filters = shopCatalogFiltersSchema.parse({
     search: committedSearch,
     category: shopCatalogFiltersSchema.shape.category.catch(null).parse(params.get('category')),
     subcategory: shopCatalogFiltersSchema.shape.subcategory.catch(null).parse(params.get('subcategory')),
+    branch: selectedBranch?.id ?? null,
     inStock: params.get('inStock') === '1',
     sort: shopCatalogFiltersSchema.shape.sort.catch('featured').parse(params.get('sort')),
     page: shopCatalogFiltersSchema.shape.page.catch(1).parse(Number(params.get('page'))),
@@ -63,7 +65,7 @@ export function ShopProductBrowser() {
 
   function clearFilters() {
     setDraft({ urlSearch: committedSearch, value: '' });
-    updateCatalogUrl({ q: null, category: null, subcategory: null, inStock: null, sort: null });
+    updateCatalogUrl({ q: null, category: null, subcategory: null, branch: null, inStock: null, sort: null });
     resultsHeadingRef.current?.focus();
   }
 
@@ -73,6 +75,9 @@ export function ShopProductBrowser() {
   }
 
   const filterPanelProps = {
+    branch: filters.branch ?? 'all',
+    branches,
+    onBranchChange: (value: string) => updateCatalogUrl({ branch: value === 'all' ? null : value }),
     inStockOnly: filters.inStock,
     onInStockChange: (value: boolean) => updateCatalogUrl({ inStock: value ? '1' : null }),
     sort: filters.sort,
@@ -122,6 +127,7 @@ export function ShopProductBrowser() {
                 key={product.id}
                 product={product}
                 compactOnNarrow
+                stockBranchName={selectedBranch?.name}
               />
             ))}
           </div>

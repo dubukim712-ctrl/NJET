@@ -122,13 +122,13 @@ export function ProductReviewsSection({ productId }: { productId: string }) {
               {reviewsQuery.isError && (
                 <p className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive" role="alert">
                   Could not refresh reviews. Showing the saved results.
-                  <button
+                  <Button variant="link" size={null}
                     type="button"
                     className="ml-2 font-medium underline underline-offset-2"
                     onClick={() => { void reviewsQuery.refetch(); }}
                   >
                     Retry
-                  </button>
+                  </Button>
                 </p>
               )}
               {reviewsQuery.data?.pages.flat().length === 0 ? (

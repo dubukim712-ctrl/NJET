@@ -140,14 +140,14 @@ export function CustomerOrdersQuery() {
         </div>
       )}
 
-      <div role="group" aria-label="Filter orders by status" className="flex flex-wrap gap-2">
+      <div role="group" aria-label="Filter orders by status" className="flex max-w-full gap-2 overflow-x-auto overscroll-x-contain p-1">
         {statusFilters.map(({ id, label }) => (
           <Button
             key={id}
             type="button"
             variant={filter === id ? "default" : "outline"}
             aria-pressed={filter === id}
-            className="min-h-11 rounded-full"
+            className="min-h-11 shrink-0 rounded-full"
             onClick={() => setFilter(id)}
           >
             {label}

@@ -1,5 +1,6 @@
 'use client';
 
+import { Button } from '@/components/ui/Button';
 import { useEffect, useId, useRef, useState } from 'react';
 import { ShoppingCart, X } from 'lucide-react';
 import { CartContents } from '@/components/cart/CartContents';
@@ -20,7 +21,7 @@ export function CartDrawer() {
 
   return (
     <>
-      <button
+      <Button variant={null} size={null}
         type="button"
         aria-controls="cart-drawer"
         aria-haspopup="dialog"
@@ -35,7 +36,7 @@ export function CartDrawer() {
             {itemCount > 99 ? '99+' : itemCount}
           </span>
         )}
-      </button>
+      </Button>
 
       <dialog
         ref={dialogRef}
@@ -45,26 +46,27 @@ export function CartDrawer() {
         onClick={(event) => {
           if (event.target === event.currentTarget) setOpen(false);
         }}
-        className="fixed inset-y-0 right-0 left-auto m-0 h-dvh max-h-none w-full max-w-none rounded-none border-0 bg-background p-0 text-foreground shadow-2xl backdrop:bg-black/40 sm:max-w-md"
+        className="fixed bottom-0 inset-x-0 top-auto m-0 max-h-[85dvh] w-full max-w-none overflow-hidden rounded-t-2xl border-0 bg-background p-0 text-foreground shadow-2xl backdrop:bg-black/50 motion-safe:animate-[cart-sheet-in_180ms_ease-out] md:inset-y-0 md:left-auto md:h-dvh md:max-h-none md:max-w-md md:rounded-none md:animate-none"
       >
-        <div className="flex h-full flex-col">
-          <header className="flex items-center justify-between border-b px-5 py-4">
+        <div className="flex h-[85dvh] flex-col md:h-full">
+          <div className="mx-auto mt-2 h-1.5 w-10 shrink-0 rounded-full bg-muted-foreground/40 md:hidden" aria-hidden="true" />
+          <header className="flex shrink-0 items-center justify-between border-b px-5 py-3 md:py-4">
             <div>
               <h2 id={titleId} className="text-lg font-semibold">Your cart</h2>
               <p className="text-sm text-muted-foreground">
                 {itemCount} item{itemCount === 1 ? '' : 's'}
               </p>
             </div>
-            <button
+            <Button variant={null} size={null}
               type="button"
               onClick={() => setOpen(false)}
-              className="rounded-full p-2 text-muted-foreground hover:bg-accent"
+              className="size-11 rounded-full text-muted-foreground hover:bg-accent"
               aria-label="Close cart"
             >
               <X className="h-5 w-5" aria-hidden="true" />
-            </button>
+            </Button>
           </header>
-          <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-5">
+          <div className="min-h-0 flex-1 overflow-hidden px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4 md:px-5">
             <CartContents compact onNavigate={() => setOpen(false)} />
           </div>
         </div>

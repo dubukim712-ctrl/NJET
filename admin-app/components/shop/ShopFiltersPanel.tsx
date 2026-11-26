@@ -1,6 +1,8 @@
 'use client';
 
-import { Search } from 'lucide-react';
+import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { Check, Search } from 'lucide-react';
 import { Select } from '@/components/ui/Select';
 
 type FilterOption = [string, string];
@@ -9,6 +11,9 @@ export type ShopSort = 'featured' | 'price-asc' | 'price-desc';
 
 export function ShopFiltersPanel({
   idPrefix,
+  branch,
+  branches,
+  onBranchChange,
   search,
   onSearchChange,
   category,
@@ -24,6 +29,9 @@ export function ShopFiltersPanel({
   onSortChange,
 }: {
   idPrefix: string;
+  branch: string;
+  branches: { id: string; name: string }[];
+  onBranchChange: (value: string) => void;
   search: string;
   onSearchChange: (value: string) => void;
   category: string;
@@ -50,25 +58,14 @@ export function ShopFiltersPanel({
         Find a product
       </h2>
       <div className="mt-4 space-y-4">
-        <div>
-          <label htmlFor={searchId} className="mb-1.5 block text-sm font-medium">
-            Search
-          </label>
-          <div className="relative">
-            <Search
-              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
-              aria-hidden="true"
-            />
-            <input
-              id={searchId}
-              type="search"
-              value={search}
-              onChange={(event) => onSearchChange(event.target.value)}
-              placeholder="Name or description"
-              className="min-h-11 w-full rounded-md border bg-background pl-9 pr-3 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            />
-          </div>
-        </div>
+        <Input id={searchId} type="search" label="Search" value={search}
+          onChange={(event) => onSearchChange(event.target.value)}
+          placeholder="Name or description" leadingIcon={<Search className="size-4" />} />
+        <Select id={`${idPrefix}-branch`} label="Branch" value={branch}
+          onValueChange={onBranchChange} className="min-h-11 bg-background">
+          <option value="all">All Branches</option>
+          {branches.map(({ id, name }) => <option key={id} value={id}>{name}</option>)}
+        </Select>
         <Select
           id={`${idPrefix}-category`}
           label="Category"
@@ -97,15 +94,14 @@ export function ShopFiltersPanel({
             </option>
           ))}
         </Select>
-        <label className="flex min-h-11 cursor-pointer items-center gap-2 text-sm font-medium">
-          <input
-            type="checkbox"
-            checked={inStockOnly}
-            onChange={(event) => onInStockChange(event.target.checked)}
-            className="size-4 shrink-0 accent-primary"
-          />
+        <Button type="button" aria-pressed={inStockOnly}
+          variant={inStockOnly ? 'secondary' : 'outline'} className="min-h-11 w-full justify-start gap-2"
+          onClick={() => onInStockChange(!inStockOnly)}>
+          <span className="grid size-4 shrink-0 place-items-center rounded border border-current" aria-hidden="true">
+            {inStockOnly && <Check className="size-3" />}
+          </span>
           In stock only
-        </label>
+        </Button>
         <Select
           id={`${idPrefix}-sort`}
           label="Sort"

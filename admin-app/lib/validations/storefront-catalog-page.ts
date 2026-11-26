@@ -6,6 +6,7 @@ export const shopCatalogFiltersSchema = z.object({
   search: z.string().trim().max(120),
   category: categoryFilter,
   subcategory: categoryFilter,
+  branch: z.uuid().nullable().optional(),
   inStock: z.boolean(),
   sort: z.enum(['featured', 'price-asc', 'price-desc']),
   page: z.number().int().min(1).max(2147483647),

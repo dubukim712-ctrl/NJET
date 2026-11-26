@@ -88,6 +88,7 @@ async function readCatalogPage(
   const result = await supabase.rpc('storefront_catalog_page', {
     p_search: filters.search, p_category: filters.category, p_subcategory: filters.subcategory,
     p_in_stock: filters.inStock, p_sort: filters.sort, p_page: filters.page, p_page_size: pageSize,
+    ...(filters.branch ? { p_branch_id: filters.branch } : {}),
     ...(slug === undefined ? {} : { p_slug: slug }),
     ...(productType === undefined ? {} : { p_product_type: productType }),
   });

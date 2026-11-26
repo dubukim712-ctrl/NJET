@@ -1,4 +1,7 @@
+import { ProductReviewStars } from '@/components/shop/ProductReviewStars';
 import type { StorefrontHomeReview } from '@/data/commerce/storefront-home';
+import { CustomerReleaseGallery } from '@/components/shop/CustomerReleaseGallery';
+import type { getPublishedCustomerReleases } from '@/data/commerce/customer-releases';
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, MapPin } from "lucide-react";
@@ -6,9 +9,11 @@ import { ArrowRight, MapPin } from "lucide-react";
 export function StorefrontAboutSection({
   imageUrl,
   reviews,
+  releases,
 }: {
   imageUrl: string | null;
   reviews: StorefrontHomeReview[];
+  releases: Awaited<ReturnType<typeof getPublishedCustomerReleases>>;
 }) {
   return (
     <section
@@ -43,7 +48,7 @@ export function StorefrontAboutSection({
             <ArrowRight className="size-4" aria-hidden="true" />
           </Link>
           <Link
-            href="#business-contact"
+            href="#branches"
             className="inline-flex min-h-11 items-center gap-2 rounded-md border px-5 text-sm font-medium hover:bg-accent"
           >
             Find a store
@@ -52,9 +57,9 @@ export function StorefrontAboutSection({
         </div>
       </div>
 
-      <div className="flex flex-col gap-4">
+      <div className="relative isolate flex min-h-72 flex-col justify-end overflow-hidden rounded-2xl bg-[#173c2b] text-white sm:min-h-96">
         {imageUrl && (
-          <div className="relative min-h-64 overflow-hidden rounded-2xl bg-muted sm:min-h-80">
+          <>
             <Image
               src={imageUrl}
               alt="From the Noel & Jane E-bike Trading story"
@@ -63,9 +68,10 @@ export function StorefrontAboutSection({
               unoptimized
               className="object-cover"
             />
-          </div>
+            <div aria-hidden="true" className="absolute inset-0 bg-linear-to-t from-black/90 via-black/65 to-black/15" />
+          </>
         )}
-        <div className="flex flex-col justify-between gap-5 rounded-2xl bg-primary p-6 text-primary-foreground sm:p-8">
+        <div className="relative flex w-full flex-col gap-4 p-6 text-white sm:p-8">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] opacity-80">
             Our journey
           </p>
@@ -86,23 +92,33 @@ export function StorefrontAboutSection({
           </p>
         </div>
       </div>
-      {reviews.length > 0 && (
-        <div className="lg:col-span-2">
-          <h3 className="mb-4 text-xl font-semibold">Verified Cavite purchases</h3>
-          <div className="grid gap-4 md:grid-cols-3">
-            {reviews.map((review) => (
-              <figure key={review.id} className="rounded-2xl border bg-card p-5">
-                <p className="mb-2 text-sm font-semibold text-primary">{review.rating} / 5 stars</p>
-                <blockquote className="line-clamp-4 break-words text-sm leading-6">“{review.comment}”</blockquote>
-                <figcaption className="mt-3 text-xs leading-5 text-muted-foreground">
-                  {review.reviewer_name ?? 'Anonymous customer'} · {review.branch_name}<br />
-                  <Link href={`/shop/view-product/${review.slug}`} className="font-medium text-primary hover:underline">{review.product_name}</Link>
-                </figcaption>
-              </figure>
-            ))}
-          </div>
-        </div>
-      )}
+      <div className="grid min-w-0 grid-cols-1 items-start gap-6 lg:col-span-2 lg:grid-cols-12">
+        <CustomerReleaseGallery releases={releases} />
+        <section aria-labelledby="customer-reviews-title" className={`min-w-0 ${releases.length ? 'lg:col-span-5' : 'lg:col-span-12'}`}>
+          <h3 id="customer-reviews-title" className="mb-4 text-xl font-semibold">What our customers say</h3>
+          {reviews.length ? (
+            <div className="grid gap-3">
+              {reviews.map((review) => (
+                <figure key={review.id} className="space-y-3 rounded-2xl border bg-card p-5 text-card-foreground">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <ProductReviewStars rating={review.rating} />
+                    <span className="rounded-full bg-secondary px-2.5 py-1 text-xs font-medium text-secondary-foreground">
+                      {review.branch_name}
+                    </span>
+                  </div>
+                  <blockquote className="whitespace-pre-line break-words text-sm leading-6">“{review.comment}”</blockquote>
+                  <figcaption className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-sm">
+                    <span className="font-semibold">{review.reviewer_name ?? 'Anonymous customer'}</span>
+                    <Link href={`/shop/view-product/${review.slug}`} className="text-primary hover:underline">{review.product_name}</Link>
+                  </figcaption>
+                </figure>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">No written reviews from verified buyers yet.</p>
+          )}
+        </section>
+      </div>
     </section>
   );
 }

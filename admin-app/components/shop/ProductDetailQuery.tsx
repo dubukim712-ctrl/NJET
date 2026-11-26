@@ -12,6 +12,7 @@ import {
   StorefrontCatalogQueryError,
   useStorefrontCatalogQuery,
 } from '@/data/commerce/storefront-catalog-client';
+import { featuredProductDescription } from '@/lib/storefront-featured-copy';
 import { useState } from 'react';
 
 export function ProductDetailQuery({ slug }: { slug: string }) {
@@ -108,7 +109,7 @@ function ProductDetailContent({
             </p>
             <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">{product.name}</h1>
             <p className="mt-4 whitespace-pre-line text-sm leading-6 text-muted-foreground">
-              {product.description || 'Contact our team for additional product information.'}
+              {featuredProductDescription(product.description)}
             </p>
           </header>
           <ProductPurchasePanel

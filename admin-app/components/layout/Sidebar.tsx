@@ -71,6 +71,12 @@ const ADMIN_NAVIGATION: NavGroup[] = [
         permission: PERMISSIONS.ordersRead,
       },
       {
+        name: "Customer releases",
+        href: "/admin/customer-releases",
+        icon: Package,
+        permission: PERMISSIONS.ordersRead,
+      },
+      {
         name: "Products & stock",
         href: "/admin/products",
         icon: Package,

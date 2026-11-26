@@ -214,14 +214,14 @@ export function CustomerServiceAppointments() {
           <Button type="button" variant="outline" onClick={() => { void query.refetch(); }}>Try again</Button>
         </div>
       )}
-      <div role="group" aria-label="Filter appointments by status" className="flex flex-wrap gap-2">
+      <div role="group" aria-label="Filter appointments by status" className="flex max-w-full gap-2 overflow-x-auto overscroll-x-contain p-1">
         {appointmentFilters.map(({ id, label }) => (
           <Button
             key={id}
             type="button"
             variant={filter === id ? 'default' : 'outline'}
             aria-pressed={filter === id}
-            className="min-h-11 rounded-full"
+            className="min-h-11 shrink-0 rounded-full"
             onClick={() => setFilter(id)}
           >
             {label}

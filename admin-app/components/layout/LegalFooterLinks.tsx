@@ -8,17 +8,12 @@ const links = [
 
 export function LegalFooterLinks() {
   return (
-    <section>
-      <h3 className="text-xs font-semibold uppercase tracking-[0.16em] text-primary-foreground/70">
-        Legal
-      </h3>
-      <nav aria-label="Legal policies" className="mt-4 flex flex-col items-start gap-3 text-sm">
-        {links.map(([href, label]) => (
-          <Link key={href} className="underline-offset-4 hover:underline" href={href}>
-            {label}
-          </Link>
+    <nav aria-label="Legal policies" className="mt-3 flex flex-col items-start gap-2.5 border-t border-primary-foreground/25 pt-3 text-sm leading-5">
+      {links.map(([href, label]) => (
+        <Link key={href} className="underline-offset-4 hover:underline" href={href}>
+          {label}
+        </Link>
         ))}
-      </nav>
-    </section>
+    </nav>
   );
 }

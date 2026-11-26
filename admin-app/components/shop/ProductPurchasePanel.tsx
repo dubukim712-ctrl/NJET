@@ -4,6 +4,10 @@ import { useAuth } from "@/components/auth/AuthProvider";
 import { getStorefrontStockLabel } from "@/data/commerce/storefront-stock-label";
 import { useEffect, useMemo, useState } from "react";
 import { AddToCartButton } from "@/components/cart/AddToCartButton";
+import { Button } from '@/components/ui/Button';
+import { ProductPaymentTerms } from '@/components/shop/ProductPaymentTerms';
+import { isSrpLabel, readSrpMinor } from '@/lib/storefront-featured-copy';
+import { openSupportChatEvent } from '@/lib/support-chat/open-launcher';
 import { Select } from "@/components/ui/Select";
 import type { CatalogProduct } from "@/data/commerce/catalog";
 import { ProductStockBadge } from "@/components/shop/ProductStockBadge";
@@ -20,7 +24,21 @@ export function ProductPurchasePanel({
   onImagePathChange: (path: string | null) => void;
 }) {
   const { user } = useAuth();
-  const [branchId, setBranchId] = useState(branches[0]?.id ?? "");
+  function inStockSelection(preferredVariantId?: string) {
+    const preferred = product.variants.find(({ id }) => id === preferredVariantId);
+    const availableBranch = preferred && branches.find((branch) =>
+      preferred.stockByBranch.some((stock) => stock.branchId === branch.id && stock.available));
+    if (preferred && availableBranch) return { branch: availableBranch.id, variant: preferred.id };
+
+    for (const branch of branches) {
+      const variant = product.variants.find((item) =>
+        item.stockByBranch.some((stock) => stock.branchId === branch.id && stock.available));
+      if (variant) return { branch: branch.id, variant: variant.id };
+    }
+    return null;
+  }
+
+  const [branchId, setBranchId] = useState(() => inStockSelection()?.branch ?? branches[0]?.id ?? '');
   const [variantId, setVariantId] = useState("");
   const branchVariants = useMemo(
     () =>
@@ -40,6 +58,11 @@ export function ProductPurchasePanel({
     branchVariants.find((variant) => variant.id === variantId) ??
     branchVariants.find((variant) => variant.available) ??
     branchVariants[0];
+  const recovery = selectedVariant?.available ? null : inStockSelection(selectedVariant?.id);
+  const specs = Object.entries(selectedVariant?.specifications ?? {});
+  const srpSpec = specs.find(([name]) => isSrpLabel(name));
+  const srp = srpSpec ? readSrpMinor(srpSpec[1]) : null;
+  const visibleSpecs = srp === null ? specs : specs.filter(([name]) => !isSrpLabel(name));
 
   useEffect(() => {
     onImagePathChange(selectedVariant?.image_path ?? product.image_path);
@@ -47,7 +70,7 @@ export function ProductPurchasePanel({
 
   const changeBranch = (nextBranchId: string) => {
     setBranchId(nextBranchId);
-    setVariantId("");
+    setVariantId(selectedVariant?.id ?? '');
   };
 
   return (
@@ -79,7 +102,6 @@ export function ProductPurchasePanel({
           <option
             key={variant.id}
             value={variant.id}
-            disabled={!variant.available}
           >
             {variant.name} -{" "}
             {getStorefrontStockLabel(variant.branchStock, Boolean(user))}
@@ -92,6 +114,7 @@ export function ProductPurchasePanel({
             <ProductPrice
               priceMinor={selectedVariant.price_minor}
               listPriceMinor={selectedVariant.list_price_minor}
+              srpMinor={srp}
             />
             <ProductStockBadge available={selectedVariant.available}>
               {getStorefrontStockLabel(selectedVariant.branchStock, Boolean(user))}
@@ -100,10 +123,9 @@ export function ProductPurchasePanel({
           <p className="mt-1 text-xs text-muted-foreground">
             SKU: {selectedVariant.sku}
           </p>
-          {selectedVariant.specifications &&
-            Object.keys(selectedVariant.specifications).length > 0 && (
+          {visibleSpecs.length > 0 && (
               <dl className="mt-3 grid gap-x-4 gap-y-2 border-t pt-3 text-sm min-[321px]:grid-cols-2">
-                {Object.entries(selectedVariant.specifications).map(
+                {visibleSpecs.map(
                   ([name, value]) => (
                     <div key={name}>
                       <dt className="text-xs font-medium text-muted-foreground">
@@ -121,12 +143,15 @@ export function ProductPurchasePanel({
               <b>{formatPhp(selectedVariant.reservation_minor)}</b> per unit
             </p>
           )}
-          {selectedVariant.home_credit_downpayment_minor > 0 && (
+          {(selectedVariant.home_credit_downpayment_minor > 0 || product.product_type === "ebike") && (
             <p className="mt-1 text-sm text-muted-foreground">
               Home Credit downpayment:{" "}
               <b>{formatPhp(selectedVariant.home_credit_downpayment_minor)}</b>{" "}
               per unit
             </p>
+          )}
+          {product.product_type === 'ebike' && selectedVariant.price_minor > 0 && (
+            <ProductPaymentTerms priceMinor={selectedVariant.price_minor} downpaymentMinor={selectedVariant.home_credit_downpayment_minor} />
           )}
         </div>
       )}
@@ -137,13 +162,24 @@ export function ProductPurchasePanel({
           maxQuantity={selectedVariant.branchStock?.stock ?? null}
         />
       ) : (
-        <button
-          type="button"
-          disabled
-          className="min-h-11 w-full rounded-md bg-muted px-4 text-sm font-medium text-muted-foreground"
-        >
-          Choose an available variant
-        </button>
+        <div className="grid gap-2">
+          <Button type="button" variant="secondary" className="min-h-11 w-full" disabled>
+            Out of stock
+          </Button>
+          {recovery ? (
+            <Button type="button" variant="outline" className="min-h-11 w-full whitespace-normal" onClick={() => {
+              setBranchId(recovery.branch);
+              setVariantId(recovery.variant);
+            }}>
+              {recovery.branch === branchId ? 'Switch to In-Stock Variant' : 'Switch to In-Stock Branch'}
+            </Button>
+          ) : (
+            <Button type="button" variant="outline" className="min-h-11 w-full whitespace-normal"
+              onClick={() => window.dispatchEvent(new Event(openSupportChatEvent))}>
+              Ask About Restock via Chat
+            </Button>
+          )}
+        </div>
       )}
     </section>
   );

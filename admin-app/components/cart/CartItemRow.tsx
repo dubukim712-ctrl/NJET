@@ -72,14 +72,14 @@ export function CartItemRow({
               />
             )}
           </div>
-          <button
+          <Button variant="ghost" size={null}
             type="button"
             onClick={() => onRemove(item.variantId)}
-            className="h-fit rounded p-1 text-muted-foreground hover:bg-accent hover:text-destructive"
+            className="size-11 shrink-0 rounded-full text-muted-foreground hover:text-destructive"
             aria-label={`Remove ${item.variant?.productName ?? "unavailable item"}`}
           >
             <Trash2 className="h-4 w-4" aria-hidden="true" />
-          </button>
+          </Button>
         </div>
         {item.variant ? (
           <>
@@ -87,7 +87,7 @@ export function CartItemRow({
               <Button
                 type="button"
                 variant="ghost"
-                size="icon"
+                size={null} className="size-11"
                 aria-label="Decrease quantity"
                 disabled={item.quantity <= 1}
                 onClick={() =>
@@ -109,7 +109,7 @@ export function CartItemRow({
               <Button
                 type="button"
                 variant="ghost"
-                size="icon"
+                size={null} className="size-11"
                 aria-label="Increase quantity"
                 disabled={cannotIncrease}
                 onClick={() =>
@@ -120,9 +120,9 @@ export function CartItemRow({
               </Button>
             </div>
             {needsAvailability && availability.isError && (
-              <button type="button" className="mt-1 text-xs underline" onClick={() => void availability.refetch()}>
+              <Button variant="ghost" size={null} type="button" className="mt-1 min-h-11 px-1 text-xs underline" onClick={() => void availability.refetch()}>
                 Retry availability check
-              </button>
+              </Button>
             )}
             {atLimit && (
                 <p

@@ -14,7 +14,7 @@ export type DatabaseStorefrontFunctions = {
   storefront_catalog_page: {
     Args: {
       p_search: string; p_category: string | null; p_subcategory: string | null;
-      p_in_stock: boolean; p_sort: string; p_page: number; p_page_size: number; p_slug?: string; p_product_type?: ProductType;
+      p_in_stock: boolean; p_sort: string; p_page: number; p_page_size: number; p_slug?: string; p_product_type?: ProductType; p_branch_id?: string;
     };
     Returns: Json;
   };

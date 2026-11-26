@@ -69,17 +69,32 @@ test('catalog filters and sorts across all active products before paging whole p
     alter table product_reviews add column id uuid default gen_random_uuid(),
       add column customer_id uuid, add column order_item_id uuid, add column comment text,
       add column is_anonymous boolean, add column created_at timestamptz default now();
-    create table users (id uuid primary key, full_name text);
+    create table users (id uuid primary key, full_name text, avatar_url text);
     create table orders (id uuid primary key, branch_id uuid, customer_id uuid, status text);
-    create table order_items (id uuid primary key, order_id uuid, variant_id uuid not null references product_variants(id));
-    insert into users values ('${id(206)}', 'Anonymous Test Rider');
+    create table order_items (id uuid primary key, order_id uuid, variant_id uuid not null references product_variants(id), variant_name text);
+    insert into users values ('${id(206)}', 'Anonymous Test Rider', null);
     insert into orders values ('${id(207)}', '${id(203)}', '${id(206)}', 'completed');
     insert into order_items
-    select '${id(208)}', '${id(207)}', id from product_variants where sku = 'product-125-510';
+    select '${id(208)}', '${id(207)}', id, name from product_variants where sku = 'product-125-510';
     update product_reviews set customer_id = '${id(206)}', order_item_id = '${id(208)}',
       comment = 'A published order review.', is_anonymous = true;
   `);
   await db.exec(await migration('20240101000139_storefront_landing.sql'));
+  await db.exec('drop function if exists public.published_product_reviews(uuid, integer, integer);');
+  const reviewProfile = await migration('20240101000109_published_review_profiles.sql');
+  await db.exec(reviewProfile.replace('drop function public.published_product_reviews', 'drop function if exists public.published_product_reviews'));
+  await db.exec(await migration('20240101000140_storefront_featured_polish.sql'));
+  await db.exec(await migration('20240101000141_storefront_branch_catalog.sql'));
+  await db.exec(await migration('20240101000143_preserve_published_review_ratings.sql'));
+  await db.exec(await migration('20240101000144_rank_storefront_verified_reviews.sql'));
+  await db.exec(`
+    update products set product_type = 'ebike' where slug = 'product-124';
+    insert into product_reviews (product_id, rating, status, customer_id, order_item_id, comment, is_anonymous, created_at)
+    select product_id, 5, 'published', customer_id, order_item_id, placeholder, true, now() + interval '1 day'
+    from product_reviews
+    cross join unnest(array['test', '  TEST REVIEW 123!', '   ', 'nice']) as placeholder
+    where status = 'published';
+  `);
 
   async function page({ search = '', categoryId = null, subcategoryId = null, inStock = false, sort = 'featured', number = 1 } = {}) {
     const result = await db.query('select public.storefront_catalog_page($1,$2,$3,$4,$5,$6,24) as catalog',
@@ -89,22 +104,34 @@ test('catalog filters and sorts across all active products before paging whole p
 
   await db.exec('grant execute on function public.storefront_catalog(text,uuid[]) to anon; set role anon');
   const featured = (await db.query("select public.storefront_catalog_page('',null,null,false,'featured',1,4,null,'ebike') as catalog")).rows[0].catalog;
-  assert.deepEqual(featured.products.map((product) => product.slug), ['product-125']);
+  assert.deepEqual(featured.products.map((product) => product.slug), ['product-125', 'product-124']);
   assert.deepEqual(featured.products[0].variants.at(-1).stockByBranch,
     [{ branchId: id(203), available: true, stock: null }]);
-  const reviews = await db.query('select slug, reviewer_name, branch_name from public.storefront_home_reviews()');
+  const reviews = await db.query('select slug, reviewer_name, branch_name from public.storefront_home_reviews() where comment is not null');
   assert.deepEqual(reviews.rows, [{ slug: 'product-125', reviewer_name: null, branch_name: 'Hillsview' }]);
+  const detailReviews = await db.query('select comment from public.published_product_reviews($1, 4, 0)', [id(125)]);
+  assert.deepEqual(detailReviews.rows, Array.from({ length: 4 }, () => ({ comment: null })));
+  const nextReviews = await db.query('select comment from public.published_product_reviews($1, 4, 4)', [id(125)]);
+  assert.deepEqual(nextReviews.rows, [{ comment: 'A published order review.' }]);
+  const byBranch = async (branchId) => (await db.query(
+    "select public.storefront_catalog_page('',null,null,false,'featured',1,24,null,null,$1) as catalog", [branchId],
+  )).rows[0].catalog;
+  const branchCatalog = await byBranch(id(203));
+  assert.deepEqual(branchCatalog.products.map((product) => product.slug), ['product-125']);
+  assert.deepEqual(branchCatalog.products[0].stockSummary, { available: true, stock: null });
+  assert.equal((await byBranch(id(204))).total, 0);
   const first = await page();
+  assert.equal(first.products[0].slug, 'product-125');
   assert.equal(first.total, 125);
   assert.equal(first.products.length, 24);
   assert.ok(first.facets.some((facet) => facet.category_id === category && facet.subcategory_id === subcategory));
   assert.deepEqual((await page({ number: 6 })).products.map((product) => product.slug),
-    ['product-121', 'product-122', 'product-123', 'product-124', 'product-125']);
+    ['product-120', 'product-121', 'product-122', 'product-123', 'product-124']);
   const [later] = (await page({ search: '  TRAIL specialist  ' })).products;
   assert.equal(later.slug, 'product-125');
   assert.equal(later.variants.length, 510);
   assert.deepEqual(later.stockSummary, { available: true, stock: null });
-  assert.deepEqual(later.ratingSummary, { averageRating: 5, reviewCount: 1 });
+  assert.deepEqual(later.ratingSummary, { averageRating: 5, reviewCount: 5 });
   assert.deepEqual((await page({ categoryId: category, subcategoryId: subcategory })).products.map((p) => p.slug), ['product-125']);
   assert.deepEqual((await page({ inStock: true })).products.map((p) => p.slug), ['product-125']);
   assert.equal((await page({ sort: 'price-asc' })).products[0].slug, 'product-125');
@@ -116,9 +143,28 @@ test('catalog filters and sorts across all active products before paging whole p
   await db.query("select set_config('test.user',$1,false)", [id(999)]);
   const [signedIn] = (await page({ inStock: true })).products;
   assert.deepEqual(signedIn.stockSummary, { available: true, stock: 1 });
+  assert.equal((await byBranch(id(203))).products[0].stockSummary.stock, 1);
   const [detail] = (await db.query(`select public.storefront_catalog_page('',null,null,false,'featured',1,1,'product-125') as catalog`)).rows[0].catalog.products;
   assert.equal(detail.variants.length, 510);
   assert.deepEqual(detail.variants.at(-1).stockByBranch, [{ branchId: id(203), available: true, stock: 1 }]);
   const cart = await db.query('select product_slug, sku from public.storefront_catalog(null,$1)', [[detail.variants.at(-1).id]]);
   assert.deepEqual(cart.rows, [{ product_slug: 'product-125', sku: 'product-125-510' }]);
+  await db.exec('reset role');
+  await db.exec(`
+    insert into product_reviews (product_id, rating, status, customer_id, order_item_id, comment, is_anonymous, created_at)
+    select product_id, score, 'published', customer_id, order_item_id, 'Verified comment ' || score, true, now() + interval '2 days'
+    from product_reviews
+    cross join unnest(array[2,3,4]) as score
+    where comment = 'A published order review.' and status = 'published';
+  `);
+  await db.exec('set role anon');
+  const topReviews = await db.query('select comment, rating from public.storefront_home_reviews()');
+  assert.deepEqual(topReviews.rows, [
+    { comment: 'A published order review.', rating: 5 },
+    { comment: 'Verified comment 4', rating: 4 },
+    { comment: 'Verified comment 3', rating: 3 },
+  ]);
+  await db.exec("reset role; update product_reviews set comment = null; set role anon");
+  const ratingsOnly = await db.query('select comment, rating from public.storefront_home_reviews()');
+  assert.deepEqual(ratingsOnly.rows, []);
 });

@@ -69,7 +69,7 @@ export function CartContents({
   };
 
   return (
-    <div className={compact ? "space-y-5" : "mx-auto max-w-4xl space-y-6"}>
+    <div className={compact ? "flex h-full flex-col gap-3" : "mx-auto max-w-4xl space-y-6"}>
       {!compact && (
         <header>
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">
@@ -130,7 +130,7 @@ export function CartContents({
         </section>
       ) : (
         <>
-          <ul className={compact ? "divide-y" : "space-y-3"}>
+          <ul className={compact ? "min-h-0 flex-1 divide-y overflow-y-auto overscroll-contain px-1" : "space-y-3"}>
             {cartItems.map((item) => (
               <CartItemRow
                 key={item.variantId}
@@ -143,7 +143,7 @@ export function CartContents({
             ))}
           </ul>
 
-          <aside className="rounded-xl border bg-card p-5">
+          <aside className={compact ? "shrink-0 overflow-y-auto rounded-xl border bg-card p-3 max-h-[55%] md:p-4" : "rounded-xl border bg-card p-5"}>
             <div className="flex justify-between text-sm">
               <span>Subtotal</span>
               <span className="font-semibold">{formatPhp(subtotal)}</span>
@@ -153,11 +153,11 @@ export function CartContents({
               checkout.
             </p>
             {unavailable || out || loadError ? (
-              <Button type="button" className="mt-4 w-full" disabled>
+              <Button type="button" className="mt-3 min-h-11 w-full whitespace-normal" disabled>
                 Review unavailable items to continue
               </Button>
             ) : (
-              <Button asChild className="mt-4 w-full">
+              <Button asChild className="mt-3 min-h-11 w-full whitespace-normal">
                 <Link
                   href="/checkout"
                   onClick={(event) => {
@@ -189,21 +189,13 @@ export function CartContents({
                     : "This account does not have permission to place customer orders."}
                 </p>
                 {checkoutNotice === "sign-in" && (
-                  <div className="mt-2 flex flex-wrap gap-3 text-sm font-medium">
-                    <Link
-                      href="/login?redirect=%2Fcheckout"
-                      onClick={onNavigate}
-                      className="text-primary underline underline-offset-4"
-                    >
-                      Sign in
-                    </Link>
-                    <Link
-                      href="/register"
-                      onClick={onNavigate}
-                      className="text-primary underline underline-offset-4"
-                    >
-                      Create an account
-                    </Link>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <Button asChild size="sm" className="min-h-11">
+                      <Link href="/login?redirect=%2Fcheckout" onClick={onNavigate}>Sign in</Link>
+                    </Button>
+                    <Button asChild size="sm" variant="outline" className="min-h-11">
+                      <Link href="/register" onClick={onNavigate}>Create an account</Link>
+                    </Button>
                   </div>
                 )}
               </div>

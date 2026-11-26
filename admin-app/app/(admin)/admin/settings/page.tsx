@@ -1,3 +1,6 @@
+import Link from 'next/link';
+import { Button } from '@/components/ui/Button';
+import { releasesPath } from '@/lib/customer-releases';
 import { requireFullAccess } from '@/data/auth/guards';
 import { SystemSettingsQuery } from '@/components/admin/settings/SystemSettingsQuery';
 
@@ -15,6 +18,11 @@ export default async function SettingsPage() {
           Manage business information, service hours, payment accounts, documents, and storefront policies.
         </p>
       </header>
+      <section className="rounded-xl border bg-card p-5">
+        <h2 className="text-lg font-semibold">Customer Releases / Purchase Gallery</h2>
+        <p className="mt-1 text-sm text-muted-foreground">Upload release photos and manage what appears on the storefront.</p>
+        <Button asChild variant="outline" className="mt-3"><Link href={releasesPath}>Manage Customer Releases</Link></Button>
+      </section>
       <SystemSettingsQuery userId={user.id} />
     </div>
   );

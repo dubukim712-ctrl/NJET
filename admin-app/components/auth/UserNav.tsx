@@ -1,5 +1,6 @@
 "use client";
 
+import { Button } from '@/components/ui/Button';
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CalendarDays, CircleHelp, Package, LogOut, User, Settings, Shield } from "lucide-react";
@@ -61,7 +62,7 @@ export function UserNav({ user, showHelp = false }: UserNavProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button
+        <Button variant={null} size={null}
           type="button"
           className="flex items-center gap-2 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring"
           aria-label="Open user menu"
@@ -75,7 +76,7 @@ export function UserNav({ user, showHelp = false }: UserNavProps) {
               {initials}
             </AvatarFallback>
           </Avatar>
-        </button>
+        </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
         className="w-48 sm:w-56"

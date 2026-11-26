@@ -54,9 +54,9 @@ export function AddToCartButton({
         {label}
       </Button>
       {availabilityFailed && (
-        <button type="button" className="mt-2 min-h-11 underline" onClick={() => void availability.refetch()}>
+        <Button variant="link" size={null} type="button" className="mt-2 min-h-11 underline" onClick={() => void availability.refetch()}>
           Retry availability check
-        </button>
+        </Button>
       )}
     </>
   );
