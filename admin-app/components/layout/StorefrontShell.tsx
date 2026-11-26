@@ -154,16 +154,10 @@ export function StorefrontShell({ user, children, businessInfo, branches }: Stor
               <UserNav user={displayUser} showHelp />
             ) : (
               <div className="flex shrink-0 items-center gap-1">
-                <Link
-                  href="/login"
-                  className="inline-flex min-h-10 items-center rounded-md px-2 text-sm font-medium hover:bg-accent"
-                >
+                <Link href="/login" className="inline-flex min-h-10 items-center rounded-md px-2 text-sm font-medium hover:bg-accent">
                   Sign in
                 </Link>
-                <Link
-                  href="/register"
-                  className="inline-flex min-h-10 items-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-                >
+                <Link href="/register" className="inline-flex min-h-10 items-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground hover:bg-primary/90">
                   Join
                 </Link>
               </div>

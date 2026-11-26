@@ -42,20 +42,20 @@ export async function StorefrontHomePage({ permissionError = false }: { permissi
   return (
     <div className="space-y-12 sm:space-y-16">
       {permissionError && <p role="alert" className="mx-4 mt-4 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive sm:mx-6 xl:mx-auto xl:max-w-7xl">You don&apos;t have permission to access that page.</p>}
-      <div className="[--hero-bg:#f5f6f2] dark:[--hero-bg:var(--background)]">
-        <section aria-labelledby="storefront-hero-title" className="relative isolate overflow-hidden bg-[var(--hero-bg)] text-foreground lg:flex lg:aspect-[11/5] lg:min-h-[30rem] lg:items-center">
+      <div className="[--hero-bg:#1b4d36]">
+        <section aria-labelledby="storefront-hero-title" className="relative isolate overflow-hidden bg-[var(--hero-bg)] text-white lg:flex lg:aspect-[11/5] lg:min-h-[30rem] lg:items-center">
           <div className="relative z-10 mx-auto w-full max-w-7xl px-4 pt-7 sm:px-6 sm:pt-10 lg:py-12">
             <div className="max-w-xl lg:w-[46%]">
-              <p className="text-xs font-semibold uppercase tracking-[0.19em] text-primary">Noel &amp; Jane E-bike Trading</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.19em] text-emerald-200">Noel &amp; Jane E-bike Trading</p>
               <h1 id="storefront-hero-title" className="mt-4 max-w-2xl text-4xl font-black leading-[0.98] tracking-tight sm:text-6xl">
                 SKIP THE TRAFFIC. OWN YOUR RIDE IN CAVITE.
               </h1>
-              <p className="mt-5 max-w-md text-base leading-6 text-muted-foreground">2-Wheel &amp; 3-Wheel E-Bikes with 1-ID Home Credit application &amp; Official Certificate of Ownership.</p>
+              <p className="mt-5 max-w-md text-base leading-6 text-white/85">2-Wheel &amp; 3-Wheel E-Bikes with 1-ID Home Credit application &amp; Official Certificate of Ownership.</p>
               <div className="mt-7 flex flex-wrap gap-2.5">
-                <Button asChild size={null} className="min-h-11 gap-2 rounded-lg bg-[#24583b] px-4 font-semibold text-[#fffefa] hover:bg-[#173c2b]">
+                <Button asChild size={null} className="min-h-11 gap-2 rounded-lg bg-white px-4 font-semibold text-[color:var(--hero-bg)] hover:bg-emerald-50">
                   <Link href="/shop">Explore the shop <ArrowRight className="size-4" aria-hidden="true" /></Link>
                 </Button>
-                <Button asChild variant="outline" size={null} className="min-h-11 gap-2 rounded-lg bg-transparent px-4 font-semibold text-foreground">
+                <Button asChild variant="outline" size={null} className="min-h-11 gap-2 rounded-lg border-white/40 bg-transparent px-4 font-semibold text-white hover:bg-white/10 hover:text-white">
                   <Link href="#installments">Check Installment Plans <ArrowDown className="size-4" aria-hidden="true" /></Link>
                 </Button>
               </div>
@@ -63,9 +63,9 @@ export async function StorefrontHomePage({ permissionError = false }: { permissi
           </div>
           <div className="pointer-events-none relative aspect-[4/3] sm:aspect-video lg:absolute lg:inset-0 lg:aspect-auto">
             <Image src={caviteRiders} placeholder="blur" alt="Riders on two-wheel commuter and three-wheel family e-bikes on a Cavite street"
-              fill preload sizes="100vw" className="h-full w-full object-cover object-right-bottom" />
-            <div aria-hidden="true" className="absolute inset-0 bg-[linear-gradient(to_bottom,var(--hero-bg),transparent_24%,transparent_96%,color-mix(in_srgb,var(--hero-bg)_18%,transparent))] lg:bg-[linear-gradient(to_bottom,var(--hero-bg),transparent_14%)]" />
-            <div aria-hidden="true" className="absolute inset-0 hidden bg-[linear-gradient(to_right,var(--hero-bg)_0%,color-mix(in_srgb,var(--hero-bg)_85%,transparent)_36%,transparent_66%)] lg:block" />
+              fill preload sizes="100vw" className="h-full w-full object-cover object-right-bottom [mask-image:linear-gradient(to_bottom,transparent,black_20%)] lg:[mask-image:linear-gradient(to_right,transparent,black_44%)]" />
+            <div aria-hidden="true" className="absolute inset-0 bg-[linear-gradient(to_bottom,var(--hero-bg),transparent_36%,transparent_96%,color-mix(in_srgb,var(--hero-bg)_22%,transparent))] lg:hidden" />
+            <div aria-hidden="true" className="absolute inset-0 hidden bg-[linear-gradient(to_right,var(--hero-bg)_0%,color-mix(in_srgb,var(--hero-bg)_90%,transparent)_36%,transparent_69%)] lg:block" />
           </div>
         </section>
 
