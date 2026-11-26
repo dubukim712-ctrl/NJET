@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useState, useSyncExternalStore } from 'react';
+import { useEffect, useState } from 'react';
 import { Ellipsis, House, MapPin, ShoppingBag } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
@@ -15,40 +15,15 @@ const tabs = [
   { id: 'branches', label: 'Branches', href: '/#branches', icon: MapPin },
 ] as const;
 
-function subscribeToHash(listener: () => void) {
-  window.addEventListener('hashchange', listener);
-  window.addEventListener('popstate', listener);
-  // App Router hash links can scroll after updating history without a hashchange event.
-  window.addEventListener('scroll', listener, { passive: true });
-  return () => {
-    window.removeEventListener('hashchange', listener);
-    window.removeEventListener('popstate', listener);
-    window.removeEventListener('scroll', listener);
-  };
-}
-
 const tabClass = (active: boolean) => cn(
   'h-16 min-w-0 flex-col gap-1 rounded-none px-1 text-xs',
   active ? 'bg-primary/10 font-semibold text-primary' : 'text-muted-foreground',
 );
 
-export function StorefrontMobileNavigation({ signedIn, canBook }: { signedIn: boolean; canBook: boolean }) {
+export function StorefrontMobileNavigation({ activeLink, signedIn, canBook }: { activeLink: string | null; signedIn: boolean; canBook: boolean }) {
   const pathname = usePathname();
-  const hash = useSyncExternalStore(subscribeToHash, () => window.location.hash, () => '');
   const [open, setOpen] = useState(false);
-  const [visibleBranchPage, setVisibleBranchPage] = useState<string | null>(null);
   const home = pathname === '/';
-
-  useEffect(() => {
-    if (!home) return;
-    const section = document.getElementById('branches');
-    if (!section) return;
-    const observer = new IntersectionObserver(([entry]) => {
-      setVisibleBranchPage(entry?.isIntersecting ? pathname : null);
-    }, { rootMargin: '-20% 0px -35% 0px' });
-    observer.observe(section);
-    return () => observer.disconnect();
-  }, [home, pathname]);
 
   useEffect(() => {
     const desktop = window.matchMedia('(min-width: 48rem)');
@@ -57,16 +32,11 @@ export function StorefrontMobileNavigation({ signedIn, canBook }: { signedIn: bo
     return () => desktop.removeEventListener('change', closeOnDesktop);
   }, []);
 
-  let active = 'more';
-  if (!open) {
-    if (pathname === '/shop' || pathname.startsWith('/shop/')) active = 'shop';
-    else if (home && (hash === '#branches' || visibleBranchPage === pathname)) active = 'branches';
-    else if (home && hash !== '#service-center' && hash !== '#installments') active = 'home';
-  }
+  const active = open ? 'more' : (tabs.find(({ href }) => href === activeLink)?.id ?? 'more');
 
   const moreLinks = [
-    { label: 'Parts & Service', href: '/#service-center' },
     { label: 'Installments', href: '/#installments' },
+    { label: 'Parts & Service', href: '/#service-center' },
     { label: canBook ? 'Book Service' : 'Sign in to Book Service', href: canBook ? serviceBookingPath : serviceSignInPath },
     ...(signedIn ? [{ label: 'My account', href: '/dashboard/profile' }]
       : [{ label: 'Sign in', href: '/login' }, { label: 'Join', href: '/register' }]),
@@ -78,7 +48,7 @@ export function StorefrontMobileNavigation({ signedIn, canBook }: { signedIn: bo
       <nav aria-label="Mobile storefront navigation" className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-4 border-t bg-background/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_16px_rgba(0,0,0,0.08)] backdrop-blur md:hidden">
         {tabs.map(({ id, label, href, icon: Icon }) => (
           <Button key={id} asChild variant={null} size={null} className={tabClass(active === id)}>
-            <Link href={href} aria-current={active === id ? 'page' : undefined} onClick={(event) => {
+            <Link href={href} aria-current={active === id ? id === 'branches' ? 'location' : 'page' : undefined} onClick={(event) => {
               if (id !== 'home' || !home || event.defaultPrevented || event.button !== 0
                 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
               event.preventDefault();

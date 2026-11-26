@@ -56,8 +56,8 @@ export function StorefrontFooter({ businessInfo, branches, canBook }: {
             <h2 className={heading}>Quick Links &amp; Branches</h2>
             <nav aria-label="Shop and branches" className={links}>
               <Link href="/shop">Catalog</Link>
-              <Link href="/#service-center">Parts &amp; Service</Link>
               <Link href="/#installments">Installments</Link>
+              <Link href="/#service-center">Parts &amp; Service</Link>
               {orderStorefrontBranches(branches).map((branch) => (
                 <Link key={branch.id} href={{ pathname: '/', query: { branch: branch.id }, hash: 'branches' }}>
                   {footerBranchName(branch)}
