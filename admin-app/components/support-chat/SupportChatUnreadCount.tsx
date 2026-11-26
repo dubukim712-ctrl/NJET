@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { getSupportChatUnreadCountAction } from '@/data/actions/support-chat';
-import { createClient } from '@/data/supabase/client';
+import { subscribeStaffChatInbox } from '@/data/support-chat/staff-inbox-realtime';
 
 interface SupportChatUnreadCountProps {
   userId: string | null;
@@ -22,11 +22,12 @@ export function SupportChatUnreadCount({
     let active = true;
     let refreshTimer: ReturnType<typeof setTimeout> | undefined;
     let pollTimer: ReturnType<typeof setInterval> | undefined;
-    const supabase = createClient();
+    let refreshId = 0;
     const refresh = async () => {
+      const id = ++refreshId;
       try {
         const result = await getSupportChatUnreadCountAction();
-        if (!active) return;
+        if (!active || id !== refreshId) return;
         if (!result.success) {
           setHasError(true);
           return;
@@ -34,7 +35,7 @@ export function SupportChatUnreadCount({
         setCount(result.data);
         setHasError(false);
       } catch {
-        if (active) setHasError(true);
+        if (active && id === refreshId) setHasError(true);
       }
     };
     const startPolling = () => {
@@ -46,27 +47,21 @@ export function SupportChatUnreadCount({
     };
 
     void refresh();
-    const channel = supabase
-      .channel('support-chat:staff-inbox', { config: { private: true } })
-      .on('broadcast', { event: 'chat_changed' }, () => {
-        if (refreshTimer) clearTimeout(refreshTimer);
-        refreshTimer = setTimeout(() => void refresh(), 200);
-      })
-      .subscribe((state) => {
-        if (!active) return;
-        if (state === 'SUBSCRIBED') {
-          stopPolling();
-          void refresh();
-        } else if (state === 'CHANNEL_ERROR' || state === 'TIMED_OUT' || state === 'CLOSED') {
-          startPolling();
-        }
-      });
+    const unsubscribe = subscribeStaffChatInbox((event) => {
+      if (event === 'offline') {
+        startPolling();
+        return;
+      }
+      if (event === 'connected') stopPolling();
+      if (refreshTimer) clearTimeout(refreshTimer);
+      refreshTimer = setTimeout(() => void refresh(), 200);
+    });
 
     return () => {
       active = false;
       if (refreshTimer) clearTimeout(refreshTimer);
       stopPolling();
-      void supabase.removeChannel(channel);
+      unsubscribe();
     };
   }, [userId]);
 

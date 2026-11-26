@@ -12,6 +12,7 @@ export type SupportChatMessage = {
 export type SupportChatThread = {
   id: string;
   channel: 'web' | 'messenger';
+  is_unread: boolean;
   customer_kind: 'account' | 'guest';
   customer_name: string;
   guest_email: string | null;

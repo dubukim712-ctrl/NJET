@@ -13,12 +13,12 @@ import { Textarea } from '@/components/ui/Textarea';
 import { createClient } from '@/data/supabase/client';
 import {
   deleteSupportChatMessageAction,
-  markSupportChatThreadReadAction,
   loadSupportChatMessagesAction,
   sendSupportChatMessageAction,
   setSupportChatStatusAction,
 } from '@/data/actions/support-chat';
 import { ChatMessageList } from '@/components/support-chat/ChatMessageList';
+import { useStaffChatRead } from '@/components/support-chat/useStaffChatRead';
 import { messengerUrl } from '@/lib/support-chat/messenger-link';
 import type { SupportChatMessage } from '@/types/support-chat';
 
@@ -52,20 +52,10 @@ export function ChatConversation({
   const [error, setError] = useState<string | null>(null);
   const [realtimeState, setRealtimeState] = useState<'connecting' | 'connected' | 'offline'>('connecting');
 
+  const conversationRef = useStaffChatRead(threadId, mode === 'staff' ? messages.at(-1)?.id : undefined);
+
   const loadLatest = useCallback(async () => {
-    const markAsRead = async () => {
-      if (mode !== 'staff') return null;
-      try {
-        const readResult = await markSupportChatThreadReadAction({ threadId });
-        return readResult.success ? null : readResult.error;
-      } catch {
-        return 'The chat could not be marked as read.';
-      }
-    };
-    const [result, readError] = await Promise.all([
-      loadSupportChatMessagesAction({ threadId }),
-      markAsRead(),
-    ]);
+    const result = await loadSupportChatMessagesAction({ threadId });
     if (!result.success) {
       setError(result.error);
       setLoading(false);
@@ -82,9 +72,9 @@ export function ChatConversation({
       );
     });
     setHasOlder(result.data.length === 50);
-    setError(readError);
+    setError(null);
     setLoading(false);
-  }, [mode, threadId]);
+  }, [threadId]);
 
   useEffect(() => {
     const timer = setTimeout(() => void loadLatest(), 0);
@@ -111,7 +101,10 @@ export function ChatConversation({
       .on('broadcast', { event: 'chat_changed' }, scheduleRefresh)
       .subscribe((state) => {
         if (!active) return;
-        if (state === 'SUBSCRIBED') setRealtimeState('connected');
+        if (state === 'SUBSCRIBED') {
+          setRealtimeState('connected');
+          scheduleRefresh();
+        }
         else if (state === 'CHANNEL_ERROR' || state === 'TIMED_OUT' || state === 'CLOSED') {
           setRealtimeState('offline');
         }
@@ -200,7 +193,7 @@ export function ChatConversation({
   };
 
   return (
-    <section className={`flex h-[min(70dvh,46rem)] flex-col overflow-hidden rounded-2xl border bg-background shadow-sm ${fillHeight ? 'max-lg:h-full max-lg:min-h-0 max-lg:flex-1' : ''}`}>
+    <section ref={conversationRef} className={`flex h-[min(70dvh,46rem)] flex-col overflow-hidden rounded-2xl border bg-background shadow-sm ${fillHeight ? 'max-lg:h-full max-lg:min-h-0 max-lg:flex-1' : ''}`}>
       <header className="flex flex-wrap items-center justify-between gap-3 border-b px-4 py-3 sm:px-5">
         <div>
           <p className="font-semibold">{mode === 'staff' ? 'Conversation' : 'Messages'}</p>

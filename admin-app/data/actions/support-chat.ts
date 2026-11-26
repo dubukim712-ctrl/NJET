@@ -288,6 +288,7 @@ export async function markSupportChatThreadReadAction(input: unknown): Promise<A
 
     const { error } = await context.supabase.rpc('support_chat_mark_thread_read', {
       p_thread_id: validation.data.threadId,
+      p_message_id: validation.data.messageId,
     });
     if (error) {
       return { success: false, error: 'The chat could not be marked as read.' };

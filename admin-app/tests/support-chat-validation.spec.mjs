@@ -110,10 +110,11 @@ test('chat messages are trimmed and capped at 4000 characters', () => {
   );
 });
 
-test('staff read requests require a valid thread id', () => {
+test('staff read requests require valid thread and message ids', () => {
   assert.equal(
     supportChatReadSchema.safeParse({
       threadId: '2ae8af24-c85a-44c3-9411-429fb0eb57d9',
+      messageId: '2ae8af24-c85a-44c3-9411-429fb0eb57da',
     }).success,
     true,
   );

@@ -78,6 +78,7 @@ export type DatabaseSupportChatFunctions = {
     Returns: {
       id: string;
       channel: 'web' | 'messenger';
+      is_unread: boolean;
       customer_kind: 'account' | 'guest';
       customer_name: string;
       guest_email: string | null;
@@ -99,7 +100,7 @@ export type DatabaseSupportChatFunctions = {
     Returns: number;
   };
   support_chat_mark_thread_read: {
-    Args: { p_thread_id: string };
+    Args: { p_thread_id: string; p_message_id: string };
     Returns: undefined;
   };
   support_chat_request_guest_email_access: {

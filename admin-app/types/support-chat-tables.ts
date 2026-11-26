@@ -213,16 +213,19 @@ export type SupportChatTables = {
       thread_id: string;
       user_id: string;
       last_read_at: string;
+      last_read_message_id: string | null;
     };
     Insert: {
       thread_id: string;
       user_id: string;
       last_read_at?: string;
+      last_read_message_id?: string | null;
     };
     Update: {
       thread_id?: string;
       user_id?: string;
       last_read_at?: string;
+      last_read_message_id?: string | null;
     };
     Relationships: [];
   };

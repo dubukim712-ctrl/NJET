@@ -1,9 +1,9 @@
 'use client';
-import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
 import { ArrowLeft, MessageCircle, Search } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
-import { createClient } from '@/data/supabase/client';
+import { subscribeStaffChatInbox } from '@/data/support-chat/staff-inbox-realtime';
 import { listSupportChatThreadsAction } from '@/data/actions/support-chat';
 import { MessengerBadge } from '@/components/support-chat/MessengerBadge';
 import { ChatConversation } from '@/components/support-chat/ChatConversation';
@@ -24,99 +24,91 @@ export function StaffChatInbox({ userId }: { userId: string }) {
   const [hasMore, setHasMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [realtime, setRealtime] = useState<'connecting' | 'connected' | 'offline'>('connecting');
+  const loadedCount = useRef(0);
+  const requestId = useRef(0);
   const loadThreads = useCallback(async (
     append = false,
     cursor?: { lastMessageAt: string; threadId: string },
   ) => {
-    const result = await listSupportChatThreadsAction({
-      status,
-      search,
-      ...(cursor
-        ? {
-            beforeLastMessageAt: cursor.lastMessageAt,
-            beforeThreadId: cursor.threadId,
-          }
-        : {}),
-    });
+    const id = ++requestId.current;
+    const rows: SupportChatThread[] = [];
+    let more = false;
+    let after = cursor;
+    do {
+      const result = await listSupportChatThreadsAction({
+        status, search,
+        beforeLastMessageAt: after?.lastMessageAt,
+        beforeThreadId: after?.threadId,
+      });
+      if (id !== requestId.current) return;
+      if (!result.success) {
+        setError(result.error);
+        setLoading(false);
+        setLoadingMore(false);
+        return;
+      }
+      rows.push(...result.data);
+      more = result.data.length === 50;
+      const last = result.data.at(-1);
+      after = last && { lastMessageAt: last.last_message_at, threadId: last.id };
+    } while (!append && more && rows.length < loadedCount.current);
 
-    if (!result.success) {
-      setError(result.error);
-      setLoading(false);
-      setLoadingMore(false);
-      return;
-    }
-
-    setThreads((current) => append ? [...current, ...result.data] : result.data);
-    if (!append && result.data.length > 0) {
-      setSelectedId((current) => current ?? result.data[0].id);
-    }
-    setHasMore(result.data.length === 50);
+    loadedCount.current = append ? loadedCount.current + rows.length : rows.length;
+    setThreads((current) => append ? [...current, ...rows] : rows);
+    setHasMore(more);
     setError(null);
     setLoading(false);
     setLoadingMore(false);
   }, [search, status]);
-
   useEffect(() => {
     const timer = setTimeout(() => void loadThreads(), 0);
     return () => clearTimeout(timer);
   }, [loadThreads]);
-
   useEffect(() => {
-    const supabase = createClient();
-    let active = true;
     let timer: ReturnType<typeof setTimeout> | undefined;
-    const channel = supabase
-      .channel('support-chat:staff-inbox', { config: { private: true } })
-      .on('broadcast', { event: 'chat_changed' }, () => {
-        if (timer) clearTimeout(timer);
-        timer = setTimeout(() => {
-          if (active) void loadThreads();
-        }, 200);
-      })
-      .subscribe((state) => {
-        if (!active) return;
-        if (state === 'SUBSCRIBED') setRealtime('connected');
-        else if (state === 'CHANNEL_ERROR' || state === 'TIMED_OUT' || state === 'CLOSED') {
-          setRealtime('offline');
-        }
-      });
-
-    return () => {
-      active = false;
+    const unsubscribe = subscribeStaffChatInbox((event) => {
+      if (event === 'offline') {
+        setRealtime('offline');
+        return;
+      }
+      if (event === 'connected') setRealtime('connected');
       if (timer) clearTimeout(timer);
-      void supabase.removeChannel(channel);
+      timer = setTimeout(() => void loadThreads(), 200);
+    });
+    return () => {
+      if (timer) clearTimeout(timer);
+      unsubscribe();
     };
   }, [loadThreads]);
-
   useEffect(() => {
     if (realtime === 'connected') return;
     const timer = setInterval(() => void loadThreads(), 30_000);
     return () => clearInterval(timer);
   }, [loadThreads, realtime]);
-
   const selectedThread = threads.find((thread) => thread.id === selectedId);
   const mobileConversationOpen = showMobileConversation && Boolean(selectedThread);
-
   const searchSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const nextSearch = searchInput.trim();
     if (nextSearch === search) return;
+    requestId.current++;
+    loadedCount.current = 0;
     setThreads([]);
     setSelectedId(null);
     setShowMobileConversation(false);
     setLoading(true);
     setSearch(nextSearch);
   };
-
   const changeStatus = (next: 'all' | 'open' | 'resolved') => {
     if (next === status) return;
+    requestId.current++;
+    loadedCount.current = 0;
     setThreads([]);
     setSelectedId(null);
     setShowMobileConversation(false);
     setLoading(true);
     setStatus(next);
   };
-
   const loadMore = () => {
     const last = threads[threads.length - 1];
     if (!last || loadingMore) return;
@@ -126,7 +118,6 @@ export function StaffChatInbox({ userId }: { userId: string }) {
       threadId: last.id,
     });
   };
-
   const updateStatus = (next: 'open' | 'resolved') => {
     setThreads((current) =>
       current.map((thread) =>
@@ -221,7 +212,7 @@ export function StaffChatInbox({ userId }: { userId: string }) {
                       className={`block w-full whitespace-normal rounded-xl p-3 text-left text-base font-normal ${active ? 'bg-primary/10' : 'hover:bg-muted'}`}
                     >
                       <div className="flex items-start justify-between gap-3">
-                        <span className="truncate font-semibold">{thread.customer_name}</span>
+                        <span className="flex min-w-0 items-center gap-2 font-semibold">{thread.is_unread && <span role="img" aria-label="Unread" className="size-2 shrink-0 rounded-full bg-primary" />}<span className="truncate">{thread.customer_name}</span></span>
                         <time className="shrink-0 text-[11px] text-muted-foreground" dateTime={thread.last_message_at}>
                           {new Date(thread.last_message_at).toLocaleDateString([], {
                             month: 'short',

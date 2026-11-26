@@ -47,7 +47,7 @@ export const supportChatDeleteSchema = z.object({
 export const supportChatInboxSchema = z.object({
   status: z.enum(['open', 'resolved', 'all']),
   search: z.string().trim().max(100),
-  beforeLastMessageAt: z.string().datetime().optional(),
+  beforeLastMessageAt: z.string().datetime({ offset: true }).optional(),
   beforeThreadId: z.string().uuid().optional(),
 }).refine(
   (value) => Boolean(value.beforeLastMessageAt) === Boolean(value.beforeThreadId),
@@ -61,4 +61,5 @@ export const supportChatStatusSchema = z.object({
 
 export const supportChatReadSchema = z.object({
   threadId: z.string().uuid(),
+  messageId: z.string().uuid(),
 });
