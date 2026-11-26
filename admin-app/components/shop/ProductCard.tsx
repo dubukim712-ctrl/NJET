@@ -8,19 +8,29 @@ import type { CatalogProduct } from '@/data/commerce/catalog';
 import { ProductImage } from '@/components/shop/ProductImage';
 import { ProductStockBadge } from '@/components/shop/ProductStockBadge';
 import { getStartingVariant } from '@/data/commerce/storefront-starting-variant';
+import { formatPhp } from '@/lib/commerce';
 import { ProductPrice } from '@/components/shop/ProductPrice';
 
 export function ProductCard({
   product,
   compactOnNarrow = false,
   loading,
+  featuredBranches,
 }: {
   product: CatalogProduct;
   compactOnNarrow?: boolean;
   loading?: 'eager' | 'lazy';
+  featuredBranches?: { id: string; name: string }[];
 }) {
   const { user } = useAuth();
   const startingVariant = getStartingVariant(product);
+  const specs = featuredBranches ? Object.entries(startingVariant?.specifications ?? {}).slice(0, 2) : [];
+  const stockedBranches = featuredBranches?.filter((branch) => product.variants.some(
+    (variant) => variant.stockByBranch.some((stock) => stock.branchId === branch.id && stock.available),
+  )) ?? [];
+  const monthly = featuredBranches && startingVariant && !product.is_demo && startingVariant.price_minor > 0
+    ? Math.round(Math.max(0, startingVariant.price_minor - startingVariant.home_credit_downpayment_minor) / 24)
+    : null;
   const { averageRating, reviewCount } = product.ratingSummary;
   const stockLabel = getStorefrontStockLabel(product.stockSummary, Boolean(user));
   const showsTotal = Boolean(user) && product.stockSummary.available && product.stockSummary.stock !== null;
@@ -116,9 +126,17 @@ export function ProductCard({
               {product.description || 'Ask our team for product details.'}
             </p>
           </div>
+          {specs.length > 0 && (
+            <p className="line-clamp-2 text-xs text-muted-foreground">
+              {specs.map(([label, value]) => `${label} ${value}`).join(' · ')}
+            </p>
+          )}
           <ProductStockBadge available={product.stockSummary.available}>
             {stockLabel}{showsTotal && ' across branches'}
           </ProductStockBadge>
+          {stockedBranches.length > 0 && (
+            <p className="text-xs leading-5 text-muted-foreground">In stock at {stockedBranches.map((branch) => branch.name).join(', ')}</p>
+          )}
           <div
             className={`flex min-h-10 min-w-0 items-center text-sm font-semibold ${
               compactOnNarrow
@@ -131,7 +149,7 @@ export function ProductCard({
             ) : (
               <div className="flex flex-col items-start">
                 <span className="text-[10px] font-medium leading-3 text-muted-foreground sm:text-xs sm:leading-4">
-                  From
+                  {featuredBranches ? 'Cash price from' : 'From'}
                 </span>
                 <ProductPrice
                   priceMinor={startingVariant.price_minor}
@@ -141,6 +159,9 @@ export function ProductCard({
               </div>
             )}
           </div>
+          {monthly !== null && (
+            <p className="text-xs font-medium text-primary">{formatPhp(monthly)}/mo estimated over 24 months before interest and fees</p>
+          )}
         </div>
       </article>
     </Link>

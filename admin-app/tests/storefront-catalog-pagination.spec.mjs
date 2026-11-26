@@ -61,6 +61,25 @@ test('catalog filters and sorts across all active products before paging whole p
   await db.exec(discountSql.slice(discountSql.indexOf('create or replace function public.resolve_product_discount'),
     discountSql.indexOf('create or replace function public.active_variant_discounts')));
   await db.exec(await migration('20240101000131_storefront_catalog_pagination.sql'));
+  await db.exec(`
+    alter table branches add column name text;
+    alter table branches add column address text;
+    update branches set name = 'Hillsview', address = 'Naic, Cavite';
+    alter table product_reviews alter column rating type smallint;
+    alter table product_reviews add column id uuid default gen_random_uuid(),
+      add column customer_id uuid, add column order_item_id uuid, add column comment text,
+      add column is_anonymous boolean, add column created_at timestamptz default now();
+    create table users (id uuid primary key, full_name text);
+    create table orders (id uuid primary key, branch_id uuid, customer_id uuid, status text);
+    create table order_items (id uuid primary key, order_id uuid, variant_id uuid not null references product_variants(id));
+    insert into users values ('${id(206)}', 'Anonymous Test Rider');
+    insert into orders values ('${id(207)}', '${id(203)}', '${id(206)}', 'completed');
+    insert into order_items
+    select '${id(208)}', '${id(207)}', id from product_variants where sku = 'product-125-510';
+    update product_reviews set customer_id = '${id(206)}', order_item_id = '${id(208)}',
+      comment = 'A published order review.', is_anonymous = true;
+  `);
+  await db.exec(await migration('20240101000139_storefront_landing.sql'));
 
   async function page({ search = '', categoryId = null, subcategoryId = null, inStock = false, sort = 'featured', number = 1 } = {}) {
     const result = await db.query('select public.storefront_catalog_page($1,$2,$3,$4,$5,$6,24) as catalog',
@@ -69,6 +88,12 @@ test('catalog filters and sorts across all active products before paging whole p
   }
 
   await db.exec('grant execute on function public.storefront_catalog(text,uuid[]) to anon; set role anon');
+  const featured = (await db.query("select public.storefront_catalog_page('',null,null,false,'featured',1,4,null,'ebike') as catalog")).rows[0].catalog;
+  assert.deepEqual(featured.products.map((product) => product.slug), ['product-125']);
+  assert.deepEqual(featured.products[0].variants.at(-1).stockByBranch,
+    [{ branchId: id(203), available: true, stock: null }]);
+  const reviews = await db.query('select slug, reviewer_name, branch_name from public.storefront_home_reviews()');
+  assert.deepEqual(reviews.rows, [{ slug: 'product-125', reviewer_name: null, branch_name: 'Hillsview' }]);
   const first = await page();
   assert.equal(first.total, 125);
   assert.equal(first.products.length, 24);

@@ -14,9 +14,13 @@ export type DatabaseStorefrontFunctions = {
   storefront_catalog_page: {
     Args: {
       p_search: string; p_category: string | null; p_subcategory: string | null;
-      p_in_stock: boolean; p_sort: string; p_page: number; p_page_size: number; p_slug?: string;
+      p_in_stock: boolean; p_sort: string; p_page: number; p_page_size: number; p_slug?: string; p_product_type?: ProductType;
     };
     Returns: Json;
+  };
+  storefront_home_reviews: {
+    Args: Record<PropertyKey, never>;
+    Returns: { id: string; product_name: string; slug: string; rating: number; comment: string; reviewer_name: string | null; branch_name: string }[];
   };
   storefront_catalog: {
     Args: { p_slug?: string | null; p_variant_ids?: string[] | null };

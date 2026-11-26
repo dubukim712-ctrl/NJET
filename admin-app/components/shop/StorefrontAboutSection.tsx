@@ -1,11 +1,14 @@
+import type { StorefrontHomeReview } from '@/data/commerce/storefront-home';
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, MapPin } from "lucide-react";
 
 export function StorefrontAboutSection({
   imageUrl,
+  reviews,
 }: {
   imageUrl: string | null;
+  reviews: StorefrontHomeReview[];
 }) {
   return (
     <section
@@ -49,19 +52,20 @@ export function StorefrontAboutSection({
         </div>
       </div>
 
-      {imageUrl ? (
-        <div className="relative min-h-64 overflow-hidden rounded-2xl bg-muted sm:min-h-80">
-          <Image
-            src={imageUrl}
-            alt="Noel & Jane E-bike Trading store or team"
-            fill
-            sizes="(min-width: 1024px) 45vw, 100vw"
-            unoptimized
-            className="object-cover"
-          />
-        </div>
-      ) : (
-        <div className="flex min-h-64 flex-col justify-between rounded-2xl bg-primary p-6 text-primary-foreground sm:min-h-80 sm:p-8">
+      <div className="flex flex-col gap-4">
+        {imageUrl && (
+          <div className="relative min-h-64 overflow-hidden rounded-2xl bg-muted sm:min-h-80">
+            <Image
+              src={imageUrl}
+              alt="From the Noel & Jane E-bike Trading story"
+              fill
+              sizes="(min-width: 1024px) 45vw, 100vw"
+              unoptimized
+              className="object-cover"
+            />
+          </div>
+        )}
+        <div className="flex flex-col justify-between gap-5 rounded-2xl bg-primary p-6 text-primary-foreground sm:p-8">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] opacity-80">
             Our journey
           </p>
@@ -80,6 +84,23 @@ export function StorefrontAboutSection({
             <MapPin className="size-4 shrink-0" aria-hidden="true" />
             Hillsview, Naic · Established July 2023
           </p>
+        </div>
+      </div>
+      {reviews.length > 0 && (
+        <div className="lg:col-span-2">
+          <h3 className="mb-4 text-xl font-semibold">Verified Cavite purchases</h3>
+          <div className="grid gap-4 md:grid-cols-3">
+            {reviews.map((review) => (
+              <figure key={review.id} className="rounded-2xl border bg-card p-5">
+                <p className="mb-2 text-sm font-semibold text-primary">{review.rating} / 5 stars</p>
+                <blockquote className="line-clamp-4 break-words text-sm leading-6">“{review.comment}”</blockquote>
+                <figcaption className="mt-3 text-xs leading-5 text-muted-foreground">
+                  {review.reviewer_name ?? 'Anonymous customer'} · {review.branch_name}<br />
+                  <Link href={`/shop/view-product/${review.slug}`} className="font-medium text-primary hover:underline">{review.product_name}</Link>
+                </figcaption>
+              </figure>
+            ))}
+          </div>
         </div>
       )}
     </section>

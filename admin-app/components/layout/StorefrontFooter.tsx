@@ -1,5 +1,6 @@
 "use client";
 
+import { serviceBookingPath, serviceSignInPath } from '@/lib/storefront-service';
 import Link from "next/link";
 import { CircleHelp, Clock3, Mail, MapPin, Phone } from "lucide-react";
 import { LegalFooterLinks } from "@/components/layout/LegalFooterLinks";
@@ -7,15 +8,14 @@ import type { StorefrontBusinessInfo } from "@/data/commerce/system-settings";
 
 export function StorefrontFooter({
   businessInfo,
-  businessInfoError,
-  businessInfoPending,
-  hasBusinessContact,
+  branches,
+  canBook,
 }: {
   businessInfo: StorefrontBusinessInfo | null;
-  businessInfoError: string | null;
-  businessInfoPending: boolean;
-  hasBusinessContact: boolean;
+  branches: { id: string; name: string; address: string }[];
+  canBook: boolean;
 }) {
+  const hasBusinessContact = Boolean(businessInfo?.phone || businessInfo?.email || businessInfo?.address);
   const email = businessInfo?.email ?? "";
   const domainStart = email.lastIndexOf("@") + 1;
 
@@ -30,26 +30,15 @@ export function StorefrontFooter({
             <h2 className="mt-3 text-2xl font-semibold tracking-tight">
               {businessInfo?.businessName || "NJET"}
             </h2>
-            <p
-              className="mt-3 text-sm leading-6 text-primary-foreground/80"
-              role={businessInfoError ? "status" : undefined}
-            >
-              {businessInfoError
-                ? "Business contact information is temporarily unavailable."
-                : businessInfoPending
-                  ? "Loading business contact information..."
-                  : hasBusinessContact || businessInfo?.businessHours
-                    ? "Get in touch with our team. We are here to help you find your next ride."
-                    : "Business contact details have not been added yet."}
-            </p>
+            <Link href="/#business-contact" className="mt-3 inline-flex min-h-10 items-center text-sm underline underline-offset-4">Find an NJET branch</Link>
           </section>
 
-          <div className="grid gap-8 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
+          <div className="grid gap-8 sm:grid-cols-2 sm:gap-6 lg:grid-cols-2 xl:grid-cols-4">
             <section>
               <h3 className="text-xs font-semibold uppercase tracking-[0.16em] text-primary-foreground/70">
                 Contact
               </h3>
-              {hasBusinessContact ? (
+              {hasBusinessContact && (
                 <address className="mt-4 space-y-4 not-italic">
                   {businessInfo?.phone && (
                     <a
@@ -104,10 +93,6 @@ export function StorefrontFooter({
                     </div>
                   )}
                 </address>
-              ) : (
-                <p className="mt-4 text-sm leading-6 text-primary-foreground/80">
-                  Contact details have not been added yet.
-                </p>
               )}
               <Link
                 href="/help"
@@ -122,7 +107,7 @@ export function StorefrontFooter({
               <h3 className="text-xs font-semibold uppercase tracking-[0.16em] text-primary-foreground/70">
                 Business hours
               </h3>
-              {businessInfo?.businessHours ? (
+              {businessInfo?.businessHours && (
                 <div className="mt-4 flex items-start gap-3">
                   <Clock3
                     className="mt-0.5 size-4 shrink-0"
@@ -132,13 +117,23 @@ export function StorefrontFooter({
                     {businessInfo.businessHours}
                   </p>
                 </div>
-              ) : (
-                <p className="mt-4 text-sm leading-6 text-primary-foreground/80">
-                  Hours have not been added yet.
-                </p>
               )}
+              {branches.length > 0 && <ul className="mt-4 space-y-2 text-sm leading-5">
+                {branches.map((branch) => <li key={branch.id}><strong>{branch.name}</strong><br />{branch.address}</li>)}
+              </ul>}
             </section>
 
+            <section>
+              <h3 className="text-xs font-semibold uppercase tracking-[0.16em] text-primary-foreground/70">My Account</h3>
+              <nav aria-label="Customer account" className="mt-4 flex flex-col items-start gap-3 text-sm [&_a:hover]:underline">
+                {canBook ? (
+                  <><Link href="/dashboard">My dashboard</Link><Link href="/dashboard/orders">Orders &amp; certificates</Link></>
+                ) : (
+                  <><Link href="/login">Sign in</Link><Link href="/register">Join</Link></>
+                )}
+                <Link href={canBook ? serviceBookingPath : serviceSignInPath}>{canBook ? 'Book a Service Checkup' : 'Sign in to Book Service'}</Link>
+              </nav>
+            </section>
             <LegalFooterLinks />
           </div>
         </div>

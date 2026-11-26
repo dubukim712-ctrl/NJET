@@ -1,3 +1,4 @@
+import { getPublicStorefrontInfo } from '@/data/commerce/storefront-home';
 import { StorefrontShell } from '@/components/layout/StorefrontShell';
 import { SupportChatLauncher } from '@/components/support-chat/SupportChatLauncher';
 
@@ -6,9 +7,10 @@ export default async function StorefrontLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const { business, branches } = await getPublicStorefrontInfo();
   return (
     <>
-      <StorefrontShell user={null}>{children}</StorefrontShell>
+      <StorefrontShell businessInfo={business.data} branches={branches.data ?? []} user={null}>{children}</StorefrontShell>
       <SupportChatLauncher />
     </>
   );

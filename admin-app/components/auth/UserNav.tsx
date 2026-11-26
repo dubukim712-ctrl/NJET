@@ -1,7 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { CircleHelp, LogOut, User, Settings, Shield } from "lucide-react";
+import { CalendarDays, CircleHelp, Package, LogOut, User, Settings, Shield } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/components/auth/AuthProvider";
 import {
@@ -98,6 +99,22 @@ export function UserNav({ user, showHelp = false }: UserNavProps) {
         <DropdownMenuSeparator />
         {canUseStorefront && (
           <>
+            {showHelp && displayUser.scope === "customer" && (
+              <>
+                <DropdownMenuItem asChild>
+                  <Link href="/dashboard/orders" className="flex items-center gap-2">
+                    <Package className="size-4" aria-hidden="true" />
+                    Orders &amp; certificates
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/dashboard/appointments" className="flex items-center gap-2">
+                    <CalendarDays className="size-4" aria-hidden="true" />
+                    Service history
+                  </Link>
+                </DropdownMenuItem>
+              </>
+            )}
             {showHelp && (
               <DropdownMenuItem asChild>
                 <a href="/dashboard/help" className="flex items-center gap-2">

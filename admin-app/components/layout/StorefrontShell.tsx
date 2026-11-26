@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  Home, CalendarDays, Package, ShoppingBag, Search, X,
+  Home, CalendarDays, Package, ShoppingBag, Search, X, Menu,
   type LucideIcon,
 } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
@@ -13,10 +13,8 @@ import { UserNav } from "@/components/auth/UserNav";
 import { CartDrawer } from "@/components/cart/CartDrawer";
 import { StorefrontFooter } from "@/components/layout/StorefrontFooter";
 import { ShopFiltersProvider } from "@/components/shop/ShopFiltersContext";
-import {
-  StorefrontBusinessInfoQueryError,
-  useStorefrontBusinessInfoQuery,
-} from "@/data/commerce/storefront-business-info-client";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/DropdownMenu";
+import type { StorefrontBusinessInfo } from "@/data/commerce/system-settings";
 import { hasPermission, PERMISSIONS } from "@/lib/permissions";
 import { cn } from "@/lib/utils";
 import type { UserProfile } from "@/types/database";
@@ -24,6 +22,8 @@ import type { UserProfile } from "@/types/database";
 interface StorefrontShellProps {
   user: UserProfile | null;
   children: React.ReactNode;
+  businessInfo: StorefrontBusinessInfo | null;
+  branches: { id: string; name: string; address: string }[];
 }
 
 const NAVIGATION: {
@@ -32,12 +32,18 @@ const NAVIGATION: {
   icon: LucideIcon;
 }[] = [
   { name: "Home", href: "/", icon: Home },
-  { name: "Shop", href: "/shop", icon: ShoppingBag },
+  { name: "E-Bikes", href: "/shop", icon: ShoppingBag },
   { name: "Orders", href: "/dashboard/orders", icon: Package },
   { name: "Appointments", href: "/dashboard/appointments", icon: CalendarDays },
 ];
 
-export function StorefrontShell({ user, children }: StorefrontShellProps) {
+const sectionLinks = [
+  { name: "Parts & Service", href: "/#service-center" },
+  { name: "Installments", href: "/#installments" },
+  { name: "Branches", href: "/#business-contact" },
+];
+
+export function StorefrontShell({ user, children, businessInfo, branches }: StorefrontShellProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [shopFiltersOpen, setShopFiltersOpen] = useState(false);
@@ -46,18 +52,6 @@ export function StorefrontShell({ user, children }: StorefrontShellProps) {
   const shopFiltersContainerRef = useRef<HTMLDivElement>(null);
   const shopFiltersButtonRef = useRef<HTMLButtonElement>(null);
   const { user: clientUser } = useAuth();
-  const businessInfoQuery = useStorefrontBusinessInfoQuery();
-  const businessInfo = businessInfoQuery.data ?? null;
-  const businessInfoError =
-    !businessInfo &&
-    businessInfoQuery.error instanceof StorefrontBusinessInfoQueryError
-      ? businessInfoQuery.error.message
-      : !businessInfo && businessInfoQuery.isError
-        ? "Business contact information is temporarily unavailable."
-        : null;
-  const hasBusinessContact = Boolean(
-    businessInfo?.phone || businessInfo?.email || businessInfo?.address,
-  );
   const displayUser = clientUser ?? user;
   const canAccessStorefront = hasPermission(
     displayUser,
@@ -106,12 +100,12 @@ export function StorefrontShell({ user, children }: StorefrontShellProps) {
         mobile ? "w-full justify-around" : "gap-1",
       )}
     >
-      {navigationItems.map((item) => {
+      {(mobile ? navigationItems : NAVIGATION.slice(0, 2)).map((item) => {
         const href = item.href;
         const active =
           item.name === "Home"
             ? pathname === "/"
-            : item.name === "Shop"
+            : item.name === "E-Bikes"
               ? pathname.startsWith("/shop")
               : item.name === "Orders"
                 ? pathname.startsWith("/dashboard/orders")
@@ -144,7 +138,7 @@ export function StorefrontShell({ user, children }: StorefrontShellProps) {
             className={cn(
               mobile
                 ? "flex min-h-16 flex-1 flex-col items-center justify-center gap-1 text-xs font-medium"
-                : "inline-flex min-h-10 items-center justify-center gap-2 rounded-full px-3 text-sm font-medium transition-colors sm:px-4",
+                : "inline-flex min-h-10 items-center justify-center gap-2 whitespace-nowrap rounded-full px-2 text-sm font-medium transition-colors xl:px-3",
               active
                 ? "text-primary"
                 : "text-muted-foreground hover:text-accent-foreground",
@@ -153,19 +147,25 @@ export function StorefrontShell({ user, children }: StorefrontShellProps) {
             )}
           >
             <item.icon
-              className={mobile ? "h-5 w-5" : "h-4 w-4"}
+              className={mobile ? "h-5 w-5" : "hidden"}
               aria-hidden="true"
             />
             {item.name}
           </Link>
         );
       })}
+      {!mobile && sectionLinks.map(({ name, href }) => (
+        <Link key={href} href={href} className="inline-flex min-h-10 items-center whitespace-nowrap px-2 text-sm font-medium text-muted-foreground hover:text-primary xl:px-3">{name}</Link>
+      ))}
     </nav>
   );
 
   return (
     <div className="min-h-dvh bg-background pb-[calc(4rem+env(safe-area-inset-bottom))] lg:pb-0">
       <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+        <div className="bg-primary px-3 py-1.5 text-center text-[11px] leading-4 text-primary-foreground sm:text-xs">
+          <strong>MEMBER PERKS:</strong> Sign in to book a service checkup, track orders &amp; view your Certificate of Ownership.
+        </div>
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6">
           <Link
             href="/"
@@ -181,7 +181,7 @@ export function StorefrontShell({ user, children }: StorefrontShellProps) {
                 className="size-9 shrink-0 rounded-md object-contain"
               />
             )}
-            <span className="truncate">
+            <span className="truncate lg:max-w-40 xl:max-w-none">
               {businessInfo?.businessName || "NJET"}
             </span>
           </Link>
@@ -209,7 +209,7 @@ export function StorefrontShell({ user, children }: StorefrontShellProps) {
                 <div
                   id="shop-filters-popover-root"
                   ref={(element) => setShopFiltersPopoverRoot(element)}
-                  className="fixed left-1/2 top-[4.5rem] z-[60] w-[min(90vw,24rem)] -translate-x-1/2"
+                  className="fixed left-1/2 top-[7.5rem] z-[60] w-[min(90vw,24rem)] -translate-x-1/2"
                 />
               </div>
             )}
@@ -217,7 +217,7 @@ export function StorefrontShell({ user, children }: StorefrontShellProps) {
             {displayUser ? (
               <UserNav user={displayUser} showHelp />
             ) : (
-              <div className="flex items-center gap-1">
+              <div className="hidden items-center gap-1 sm:flex">
                 <Link
                   href="/login"
                   className="inline-flex min-h-10 items-center rounded-md px-2 text-sm font-medium hover:bg-accent"
@@ -232,6 +232,24 @@ export function StorefrontShell({ user, children }: StorefrontShellProps) {
                 </Link>
               </div>
             )}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button type="button" aria-label="Storefront menu" className="inline-flex size-10 shrink-0 items-center justify-center rounded-full hover:bg-accent lg:hidden">
+                  <Menu className="size-5" aria-hidden="true" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-52">
+                {[...NAVIGATION.slice(0, 2), ...sectionLinks].map(({ name, href }) => (
+                  <DropdownMenuItem key={href} asChild><Link href={href} className="min-h-10">{name}</Link></DropdownMenuItem>
+                ))}
+                {!displayUser && (
+                  <>
+                    <DropdownMenuItem asChild><Link href="/login" className="min-h-10">Sign in</Link></DropdownMenuItem>
+                    <DropdownMenuItem asChild><Link href="/register" className="min-h-10">Join</Link></DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </header>
@@ -246,12 +264,7 @@ export function StorefrontShell({ user, children }: StorefrontShellProps) {
           {children}
         </ShopFiltersProvider>
       </main>
-      <StorefrontFooter
-        businessInfo={businessInfo}
-        businessInfoError={businessInfoError}
-        businessInfoPending={businessInfoQuery.isPending}
-        hasBusinessContact={hasBusinessContact}
-      />
+      <StorefrontFooter businessInfo={businessInfo} branches={branches} canBook={canAccessStorefront && displayUser?.scope === "customer"} />
       <div className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_16px_rgba(0,0,0,0.06)] backdrop-blur lg:hidden">
         <div className="mx-auto flex max-w-lg justify-around">
           {navigation(true)}

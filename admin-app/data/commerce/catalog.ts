@@ -83,11 +83,13 @@ async function readCatalogPage(
   filters: ShopCatalogFilters,
   pageSize: number,
   slug?: string,
+  productType?: CatalogProduct['product_type'],
 ): Promise<ShopCatalogPage> {
   const result = await supabase.rpc('storefront_catalog_page', {
     p_search: filters.search, p_category: filters.category, p_subcategory: filters.subcategory,
     p_in_stock: filters.inStock, p_sort: filters.sort, p_page: filters.page, p_page_size: pageSize,
     ...(slug === undefined ? {} : { p_slug: slug }),
+    ...(productType === undefined ? {} : { p_product_type: productType }),
   });
   if (result.error) throw result.error;
   return shopCatalogPageSchema.parse(result.data);
@@ -99,6 +101,19 @@ export async function getShopCatalogPage(filters: ShopCatalogFilters): Promise<S
   } catch (error) {
     unstable_rethrow(error);
     console.error('Could not load the storefront catalog page.', catalogErrorDetails(error));
+    return null;
+  }
+}
+
+export async function getFeaturedStorefrontBikes(): Promise<CatalogProduct[] | null> {
+  try {
+    const page = await readCatalogPage(await createClient(), {
+      search: '', category: null, subcategory: null, inStock: false, sort: 'featured', page: 1,
+    }, 4, undefined, 'ebike');
+    return page.products;
+  } catch (error) {
+    unstable_rethrow(error);
+    console.error('Could not load featured e-bikes.', catalogErrorDetails(error));
     return null;
   }
 }
