@@ -9,6 +9,7 @@ interface ModalProps {
   title: string;
   onClose: () => void;
   children: ReactNode;
+  footer?: ReactNode;
   size?: "default" | "wide";
   placement?: "center" | "bottom";
 }
@@ -18,6 +19,7 @@ export function Modal({
   title,
   onClose,
   children,
+  footer,
   size = "default",
   placement = "center",
 }: ModalProps) {
@@ -25,6 +27,10 @@ export function Modal({
   const titleId = useId();
   const bottomSheet = placement === "bottom";
   const width = size === "wide" ? "max-w-3xl" : "max-w-xl";
+  const hasFooter = footer != null;
+  const viewportHeight = hasFooter
+    ? "max-h-[85vh] supports-[height:100dvh]:max-h-[85dvh]"
+    : "max-h-[90dvh]";
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -47,10 +53,10 @@ export function Modal({
       onClick={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}
-      className={`fixed max-h-[90dvh] overflow-visible border-0 bg-transparent p-0 text-card-foreground shadow-none backdrop:bg-black/50 ${bottomSheet ? "inset-x-0 bottom-0 top-auto m-0 w-full max-w-none rounded-t-2xl" : `inset-0 m-auto w-[calc(100%-2rem)] rounded-xl ${width}`}`}
+      className={`fixed z-50 ${viewportHeight} overflow-visible border-0 bg-transparent p-0 text-card-foreground shadow-none backdrop:bg-black/50 ${bottomSheet ? "inset-x-0 bottom-0 top-auto m-0 w-full max-w-none rounded-t-2xl" : `inset-0 m-auto w-[calc(100%-2rem)] rounded-xl ${width}`}`}
     >
-      <div className={`max-h-[90dvh] overflow-y-auto border bg-card text-card-foreground shadow-xl ${bottomSheet ? "rounded-t-2xl" : "rounded-xl"}`}>
-        <header className="sticky top-0 z-10 flex items-center justify-between gap-4 border-b bg-card px-4 py-3 sm:px-5 sm:py-4">
+      <div className={`${viewportHeight} ${hasFooter ? "flex flex-col overflow-hidden" : "overflow-y-auto"} border bg-card text-card-foreground shadow-xl ${bottomSheet ? "rounded-t-2xl" : "rounded-xl"}`}>
+        <header className={`${hasFooter ? "shrink-0" : "sticky top-0 z-10"} flex items-center justify-between gap-4 border-b bg-card px-4 py-3 sm:px-5 sm:py-4`}>
           <h2 id={titleId} className="text-lg font-semibold">
             {title}
           </h2>
@@ -63,7 +69,23 @@ export function Modal({
             <X className="size-5" aria-hidden="true" />
           </Button>
         </header>
-        <div className={bottomSheet ? "px-4 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))]" : "p-4 sm:p-6"}>{children}</div>
+        {hasFooter ? (
+          <>
+            <div
+              role="region"
+              aria-label={title + " content"}
+              tabIndex={0}
+              className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6"
+            >
+              {children}
+            </div>
+            <footer className="shrink-0 border-t px-4 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom,0px))] sm:px-6">
+              {footer}
+            </footer>
+          </>
+        ) : (
+          <div className={bottomSheet ? "px-4 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))]" : "p-4 sm:p-6"}>{children}</div>
+        )}
       </div>
     </dialog>
   );

@@ -55,42 +55,42 @@ export function CheckoutPolicyFields({
         </span>
       </div>
       {error && <p id={id + '-error'} role="alert" className="text-sm text-destructive">{error}</p>}
-      <Modal open={Boolean(policy)} title={policy?.title ?? ''} onClose={closePolicy} size="wide">
+      <Modal
+        open={Boolean(policy)}
+        title={policy?.title ?? ''}
+        onClose={closePolicy}
+        size="wide"
+        footer={
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="outline" onClick={closePolicy}>Close</Button>
+            <Button type="button" onClick={() => {
+              onAcceptedChange(true);
+              closePolicy();
+            }}>I Agree</Button>
+          </div>
+        }
+      >
         {policy && (
-          <>
-            <div
-              role="region"
-              aria-label={policy.title + ' content'}
-              tabIndex={0}
-              className="max-h-[60vh] space-y-4 overflow-y-auto overscroll-contain pr-3 text-sm leading-6"
-            >
-              <p className="text-muted-foreground">Version {policy.version} · Last updated {policy.lastUpdated}</p>
-              <p>{policy.intro}</p>
-              {policy.sections.map((section) => (
-                <section key={section.id} className="space-y-2">
-                  <h3 className="font-semibold">{section.title}</h3>
-                  {section.paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
-                  {section.bullets && (
-                    <ul className="list-disc space-y-1 pl-5">
-                      {section.bullets.map((bullet) => <li key={bullet}>{bullet}</li>)}
-                    </ul>
-                  )}
-                </section>
-              ))}
-              {policy.slug === 'terms' && (
-                <Link className="font-medium text-primary underline underline-offset-4" href="/return-policy">
-                  Return Policy
-                </Link>
-              )}
-            </div>
-            <footer className="mt-4 flex justify-end gap-2 border-t pt-4">
-              <Button type="button" variant="outline" onClick={closePolicy}>Close</Button>
-              <Button type="button" onClick={() => {
-                onAcceptedChange(true);
-                closePolicy();
-              }}>I Agree</Button>
-            </footer>
-          </>
+          <div className="space-y-4 text-sm leading-6">
+            <p className="text-muted-foreground">Version {policy.version} · Last updated {policy.lastUpdated}</p>
+            <p>{policy.intro}</p>
+            {policy.sections.map((section) => (
+              <section key={section.id} className="space-y-2">
+                <h3 className="font-semibold">{section.title}</h3>
+                {section.paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
+                {section.bullets && (
+                  <ul className="list-disc space-y-1 pl-5">
+                    {section.bullets.map((bullet) => <li key={bullet}>{bullet}</li>)}
+                  </ul>
+                )}
+              </section>
+            ))}
+            {policy.slug === 'terms' && (
+              <Link className="font-medium text-primary underline underline-offset-4" href="/return-policy">
+                Return Policy
+              </Link>
+            )}
+          </div>
         )}
       </Modal>
     </section>
