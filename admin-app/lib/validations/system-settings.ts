@@ -4,7 +4,7 @@ const uuid = '[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f
 
 export const settingsAssetPathSchema = z.string().regex(
   new RegExp(
-    `^(logos/${uuid}\\.(jpg|png|webp)|about/${uuid}\\.(jpg|png|webp)|recipients/(gcash|bank_transfer|card)/qr/${uuid}\\.(jpg|png|webp))$`
+    `^(logos/${uuid}\\.(jpg|png|webp)|hero/${uuid}\\.(jpg|png|webp)|about/${uuid}\\.(jpg|png|webp)|recipients/(gcash|bank_transfer|card)/qr/${uuid}\\.(jpg|png|webp))$`
   )
 );
 
@@ -23,6 +23,7 @@ export const businessSettingsSchema = z.object({
     (value) => !/[\u0000-\u001f\u007f]/.test(value)
   ),
   logoPath: z.string().regex(new RegExp(`^logos/${uuid}\\.(jpg|png|webp)$`)).nullable(),
+  heroImagePath: z.string().regex(new RegExp(`^hero/${uuid}\\.(jpg|png|webp)$`)).nullable().optional(),
   aboutImagePath: z.string().regex(new RegExp(`^about/${uuid}\\.(jpg|png|webp)$`)).nullable(),
 }).strict();
 

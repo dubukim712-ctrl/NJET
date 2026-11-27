@@ -181,7 +181,7 @@ export async function removeUnusedSystemSettingsAssetAction(
     return { success: false, error: 'Select a valid unused settings file.' };
   }
 
-  const bucket = parsed.data.startsWith('logos/') || parsed.data.startsWith('about/')
+  const bucket = parsed.data.startsWith('logos/') || parsed.data.startsWith('about/') || parsed.data.startsWith('hero/')
     ? 'njet-storefront-branding'
     : PAYMENT_MEDIA_BUCKET;
   const removed = await removeStoredObject(supabase, bucket, parsed.data);

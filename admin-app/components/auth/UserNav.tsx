@@ -92,7 +92,7 @@ export function UserNav({ user, showHelp = false }: UserNavProps) {
             <p className="truncate text-xs leading-none text-muted-foreground">
               {displayUser.email}
             </p>
-            <span className="mt-1 inline-flex w-fit items-center rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium capitalize text-primary">
+            <span className="mt-1 inline-flex w-fit items-center rounded-full bg-accent px-2 py-0.5 text-xs font-medium capitalize text-foreground">
               {displayUser.role_name}
             </span>
           </div>

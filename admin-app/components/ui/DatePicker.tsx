@@ -190,10 +190,10 @@ export function DatePicker({
         aria-describedby={describedBy}
         aria-expanded={open}
         aria-haspopup="dialog"
-        className={`flex min-h-11 w-full min-w-0 items-center justify-between gap-3 rounded-md border bg-[#fffefa] px-3 py-2 text-left text-base leading-5 text-[#202a28] transition hover:border-[#53635e] focus-visible:outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:bg-[#eceae2] disabled:text-[#4c5a56] md:text-sm ${
+        className={`flex min-h-11 w-full min-w-0 items-center justify-between gap-3 rounded-md border bg-card px-3 py-2 text-left text-base leading-5 text-foreground transition hover:border-foreground/60 focus-visible:outline-none focus-visible:ring-2 disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground md:pointer-fine:text-sm ${
           error
-            ? "border-[#9a372d] focus-visible:border-[#9a372d] focus-visible:ring-[#9a372d]/25"
-            : "border-[#9ca69f] focus-visible:border-[#315b50] focus-visible:ring-[#315b50]/30"
+            ? "border-destructive focus-visible:border-destructive focus-visible:ring-destructive"
+            : "border-input focus-visible:border-ring focus-visible:ring-ring"
         }`}
         disabled={disabled}
         id={buttonId}
@@ -211,7 +211,7 @@ export function DatePicker({
         <span className="min-w-0 truncate">{displayDate(selectedValue)}</span>
         <CalendarDays
           aria-hidden="true"
-          className="size-4 shrink-0 text-[#3f4d47]"
+          className="size-4 shrink-0 text-muted-foreground"
         />
       </button>
       {helperText && (

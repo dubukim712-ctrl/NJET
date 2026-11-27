@@ -1,13 +1,8 @@
 import Image from "next/image";
-import caviteRiders from "./njet-cavite-riders-wide.webp";
+import defaultHero from "./njet-storefront-hero.jpg";
 import Link from "next/link";
 import {
-  ArrowDown,
   ArrowRight,
-  Bike,
-  BriefcaseBusiness,
-  Gauge,
-  Users,
   MapPin,
   IdCard,
   ShieldCheck,
@@ -24,16 +19,10 @@ import { hasPermission, PERMISSIONS } from "@/lib/permissions";
 import { Button } from "@/components/ui/Button";
 import { ProductCard } from "@/components/shop/ProductCard";
 import { HomeCreditEstimator } from "@/components/shop/HomeCreditEstimator";
+import { StorefrontBenefitsSection } from "@/components/shop/StorefrontBenefitsSection";
 import { StorefrontAboutSection } from "@/components/shop/StorefrontAboutSection";
 import { StorefrontBranchesSection } from "@/components/shop/StorefrontBranchesSection";
 import { StorefrontServiceSection } from "@/components/shop/StorefrontServiceSection";
-
-const useCases = [
-  { title: "Daily Commute", query: "commute", icon: Bike },
-  { title: "School & Family", query: "family", icon: Users },
-  { title: "Negosyo / Cargo", query: "cargo", icon: BriefcaseBusiness },
-  { title: "Long Range", query: "range", icon: Gauge },
-];
 
 const steps = [
   {
@@ -86,7 +75,7 @@ export async function StorefrontHomePage({
   });
 
   return (
-    <div className="space-y-12 sm:space-y-16">
+    <div className="space-y-8 md:space-y-12">
       {permissionError && (
         <p
           role="alert"
@@ -95,14 +84,14 @@ export async function StorefrontHomePage({
           You don&apos;t have permission to access that page.
         </p>
       )}
-      <div className="[--hero-bg:#1b4d36]">
+      <div className="[--hero-bg:#264653]">
         <section
           aria-labelledby="storefront-hero-title"
-          className="relative isolate overflow-hidden bg-[var(--hero-bg)] text-white lg:flex lg:aspect-[11/5] lg:min-h-[30rem] lg:items-center"
+          className="relative isolate overflow-hidden bg-[var(--hero-bg)] text-[#f4ede4] lg:flex lg:aspect-[11/5] lg:min-h-[30rem] lg:items-center"
         >
           <div className="relative z-10 mx-auto w-full max-w-7xl px-4 pt-7 sm:px-6 sm:pt-10 lg:py-12">
             <div className="max-w-xl lg:w-[46%]">
-              <p className="text-xs font-semibold uppercase tracking-[0.19em] text-secondary">
+              <p className="text-xs font-semibold uppercase tracking-[0.19em] text-white">
                 Noel &amp; Jane E-bike Trading
               </p>
               <h1
@@ -111,17 +100,14 @@ export async function StorefrontHomePage({
               >
                 Ebikes for Daily Commute, School, Family &amp; Negosyo
               </h1>
-              <p className="mt-5 max-w-md text-base leading-6 text-primary-foreground sm:text-lg sm:leading-7 md:max-w-lg">
-                Explore our wide range of e-bikes designed for your daily
-                commute, school runs, family outings, and negosyo needs. Find
-                the perfect e-bike that fits your lifestyle and enjoy the
-                benefits of sustainable transportation.
+              <p className="mt-5 max-w-md text-base leading-6 text-[#f4ede4] sm:text-lg sm:leading-7 md:max-w-lg">
+                Ride with comfort, save on fuel, and enjoy hassle-free travel with your very own e-bike.
               </p>
               <div className="mt-7 flex flex-wrap gap-2.5">
                 <Button
-                  asChild
+                  asChild variant={null}
                   size={null}
-                  className="min-h-11 gap-1 rounded-lg text-xs sm:text-sm bg-white px-4 font-semibold text-[color:var(--hero-bg)] hover:bg-emerald-50"
+                  className="min-h-11 gap-1 rounded-lg text-xs sm:text-sm bg-primary-action px-4 font-semibold text-primary-foreground ring-1 ring-inset ring-white/40 hover:bg-primary-action-hover focus-visible:outline-white focus-visible:ring-[#f4ede4]"
                 >
                   <Link href="/shop">
                     Explore the shop{" "}
@@ -144,9 +130,9 @@ export async function StorefrontHomePage({
           </div>
           <div className="pointer-events-none relative aspect-[4/3] sm:aspect-video lg:absolute lg:inset-0 lg:aspect-auto">
             <Image
-              src={caviteRiders}
-              placeholder="blur"
-              alt="Riders on two-wheel commuter and three-wheel family e-bikes on a Cavite street"
+              src={business.data?.heroImageUrl ?? defaultHero}
+              placeholder={business.data?.heroImageUrl ? "empty" : "blur"}
+              alt=""
               fill
               preload
               sizes="100vw"
@@ -158,32 +144,15 @@ export async function StorefrontHomePage({
             />
             <div
               aria-hidden="true"
-              className="absolute inset-0 hidden bg-[linear-gradient(to_right,var(--hero-bg)_0%,color-mix(in_srgb,var(--hero-bg)_90%,transparent)_36%,transparent_69%)] lg:block"
+              className="absolute inset-0 hidden bg-[linear-gradient(to_right,var(--hero-bg)_0%,color-mix(in_srgb,var(--hero-bg)_94%,transparent)_49%,transparent_76%)] lg:block"
             />
           </div>
         </section>
-
-        <nav
-          aria-label="Shop by rider use"
-          className="mx-auto grid max-w-7xl grid-cols-2 gap-3 px-4 pt-3 sm:grid-cols-4 sm:px-6"
-        >
-          {useCases.map(({ title, query, icon: Icon }) => (
-            <Link
-              key={query}
-              href={`/shop?q=${query}`}
-              className="flex flex-col justify-center min-h-10 flex-wrap items-center gap-x-3 gap-y-1 rounded-2xl border bg-card p-3 text-sm font-semibold hover:border-primary sm:p-4"
-            >
-              <Icon
-                className="size-5 shrink-0 text-primary"
-                aria-hidden="true"
-              />
-              {title}
-            </Link>
-          ))}
-        </nav>
       </div>
 
-      <div className="mx-auto max-w-7xl space-y-12 px-4 sm:space-y-16 sm:px-6">
+      <div className="mx-auto max-w-7xl space-y-12 px-4 sm:px-6 md:space-y-16">
+        <StorefrontBenefitsSection />
+
         <section aria-labelledby="featured-products">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <h2
@@ -194,7 +163,7 @@ export async function StorefrontHomePage({
             </h2>
             <Link
               href="/shop"
-              className="hidden sm:inline-flex min-h-10 items-center gap-2 text-sm font-semibold text-primary hover:underline"
+              className="hidden sm:inline-flex min-h-10 items-center gap-2 text-sm font-semibold text-foreground hover:underline"
             >
               View all products{" "}
               <ArrowRight className="size-4" aria-hidden="true" />
@@ -202,7 +171,7 @@ export async function StorefrontHomePage({
           </div>
           {products?.length ? (
             <>
-              <div className="mt-5 grid grid-flow-col auto-cols-[16rem] gap-3 overflow-x-auto sm:gap-4 lg:grid-flow-row lg:grid-cols-4 lg:auto-cols-auto lg:overflow-visible">
+              <div className="mt-5 grid grid-flow-col auto-cols-[16rem] gap-3 overflow-x-auto p-1 sm:gap-4 lg:grid-flow-row lg:grid-cols-4 lg:auto-cols-auto lg:overflow-visible">
                 {products.map((product) => (
                   <ProductCard
                     key={product.id}
@@ -215,7 +184,7 @@ export async function StorefrontHomePage({
 
               <Link
                 href="/shop"
-                className="inline-flex w-full mt-5 sm:hidden min-h-10 justify-center items-center gap-2 text-sm font-semibold text-primary hover:underline"
+                className="inline-flex w-full mt-5 sm:hidden min-h-10 justify-center items-center gap-2 text-sm font-semibold text-foreground hover:underline"
               >
                 View all products{" "}
                 <ArrowRight className="size-4" aria-hidden="true" />
@@ -243,8 +212,8 @@ export async function StorefrontHomePage({
             {steps.map(({ title, detail, icon: Icon }) => (
               <li key={title} className="rounded-2xl border bg-card p-5">
                 <div className="flex flex-col justify-center items-center gap-3">
-                  <Icon className="size-6 text-primary" aria-hidden="true" />
-                  <h6 className="text-sm font-semibold text-center">{title}</h6>
+                  <Icon className="size-6 text-foreground" aria-hidden="true" />
+                  <h3 className="text-sm font-semibold text-center">{title}</h3>
                 </div>
                 <p className="mt-2 text-xs text-center leading-6 text-muted-foreground">
                   {detail}

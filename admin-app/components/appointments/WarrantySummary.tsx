@@ -8,7 +8,7 @@ export function WarrantySummary({ details, inspectionConfirmed = false }: {
     <section className="space-y-3 rounded-xl border bg-card p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="font-semibold">Warranty assessment</h2>
-        <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+        <span className="rounded-full bg-accent px-3 py-1 text-xs font-medium text-accent-foreground">
           {details.replacement_handover_on ? 'Replacement handed over' : warrantyDecisions[details.decision]}
         </span>
       </div>

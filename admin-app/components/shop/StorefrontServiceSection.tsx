@@ -19,7 +19,7 @@ export function StorefrontServiceSection({ canBook }: { canBook: boolean }) {
     >
       <span id="service-center" aria-hidden="true" className="absolute top-0 scroll-mt-32" />
       <div className="rounded-3xl border bg-card p-6 sm:p-8">
-        <h2 className="text-l font-semibold text-primary tracking-tight sm:text-xl md:text-2xl">
+        <h2 className="text-l font-semibold text-foreground tracking-tight sm:text-xl md:text-2xl">
           Parts & accessories
         </h2>
         <ul className="mt-4 divide-y">
@@ -27,11 +27,11 @@ export function StorefrontServiceSection({ canBook }: { canBook: boolean }) {
             <li key={query}>
               <Link
                 href={`/shop?q=${query}`}
-                className="flex min-h-12 items-center justify-between gap-3 text-sm font-medium hover:text-primary hover:underline"
+                className="flex min-h-12 items-center justify-between gap-3 text-sm font-medium hover:text-foreground hover:underline"
               >
                 {label}
                 <ArrowUpRight
-                  className="size-4 shrink-0 text-primary"
+                  className="size-4 shrink-0 text-foreground"
                   aria-hidden="true"
                 />
               </Link>
@@ -39,10 +39,10 @@ export function StorefrontServiceSection({ canBook }: { canBook: boolean }) {
           ))}
         </ul>
       </div>
-      <div className="rounded-3xl bg-primary p-6 text-primary-foreground sm:p-8">
+      <div className="rounded-3xl bg-[#264653] p-6 text-[#f4ede4] sm:p-8">
         <div className="flex items-center gap-4">
-          <Wrench className="size-6" aria-hidden="true" />
-          <h2 className="mt-3 text-l font-semibold tracking-tight sm:text-xl md:text-2xl">
+          <Wrench className="size-6 text-white" aria-hidden="true" />
+          <h2 className="mt-3 text-l text-white font-semibold tracking-tight sm:text-xl md:text-2xl">
             NJET Service & Maintenance Center
           </h2>
         </div>
@@ -58,7 +58,7 @@ export function StorefrontServiceSection({ canBook }: { canBook: boolean }) {
         <div className="mt-5 flex flex-wrap w-full items-center gap-x-4 gap-y-2">
           <Link
             href={canBook ? serviceBookingPath : serviceSignInPath}
-            className="inline-flex min-[320px]:max-[768px]:w-full min-h-11 min-[320px]:max-[768px]:justify-center items-center rounded-lg bg-background px-4 text-sm font-semibold text-foreground"
+            className="inline-flex min-[320px]:max-[768px]:w-full min-h-11 min-[320px]:max-[768px]:justify-center items-center rounded-lg bg-primary-action px-4 text-sm font-semibold text-primary-foreground ring-1 ring-inset ring-white/40 hover:bg-primary-action-hover focus-visible:outline-white"
           >
             {canBook ? "Book a Service Checkup" : "Sign in to Book a Service"}
           </Link>

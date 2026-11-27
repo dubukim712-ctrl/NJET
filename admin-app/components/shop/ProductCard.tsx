@@ -89,7 +89,7 @@ export function ProductCard({
           : "No reviews yet."
       } ${stockLabel}${stockContext}.`}
       title="Open product details"
-      className={`group block overflow-hidden rounded-xl border bg-card transition-colors hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+      className={`group block overflow-hidden rounded-xl border border-foreground/20 bg-card text-foreground transition hover:border-foreground/40 hover:shadow-md motion-safe:hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
         compactOnNarrow ? "min-[320px]:max-[768px]:rounded-lg" : ""
       }`}
     >
@@ -102,7 +102,7 @@ export function ProductCard({
           />
           <span
             aria-hidden="true"
-            className={`absolute right-3 top-3 inline-flex size-10 items-center justify-center rounded-full bg-card/95 text-primary shadow-sm ring-1 ring-border transition-colors group-hover:bg-primary group-hover:text-primary-foreground group-focus-visible:bg-primary group-focus-visible:text-primary-foreground ${
+            className={`absolute right-3 top-3 inline-flex size-10 items-center justify-center rounded-full bg-card/95 text-foreground shadow-sm ring-1 ring-border transition-colors group-hover:bg-accent group-hover:text-accent-foreground group-focus-visible:bg-accent group-focus-visible:text-accent-foreground ${
               compactOnNarrow
                 ? "min-[320px]:max-[768px]:right-2 min-[320px]:max-[768px]:top-2 min-[320px]:max-[768px]:size-8"
                 : ""
@@ -142,7 +142,7 @@ export function ProductCard({
             {reviewCount > 0 ? (
               <div className=" flex flex-wrap items-center gap-x-1.5 min-[375px]:max-[768px]:text-[8px] text-xs">
                 <span
-                  className="inline-flex items-center gap-0.5 text-primary"
+                  className="inline-flex items-center gap-0.5 text-[#d99b26]"
                   aria-hidden="true"
                 >
                   {[1, 2, 3, 4, 5].map((value) => (
@@ -205,14 +205,14 @@ export function ProductCard({
                 <ProductPrice
                   priceMinor={startingVariant.price_minor}
                   listPriceMinor={startingVariant.list_price_minor}
-                  className="text-xl text-primary"
+                  className="text-xl text-foreground"
                 />
               </div>
             )}
           </div>
 
           {monthly !== null && (
-            <p className="text-xs font-medium text-primary">
+            <p className="text-xs font-medium text-muted-foreground">
               Est. {formatPhp(monthly)}/mo · 24 months before fees and interest
             </p>
           )}

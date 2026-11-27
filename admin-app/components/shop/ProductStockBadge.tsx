@@ -6,7 +6,7 @@ export function ProductStockBadge({
   children: React.ReactNode;
 }) {
   const colors = available
-    ? "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-700 dark:bg-emerald-950 dark:text-emerald-200"
+    ? "border-border bg-accent text-accent-foreground"
     : "border-rose-200 bg-rose-50 text-rose-800 dark:border-rose-700 dark:bg-rose-950 dark:text-rose-200";
 
   return (

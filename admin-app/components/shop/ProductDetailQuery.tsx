@@ -12,7 +12,7 @@ import {
   StorefrontCatalogQueryError,
   useStorefrontCatalogQuery,
 } from '@/data/commerce/storefront-catalog-client';
-import { featuredProductDescription } from '@/lib/storefront-featured-copy';
+
 import { useState } from 'react';
 
 export function ProductDetailQuery({ slug }: { slug: string }) {
@@ -53,7 +53,7 @@ export function ProductDetailQuery({ slug }: { slug: string }) {
     return (
       <div className="space-y-6">
         <BackLink />
-        <section className="rounded-xl border bg-card p-5">
+        <section className="rounded-xl border border-foreground/20 bg-card text-foreground p-5">
           <h1 className="font-semibold">Product not found</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             This product may no longer be available.
@@ -83,50 +83,47 @@ function ProductDetailContent({
   isRefreshingError: boolean;
 }) {
   const [imagePath, setImagePath] = useState(product.image_path);
+  const photos = [...new Set([product.image_path, ...product.variants.map((variant) => variant.image_path)]
+    .filter((path): path is string => Boolean(path)))];
+  const activePhoto = imagePath && photos.includes(imagePath) ? imagePath : photos[0];
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6">
-      <BackLink />
+    <div className="mx-auto max-w-6xl space-y-8">
       {isRefreshingError && (
         <p className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive" role="alert">
           Could not refresh product availability. Cached details are still shown.
         </p>
       )}
-      <div className="grid items-start gap-8 lg:grid-cols-2">
-        <div className="rounded-xl border bg-card p-3">
-          <ProductImage
-            path={imagePath ?? product.image_path}
-            alt={product.name}
-            className="rounded-lg"
-          />
+      <div className="grid items-start gap-6 lg:grid-cols-[1.05fr_1fr] lg:gap-10">
+        <div className={photos.length > 1 ? 'flex min-w-0 flex-col-reverse gap-3 sm:flex-row' : 'min-w-0'}>
+          {photos.length > 1 && (
+            <div aria-label="Product photos" role="group" className="flex shrink-0 gap-2 overflow-x-auto p-1 sm:max-h-96 sm:flex-col sm:overflow-y-auto">
+              {photos.map((photo, index) => (
+                <Button
+                  key={photo}
+                  type="button"
+                  size={null}
+                  variant={null}
+                  aria-label={`Show product photo ${index + 1}`}
+                  aria-pressed={photo === activePhoto}
+                  onClick={() => setImagePath(photo)}
+                  className={`size-14 shrink-0 overflow-hidden rounded-lg border bg-card ${photo === activePhoto ? 'border-foreground' : 'border-border'}`}
+                >
+                  <ProductImage path={photo} alt="" className="size-full" />
+                </Button>
+              ))}
+            </div>
+          )}
+          <div className="min-w-0 flex-1 rounded-2xl border bg-card p-2 sm:p-3">
+            <ProductImage path={activePhoto ?? null} alt={product.name} className="rounded-xl" />
+          </div>
         </div>
-        <div className="space-y-5">
-          <header>
-            <p className="text-sm font-semibold uppercase tracking-[0.14em] text-primary">
-              {product.categoryName ?? 'Uncategorized'}
-              {product.subcategoryName && ` · ${product.subcategoryName}`}
-              {product.is_demo && ' · sample listing'}
-            </p>
-            <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">{product.name}</h1>
-            <p className="mt-4 whitespace-pre-line text-sm leading-6 text-muted-foreground">
-              {featuredProductDescription(product.description)}
-            </p>
-          </header>
-          <ProductPurchasePanel
-            product={product}
-            branches={branches}
-            onImagePathChange={setImagePath}
-          />
-          <p className="text-xs leading-5 text-muted-foreground">
-            Availability can change until staff confirms your order. Stock is not reserved when an order is submitted.
-          </p>
-        </div>
+        <ProductPurchasePanel product={product} branches={branches} onImagePathChange={setImagePath} />
       </div>
       <ProductReviewsSection productId={product.id} />
     </div>
   );
 }
-
 function BackLink() {
   return (
     <Link

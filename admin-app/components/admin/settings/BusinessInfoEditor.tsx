@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from 'react';
 import Image from 'next/image';
+import defaultHero from '@/components/shop/njet-storefront-hero.jpg';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { saveBusinessSettingsAction } from '@/data/actions/business-settings';
@@ -61,6 +62,15 @@ export function BusinessInfoEditor({
         aboutImagePath = upload.path;
       }
 
+      let heroImagePath: string | null | undefined = formData.get('resetHeroImage') === 'on' ? null : undefined;
+      const heroImage = formData.get('heroImage');
+      if (heroImage instanceof File && heroImage.size > 0) {
+        const upload = await uploadSystemSettingsAsset(heroImage, 'hero-image');
+        if (upload.error || !upload.path) throw new Error(upload.error ?? 'Could not upload the hero photo.');
+        uploadedPaths.push(upload.path);
+        heroImagePath = upload.path;
+      }
+
       const result = await saveBusinessSettingsAction({
         businessName: formData.get('businessName'),
         phone: formData.get('phone'),
@@ -69,6 +79,7 @@ export function BusinessInfoEditor({
         businessHours: formData.get('businessHours'),
         logoPath,
         aboutImagePath,
+        heroImagePath,
       });
       if (!result.success) throw new Error(result.error);
 
@@ -83,6 +94,10 @@ export function BusinessInfoEditor({
       if (removeAboutImageInput instanceof HTMLInputElement) {
         removeAboutImageInput.checked = false;
       }
+      const heroImageInput = form.elements.namedItem('heroImage');
+      if (heroImageInput instanceof HTMLInputElement) heroImageInput.value = '';
+      const resetHeroImageInput = form.elements.namedItem('resetHeroImage');
+      if (resetHeroImageInput instanceof HTMLInputElement) resetHeroImageInput.checked = false;
       await Promise.all([
         invalidateSettings(),
         invalidateStorefrontBusinessInfo(),
@@ -217,6 +232,30 @@ export function BusinessInfoEditor({
                 disabled={busy}
               />
               Remove current About Us photo
+            </label>
+          )}
+        </div>
+        <div className="space-y-3">
+          <Image
+            src={businessInfo.heroImageUrl ?? defaultHero}
+            alt="Current storefront hero"
+            width={640}
+            height={360}
+            unoptimized
+            className="h-40 w-full max-w-xl rounded-md border object-cover object-right"
+          />
+          <Input
+            name="heroImage"
+            label="Storefront hero photo"
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            disabled={busy}
+            helperText="Shown at the top of the storefront. Use a wide JPG, PNG, or WebP, up to 5 MB."
+          />
+          {businessInfo.heroImagePath && (
+            <label className="flex min-h-11 items-center gap-2 text-sm">
+              <input type="checkbox" name="resetHeroImage" className="size-4 accent-primary" disabled={busy} />
+              Restore default hero photo
             </label>
           )}
         </div>

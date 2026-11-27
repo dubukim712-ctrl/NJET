@@ -7,6 +7,7 @@ import { createClient } from '@/data/supabase/server';
 import { updateProfileSchema, changePasswordSchema } from '@/lib/validations/auth';
 import type { ActionResult } from '@/data/actions/auth';
 import { requireCustomer } from '@/data/auth/guards';
+import { toPhilippineMobileE164 } from '@/lib/phone-number';
 import { profileContactSchema } from '@/lib/validations/profile-contact';
 import type { Database, UserProfile } from '@/types/database';
 
@@ -61,7 +62,7 @@ export async function updateCustomerProfileAction(payload: unknown): Promise<Act
     const { data, error } = await supabase.rpc('save_customer_profile', {
       p_full_name: identity.data.fullName || null,
       p_avatar_url: identity.data.avatarUrl || null,
-      p_phone_number: input.phoneNumber,
+      p_phone_number: input.phoneNumber ? toPhilippineMobileE164(input.phoneNumber) : null,
       p_street_address: input.addressLine1 || null,
       p_province_code: input.provinceCode || null,
       p_province_name: input.province || null,

@@ -151,7 +151,7 @@ export function OrderPaymentPanel({
           The one-hour payment window has expired. This order can no longer accept payment.
         </p>
       ) : details.status === 'awaiting_confirmation' && details.has_payment_proof ? (
-        <p className="rounded-lg border border-primary/20 bg-primary/5 p-4 text-sm" role="status">
+        <p className="rounded-lg border border-border bg-accent p-4 text-sm" role="status">
           Your payment proof is submitted and awaiting staff review. You can replace it below until the order is confirmed.
         </p>
       ) : null}
@@ -159,7 +159,7 @@ export function OrderPaymentPanel({
       {showPaymentInstructions && (
         <section className="space-y-4 rounded-xl border bg-card p-5 sm:p-6">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-foreground">
               {getPaymentProviderLabel(details.payment_provider)}
             </p>
             <h2 className="mt-1 text-xl font-semibold">
@@ -210,7 +210,7 @@ export function OrderPaymentPanel({
             leadingIcon={<FileImage className="h-4 w-4" />}
           />
           {error && <p className="text-sm text-destructive" role="alert">{error}</p>}
-          {message && <p className="text-sm text-primary" role="status">{message}</p>}
+          {message && <p className="text-sm text-foreground" role="status">{message}</p>}
           <Button type="submit" loading={busy} disabled={busy || !proof}>
             {details.has_payment_proof ? 'Replace proof' : 'Submit payment proof'}
           </Button>

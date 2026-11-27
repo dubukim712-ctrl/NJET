@@ -188,7 +188,7 @@ export function EmailVerificationForm() {
         )}
 
         {error && <p className="rounded-md bg-destructive/10 p-3 text-sm text-destructive" role="alert">{error}</p>}
-        {notice && <p className="rounded-md border border-primary/20 bg-primary/5 p-3 text-sm" role="status">{notice}</p>}
+        {notice && <p className="rounded-md border bg-accent text-accent-foreground p-3 text-sm" role="status">{notice}</p>}
 
         <Button
           type="submit"

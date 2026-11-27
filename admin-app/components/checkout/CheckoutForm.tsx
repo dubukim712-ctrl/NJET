@@ -142,7 +142,7 @@ export function CheckoutForm({
       getCheckoutError,
       payload: {
         customerName: text('customerName'),
-        contactNumber: text('contactNumber'),
+        contactNumber: String(formData.get('contactNumber') ?? ''),
         fulfillment,
         branchId: fulfillment === 'pickup' ? activeBranchId : null,
         deliveryZoneId: fulfillment === 'delivery' ? activeZoneId : null,

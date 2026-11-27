@@ -28,7 +28,7 @@ export const orderSalesReportFiltersSchema = z.object({
 
 export const orderPaymentTransactionSchema = z.object({
   orderId: z.string().uuid(),
-  transactionType: z.enum(['collection', 'refund']),
+  transactionType: z.literal('collection'),
   paymentMethod: z.enum(['cash', 'online', 'home_credit', 'other']),
   paymentProvider: z.enum(['gcash', 'bank_transfer', 'card']).nullable(),
   amountMinor: z.number().int().min(1).max(2147483647),

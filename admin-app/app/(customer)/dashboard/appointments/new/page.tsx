@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { CustomerServiceAppointmentForm } from '@/components/dashboard/CustomerServiceAppointmentForm';
 
+import { formatSavedPhilippineMobileNumber } from '@/lib/phone-number';
 import { requireCustomer } from '@/data/auth/guards';
 import { resolveCheckoutAddress, savedAddressColumns } from '@/data/commerce/checkout-address';
 
@@ -14,8 +15,7 @@ export default async function NewCustomerAppointmentPage() {
     supabase.rpc('customer_recent_service_bikes'),
   ]);
 
-  // Booking uses the local digit-only form of the saved Philippine number.
-  const phoneNumber = contact?.phone_number?.replace(/^\+63/, '0') ?? '';
+  const phoneNumber = formatSavedPhilippineMobileNumber(contact?.phone_number);
   return (
     <div className="space-y-6">
       <Link href="/dashboard/appointments" className="inline-flex min-h-10 items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground">

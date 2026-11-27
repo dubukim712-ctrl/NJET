@@ -14,9 +14,9 @@ import {
 } from "@/lib/storefront-service";
 import { facebookUrl, messengerUrl } from "@/lib/support-chat/messenger-link";
 
-const heading = "text-sm font-semibold primary-foreground";
+const heading = "text-sm font-semibold text-[#e0f2ef]";
 const links =
-  "mt-3 flex flex-col items-start gap-2.5 text-xs text-muted leading-5 [&_a]:underline-offset-4 [&_a:hover]:underline";
+  "mt-3 flex flex-col items-start gap-2.5 text-xs text-[#f4ede4] leading-5 [&_a]:underline-offset-4 [&_a:hover]:underline";
 
 export function StorefrontFooter({
   businessInfo,
@@ -32,13 +32,13 @@ export function StorefrontFooter({
   const hours = businessInfo?.businessHours?.trim() || defaultBusinessHours;
 
   return (
-    <footer className="mt-8 border-t border-primary/20 bg-primary text-primary-foreground">
+    <footer data-chat-footer className="mt-8 border-t border-white/15 bg-[#264653] text-[#f4ede4] [&_a]:text-[#f4ede4] [&_a:hover]:text-white [&_a:focus-visible]:outline-white">
       <div className="mx-auto max-w-7xl px-4 py-9 sm:px-6 sm:py-11">
         <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:gap-x-8 lg:grid-cols-[1.1fr_1.15fr_1fr_1fr]">
           <section className="col-span-2 sm:col-span-1">
             <Link
               href="/"
-              className="inline-flex items-center gap-2 text-lg font-semibold text-primary-foreground"
+              className="inline-flex items-center gap-2 text-lg font-semibold"
             >
               {businessInfo?.logoUrl && (
                 <Image
@@ -52,7 +52,7 @@ export function StorefrontFooter({
               )}
               {businessInfo?.businessName || "NJET"}
             </Link>
-            <p className="mt-3 text-sm leading-6 text-muted">
+            <p className="mt-3 text-sm leading-6 text-[#f4ede4]">
               Serving Cavite e-bike riders since 2023
             </p>
             {(facebookUrl || messengerUrl) && (
@@ -109,7 +109,7 @@ export function StorefrontFooter({
                 </a>
               )}
             </address>
-            <p className="mt-3 flex items-start gap-2 text-xs text-muted leading-5">
+            <p className="mt-3 flex items-start gap-2 text-xs text-[#f4ede4] leading-5">
               <Clock3
                 className={`${heading} mt-0.5 size-4 shrink-0`}
                 aria-hidden="true"
@@ -159,11 +159,12 @@ export function StorefrontFooter({
                 Book a Service
               </Link>
               <Link href="/help">Help Center</Link>
+              <Link href="/chat">Chat on Website</Link>
             </nav>
             <LegalFooterLinks />
           </section>
         </div>
-        <p className="flex items-center justify-center gap-2 mt-8 border-t border-primary-foreground/25 pt-4 text-xs">
+        <p className="flex items-center justify-center gap-2 mt-8 border-t border-white/20 pt-4 text-xs">
           © 2026 {businessInfo?.businessName || "NJET"}. All rights reserved.
         </p>
       </div>

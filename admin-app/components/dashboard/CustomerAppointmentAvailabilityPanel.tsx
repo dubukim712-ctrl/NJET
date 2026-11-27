@@ -99,7 +99,7 @@ export function CustomerAppointmentAvailabilityPanel({
               <li key={technician.id} className="flex items-center justify-between gap-3 text-sm">
                 <span className="min-w-0 break-words">{technician.name}</span>
                 <span className={`flex shrink-0 items-center gap-1.5 font-medium ${
-                  technician.available ? 'text-emerald-800' : 'text-muted-foreground'
+                  technician.available ? 'text-foreground' : 'text-muted-foreground'
                 }`}>
                   {technician.available
                     ? <CircleCheck className="size-4" aria-hidden="true" />

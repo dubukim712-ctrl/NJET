@@ -11,7 +11,7 @@ import { RealtimeStatus } from '@/components/realtime/RealtimeStatus';
 import { useServiceAvailabilityRealtime } from '@/components/realtime/useServiceAvailabilityRealtime';
 import { Select } from '@/components/ui/Select';
 import { Textarea } from '@/components/ui/Textarea';
-import { AppointmentContactNumberInput } from '@/components/appointments/AppointmentContactNumberInput';
+import { PhilippineMobileInput } from '@/components/ui/PhilippineMobileInput';
 import { CustomerAppointmentAvailabilityPanel } from '@/components/dashboard/CustomerAppointmentAvailabilityPanel';
 import { CustomerAppointmentDateTimeFields } from '@/components/dashboard/CustomerAppointmentDateTimeFields';
 import { CustomerServiceAppointmentFormSkeleton } from '@/components/dashboard/CustomerServiceAppointmentFormSkeleton';
@@ -94,7 +94,7 @@ export function CustomerServiceAppointmentForm({ initialPhoneNumber, initialAddr
       city: serviceMode === 'home_service' ? value('city') : '',
       province: serviceMode === 'home_service' ? value('province') : '',
       postalCode: serviceMode === 'home_service' ? value('postalCode') : '',
-      contactNumber: value('contactNumber'),
+      contactNumber: String(form.get('contactNumber') ?? ''),
       preferredStartAt: appointmentDate && selectedAppointmentTime
         ? `${appointmentDate}T${selectedAppointmentTime}:00+08:00`
         : '',
@@ -222,11 +222,10 @@ export function CustomerServiceAppointmentForm({ initialPhoneNumber, initialAddr
                 onRetry={() => { void slotsQuery.refetch(); }}
                 dateError={fieldError(fieldErrors, 'preferredStartAt')}
               />
-              <AppointmentContactNumberInput
+              <PhilippineMobileInput
                 name="contactNumber"
                 label="Contact number" defaultValue={initialPhoneNumber}
-                helperText="Enter up to 11 digits; staff will use this number to confirm your request."
-                autoComplete="tel"
+                helperText="Staff will use this mobile number to confirm your request."
                 required
                 error={fieldError(fieldErrors, 'contactNumber')}
               />

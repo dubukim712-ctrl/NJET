@@ -7,8 +7,8 @@ const COLORS = [
   'bg-red-500',
   'bg-orange-500',
   'bg-yellow-500',
-  'bg-lime-500',
-  'bg-green-500',
+  'bg-success/70',
+  'bg-success',
 ];
 
 export function getPasswordStrength(password: string): number {
@@ -57,7 +57,7 @@ export function PasswordStrength({ password }: { password: string }) {
           return (
             <li
               key={requirement.label}
-              className={`flex items-center gap-1 ${passed ? 'text-green-600 dark:text-green-400' : ''}`}
+              className={`flex items-center gap-1 ${passed ? 'text-foreground' : ''}`}
             >
               {passed ? (
                 <CheckCircle className="h-3 w-3 shrink-0" aria-hidden="true" />

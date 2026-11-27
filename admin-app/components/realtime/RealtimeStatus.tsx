@@ -15,7 +15,7 @@ export function RealtimeStatus({ state }: { state: RealtimeConnectionState }) {
       role="status"
       className={`rounded-full px-3 py-1 text-xs font-medium ${
         state === 'connected'
-          ? 'bg-emerald-100 text-emerald-900'
+          ? 'bg-success/15 text-foreground'
           : state === 'disconnected'
             ? 'bg-amber-100 text-amber-950'
             : 'bg-secondary text-secondary-foreground'

@@ -54,7 +54,7 @@ export function HelpCenter({
 
   return (
     <div className="mx-auto w-full max-w-5xl space-y-6 pb-6 sm:space-y-8">
-      <header className="rounded-2xl border border-primary/15 bg-primary/5 p-5 sm:p-8">
+      <header className="rounded-2xl border bg-card p-5 sm:p-8">
         <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{title}</h1>
         <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground sm:text-base">
           {description}
@@ -133,7 +133,7 @@ export function HelpCenter({
       {showPolicies && (
         <nav aria-label="Help Center policies" className="flex flex-wrap gap-x-5 border-t pt-2">
           {policyLinks.map(([href, label]) => (
-            <Link key={href} href={href} className="inline-flex min-h-11 items-center text-sm font-medium text-primary underline underline-offset-4">
+            <Link key={href} href={href} className="inline-flex min-h-11 items-center text-sm font-medium text-foreground underline underline-offset-4">
               {label}
             </Link>
           ))}

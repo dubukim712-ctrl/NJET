@@ -44,6 +44,18 @@ export async function saveBusinessSettingsAction(
       );
     }
 
+    let previousHeroPath: string | null = null;
+    const heroPath = parsed.data.heroImagePath;
+    if (heroPath !== undefined) {
+      if (heroPath) await validateSettingsImage(supabase, BRANDING_BUCKET, heroPath, 'hero photo');
+      const { data, error } = await supabase.from('business_settings').select('hero_image_path').eq('id', 1).maybeSingle();
+      if (error?.code === '42703') {
+        return { success: false, error: 'Apply the storefront hero image migration before changing the hero photo.' };
+      }
+      if (error) throw error;
+      previousHeroPath = data?.hero_image_path ?? null;
+    }
+
     const { data: previous, error: previousError } = await supabase
       .from('business_settings')
       .select('logo_path, about_image_path')
@@ -60,10 +72,12 @@ export async function saveBusinessSettingsAction(
       business_hours: parsed.data.businessHours,
       logo_path: parsed.data.logoPath,
       about_image_path: parsed.data.aboutImagePath,
+      ...(heroPath !== undefined ? { hero_image_path: heroPath } : {}),
     }, { onConflict: 'id' });
     if (error) throw error;
 
     const obsoleteImages = [
+      heroPath !== undefined && heroPath !== previousHeroPath ? previousHeroPath : null,
       previous?.logo_path !== parsed.data.logoPath
         ? previous?.logo_path
         : null,

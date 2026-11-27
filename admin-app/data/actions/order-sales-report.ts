@@ -147,7 +147,7 @@ export async function recordOrderPaymentTransactionAction(payload: unknown): Pro
   try {
     const { data, error } = await supabase.rpc('record_order_payment_transaction', {
       p_order_id: input.orderId,
-      p_transaction_type: input.transactionType,
+      p_transaction_type: 'collection',
       p_payment_method: input.paymentMethod,
       p_payment_provider: input.paymentProvider,
       p_amount_minor: input.amountMinor,

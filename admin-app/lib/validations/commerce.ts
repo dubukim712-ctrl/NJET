@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { philippineMobileSchema } from "./philippine-mobile.ts";
 
 const addressField = z.string().trim().max(200).nullable();
 export const customerOrderIdSchema = z.string().uuid();
@@ -11,10 +12,7 @@ export const checkoutSchema = z
       .trim()
       .min(2, "Enter a full name with at least 2 characters.")
       .max(100, "Enter a full name with no more than 100 characters."),
-    contactNumber: z
-      .string()
-      .trim()
-      .regex(/^[+0-9][0-9 ()-]{6,11}$/, "Enter a valid contact number."),
+    contactNumber: philippineMobileSchema,
     fulfillment: z.enum(["pickup", "delivery"]),
     branchId: z.string().uuid().nullable(),
     deliveryZoneId: z.string().uuid().nullable(),

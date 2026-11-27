@@ -70,7 +70,7 @@ export function CustomerOrderCard({
       </div>
       {isPlaced && order.status === 'awaiting_confirmation' && (
         <p
-          className="mt-4 rounded-lg border border-primary/20 bg-primary p-4 text-sm text-primary-foreground"
+          className="mt-4 rounded-lg border border-white/15 bg-[#264653] p-4 text-sm text-[#f4ede4]"
           role="status"
         >
           Order {order.order_number} was placed. Staff will review it before stock is reserved.

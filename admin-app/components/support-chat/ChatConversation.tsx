@@ -206,7 +206,7 @@ export function ChatConversation({
             href={messengerUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex min-h-10 items-center text-xs font-medium text-primary underline underline-offset-4"
+            className="inline-flex min-h-10 items-center text-xs font-medium text-foreground underline underline-offset-4"
           >
             Prefer Messenger?
           </a>

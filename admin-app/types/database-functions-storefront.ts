@@ -7,6 +7,10 @@ import type {
 } from './commerce-tables';
 
 export type DatabaseStorefrontFunctions = {
+  linked_customer_release_orders: {
+    Args: { p_order_ids: string[]; p_exclude_release_id?: string };
+    Returns: { order_id: string }[];
+  };
   current_storefront_legal_policy: {
     Args: { p_slug: string };
     Returns: { slug: string; version: string; intro: string; sections: Json; created_at: string }[];

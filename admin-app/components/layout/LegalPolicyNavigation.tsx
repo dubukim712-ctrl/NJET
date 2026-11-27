@@ -57,7 +57,7 @@ export function LegalPolicyNavigation({
               aria-current={policySlug === link.slug ? 'page' : undefined}
               className={`flex min-h-11 items-center rounded-md px-3 text-sm ${
                 policySlug === link.slug
-                  ? 'bg-primary/10 font-semibold text-primary'
+                  ? 'bg-primary/15 font-semibold text-foreground ring-1 ring-inset ring-primary'
                   : 'text-muted-foreground hover:bg-muted hover:text-foreground'
               }`}
             >
@@ -78,7 +78,7 @@ export function LegalPolicyNavigation({
                           aria-current={active ? 'location' : undefined}
                           className={`block rounded-md px-2 py-1.5 text-sm leading-5 ${
                             active
-                              ? 'bg-primary/10 font-semibold text-primary'
+                              ? 'bg-primary/15 font-semibold text-foreground ring-1 ring-inset ring-primary'
                               : 'text-muted-foreground hover:text-foreground'
                           }`}
                         >

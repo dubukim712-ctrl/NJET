@@ -1,11 +1,6 @@
 import { z } from 'zod';
 import { emailSchema } from './auth.ts';
-
-const guestPhoneSchema = z
-  .string()
-  .trim()
-  .regex(/^\+?[0-9][0-9() .-]{5,23}$/)
-  .refine((value) => value.replace(/[^0-9]/g, '').length >= 7);
+import { philippineMobileSchema } from './philippine-mobile.ts';
 
 export const startGuestEmailChatSchema = z.object({
     name: z.string().trim().min(1).max(120),
@@ -18,7 +13,7 @@ export const pendingGuestChatRecoverySchema = startGuestEmailChatSchema.extend({
 
 export const startGuestPhoneChatSchema = z.object({
   name: z.string().trim().min(1).max(120),
-  phone: guestPhoneSchema,
+  phone: philippineMobileSchema,
 });
 
 export const guestEmailAccessVerifySchema = z.object({

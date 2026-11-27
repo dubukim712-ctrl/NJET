@@ -1,7 +1,7 @@
 export function ProductDetailSkeleton() {
   return (
     <div
-      className="grid items-start gap-8 lg:grid-cols-2"
+      className="grid items-start gap-6 lg:grid-cols-[1.05fr_1fr] lg:gap-10"
       role="status"
       aria-label="Loading product details"
       aria-busy="true"
@@ -19,19 +19,19 @@ export function ProductDetailSkeleton() {
             <div className="h-4 w-2/3 animate-pulse rounded bg-muted" />
           </div>
         </header>
-        <section className="space-y-5 rounded-xl border bg-card p-5 sm:p-6">
+        <section className="space-y-4">
           {[0, 1].map((field) => (
             <div key={field} className="space-y-2">
               <div className="h-4 w-28 animate-pulse rounded bg-muted" />
-              <div className="h-11 w-full animate-pulse rounded-md border bg-muted/40" />
+              <div className="h-10 w-3/4 animate-pulse rounded-full border bg-muted/40" />
             </div>
           ))}
+          <div className="h-11 w-full animate-pulse rounded-md bg-muted" />
           <div className="space-y-2 rounded-lg bg-secondary/60 p-4">
             <div className="h-6 w-32 animate-pulse rounded bg-muted" />
             <div className="h-4 w-48 animate-pulse rounded bg-muted" />
             <div className="h-4 w-24 animate-pulse rounded bg-muted" />
           </div>
-          <div className="h-11 w-full animate-pulse rounded-md bg-muted" />
         </section>
         <div className="h-4 w-full max-w-sm animate-pulse rounded bg-muted" />
       </div>

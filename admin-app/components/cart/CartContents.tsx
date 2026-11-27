@@ -72,7 +72,7 @@ export function CartContents({
     <div className={compact ? "flex h-full flex-col gap-3" : "mx-auto max-w-4xl space-y-6"}>
       {!compact && (
         <header>
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-foreground">
             Your selection
           </p>
           <h1 className="mt-1 text-3xl font-semibold tracking-tight">
@@ -180,7 +180,7 @@ export function CartContents({
             )}
             {checkoutNotice && (
               <div
-                className="mt-3 rounded-lg border border-primary/20 bg-primary/5 p-3"
+                className="mt-3 rounded-lg border border-border bg-accent p-3"
                 role="alert"
               >
                 <p className="text-sm">

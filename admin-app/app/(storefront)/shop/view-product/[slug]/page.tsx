@@ -10,5 +10,9 @@ export default async function ViewProductPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  return <ProductDetailQuery slug={slug} />;
+  return (
+    <div className="pb-24 lg:pb-12">
+      <ProductDetailQuery slug={slug} />
+    </div>
+  );
 }

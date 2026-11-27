@@ -86,7 +86,7 @@ export function CheckoutPolicyFields({
               </section>
             ))}
             {policy.slug === 'terms' && (
-              <Link className="font-medium text-primary underline underline-offset-4" href="/return-policy">
+              <Link className="font-medium text-foreground underline underline-offset-4" href="/return-policy">
                 Return Policy
               </Link>
             )}

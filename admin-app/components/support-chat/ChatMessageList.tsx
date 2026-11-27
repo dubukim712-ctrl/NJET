@@ -229,7 +229,7 @@ export function ChatMessageList({
                             setOpenMenuId(message.id);
                           }
                         }}
-                        className={`block w-fit min-w-0 max-w-full select-none whitespace-normal rounded-2xl px-4 py-3 text-left font-normal ${mine ? 'rounded-br-sm bg-primary text-primary-foreground' : 'rounded-bl-sm border bg-card text-card-foreground'}`}
+                        className={`block w-fit min-w-0 max-w-full select-none whitespace-normal rounded-2xl px-4 py-3 text-left font-normal ${mine ? 'rounded-br-sm bg-accent text-accent-foreground' : 'rounded-bl-sm border bg-card text-card-foreground'}`}
                       >
                         {message.deleted_at ? (
                           <span className="block text-sm italic opacity-75">Message deleted</span>

@@ -9,9 +9,9 @@ export default async function ShopPage() {
   const { branches } = await getPublicStorefrontInfo();
   return (
     <div className="mx-auto max-w-7xl space-y-8">
-      <header className="rounded-2xl bg-primary px-5 py-8 text-primary-foreground sm:px-10 sm:py-12">
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] opacity-80">Noel &amp; Jane E-bike Trading</p>
-        <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-5xl">Shop the NJET collection</h1>
+      <header className="rounded-2xl bg-[#264653] px-5 py-12 text-[#f4ede4] sm:px-10 md:py-16">
+        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white">Noel &amp; Jane E-bike Trading</p>
+        <h1 className="mt-2 text-3xl text-white font-semibold tracking-tight sm:text-5xl">Shop the NJET collection</h1>
         <p className="mt-3 max-w-2xl text-sm leading-6 opacity-90 sm:text-base">
           Browse e-bikes, spare parts, and accessories. Choose a branch to check local availability.
         </p>

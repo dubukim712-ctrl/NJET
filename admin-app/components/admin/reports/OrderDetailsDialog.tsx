@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useId, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { recordOrderPaymentTransactionAction } from "@/data/actions/order-sales-report";
 import { formatPhp, parsePhpAmount } from "@/lib/commerce";
 import { Button } from "@/components/ui/Button";
+import { Modal } from "@/components/ui/Modal";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import {
@@ -27,21 +28,14 @@ export function OrderDetailsDialog({
   onClose: () => void;
   onPaymentRecorded: () => Promise<void>;
 }) {
-  const dialogRef = useRef<HTMLDialogElement>(null);
+  const collectionFormId = useId();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [paymentMethod, setPaymentMethod] = useState("cash");
 
-  useEffect(() => {
-    const dialog = dialogRef.current;
-    if (!dialog) return;
-    if (order && !dialog.open) dialog.showModal();
-    if (!order && dialog.open) dialog.close();
-  }, [order]);
-
   const submitPayment = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!order) return;
+    if (!order || busy || !canManage || !canCollect) return;
     setBusy(true);
     setError(null);
     const formData = new FormData(event.currentTarget);
@@ -56,7 +50,7 @@ export function OrderDetailsDialog({
       const method = String(formData.get("method"));
       const result = await recordOrderPaymentTransactionAction({
         orderId: order.id,
-        transactionType: formData.get("transactionType"),
+        transactionType: "collection",
         paymentMethod: method,
         paymentProvider:
           method === "online" ? String(formData.get("provider") ?? "") : null,
@@ -70,7 +64,7 @@ export function OrderDetailsDialog({
         toast.error(result.error);
         return;
       }
-      toast.success("Payment transaction recorded.");
+      toast.success("Collection recorded.");
       await onPaymentRecorded();
     } catch (saveError) {
       console.error(
@@ -85,6 +79,7 @@ export function OrderDetailsDialog({
   };
   const handleClose = () => {
     setPaymentMethod("cash");
+    setError(null);
     onClose();
   };
   const status = order ? reportOrderStatus(order) : null;
@@ -93,43 +88,30 @@ export function OrderDetailsDialog({
     !["cancelled", "expired"].includes(order.status) &&
     order.balance_due_minor > 0,
   );
-  const canRefund = (order?.amount_paid_minor ?? 0) > 0;
+  const showCollectionForm = canManage && canCollect;
 
   return (
-    <dialog
-      ref={dialogRef}
-      aria-labelledby="report-order-title"
-      className="m-auto max-h-[92dvh] w-[min(96vw,48rem)] overflow-y-auto rounded-xl border border-border bg-background p-0 text-foreground shadow-2xl backdrop:bg-black/50 print:hidden"
-      onClose={handleClose}
-      onClick={(event) => {
-        if (event.target === dialogRef.current) dialogRef.current?.close();
-      }}
+    <Modal
+      open={Boolean(order)}
+      title={order ? `Order ${order.order_number}` : "Order details"}
+      onClose={() => { if (!busy) handleClose(); }}
+      size="wide"
+      className="print:hidden"
+      footer={
+        <div className="flex flex-wrap justify-end gap-2">
+          <Button type="button" variant="outline" disabled={busy} onClick={handleClose}>Close</Button>
+          {showCollectionForm && (
+            <Button type="submit" form={collectionFormId} loading={busy}>Save collection</Button>
+          )}
+        </div>
+      }
     >
       {order && (
-        <div className="space-y-5 p-4 sm:p-6">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-primary">
-                Order detail
-              </p>
-              <h2
-                id="report-order-title"
-                className="mt-1 text-xl font-semibold"
-              >
-                {order.invoice_no || order.order_number}
-              </h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {order.completed_at ? "Sale completed" : "Order placed"} ·{" "}
-                {formatReportDateTime(order.completed_at ?? order.created_at)}
-              </p>
-            </div>
-            <button
-              type="button"
-              className="rounded-md px-3 py-2 text-sm font-medium hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-              onClick={() => dialogRef.current?.close()}
-            >
-              Close
-            </button>
+        <div className="space-y-5">
+          <div className="text-sm text-muted-foreground">
+            {order.completed_at ? "Sale completed" : "Order placed"} ·{" "}
+            {formatReportDateTime(order.completed_at ?? order.created_at)}
+            {order.invoice_no && <p>Invoice {order.invoice_no}</p>}
           </div>
 
           <div className="grid gap-3 rounded-lg border border-border p-4 sm:grid-cols-2">
@@ -257,26 +239,14 @@ export function OrderDetailsDialog({
             )}
           </section>
 
-          {canManage && (canCollect || canRefund) && (
+          {showCollectionForm && (
             <form
               className="space-y-3 rounded-lg border border-border p-4 print:hidden"
+              id={collectionFormId}
               onSubmit={submitPayment}
             >
-              <h3 className="font-semibold">Record a collection or refund</h3>
+              <h3 className="font-semibold">Record a collection</h3>
               <div className="grid gap-3 sm:grid-cols-2">
-                <Select
-                  name="transactionType"
-                  label="Transaction"
-                  defaultValue={canCollect ? "collection" : "refund"}
-                  required
-                >
-                  <option value="collection" disabled={!canCollect}>
-                    Collection
-                  </option>
-                  <option value="refund" disabled={!canRefund}>
-                    Refund
-                  </option>
-                </Select>
                 <Select
                   name="method"
                   label="Method"
@@ -309,11 +279,12 @@ export function OrderDetailsDialog({
                   label="Amount (PHP)"
                   type="number"
                   min="0.01"
+                  step="0.01"
                   onWheel={(event) => event.currentTarget.blur()}
                   className="number-no-spinner"
                   required
                 />
-                <Input name="note" label="Note (optional)" maxLength={500} />
+                <Input name="note" label="Note (optional)" maxLength={500} containerClassName="sm:col-span-2" />
               </div>
               {order.payment_method === "home_credit" && (
                 <label className="flex items-center gap-2 text-sm">
@@ -330,19 +301,17 @@ export function OrderDetailsDialog({
                   {error}
                 </p>
               )}
-              <Button type="submit" disabled={busy} className="min-h-11">
-                {busy ? "Saving…" : "Save transaction"}
-              </Button>
             </form>
           )}
-          {canManage && !canCollect && !canRefund && (
+          {canManage && !canCollect && (
             <p className="rounded-lg border border-dashed border-border p-4 text-sm text-muted-foreground">
-              No balance remains to collect and no payment is available to
-              refund.
+              {["cancelled", "expired"].includes(order.status)
+                ? "Collections cannot be recorded for cancelled or expired orders."
+                : "No balance remains to collect."}
             </p>
           )}
         </div>
       )}
-    </dialog>
+    </Modal>
   );
 }

@@ -1,10 +1,16 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { getReleaseStaffContext } from '@/data/commerce/customer-releases';
+import { getLinkedReleaseOrderIds, getReleaseStaffContext } from '@/data/commerce/customer-releases';
 import { removeStoredObject, validateSettingsImage } from '@/data/commerce/system-settings-assets';
 import { releasesBucket, releasesPath } from '@/lib/customer-releases';
 import { releaseFieldsSchema, releaseIdSchema, releaseImagePathSchema } from '@/lib/validations/customer-releases';
+
+const linkedOrderError = 'This order already has a customer release photo.';
+
+function isLinkedOrderConflict(error: { code: string; message: string } | null) {
+  return error?.code === '23505' && error.message.includes('customer_releases_order_id_unique');
+}
 
 function refreshGallery() {
   revalidatePath(releasesPath);
@@ -22,6 +28,9 @@ export async function createCustomerRelease(payload: unknown, imagePath: unknown
   if (!input.success) return { error: 'Review the release fields and try again.' };
 
   try {
+    if (input.data.order_id && (await getLinkedReleaseOrderIds(context.supabase, [input.data.order_id])).length) {
+      return { error: linkedOrderError };
+    }
     await validateSettingsImage(context.supabase, releasesBucket, path.data, 'release photo');
     const { error } = await context.supabase.from('customer_releases').insert({
       ...input.data,
@@ -30,6 +39,7 @@ export async function createCustomerRelease(payload: unknown, imagePath: unknown
       is_approved: context.canApprove && input.data.is_approved,
       display_order: context.canApprove ? input.data.display_order : 0,
     });
+    if (isLinkedOrderConflict(error)) return { error: linkedOrderError };
     if (error) throw error;
     refreshGallery();
     return {};
@@ -47,8 +57,12 @@ export async function updateCustomerRelease(id: unknown, payload: unknown) {
     return { error: 'You cannot apply that release update.' };
   }
   try {
+    if (input.data.order_id && (await getLinkedReleaseOrderIds(context.supabase, [input.data.order_id], key.data)).length) {
+      return { error: linkedOrderError };
+    }
     const { data, error } = await context.supabase.from('customer_releases')
       .update(input.data).eq('id', key.data).select('id').maybeSingle();
+    if (isLinkedOrderConflict(error)) return { error: linkedOrderError };
     if (error || !data) throw error ?? new Error('Release unavailable');
     refreshGallery();
     return {};

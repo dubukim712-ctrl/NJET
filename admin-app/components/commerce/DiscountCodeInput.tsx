@@ -107,7 +107,7 @@ export function DiscountCodeInput({
         <p className="text-xs text-muted-foreground">Enter the customer phone number to check a coupon.</p>
       )}
       {error && <p className="text-sm text-destructive" role="alert">{error}</p>}
-      {applied && <p className="text-sm text-primary" role="status">Coupon applied to eligible items.</p>}
+      {applied && <p className="text-sm text-foreground" role="status">Coupon applied to eligible items.</p>}
     </section>
   );
 }

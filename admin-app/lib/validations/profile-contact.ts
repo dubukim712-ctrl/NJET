@@ -1,15 +1,12 @@
 import { z } from 'zod';
-import { normalizePhilippineMobileNumber } from '@/lib/phone-number';
-import { requestPhoneVerificationSchema } from '@/lib/validations/phone-verification';
+import { PHILIPPINE_MOBILE_ERROR, philippineMobileSchema } from './philippine-mobile.ts';
 
 const locationCode = z.string().trim().regex(/^([0-9]{1,20})?$/, 'Select a valid location.');
 const addressText = z.string().trim().max(200, 'Use no more than 200 characters.');
 
 export const profileContactSchema = z.object({
-  phoneNumber: z.string().trim().refine(
-    (value) => !value || requestPhoneVerificationSchema.safeParse({ phoneNumber: value }).success,
-    'Enter a valid Philippine mobile number.',
-  ).transform(normalizePhilippineMobileNumber),
+  phoneNumber: z.union([philippineMobileSchema, z.literal('')], { error: PHILIPPINE_MOBILE_ERROR })
+    .transform((value) => value || null),
   addressLine1: addressText,
   provinceCode: locationCode,
   province: addressText,

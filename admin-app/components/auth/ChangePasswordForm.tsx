@@ -110,7 +110,7 @@ export function ChangePasswordForm() {
       <button
         type="submit"
         disabled={isSubmitting}
-        className="flex h-10 items-center justify-center rounded-md bg-primary px-6 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:pointer-events-none disabled:opacity-50"
+        className="flex h-10 items-center justify-center rounded-md bg-primary-action px-6 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary-action-hover disabled:pointer-events-none disabled:opacity-50"
       >
         {isSubmitting ? (
           <>

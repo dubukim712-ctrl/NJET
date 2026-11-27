@@ -8,12 +8,12 @@ export function StorefrontLandingSkeleton() {
       aria-label="Loading dashboard"
       aria-busy="true"
     >
-      <section className="rounded-2xl bg-primary px-5 py-8 sm:px-10 sm:py-12">
-        <div className="h-3 w-48 animate-pulse rounded bg-primary-foreground/30" />
-        <div className="mt-3 h-10 w-3/4 max-w-xl animate-pulse rounded bg-primary-foreground/30 sm:h-14" />
+      <section className="rounded-2xl bg-[#264653] px-5 py-8 sm:px-10 sm:py-12">
+        <div className="h-3 w-48 animate-pulse rounded bg-white/30" />
+        <div className="mt-3 h-10 w-3/4 max-w-xl animate-pulse rounded bg-white/30 sm:h-14" />
         <div className="mt-4 space-y-2">
-          <div className="h-4 w-full max-w-2xl animate-pulse rounded bg-primary-foreground/20" />
-          <div className="h-4 w-4/5 max-w-xl animate-pulse rounded bg-primary-foreground/20" />
+          <div className="h-4 w-full max-w-2xl animate-pulse rounded bg-white/20" />
+          <div className="h-4 w-4/5 max-w-xl animate-pulse rounded bg-white/20" />
         </div>
         <div className="mt-6 h-11 w-44 animate-pulse rounded-md bg-background/40" />
       </section>

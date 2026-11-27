@@ -193,6 +193,7 @@ export type BusinessSettings = {
   address: string;
   logo_path: string | null;
   about_image_path: string | null;
+  hero_image_path: string | null;
   business_hours: string;
   created_at: string;
   updated_at: string;

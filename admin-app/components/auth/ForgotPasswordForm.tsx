@@ -45,7 +45,7 @@ export function ForgotPasswordForm() {
   if (sent) {
     return (
       <div className="w-full text-center">
-        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-accent text-accent-foreground">
           <MailCheck className="h-6 w-6" aria-hidden="true" />
         </div>
         <h1 className="text-2xl font-bold tracking-tight">Check your email</h1>
@@ -55,7 +55,7 @@ export function ForgotPasswordForm() {
         </p>
         <a
           href="/login"
-          className="mt-6 inline-block text-sm font-medium text-primary hover:underline"
+          className="mt-6 inline-block text-sm font-medium text-foreground hover:underline"
         >
           Back to sign in
         </a>
@@ -102,7 +102,7 @@ export function ForgotPasswordForm() {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="flex h-10 w-full items-center justify-center rounded-md bg-primary px-8 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
+          className="flex h-10 w-full items-center justify-center rounded-md bg-primary-action px-8 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary-action-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50"
         >
           {isSubmitting ? (
             <>
@@ -117,7 +117,7 @@ export function ForgotPasswordForm() {
 
       <p className="mt-6 text-center text-sm text-muted-foreground">
         Remembered it?{' '}
-        <a href="/login" className="font-medium text-primary hover:underline">
+        <a href="/login" className="font-medium text-foreground hover:underline">
           Sign in
         </a>
       </p>

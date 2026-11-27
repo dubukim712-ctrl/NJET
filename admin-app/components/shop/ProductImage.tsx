@@ -17,7 +17,7 @@ export function ProductImage({
 }) {
   const src = srcOverride ?? getProductImageUrl(path);
   return (
-    <div className={`relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-secondary text-primary ${className}`}>
+    <div className={`relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-secondary text-secondary-foreground ${className}`}>
       {src ? (
         <Image src={src} alt={alt} fill unoptimized loading={loading} sizes="(max-width: 640px) 100vw, 33vw" className="object-contain" />
       ) : (

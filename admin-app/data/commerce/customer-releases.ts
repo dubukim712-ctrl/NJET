@@ -30,7 +30,23 @@ function shortName(value: string) {
   return rest.length ? `${first} ${Array.from(rest.at(-1) ?? '')[0]}.` : first;
 }
 
-export async function getReleaseOrderOptions(client: Supabase): Promise<ReleaseOrderOption[]> {
+export async function getLinkedReleaseOrderIds(client: Supabase, orderIds: string[], excludeReleaseId?: string) {
+  if (!orderIds.length) return [];
+  const { data, error } = await client.rpc('linked_customer_release_orders', {
+    p_order_ids: orderIds,
+    p_exclude_release_id: excludeReleaseId,
+  });
+  if (error) throw error;
+  return (data ?? []).map(({ order_id }) => order_id);
+}
+
+export async function getReleaseOrderChoices(client: Supabase) {
+  const orders = await getReleaseOrderOptions(client);
+  const linkedOrderIds = await getLinkedReleaseOrderIds(client, [...new Set(orders.map(({ orderId }) => orderId))]);
+  return { orders, linkedOrderIds };
+}
+
+async function getReleaseOrderOptions(client: Supabase): Promise<ReleaseOrderOption[]> {
   const { data: orders, error } = await client.from('orders')
     .select('id, order_number, customer_name, branch_id, branch_name')
     .eq('status', 'completed').order('completed_at', { ascending: false, nullsFirst: false }).limit(30);

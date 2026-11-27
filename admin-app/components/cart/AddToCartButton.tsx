@@ -1,6 +1,7 @@
 'use client';
 
 import { ShoppingCart } from 'lucide-react';
+import { formatPhp } from '@/lib/commerce';
 import { toast } from 'sonner';
 import { useCart } from '@/components/cart/CartProvider';
 import { MAX_CART_QUANTITY } from '@/data/cart';
@@ -11,10 +12,12 @@ export function AddToCartButton({
   variantId,
   maxQuantity,
   branchId,
+  priceMinor,
 }: {
   variantId: string;
   maxQuantity: number | null;
   branchId: string;
+  priceMinor: number;
 }) {
   const { addItem, items } = useCart();
   // Checkout has one line per variant. Changing branches moves the whole line.
@@ -31,7 +34,7 @@ export function AddToCartButton({
     : atStockLimit && item?.branchId && item.branchId !== branchId ? 'Cart quantity unavailable at this branch'
     : atStockLimit ? 'Maximum available quantity in cart'
     : item?.branchId && item.branchId !== branchId ? 'Move to this branch and add one'
-    : 'Add to cart';
+    : 'Add to Cart';
 
   const handleAdd = () => {
     const result = addItem(variantId, maxQuantity ?? nextQuantity, branchId);
@@ -45,13 +48,14 @@ export function AddToCartButton({
   return (
     <>
       <Button
+        data-chat-clearance
         type="button"
-        className="mt-4 w-full"
+        size={null} className="min-h-11 w-full whitespace-normal rounded-lg px-3 py-3.5 font-semibold"
         onClick={handleAdd}
         disabled={atStockLimit || checkingAvailability || availabilityFailed}
       >
         <ShoppingCart className="mr-2 h-4 w-4" aria-hidden="true" />
-        {label}
+        {label}{!checkingAvailability && !availabilityFailed && !atStockLimit && ' · ' + formatPhp(priceMinor)}
       </Button>
       {availabilityFailed && (
         <Button variant="link" size={null} type="button" className="mt-2 min-h-11 underline" onClick={() => void availability.refetch()}>

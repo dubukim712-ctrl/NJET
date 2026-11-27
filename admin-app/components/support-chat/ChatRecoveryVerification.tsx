@@ -38,7 +38,7 @@ export function ChatRecoveryVerification({
   return (
     <section className="w-full rounded-2xl border bg-card p-5 shadow-sm sm:p-7">
       <div className="flex items-start gap-3">
-        <div className="shrink-0 rounded-xl bg-primary/10 p-3 text-primary">
+        <div className="shrink-0 rounded-xl bg-accent p-3 text-accent-foreground">
           <Mail className="size-5" aria-hidden="true" />
         </div>
         <div className="min-w-0">

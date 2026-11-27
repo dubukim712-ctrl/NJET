@@ -11,7 +11,8 @@ import { ProfileContactFields } from '@/components/auth/ProfileContactFields';
 import { Button } from '@/components/ui/Button';
 import { resolveCheckoutAddress } from '@/data/commerce/checkout-address';
 import { useInvalidateCheckoutOptionsQuery } from '@/data/commerce/checkout-options-client';
-import { normalizePhilippineMobileNumber } from '@/lib/phone-number';
+import { formatSavedPhilippineMobileNumber } from '@/lib/phone-number';
+import { philippineMobileSchema } from '@/lib/validations/philippine-mobile';
 import { updateCustomerProfileAction, updateProfileAction, type CustomerProfile } from '@/data/actions/profile';
 import type { UserProfile } from '@/types/database';
 import { useAuth } from '@/components/auth/AuthProvider';
@@ -26,7 +27,7 @@ export function ProfileForm({ profile, contact }: {
   const { refreshUser } = useAuth();
   const invalidateProfile = useInvalidateCustomerProfileQuery(profile.id);
   const invalidateCheckout = useInvalidateCheckoutOptionsQuery();
-  const [phoneNumber, setPhoneNumber] = useState(contact?.phone_number ?? '');
+  const [phoneNumber, setPhoneNumber] = useState(() => formatSavedPhilippineMobileNumber(contact?.phone_number));
   const [address, setAddress] = useState(() => resolveCheckoutAddress(contact));
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>();
   const [serverError, setServerError] = useState<string | null>(null);
@@ -48,6 +49,12 @@ export function ProfileForm({ profile, contact }: {
 
     setFieldErrors(undefined);
 
+    const phone = philippineMobileSchema.safeParse(phoneNumber);
+    if (contact && phoneNumber !== '' && !phone.success) {
+      setFieldErrors({ phoneNumber: [phone.error.issues[0].message] });
+      return;
+    }
+
     try {
       const formData = new FormData();
       formData.set('fullName', data.fullName ?? '');
@@ -62,7 +69,6 @@ export function ProfileForm({ profile, contact }: {
         return;
       }
 
-      if (contact) setPhoneNumber(normalizePhilippineMobileNumber(phoneNumber) ?? '');
       await Promise.all([refreshUser(), invalidateProfile(), contact && invalidateCheckout()]);
       toast.success('Profile updated.');
       router.refresh();
@@ -101,7 +107,7 @@ export function ProfileForm({ profile, contact }: {
           phoneNumber={phoneNumber}
           address={address}
           verified={Boolean(contact.phone_number && contact.phone_verified_at
-            && normalizePhilippineMobileNumber(phoneNumber) === contact.phone_number)}
+            && phoneNumber === formatSavedPhilippineMobileNumber(contact.phone_number))}
           fieldErrors={fieldErrors}
           saving={isSubmitting}
           onPhoneChange={setPhoneNumber}

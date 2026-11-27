@@ -18,7 +18,7 @@ function ReleaseDetails({ release }: { release: ReleasePhoto }) {
   return (
     <div className="min-w-0 space-y-2 break-words">
       <div className="flex flex-wrap items-center gap-2 text-xs">
-        {release.model_name && <span className="rounded-full bg-primary/10 px-2.5 py-1 font-semibold text-primary">{release.model_name}</span>}
+        {release.model_name && <span className="rounded-full bg-accent px-2.5 py-1 font-semibold text-foreground">{release.model_name}</span>}
         {release.branch_name && <span className="text-muted-foreground">{release.branch_name}</span>}
       </div>
       {release.customer_name && <p className="text-sm font-semibold">{release.customer_name}</p>}
@@ -36,7 +36,7 @@ export function CustomerReleaseGallery({ releases }: { releases: ReleasePhoto[] 
       <h3 id="customer-release-title" className="mb-4 text-xl font-semibold">Customer Releases Gallery</h3>
       <ul className="flex snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain pb-3 md:grid md:grid-cols-3 md:overflow-visible">
         {releases.map((release, index) => (
-          <li key={release.id} className={`relative w-[78%] min-w-0 shrink-0 snap-start overflow-hidden rounded-xl border bg-card text-card-foreground hover:border-primary focus-within:ring-2 focus-within:ring-inset focus-within:ring-primary md:w-auto ${index === 0 ? "md:col-span-3" : ""}`}>
+          <li key={release.id} className={`relative w-[78%] min-w-0 shrink-0 snap-start overflow-hidden rounded-xl border bg-card text-card-foreground hover:border-foreground/40 focus-within:ring-2 focus-within:ring-inset focus-within:ring-ring md:w-auto ${index === 0 ? "md:col-span-3" : ""}`}>
             <div className={`relative aspect-[4/3] bg-muted ${index === 0 ? "md:aspect-video" : ""}`}>
               <Image src={release.photoUrl} alt={release.model_name ?? 'Customer release photo'} fill sizes={index === 0 ? "(min-width: 1024px) 58vw, (min-width: 768px) 100vw, 78vw" : "(min-width: 1024px) 19vw, (min-width: 768px) 33vw, 78vw"} className="object-cover" />
             </div>

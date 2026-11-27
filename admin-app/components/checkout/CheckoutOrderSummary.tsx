@@ -98,7 +98,7 @@ export function CheckoutOrderSummary({
               <span className="min-w-0">Items before discount</span>
               <span className="shrink-0 text-right tabular-nums">{formatPhp(subtotal + discountTotal)}</span>
             </p>
-            <p className="flex items-start justify-between gap-3 text-primary">
+            <p className="flex items-start justify-between gap-3 text-foreground">
               <span className="min-w-0">Discount</span>
               <span className="shrink-0 text-right tabular-nums">-{formatPhp(discountTotal)}</span>
             </p>
@@ -165,7 +165,7 @@ export function CheckoutOrderSummary({
           )}
         </div>
       )}
-      <Button type="submit" className="w-full" loading={busy} disabled={!retryable && (loading || !allVariantsLoaded || !stockAvailable || !paymentAvailable || !phoneVerificationReady)}>
+      <Button data-chat-clearance type="submit" className="min-h-11 w-full" loading={busy} disabled={!retryable && (loading || !allVariantsLoaded || !stockAvailable || !paymentAvailable || !phoneVerificationReady)}>
         {retryable ? "Retry order" : "Place order"}
       </Button>
       <p className="text-xs leading-5 text-muted-foreground">

@@ -1,7 +1,16 @@
-export function normalizePhilippineMobileNumber(value: string): string | null {
-  const digits = value.replace(/[^0-9]/g, '');
-  if (/^09[0-9]{9}$/.test(digits)) return `+63${digits.slice(1)}`;
-  if (/^9[0-9]{9}$/.test(digits)) return `+63${digits}`;
-  if (/^639[0-9]{9}$/.test(digits)) return `+${digits}`;
-  return null;
+import { philippineMobileSchema } from './validations/philippine-mobile.ts';
+
+export function sanitizePhilippineMobileInput(value: string): string {
+  return value.replace(/\D/g, '').slice(0, 11);
+}
+
+export function formatSavedPhilippineMobileNumber(value: string | null | undefined): string {
+  const stored = value ?? '';
+  const local = /^\+639\d{9}$/.test(stored) ? '0' + stored.slice(3) : stored;
+  return philippineMobileSchema.safeParse(local).success ? local : '';
+}
+
+// Profile storage and the SMS gateway use E.164. Call with a validated local number.
+export function toPhilippineMobileE164(localNumber: string): string {
+  return '+63' + localNumber.slice(1);
 }

@@ -10,7 +10,7 @@ export function LegalFooterLinks() {
   return (
     <nav
       aria-label="Legal policies"
-      className="mt-3 flex flex-col items-start gap-2.5 border-t border-primary-foreground/25 pt-3 text-xs text-muted leading-5"
+      className="mt-3 flex flex-col items-start gap-2.5 border-t border-white/20 pt-3 text-xs leading-5"
     >
       {links.map(([href, label]) => (
         <Link

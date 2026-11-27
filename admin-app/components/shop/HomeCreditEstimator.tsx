@@ -26,23 +26,23 @@ export function HomeCreditEstimator({ models }: { models: EstimateModel[] }) {
   return (
     <section
       id="installments"
-      className="scroll-mt-32 rounded-3xl bg-primary p-6 text-primary-foreground sm:p-10"
+      className="scroll-mt-32 rounded-3xl bg-[#264653] p-6 text-[#f4ede4] sm:p-10"
     >
       <div className="grid items-start gap-8 lg:grid-cols-[1fr_1.1fr]">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.19em] text-secondary">
+          <p className="text-xs font-semibold uppercase tracking-[0.19em] text-white">
             Home Credit
           </p>
           <h2 className="mt-2 max-w-sm text-3xl font-semibold tracking-tight sm:text-4xl">
             Plan your monthly payment
           </h2>
-          <p className="mt-4 max-w-md text-sm leading-6 text-[#dbe2de]">
+          <p className="mt-4 max-w-md text-sm leading-6 text-[#f4ede4]/80">
             Bring one eligible government-issued ID to apply at an NJET branch.
             Approval, eligible terms, interest, and fees depend on Home Credit.
           </p>
           <Link
             href="/shop"
-            className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-lg bg-white px-4 text-sm font-semibold text-primary hover:bg-emerald-50"
+            className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-lg bg-primary-action px-4 text-sm font-semibold text-primary-foreground ring-1 ring-inset ring-white/40 hover:bg-primary-action-hover focus-visible:outline-white"
           >
             Explore the shop{" "}
             <ArrowRight className="size-4" aria-hidden="true" />
@@ -51,7 +51,7 @@ export function HomeCreditEstimator({ models }: { models: EstimateModel[] }) {
         {model ? (
           <div className="space-y-5 rounded-2xl border border-white/20 bg-white/10 p-4 sm:p-6">
             <Select
-              label={<span className="text-white">E-bike</span>}
+              label={<span className="text-[#f4ede4]">E-bike</span>}
               value={modelId}
               onValueChange={(id) => {
                 const selected = models.find((item) => item.id === id);
@@ -59,7 +59,7 @@ export function HomeCreditEstimator({ models }: { models: EstimateModel[] }) {
                 setModelId(selected.id);
                 setDownpayment(selected.downpayment);
               }}
-              className="min-h-11 rounded-lg border-white/30   hover:bg-white/10"
+              className="min-h-11 rounded-lg border-white/30"
             >
               {models.map(({ id, name }) => (
                 <option key={id} value={id}>
@@ -77,14 +77,14 @@ export function HomeCreditEstimator({ models }: { models: EstimateModel[] }) {
                 setDownpayment(Math.round(event.target.valueAsNumber * 100))
               }
               label={
-                <span className="flex justify-between gap-4 text-white">
+                <span className="flex justify-between gap-4 text-[#f4ede4]">
                   <span>Downpayment</span>
-                  <span>{formatPhp(downpayment)}</span>
+                  <span className="text-white">{formatPhp(downpayment)}</span>
                 </span>
               }
               aria-label="Downpayment"
               aria-valuetext={formatPhp(downpayment)}
-              className="min-h-8! cursor-pointer border-0 bg-transparent! p-0! accent-[#cce4c6]"
+              className="min-h-8! cursor-pointer border-0 bg-transparent! p-0! accent-[#2a9d8f]"
             />
             <div role="group" aria-label="Term in months">
               <p className="mb-2 text-sm font-medium">Term in months</p>
@@ -97,7 +97,7 @@ export function HomeCreditEstimator({ models }: { models: EstimateModel[] }) {
                     size={null}
                     aria-pressed={months === term}
                     onClick={() => setTerm(months)}
-                    className={`min-h-11 rounded-full border px-2 font-semibold ${months === term ? "border-[#cce4c6] bg-[#cce4c6] text-[#1f2a2e]" : "border-white/30 hover:bg-white/10"}`}
+                    className={`min-h-11 rounded-full border px-2 font-semibold ${months === term ? "border-[#e0f2ef] bg-[#e0f2ef] text-[#1d756a]" : "border-white/30 hover:bg-white/10"}`}
                   >
                     {months}
                   </Button>
@@ -105,21 +105,21 @@ export function HomeCreditEstimator({ models }: { models: EstimateModel[] }) {
               </div>
             </div>
             <div className="border-t border-white/20 pt-4">
-              <p className="text-sm text-[#dbe2de]">
+              <p className="text-sm text-[#f4ede4]/80">
                 Estimated Monthly Payment
               </p>
-              <output className="mt-1 block text-3xl font-semibold tabular-nums sm:text-4xl">
+              <output className="mt-1 block text-3xl font-semibold tabular-nums text-[#e0f2ef] sm:text-4xl">
                 {formatPhp(monthly ?? 0)}{" "}
                 <span className="text-base font-medium">/ mo</span>
               </output>
-              <p className="mt-2 text-xs text-[#dbe2de]">
+              <p className="mt-2 text-xs text-[#f4ede4]/80">
                 Planning estimate based on the cash price less downpayment,
                 divided by the term. Excludes interest and fees.
               </p>
             </div>
           </div>
         ) : (
-          <p className="text-sm text-[#dbe2de]">
+          <p className="text-sm text-[#f4ede4]/80">
             Model pricing is temporarily unavailable. Visit the shop for current
             prices.
           </p>

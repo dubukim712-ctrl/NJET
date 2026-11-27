@@ -5,53 +5,53 @@
 
 :root {
   color-scheme: light;
-  --background: #f4f2ec;
-  --foreground: #202a28;
-  --card: #fffefa;
-  --card-foreground: #202a28;
-  --popover: #fffefa;
-  --popover-foreground: #202a28;
-  --primary: #24583b;
-  --primary-foreground: #fffefa;
-  --secondary: #e8e4d8;
-  --secondary-foreground: #27352e;
-  --muted: #ebe8df;
-  --muted-foreground: #56615b;
-  --accent: #e5ebe3;
-  --accent-foreground: #1f3a2a;
-  --destructive: #b42318;
-  --destructive-foreground: #fffefa;
-  --success: #16a34a;
+  --background: #f4ede4;
+  --foreground: #264653;
+  --card: #fffdf9;
+  --card-foreground: #264653;
+  --popover: #fffdf9;
+  --popover-foreground: #264653;
+  --primary: #e76f51;
+  --primary-foreground: #ffffff;
+  --secondary: #e8dfd3;
+  --secondary-foreground: #264653;
+  --muted: #ece4d9;
+  --muted-foreground: #526b75;
+  --accent: #e0f2ef;
+  --accent-foreground: #1d756a;
+  --destructive: #c93b2b;
+  --destructive-foreground: #ffffff;
+  --success: #2a9d8f;
   --success-foreground: #ffffff;
-  --border: #dedbd1;
-  --input: #d6d3c8;
-  --ring: #24583b;
+  --border: #dfd6ca;
+  --input: #d3c9bb;
+  --ring: #b4452d;
   --radius: 0.75rem;
 }
 
 html.dark {
   color-scheme: dark;
-  --background: #111916;
-  --foreground: #e6ede8;
-  --card: #1a2420;
-  --card-foreground: #e6ede8;
-  --popover: #1a2420;
-  --popover-foreground: #e6ede8;
-  --primary: #7cc798;
-  --primary-foreground: #102116;
-  --secondary: #29332d;
-  --secondary-foreground: #e4eee7;
-  --muted: #242d28;
-  --muted-foreground: #a7b3aa;
-  --accent: #2b3a31;
-  --accent-foreground: #d8f1df;
+  --background: #14242b;
+  --foreground: #f4ede4;
+  --card: #1c323b;
+  --card-foreground: #f4ede4;
+  --popover: #1c323b;
+  --popover-foreground: #f4ede4;
+  --primary: #e76f51;
+  --primary-foreground: #ffffff;
+  --secondary: #264653;
+  --secondary-foreground: #f4ede4;
+  --muted: #213b46;
+  --muted-foreground: #a8bcc3;
+  --accent: #224a46;
+  --accent-foreground: #7ed4c8;
   --destructive: #ef7c72;
   --destructive-foreground: #2a1210;
-  --success: #4ade80;
-  --success-foreground: #102116;
-  --border: #35413a;
-  --input: #3c4941;
-  --ring: #7cc798;
+  --success: #2a9d8f;
+  --success-foreground: #ffffff;
+  --border: #2f4f5c;
+  --input: #385b69;
+  --ring: #e76f51;
 }
 
 @theme inline {
@@ -63,6 +63,8 @@ html.dark {
   --color-popover-foreground: var(--popover-foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-primary-action: #b4452d;
+  --color-primary-action-hover: #a33a25;
   --color-secondary: var(--secondary);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
@@ -87,6 +89,11 @@ html.dark {
 @layer base {
   * {
     border-color: var(--color-border);
+  }
+
+  :where(a:focus-visible) {
+    outline: 2px solid var(--ring);
+    outline-offset: 3px;
   }
 }
 
@@ -116,14 +123,9 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-button,
-input {
-  font: inherit;
-}
-
 ::selection {
-  background: #d3a86f;
-  color: #202a28;
+  background: var(--accent);
+  color: var(--foreground);
 }
 
 .scrollbar-hidden {
@@ -156,12 +158,13 @@ input.number-no-spinner::-webkit-outer-spin-button {
   display: block;
   width: 22px;
   height: 22px;
-  border: 3px solid #fffefa;
+  border: 3px solid #fffdf9;
   border-radius: 50% 50% 50% 0;
-  background: #24583b;
-  box-shadow: 0 1px 5px rgb(22 35 31 / 55%);
+  background: #2a9d8f;
+  box-shadow: 0 1px 5px rgb(38 70 83 / 55%);
   transform: rotate(-45deg);
 }
+
 @keyframes cart-sheet-in {
   from {
     transform: translateY(100%);

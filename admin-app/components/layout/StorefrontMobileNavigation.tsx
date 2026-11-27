@@ -18,7 +18,7 @@ export function StorefrontMobileNavigation({ activeLink }: { activeLink: string 
   const pathname = usePathname();
 
   return (
-    <nav aria-label="Mobile storefront navigation" className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t bg-background/95 pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_16px_rgba(0,0,0,0.08)] backdrop-blur lg:hidden">
+    <nav aria-label="Mobile storefront navigation" className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-border bg-background pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_16px_rgba(0,0,0,0.08)] backdrop-blur lg:hidden">
       {tabs.map(({ label, href, icon: Icon }) => {
         const active = href === activeLink;
         return (
@@ -28,8 +28,8 @@ export function StorefrontMobileNavigation({ activeLink }: { activeLink: string 
             variant={null}
             size={null}
             className={cn(
-              'h-16 min-w-0 flex-col gap-1 rounded-none px-1 text-[10px] font-medium leading-tight whitespace-nowrap',
-              active ? 'bg-primary/10 text-primary' : 'text-muted-foreground',
+              'mx-0.5 my-1 h-14 min-w-0 flex-col gap-1 rounded-lg px-0.5 text-[10px] font-medium leading-tight whitespace-nowrap focus-visible:ring-inset',
+              active ? 'bg-primary/10 font-semibold text-primary-action dark:text-primary' : 'text-muted-foreground',
             )}
           >
             <Link href={href} scroll={pathname === '/' || !href.includes('#')} aria-current={active ? (href.includes('#') ? 'location' : 'page') : undefined} onClick={(event) => {

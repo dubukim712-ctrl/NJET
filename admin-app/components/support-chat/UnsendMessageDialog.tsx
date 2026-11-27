@@ -69,7 +69,7 @@ export function UnsendMessageDialog({
           <Button variant="ghost" size={null}
             type="button"
             onClick={onClose}
-            className="min-h-11 rounded-lg px-4 text-sm font-medium text-primary hover:bg-accent"
+            className="min-h-11 rounded-lg px-4 text-sm font-medium text-foreground hover:bg-accent"
           >
             Cancel
           </Button>

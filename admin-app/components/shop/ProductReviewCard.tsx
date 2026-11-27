@@ -26,7 +26,8 @@ export function ProductReviewCard({ review }: { review: PublishedProductReview }
           <p className="break-words text-sm font-medium">{name}</p>
           <ProductReviewStars rating={review.rating} />
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
-            <span>Verified buyer &middot; <time dateTime={review.created_at}>{date}</time></span>
+            <span className="rounded-full bg-accent px-2 py-0.5 font-medium text-accent-foreground">Verified buyer</span>
+            <time dateTime={review.created_at}>{date}</time>
             {review.variant_name && (
               <span className="max-w-full break-words rounded-full border bg-muted px-2 py-0.5">
                 Variant: {review.variant_name}

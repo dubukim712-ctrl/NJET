@@ -70,7 +70,7 @@ export function AuthenticatorSettings({ initialFactors }: { initialFactors: stri
       </p>
 
       <span className={factors.length
-        ? 'inline-flex rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-900'
+        ? 'inline-flex rounded-full bg-success/15 px-3 py-1 text-xs font-medium text-foreground'
         : 'inline-flex rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground'}>
         {factors.length ? 'Enabled' : 'Not enabled'}
       </span>

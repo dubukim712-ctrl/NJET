@@ -45,7 +45,7 @@ export function PrintableSalesReceipt({ receipt, logoUrl, backHref }: {
         }
       `}</style>
       <div className="mx-auto mb-4 flex max-w-3xl items-center justify-between gap-3 print:hidden">
-        <Link className="text-sm font-medium text-primary underline" href={backHref}>Back to Order</Link>
+        <Link className="text-sm font-medium text-foreground underline" href={backHref}>Back to Order</Link>
         <PrintReceiptButton />
       </div>
       <article className="sales-receipt mx-auto max-w-3xl space-y-5 rounded-lg border border-neutral-300 bg-white p-4 text-black sm:p-8">

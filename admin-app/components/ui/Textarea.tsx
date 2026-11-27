@@ -51,9 +51,9 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
           {...textareaProps}
           aria-describedby={describedBy}
           aria-invalid={error ? true : textareaProps['aria-invalid']}
-          className={`block min-h-24 w-full min-w-0 rounded-md border bg-card px-3 py-2 text-base leading-5 text-foreground outline-none transition placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/30 disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground md:pointer-fine:text-sm ${
+          className={`block min-h-24 w-full min-w-0 rounded-md border bg-card px-3 py-2 text-base leading-5 text-foreground outline-none transition placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted-foreground md:pointer-fine:text-sm ${
             error
-              ? 'border-destructive focus-visible:border-destructive focus-visible:ring-destructive/25'
+              ? 'border-destructive focus-visible:border-destructive focus-visible:ring-destructive'
               : 'border-border'
           } ${className}`}
           id={textareaId}

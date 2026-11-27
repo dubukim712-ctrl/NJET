@@ -27,7 +27,7 @@ export function LegalPolicyPage({ policy }: { policy: LegalPolicy }) {
 
         <article className="min-w-0">
           <header className="border-b pb-6">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-foreground">
               Noel &amp; Jane E-bike Trading
             </p>
             <h1 className="mt-2 text-3xl font-bold uppercase tracking-tight text-foreground sm:text-4xl">
@@ -48,7 +48,7 @@ export function LegalPolicyPage({ policy }: { policy: LegalPolicy }) {
             </p>
             <div className="overflow-hidden rounded-lg border">
               <table className="w-full table-fixed border-collapse text-left text-sm">
-                <thead className="bg-primary text-primary-foreground">
+                <thead className="bg-[#264653] text-white">
                   <tr>
                     <th className="w-[38%] px-3 py-3 font-semibold sm:px-5">
                       Section
@@ -98,7 +98,7 @@ export function LegalPolicyPage({ policy }: { policy: LegalPolicy }) {
             ))}
           </div>
 
-          <p className="mt-2 rounded-lg border-l-4 border-primary bg-primary/5 p-4 text-sm leading-6 text-foreground">
+          <p className="mt-2 rounded-lg border-l-4 border-primary bg-accent p-4 text-sm leading-6 text-foreground">
             For help with an order or a policy question, use the current contact
             details shown in the site footer or on your sales documents.
           </p>

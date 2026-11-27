@@ -8,7 +8,7 @@ export function CheckoutAuthNotice({
 }) {
   return (
     <section
-      className="space-y-3 rounded-xl border border-primary/20 bg-primary/5 p-5"
+      className="space-y-3 rounded-xl border border-border bg-accent p-5"
       role="status"
     >
       <h2 className="font-semibold">
@@ -26,7 +26,7 @@ export function CheckoutAuthNotice({
           </Button>
           <Link
             href="/register"
-            className="inline-flex min-h-10 items-center text-sm font-medium text-primary underline underline-offset-4"
+            className="inline-flex min-h-10 items-center text-sm font-medium text-foreground underline underline-offset-4"
           >
             Create an account
           </Link>

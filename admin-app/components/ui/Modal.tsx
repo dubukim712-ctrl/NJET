@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button';
 
 interface ModalProps {
   open: boolean;
+  className?: string;
   title: string;
   onClose: () => void;
   children: ReactNode;
@@ -17,6 +18,7 @@ interface ModalProps {
 
 export function Modal({
   open,
+  className,
   title,
   onClose,
   children,
@@ -55,7 +57,7 @@ export function Modal({
       onClick={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}
-      className={`fixed z-50 ${viewportHeight} overflow-visible border-0 bg-transparent p-0 text-card-foreground shadow-none backdrop:bg-black/50 ${bottomSheet ? "inset-x-0 bottom-0 top-auto m-0 w-full max-w-none rounded-t-2xl" : `inset-0 m-auto w-[calc(100%-2rem)] rounded-xl ${width}`}`}
+      className={`fixed z-50 ${className ?? ""} ${viewportHeight} overflow-visible border-0 bg-transparent p-0 text-card-foreground shadow-none backdrop:bg-black/50 ${bottomSheet ? "inset-x-0 bottom-0 top-auto m-0 w-full max-w-none rounded-t-2xl" : `inset-0 m-auto w-[calc(100%-2rem)] rounded-xl ${width}`}`}
     >
       <div className={`${viewportHeight} ${hasFooter ? "flex flex-col overflow-hidden" : "overflow-y-auto"} border bg-card text-card-foreground shadow-xl ${bottomSheet ? "rounded-t-2xl" : "rounded-xl"}`}>
         <header className={`${hasFooter ? "shrink-0" : "sticky top-0 z-10"} flex items-center justify-between gap-4 border-b bg-card px-4 py-3 sm:px-5 sm:py-4`}>

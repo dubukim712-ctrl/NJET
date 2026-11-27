@@ -1,6 +1,6 @@
 'use client';
 
-import { Input } from '@/components/ui/Input';
+import { PhilippineMobileInput } from '@/components/ui/PhilippineMobileInput';
 import { PhilippineAddressFields, type PhilippineAddressValues } from '@/components/admin/commerce/PhilippineAddressFields';
 
 export function ProfileContactFields({
@@ -23,21 +23,18 @@ export function ProfileContactFields({
   return (
     <section className="space-y-4 border-t pt-5">
       <h3 className="text-lg font-semibold">Contact information</h3>
-      <Input
+      <PhilippineMobileInput
+        name="phoneNumber"
         label="Mobile number"
-        type="tel"
-        autoComplete="tel"
-        placeholder="0917 123 4567"
-        maxLength={24}
         value={phoneNumber}
-        onChange={(event) => onPhoneChange(event.target.value)}
+        onValueChange={onPhoneChange}
         error={fieldErrors?.phoneNumber?.[0]}
         disabled={saving}
         helperText="Changing your number clears its verification. You can verify it at checkout when required."
         rightAdornment={
           <span
             role="status"
-            className={`whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium ${verified ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}
+            className={`whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium ${verified ? 'bg-accent text-accent-foreground' : 'bg-muted text-muted-foreground'}`}
           >
             {verified ? 'Verified' : 'Unverified'}
           </span>

@@ -9,7 +9,7 @@ const ORDER_STATUS_COLORS: Record<OrderStatus, string> = {
   cancelled: 'bg-red-100 text-red-900 dark:bg-red-900/30 dark:text-red-200',
   expired: 'bg-red-100 text-red-900 dark:bg-red-900/30 dark:text-red-200',
   completed:
-    'bg-green-100 text-green-900 dark:bg-green-900/30 dark:text-green-200',
+    'bg-success/15 text-foreground',
 };
 
 function isOrderStatus(status: string): status is OrderStatus {

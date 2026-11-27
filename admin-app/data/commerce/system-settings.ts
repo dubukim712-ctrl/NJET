@@ -25,13 +25,15 @@ export type AdminBusinessInfo = {
   businessHours: string;
   logoPath: string | null;
   logoUrl: string | null;
+  heroImagePath: string | null;
+  heroImageUrl: string | null;
   aboutImagePath: string | null;
   aboutImageUrl: string | null;
 };
 
 export type StorefrontBusinessInfo = Omit<
   AdminBusinessInfo,
-  'logoPath' | 'aboutImagePath'
+  'logoPath' | 'aboutImagePath' | 'heroImagePath'
 >;
 
 export type AdminSystemSettings = {
@@ -53,6 +55,14 @@ export type AdminSystemSettings = {
   paymentRecipients: AdminPaymentRecipient[];
 };
 
+async function getHeroImage(supabase: SupabaseClient) {
+  const { data, error } = await supabase.from('business_settings').select('hero_image_path').eq('id', 1).maybeSingle();
+  if (error && error.code !== '42703') throw error;
+  const path = data?.hero_image_path ?? null;
+  const url = path ? supabase.storage.from('njet-storefront-branding').getPublicUrl(path).data.publicUrl : null;
+  return { path, url };
+}
+
 export async function getAdminSystemSettings(): Promise<{
   data: AdminSystemSettings | null;
   error: string | null;
@@ -61,6 +71,7 @@ export async function getAdminSystemSettings(): Promise<{
     const { supabase } = await requireFullAccess('/admin/settings');
     const [
       businessResult,
+      heroImage,
       recipientResult,
       branchesResult,
       serviceHoursResult,
@@ -71,6 +82,7 @@ export async function getAdminSystemSettings(): Promise<{
         .select('business_name, phone, email, address, business_hours, logo_path, about_image_path, phone_verification_required')
         .eq('id', 1)
         .maybeSingle(),
+      getHeroImage(supabase),
       supabase
         .from('payment_recipients')
         .select('id, provider, recipient_name, account_details, payment_qr_path, active')
@@ -103,6 +115,8 @@ export async function getAdminSystemSettings(): Promise<{
           logoUrl: businessResult.data.logo_path
             ? branding.getPublicUrl(businessResult.data.logo_path).data.publicUrl
             : null,
+          heroImagePath: heroImage.path,
+          heroImageUrl: heroImage.url,
           aboutImagePath: businessResult.data.about_image_path,
           aboutImageUrl: businessResult.data.about_image_path
             ? branding.getPublicUrl(businessResult.data.about_image_path).data.publicUrl
@@ -165,8 +179,10 @@ export async function getStorefrontBusinessInfo(
       };
     }
 
+    const heroImage = await getHeroImage(supabase);
     return {
       data: {
+        heroImageUrl: heroImage.url,
         businessName: data.business_name,
         phone: data.phone,
         email: data.email,

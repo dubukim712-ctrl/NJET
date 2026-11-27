@@ -78,12 +78,12 @@ export function CustomerOrderPaymentQuery({
       </div>
       <Link
         href="/dashboard/orders"
-        className="inline-flex min-h-10 items-center gap-2 text-sm font-medium text-primary hover:underline"
+        className="inline-flex min-h-10 items-center gap-2 text-sm font-medium text-foreground hover:underline"
       >
         <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Back to orders
       </Link>
       <header>
-        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">Order payment</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-foreground">Order payment</p>
         <h1 className="mt-1 break-words text-3xl font-semibold tracking-tight">{query.data.order_number}</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           Your order status is {query.data.status.replaceAll('_', ' ')}.

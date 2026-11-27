@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { philippineMobileSchema } from './philippine-mobile.ts';
 import type {
   ServiceAppointmentMode,
   ServiceAppointmentStatus,
@@ -86,14 +87,14 @@ function validateThirtyMinuteSlot(
   });
 }
 
-const contactNumberSchema = z.string().regex(
+const staffContactNumberSchema = z.string().regex(
   /^[0-9]{7,11}$/,
   'Enter a contact number with 7 to 11 digits.'
 );
 
 export const customerServiceAppointmentRequestSchema =
   appointmentDetailsSchema.extend({
-    contactNumber: contactNumberSchema,
+    contactNumber: philippineMobileSchema,
     preferredStartAt: z.string().datetime({ offset: true }),
   }).strict().superRefine((value, context) => {
     validateServiceAddress(value, context);
@@ -110,7 +111,7 @@ export const customerServiceAppointmentRequestSchema =
 export const staffServiceAppointmentCreateSchema =
   appointmentDetailsSchema.extend({
     customerName: z.string().trim().min(2).max(100),
-    contactNumber: contactNumberSchema,
+    contactNumber: staffContactNumberSchema,
     scheduledAt: z.string().datetime({ offset: true }),
     assignedTechnicianId: z.string().uuid(),
     estimateMinor: z.number().int().min(0).nullable(),

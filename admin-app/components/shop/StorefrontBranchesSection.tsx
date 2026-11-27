@@ -48,11 +48,11 @@ export function StorefrontBranchesSection({
     <section
       id="branches"
       aria-labelledby="branch-finder-title"
-      className="scroll-mt-32 border-t pt-8 sm:pt-12"
+      className="scroll-mt-32 border-t pt-12 md:pt-16"
     >
       <h2
         id="branch-finder-title"
-        className="text-xl font-semibold tracking-tight sm:text-2xl md:text-3xl lg:text-4xl"
+        className="text-xl font-semibold tracking-tight sm:text-2xl md:text-3xl"
       >
         Visit us on our branch!
       </h2>
@@ -72,7 +72,7 @@ export function StorefrontBranchesSection({
                   variant={branch.id === selected.id ? "default" : "outline"}
                   aria-pressed={branch.id === selected.id}
                   onClick={() => selectBranch(branch.id)}
-                  className="min-h-11 shrink-0 justify-start whitespace-normal rounded-full px-4 py-2 text-left justify-center"
+                  className="min-h-11 shrink-0 justify-center whitespace-normal rounded-full px-4 py-2 text-center"
                 >
                   {branch.name}
                 </Button>
@@ -90,14 +90,14 @@ export function StorefrontBranchesSection({
               </h3>
               <address className="mt-4 flex gap-2 text-sm leading-6 text-muted-foreground not-italic">
                 <MapPin
-                  className="mt-1 size-4 shrink-0 text-primary"
+                  className="mt-1 size-4 shrink-0 text-foreground"
                   aria-hidden="true"
                 />
                 {selected.address.trim() || "Street address unavailable"}
               </address>
               <p className="mt-3 flex gap-2 text-sm leading-6 text-muted-foreground">
                 <Clock3
-                  className="mt-1 size-4 shrink-0 text-primary"
+                  className="mt-1 size-4 shrink-0 text-foreground"
                   aria-hidden="true"
                 />
                 <span>
@@ -145,12 +145,12 @@ export function StorefrontBranchesSection({
               <GoogleMapsEmbed
                 query={location}
                 title={`Map of ${selected.name}`}
-                className="h-64 w-full flex-1 border-0 sm:min-h-72"
+                className="min-h-64 w-full flex-1 border-0 sm:min-h-72"
               />
             ) : (
               <div className="grid min-h-48 flex-1 place-content-center gap-2 bg-muted p-5 text-center text-sm text-muted-foreground">
                 <MapPin
-                  className="mx-auto size-6 text-primary"
+                  className="mx-auto size-6 text-foreground"
                   aria-hidden="true"
                 />
                 Search for {selected.name} on Google Maps.

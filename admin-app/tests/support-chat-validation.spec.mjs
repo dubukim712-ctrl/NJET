@@ -63,14 +63,14 @@ test('phone guest starts reject invalid numbers', () => {
   assert.equal(
     startGuestPhoneChatSchema.safeParse({
       name: 'Sam',
-      phone: '+63 912 345 6789',
+      phone: '09123456789',
     }).success,
     true,
   );
   assert.equal(
     startGuestPhoneChatSchema.safeParse({
       name: 'Sam',
-      phone: '123',
+      phone: '+63 912 345 6789',
     }).success,
     false,
   );

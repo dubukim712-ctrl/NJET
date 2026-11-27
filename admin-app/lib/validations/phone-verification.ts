@@ -1,13 +1,8 @@
 import { z } from 'zod';
-import { normalizePhilippineMobileNumber } from '@/lib/phone-number';
-
-const phoneNumber = z.string().trim().min(1).max(24).refine(
-  (value) => normalizePhilippineMobileNumber(value) !== null,
-  'Enter a valid Philippine mobile number.'
-);
+import { philippineMobileSchema } from './philippine-mobile.ts';
 
 export const requestPhoneVerificationSchema = z.object({
-  phoneNumber,
+  phoneNumber: philippineMobileSchema,
 }).strict();
 
 export const verifyPhoneVerificationSchema = z.object({

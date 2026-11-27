@@ -17,12 +17,12 @@ export function StorefrontAboutSection({
 }) {
   return (
     <section
-      className="grid gap-6 border-y py-10 sm:gap-8 sm:py-14 lg:grid-cols-[1.05fr_0.95fr] lg:items-center"
+      className="grid gap-6 border-y py-12 sm:gap-8 md:py-16 lg:grid-cols-[1.05fr_0.95fr] lg:items-center"
       aria-labelledby="about-njet"
     >
       <div className="space-y-5">
         <div>
-          <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-[0.2em] text-primary">
+          <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-[0.2em] text-foreground">
             About us
           </p>
           <h2
@@ -44,7 +44,7 @@ export function StorefrontAboutSection({
         <div className="flex max-[375px]:w-full  flex-wrap gap-3 pt-1">
           <Link
             href="/shop"
-            className="inline-flex max-[375px]:w-full max-[375px]:justify-center min-h-11 items-center gap-2 rounded-md bg-primary px-5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+            className="inline-flex max-[375px]:w-full max-[375px]:justify-center min-h-11 items-center gap-2 rounded-md bg-primary-action px-5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary-action-hover"
           >
             Explore the shop
             <ArrowRight className="size-4" aria-hidden="true" />
@@ -59,7 +59,7 @@ export function StorefrontAboutSection({
         </div>
       </div>
 
-      <div className="relative isolate flex min-h-72 flex-col justify-end overflow-hidden rounded-2xl bg-[#173c2b] text-white sm:min-h-96">
+      <div className="relative isolate flex min-h-72 flex-col justify-end overflow-hidden rounded-2xl bg-[#264653] text-white sm:min-h-96">
         {imageUrl && (
           <>
             <Image
@@ -72,7 +72,7 @@ export function StorefrontAboutSection({
             />
             <div
               aria-hidden="true"
-              className="absolute inset-0 bg-linear-to-t from-black/90 via-black/65 to-black/15"
+              className="absolute inset-0 bg-linear-to-t from-[#14242b]/95 via-[#14242b]/85 to-[#264653]/20"
             />
           </>
         )}
@@ -121,7 +121,7 @@ export function StorefrontAboutSection({
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <ProductReviewStars rating={review.rating} />
-                    <span className="rounded-full bg-secondary px-2.5 py-1 text-xs font-medium text-secondary-foreground">
+                    <span className="rounded-full bg-accent px-2.5 py-1 text-xs font-medium text-accent-foreground">
                       {review.branch_name}
                     </span>
                   </div>
@@ -134,7 +134,7 @@ export function StorefrontAboutSection({
                     </span>
                     <Link
                       href={`/shop/view-product/${review.slug}`}
-                      className="text-primary hover:underline"
+                      className="text-foreground hover:underline"
                     >
                       {review.product_name}
                     </Link>

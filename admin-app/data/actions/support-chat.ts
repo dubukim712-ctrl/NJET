@@ -32,7 +32,7 @@ export async function startGuestChatAction(
   if (!validation.success) {
     return {
       success: false,
-      error: 'Enter your name and a valid phone number.',
+      error: validation.error.flatten().fieldErrors.phone?.[0] ?? 'Enter your name to start a chat.',
       fieldErrors: validation.error.flatten().fieldErrors,
     };
   }

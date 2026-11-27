@@ -8,7 +8,9 @@ import {
 } from "@/data/actions/phone-verification";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
-import { normalizePhilippineMobileNumber } from "@/lib/phone-number";
+import { PhilippineMobileInput } from "@/components/ui/PhilippineMobileInput";
+import { formatSavedPhilippineMobileNumber } from "@/lib/phone-number";
+import { PHILIPPINE_MOBILE_ERROR, philippineMobileSchema } from "@/lib/validations/philippine-mobile";
 
 export function CheckoutPhoneVerification({
   fieldError,
@@ -23,13 +25,9 @@ export function CheckoutPhoneVerification({
   verificationRequired: boolean;
   onVerificationChange: (verified: boolean) => void;
 }) {
-  const [phoneNumber, setPhoneNumber] = useState(
-    !verificationRequired && initialPhoneNumber?.startsWith("+63")
-      ? `0${initialPhoneNumber.slice(3)}`
-      : (initialPhoneNumber ?? ""),
-  );
+  const [phoneNumber, setPhoneNumber] = useState(() => formatSavedPhilippineMobileNumber(initialPhoneNumber));
   const [verifiedPhoneNumber, setVerifiedPhoneNumber] = useState(
-    initialVerifiedPhoneNumber,
+    () => formatSavedPhilippineMobileNumber(initialVerifiedPhoneNumber) || null,
   );
   const [challengeId, setChallengeId] = useState<string | null>(null);
   const [challengePhoneNumber, setChallengePhoneNumber] = useState<
@@ -39,41 +37,30 @@ export function CheckoutPhoneVerification({
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const normalizedPhoneNumber = normalizePhilippineMobileNumber(phoneNumber);
   const isVerified = Boolean(
     verificationRequired &&
-    normalizedPhoneNumber &&
-    normalizedPhoneNumber === verifiedPhoneNumber,
+    phoneNumber &&
+    phoneNumber === verifiedPhoneNumber,
   );
   const challengeMatchesPhone = Boolean(
-    challengeId && challengePhoneNumber === normalizedPhoneNumber,
+    challengeId && challengePhoneNumber === phoneNumber,
   );
 
-  const changePhoneNumber = (value: string) => {
-    const nextPhoneNumber = verificationRequired
-      ? value.replace(/[^\d+().\s-]/g, "").slice(0, 24)
-      : value.replace(/[^0-9]/g, "").slice(0, 11);
-    if (
-      normalizePhilippineMobileNumber(nextPhoneNumber) !==
-      normalizePhilippineMobileNumber(phoneNumber)
-    ) {
+  const changePhoneNumber = (nextPhoneNumber: string) => {
+    if (nextPhoneNumber !== phoneNumber) {
       setChallengeId(null);
       setChallengePhoneNumber(null);
       setCode("");
       setMessage(null);
       setError(null);
     }
-    onVerificationChange(
-      !verificationRequired ||
-        normalizePhilippineMobileNumber(nextPhoneNumber) ===
-          verifiedPhoneNumber,
-    );
+    onVerificationChange(!verificationRequired || nextPhoneNumber === verifiedPhoneNumber);
     setPhoneNumber(nextPhoneNumber);
   };
 
   const requestCode = async () => {
-    if (!normalizedPhoneNumber) {
-      setError("Enter a valid Philippine mobile number.");
+    if (!philippineMobileSchema.safeParse(phoneNumber).success) {
+      setError(PHILIPPINE_MOBILE_ERROR);
       return;
     }
     setBusy(true);
@@ -81,14 +68,14 @@ export function CheckoutPhoneVerification({
     setMessage(null);
     try {
       const result = await requestPhoneVerificationAction({
-        phoneNumber: normalizedPhoneNumber,
+        phoneNumber,
       });
       if (!result.success) {
         setError(result.error);
         return;
       }
       setChallengeId(result.data.challengeId);
-      setChallengePhoneNumber(normalizedPhoneNumber);
+      setChallengePhoneNumber(phoneNumber);
       setCode("");
       setMessage("A verification code was sent to this number.");
     } catch (requestError) {
@@ -135,19 +122,12 @@ export function CheckoutPhoneVerification({
 
   return (
     <div className="space-y-3">
-      <Input
+      <PhilippineMobileInput
         name="contactNumber"
         label="Contact number"
-        type="tel"
-        autoComplete="tel"
-        inputMode={verificationRequired ? "tel" : "numeric"}
-        pattern={verificationRequired ? undefined : "[0-9]{7,11}"}
-        minLength={verificationRequired ? undefined : 7}
-        maxLength={11}
         value={phoneNumber}
-        onChange={(event) => changePhoneNumber(event.target.value)}
+        onValueChange={changePhoneNumber}
         disabled={busy}
-        placeholder={verificationRequired ? "09XXXXXXXXX" : "Enter your number"}
         required
         leadingIcon={<Phone className="h-4 w-4" />}
         helperText={
@@ -159,7 +139,7 @@ export function CheckoutPhoneVerification({
       />
       {verificationRequired && isVerified && (
         <p
-          className="flex items-center gap-2 text-sm font-medium text-primary"
+          className="flex items-center gap-2 rounded-md bg-accent p-2 text-sm font-medium text-accent-foreground"
           role="status"
         >
           <CheckCircle2 className="h-4 w-4" aria-hidden="true" />

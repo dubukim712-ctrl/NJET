@@ -71,7 +71,7 @@ export function ProductReviewsSection({ productId }: { productId: string }) {
     <section id="product-reviews" className="space-y-6 border-t pt-7" aria-labelledby="product-reviews-title">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">Customer feedback</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-foreground">Customer feedback</p>
           <h2 id="product-reviews-title" className="mt-1 text-2xl font-semibold tracking-tight">
             Ratings &amp; reviews
           </h2>
@@ -167,7 +167,7 @@ export function ProductReviewsSection({ productId }: { productId: string }) {
           </div>
           {!user ? (
             <p className="text-sm text-muted-foreground">
-              <Link className="font-medium text-primary underline-offset-4 hover:underline" href="/login?redirect=%2Fshop">
+              <Link className="font-medium text-foreground underline-offset-4 hover:underline" href="/login?redirect=%2Fshop">
                 Sign in
               </Link>{' '}
               with your customer account to check review eligibility.

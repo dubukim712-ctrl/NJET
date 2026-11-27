@@ -8,7 +8,8 @@ import { getAuthContext, requirePermission } from '@/data/auth/guards';
 import { createServiceClient } from '@/data/supabase/service';
 import { sendPhoneVerificationSms } from '@/data/sms-gateway/phone-verification-sms';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
-import { normalizePhilippineMobileNumber } from '@/lib/phone-number';
+import { PHILIPPINE_MOBILE_ERROR } from '@/lib/validations/philippine-mobile';
+import { formatSavedPhilippineMobileNumber, toPhilippineMobileE164 } from '@/lib/phone-number';
 import {
   requestPhoneVerificationSchema,
   verifyPhoneVerificationSchema,
@@ -47,15 +48,12 @@ export async function requestPhoneVerificationAction(
   if (!validation.success) {
     return {
       success: false,
-      error: 'Enter a valid Philippine mobile number.',
+      error: PHILIPPINE_MOBILE_ERROR,
       fieldErrors: validation.error.flatten().fieldErrors,
     };
   }
 
-  const phoneNumber = normalizePhilippineMobileNumber(validation.data.phoneNumber);
-  if (!phoneNumber) {
-    return { success: false, error: 'Enter a valid Philippine mobile number.' };
-  }
+  const phoneNumber = toPhilippineMobileE164(validation.data.phoneNumber);
 
   const challengeId = randomUUID();
   const code = randomInt(0, 1_000_000).toString().padStart(6, '0');
@@ -146,7 +144,7 @@ export async function verifyPhoneVerificationAction(
       };
     }
 
-    const phoneNumber = normalizePhilippineMobileNumber(
+    const phoneNumber = formatSavedPhilippineMobileNumber(
       verification.verified_phone_number
     );
     if (!phoneNumber) {

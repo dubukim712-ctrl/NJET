@@ -100,24 +100,22 @@ export function StorefrontShell({
       <header
         id="storefront-header"
         className={cn(
-          "sticky top-0 z-40",
-          hasPanoramicHero
-            ? "bg-[#f5f6f2] dark:bg-background"
-            : "border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80",
+          "sticky top-0 z-40 bg-background",
+          !hasPanoramicHero && "border-b",
         )}
       >
-        <div className="bg-primary px-3 py-1.5 text-center text-[11px] leading-4 text-primary-foreground sm:text-xs">
+        <div className="bg-[#264653] px-3 py-1.5 text-center text-[11px] leading-4 text-[#f4ede4] sm:text-xs">
           {displayUser ? (
-            <Link href="/dashboard" className="underline-offset-2 hover:underline focus-visible:underline">
-              <strong>MEMBER PERKS:</strong> Track your orders, view receipts &amp; book a service checkup →
+            <Link href="/dashboard" className="underline-offset-2 hover:underline focus-visible:underline focus-visible:outline-white">
+              <strong className="text-[#e0f2ef]">MEMBER PERKS:</strong> Track your orders, view receipts &amp; book a service checkup →
             </Link>
           ) : (
             <>
-              <strong>MEMBER PERKS:</strong> Sign in to book a service checkup &amp; track orders.
+              <strong className="text-[#e0f2ef]">MEMBER PERKS:</strong> Sign in to book a service checkup &amp; track orders.
             </>
           )}
         </div>
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-2 px-4 sm:px-6">
+        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-2 px-3 sm:px-6">
           <Link
             href="/"
             className="flex min-w-0 items-center gap-2 text-base font-semibold leading-none tracking-tight sm:text-lg"
@@ -177,9 +175,9 @@ export function StorefrontShell({
                       : undefined
                   }
                   className={cn(
-                    "inline-flex min-h-10 items-center whitespace-nowrap rounded-full px-2 text-sm font-medium hover:text-primary xl:px-3",
+                    "inline-flex min-h-10 items-center whitespace-nowrap rounded-full px-2 text-sm font-medium hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring xl:px-3",
                     active
-                      ? "bg-primary/10 text-primary"
+                      ? "bg-primary/10 font-semibold text-primary-action dark:text-primary"
                       : "text-muted-foreground",
                   )}
                 >
@@ -229,7 +227,7 @@ export function StorefrontShell({
                 </Link>
                 <Link
                   href="/register"
-                  className="inline-flex min-h-10 items-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+                  className="inline-flex min-h-10 items-center rounded-md bg-primary-action px-3 text-sm font-medium text-primary-foreground hover:bg-primary-action-hover"
                 >
                   Join us
                 </Link>
@@ -240,6 +238,7 @@ export function StorefrontShell({
       </header>
 
       <main
+        id="storefront-content"
         className={cn(
           "min-h-[calc(100dvh-4rem)] w-full overflow-x-clip pb-[calc(9rem+env(safe-area-inset-bottom))] lg:pb-24",
           !hasPanoramicHero && "mx-auto max-w-7xl px-4 pt-6 sm:px-6 sm:pt-8",

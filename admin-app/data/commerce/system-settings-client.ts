@@ -16,6 +16,7 @@ const PAYMENT_MEDIA_BUCKET = 'njet-payment-recipient-media';
 export type SettingsAsset =
   | { kind: 'business-logo'; path: string }
   | { kind: 'about-image'; path: string }
+  | { kind: 'hero-image'; path: string }
   | { kind: 'payment-qr'; provider: PaymentProvider; path: string };
 
 export async function uploadSystemSettingsAsset(
@@ -27,18 +28,18 @@ export async function uploadSystemSettingsAsset(
   let path: string;
   let contentType: string;
 
-  if (kind === 'business-logo' || kind === 'about-image') {
+  if (kind !== 'payment-qr') {
     const extension = IMAGE_EXTENSIONS[file.type];
     if (!extension || file.size < 1 || file.size > MAX_IMAGE_SIZE) {
       return {
         path: null,
-        error: kind === 'about-image'
+        error: kind !== 'business-logo'
           ? 'Use a JPG, PNG, or WebP photo no larger than 5 MB.'
           : 'Use a JPG, PNG, or WebP logo no larger than 5 MB.',
       };
     }
     bucket = BRANDING_BUCKET;
-    path = `${kind === 'about-image' ? 'about' : 'logos'}/${crypto.randomUUID()}.${extension}`;
+    path = `${kind === 'hero-image' ? 'hero' : kind === 'about-image' ? 'about' : 'logos'}/${crypto.randomUUID()}.${extension}`;
     contentType = file.type;
   } else {
     const extension = IMAGE_EXTENSIONS[file.type];

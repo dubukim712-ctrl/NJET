@@ -105,7 +105,7 @@ export function ShopProductBrowser({ branches }: { branches: { id: string; name:
       <section aria-label="Products">
         <div className="mb-4 flex items-end justify-between gap-3">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">Explore</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-foreground">Explore</p>
             <h2 ref={resultsHeadingRef} tabIndex={-1} className="mt-1 text-2xl font-semibold tracking-tight">Products</h2>
           </div>
           <p className="text-sm text-muted-foreground" aria-live="polite">

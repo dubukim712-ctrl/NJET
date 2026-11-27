@@ -4,6 +4,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { ArrowLeft, LifeBuoy, LoaderCircle, Mail, MessageCircle, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { PhilippineMobileInput } from '@/components/ui/PhilippineMobileInput';
 import Link from 'next/link';
 import {
   requestGuestChatEmailAccessAction,
@@ -153,7 +154,7 @@ export function CustomerSupportChat({
       </Link>
 
       <header className="mb-6 mt-5 border-l-4 border-primary pl-4 sm:mb-8 sm:mt-7 sm:pl-6">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">NJET customer care</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-foreground">NJET customer care</p>
         <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">Let’s talk.</h1>
         <p className="mt-2 max-w-xl text-sm leading-6 text-muted-foreground sm:text-base">
           Message our team about a product, order, or service. Your conversation stays here so you can return to it later.
@@ -189,7 +190,7 @@ export function CustomerSupportChat({
         <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
           <form onSubmit={startChat} className="rounded-2xl border bg-card p-5 shadow-sm sm:p-7">
             <div className="flex items-start gap-3">
-              <div className="rounded-xl bg-primary/10 p-3 text-primary">
+              <div className="rounded-xl bg-accent p-3 text-accent-foreground">
                 <MessageCircle className="size-5" aria-hidden="true" />
               </div>
               <div>
@@ -216,7 +217,7 @@ export function CustomerSupportChat({
                     type="button"
                     onClick={() => { setContactMethod('email'); setContact(''); }}
                     aria-pressed={contactMethod === 'email'}
-                    className={`min-h-10 gap-2 rounded-lg border ${contactMethod === 'email' ? 'border-primary bg-primary/5 text-primary' : 'text-muted-foreground'}`}
+                    className={`min-h-10 gap-2 rounded-lg border ${contactMethod === 'email' ? 'border-accent-foreground bg-accent text-accent-foreground' : 'text-muted-foreground'}`}
                   >
                     <Mail className="size-4" aria-hidden="true" /> Email
                   </Button>
@@ -224,24 +225,36 @@ export function CustomerSupportChat({
                     type="button"
                     onClick={() => { setContactMethod('phone'); setContact(''); }}
                     aria-pressed={contactMethod === 'phone'}
-                    className={`min-h-10 gap-2 rounded-lg border ${contactMethod === 'phone' ? 'border-primary bg-primary/5 text-primary' : 'text-muted-foreground'}`}
+                    className={`min-h-10 gap-2 rounded-lg border ${contactMethod === 'phone' ? 'border-accent-foreground bg-accent text-accent-foreground' : 'text-muted-foreground'}`}
                   >
                     <Phone className="size-4" aria-hidden="true" /> Phone
                   </Button>
                 </div>
               </fieldset>
-              <Input
-                label={contactMethod === 'email' ? 'Email address' : 'Phone number'}
-                helperText="Email chats start after verification and can be reopened on another device. Phone chats stay on this browser."
-                id="chat-contact"
-                required
-                type={contactMethod === 'email' ? 'email' : 'tel'}
-                autoComplete={contactMethod === 'email' ? 'email' : 'tel'}
-                value={contact}
-                onChange={(event) => setContact(event.target.value)}
-                placeholder={contactMethod === 'email' ? 'you@example.com' : '+63 9xx xxx xxxx'}
-                className="rounded-lg! bg-background!"
-              />
+              {contactMethod === 'email' ? (
+                <Input
+                  label="Email address"
+                  helperText="Email chats start after verification and can be reopened on another device."
+                  id="chat-contact"
+                  type="email"
+                  autoComplete="email"
+                  value={contact}
+                  onChange={(event) => setContact(event.target.value)}
+                  placeholder="you@example.com"
+                  className="rounded-lg! bg-background!"
+                  required
+                />
+              ) : (
+                <PhilippineMobileInput
+                  label="Phone number"
+                  helperText="Phone chats stay on this browser."
+                  id="chat-contact"
+                  value={contact}
+                  onValueChange={setContact}
+                  className="rounded-lg! bg-background!"
+                  required
+                />
+              )}
             </div>
 
             {error && <p role="alert" className="mt-4 text-sm text-destructive">{error}</p>}
@@ -256,11 +269,11 @@ export function CustomerSupportChat({
             </Button>
           </form>
 
-          <aside className="flex gap-3 rounded-2xl bg-primary p-5 text-primary-foreground lg:block lg:self-start lg:p-6">
-            <LifeBuoy className="mt-0.5 size-5 shrink-0" aria-hidden="true" />
+          <aside className="flex gap-3 rounded-2xl bg-[#264653] p-5 text-[#f4ede4] lg:block lg:self-start lg:p-6">
+            <LifeBuoy className="mt-0.5 size-5 shrink-0 text-white" aria-hidden="true" />
             <div>
               <h2 className="font-semibold">Here to help</h2>
-              <p className="mt-2 text-sm leading-6 text-primary-foreground/85">
+              <p className="mt-2 text-sm leading-6 text-[#f4ede4]">
                 Our staff can see your messages and reply in this conversation. Your contact details are only used to support your chat.
               </p>
             </div>

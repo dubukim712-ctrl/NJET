@@ -40,14 +40,14 @@ export function DatePickerCalendar({
     <>
       <button
         aria-label="Close calendar"
-        className="fixed inset-0 z-[60] bg-[#10231f]/45 md:hidden"
+        className="fixed inset-0 z-[60] bg-[#14242b]/45 md:hidden"
         onClick={onDismiss}
         tabIndex={-1}
         type="button"
       />
       <section
         aria-label={label}
-        className="fixed inset-x-0 bottom-0 z-[61] max-h-[calc(100dvh-1rem)] overflow-y-auto rounded-t-2xl border border-[#c9c4b8] bg-[#fffefa] p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-[0_16px_40px_rgba(16,30,25,0.2)] md:inset-x-auto md:bottom-auto md:rounded-xl md:p-3"
+        className="fixed inset-x-0 bottom-0 z-[61] max-h-[calc(100dvh-1rem)] overflow-y-auto rounded-t-2xl border border-border bg-card p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-xl md:inset-x-auto md:bottom-auto md:rounded-xl md:p-3"
         id={calendarId}
         ref={calendarRef}
         role="dialog"
@@ -56,7 +56,7 @@ export function DatePickerCalendar({
         <header className="mb-3 flex items-center justify-between gap-2">
           <button
             aria-label="Previous month"
-            className="grid size-11 shrink-0 place-items-center rounded-md text-[#26342f] hover:bg-[#efede5] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#315b50]"
+            className="grid size-11 shrink-0 place-items-center rounded-md text-foreground hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring"
             onClick={() => changeMonth(-1)}
             type="button"
           >
@@ -64,14 +64,14 @@ export function DatePickerCalendar({
           </button>
           <h2
             aria-live="polite"
-            className="min-w-0 text-center text-sm font-semibold text-[#202a28]"
+            className="min-w-0 text-center text-sm font-semibold text-foreground"
           >
             {monthLabel}
           </h2>
           <div className="flex shrink-0 items-center gap-1">
             <button
               aria-label="Next month"
-              className="grid size-11 place-items-center rounded-md text-[#26342f] hover:bg-[#efede5] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#315b50]"
+              className="grid size-11 place-items-center rounded-md text-foreground hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring"
               onClick={() => changeMonth(1)}
               type="button"
             >
@@ -79,7 +79,7 @@ export function DatePickerCalendar({
             </button>
             <button
               aria-label="Close calendar"
-              className="grid size-11 place-items-center rounded-md text-[#26342f] hover:bg-[#efede5] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#315b50] md:hidden"
+              className="grid size-11 place-items-center rounded-md text-foreground hover:bg-accent focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring md:hidden"
               onClick={onClose}
               type="button"
             >
@@ -95,7 +95,7 @@ export function DatePickerCalendar({
           {WEEKDAYS.map((weekday) => (
             <span
               aria-label={weekday}
-              className="grid h-8 place-items-center text-[0.68rem] font-semibold text-[#4c5a56]"
+              className="grid h-8 place-items-center text-[0.68rem] font-semibold text-muted-foreground"
               key={weekday}
               role="columnheader"
             >
@@ -133,10 +133,10 @@ export function DatePickerCalendar({
                   timeZone: "UTC",
                 })}
                 aria-selected={selected}
-                className={`grid size-10 place-items-center rounded-md text-sm tabular-nums transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#24583b] disabled:cursor-not-allowed disabled:text-[#68736e] ${
+                className={`grid size-10 place-items-center rounded-md text-sm tabular-nums transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring disabled:cursor-not-allowed disabled:text-muted-foreground ${
                   selected
-                    ? "bg-[#24583b] font-semibold text-white"
-                    : "text-[#202a28] hover:bg-[#efede5]"
+                    ? "bg-accent font-semibold text-accent-foreground ring-1 ring-inset ring-accent-foreground"
+                    : "text-foreground hover:bg-accent"
                 }`}
                 disabled={unavailable}
                 key={dateValue}

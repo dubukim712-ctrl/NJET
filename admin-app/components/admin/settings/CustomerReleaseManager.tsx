@@ -13,9 +13,10 @@ import type { CustomerRelease } from '@/types/customer-releases';
 
 type ReleaseItem = CustomerRelease & { photoUrl: string };
 
-export function CustomerReleaseManager({ items, orders, orderNumbers, userId, canApprove }: {
+export function CustomerReleaseManager({ items, orders, linkedOrderIds, orderNumbers, userId, canApprove }: {
   items: ReleaseItem[];
   orders: ReleaseOrderOption[];
+  linkedOrderIds: string[];
   orderNumbers: Record<string, string>;
   userId: string;
   canApprove: boolean;
@@ -26,6 +27,8 @@ export function CustomerReleaseManager({ items, orders, orderNumbers, userId, ca
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const linked = new Set(linkedOrderIds);
+  const availableOrders = orders.filter(({ orderId }) => !linked.has(orderId));
 
   async function changePublication(item: ReleaseItem) {
     setBusy(true);
@@ -64,7 +67,7 @@ export function CustomerReleaseManager({ items, orders, orderNumbers, userId, ca
     <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]">
       <section className="min-w-0 space-y-4 rounded-xl border bg-card p-4 sm:p-5">
         <h2 className="text-lg font-semibold">Upload a release photo</h2>
-        <CustomerReleaseForm orders={orders} userId={userId} canApprove={canApprove}
+        <CustomerReleaseForm orders={availableOrders} userId={userId} canApprove={canApprove}
           onSaved={() => { setStatus(canApprove ? 'Release saved.' : 'Photo submitted for admin review.'); router.refresh(); }} />
       </section>
       <section className="min-w-0 space-y-4 rounded-xl border bg-card p-4 sm:p-5">
@@ -106,7 +109,7 @@ export function CustomerReleaseManager({ items, orders, orderNumbers, userId, ca
         </ul>
       </section>
       <Modal open={Boolean(editor)} title="Edit release photo" onClose={() => setEditor(null)}>
-        {editor && <CustomerReleaseForm key={editor.id} orders={orders} userId={userId} canApprove={canApprove}
+        {editor && <CustomerReleaseForm key={editor.id} orders={orders.filter(({ orderId }) => orderId === editor.order_id || !linked.has(orderId))} userId={userId} canApprove={canApprove}
           release={editor} onSaved={() => { setEditor(null); router.refresh(); }} />}
       </Modal>
       <ConfirmDialog open={Boolean(removing)} onOpenChange={(open) => { if (!open) setRemoving(null); }}

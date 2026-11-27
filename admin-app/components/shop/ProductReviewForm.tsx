@@ -88,7 +88,7 @@ export function ProductReviewForm({
                 aria-label={`${value} ${value === 1 ? 'star' : 'stars'}`}
                 aria-pressed={rating === value}
                 onClick={() => setRating(value)}
-                className="inline-flex size-11 items-center justify-center rounded-sm text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="inline-flex size-11 items-center justify-center rounded-sm text-[#d99b26] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <Star
                   className={`size-6 ${value <= rating ? 'fill-current' : ''}`}
@@ -113,7 +113,7 @@ export function ProductReviewForm({
       </Button>
       {error && <p className="text-sm text-destructive" role="alert">{error}</p>}
       {saved && (
-        <p className="text-sm text-primary" role="status">
+        <p className="text-sm text-foreground" role="status">
           Your review was submitted for approval.
         </p>
       )}
