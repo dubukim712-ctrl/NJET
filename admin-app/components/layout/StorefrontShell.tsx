@@ -8,12 +8,12 @@ import { Search, X } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { UserNav } from "@/components/auth/UserNav";
 import { CartDrawer } from "@/components/cart/CartDrawer";
-import { SupportChatLauncher } from '@/components/support-chat/SupportChatLauncher';
+import { SupportChatLauncher } from "@/components/support-chat/SupportChatLauncher";
 import { StorefrontFooter } from "@/components/layout/StorefrontFooter";
 import { ShopFiltersProvider } from "@/components/shop/ShopFiltersContext";
-import { Button } from '@/components/ui/Button';
-import { useStorefrontActiveLink } from '@/components/layout/useStorefrontActiveLink';
-import { StorefrontMobileNavigation } from '@/components/layout/StorefrontMobileNavigation';
+import { Button } from "@/components/ui/Button";
+import { useStorefrontActiveLink } from "@/components/layout/useStorefrontActiveLink";
+import { StorefrontMobileNavigation } from "@/components/layout/StorefrontMobileNavigation";
 import type { StorefrontBusinessInfo } from "@/data/commerce/system-settings";
 import { hasPermission, PERMISSIONS } from "@/lib/permissions";
 import { cn } from "@/lib/utils";
@@ -34,10 +34,15 @@ const sectionLinks = [
   { name: "Branches", href: "/#branches" },
 ];
 
-export function StorefrontShell({ user, children, businessInfo, branches }: StorefrontShellProps) {
+export function StorefrontShell({
+  user,
+  children,
+  businessInfo,
+  branches,
+}: StorefrontShellProps) {
   const pathname = usePathname();
   const activeLink = useStorefrontActiveLink(pathname);
-  const hasPanoramicHero = pathname === '/' || pathname === '/dashboard';
+  const hasPanoramicHero = pathname === "/" || pathname === "/dashboard";
   const router = useRouter();
   const [shopFiltersOpen, setShopFiltersOpen] = useState(false);
   const [shopFiltersPopoverRoot, setShopFiltersPopoverRoot] =
@@ -82,11 +87,18 @@ export function StorefrontShell({ user, children, businessInfo, branches }: Stor
 
   return (
     <div className="min-h-dvh bg-background pb-[calc(5rem+env(safe-area-inset-bottom))] md:pb-0">
-      <header id="storefront-header" className={cn("sticky top-0 z-40", hasPanoramicHero
-        ? "bg-[#f5f6f2] dark:bg-background"
-        : "border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80")}>
+      <header
+        id="storefront-header"
+        className={cn(
+          "sticky top-0 z-40",
+          hasPanoramicHero
+            ? "bg-[#f5f6f2] dark:bg-background"
+            : "border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80",
+        )}
+      >
         <div className="bg-primary px-3 py-1.5 text-center text-[11px] leading-4 text-primary-foreground sm:text-xs">
-          <strong>MEMBER PERKS:</strong> Sign in to book a service checkup, track orders &amp; view your Certificate of Ownership.
+          <strong>MEMBER PERKS:</strong> Sign in to book a service checkup,
+          track orders &amp; view your Certificate of Ownership.
         </div>
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-2 px-4 sm:px-6">
           <Link
@@ -109,23 +121,49 @@ export function StorefrontShell({ user, children, businessInfo, branches }: Stor
             <span className="sm:hidden md:inline lg:hidden">NJET</span>
           </Link>
 
-          <nav aria-label="Storefront navigation" className="hidden items-center md:flex">
+          <nav
+            aria-label="Storefront navigation"
+            className="hidden items-center md:flex"
+          >
             {sectionLinks.map(({ name, href }) => {
               const active = href === activeLink;
               return (
-                <Link key={href} href={href} prefetch={false}
+                <Link
+                  key={href}
+                  href={href}
+                  prefetch={false}
                   onPointerEnter={() => router.prefetch(href)}
                   onFocus={() => router.prefetch(href)}
                   onClick={(event) => {
-                    if (href !== '/' || pathname !== '/' || event.defaultPrevented || event.button !== 0
-                      || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+                    if (
+                      href !== "/" ||
+                      pathname !== "/" ||
+                      event.defaultPrevented ||
+                      event.button !== 0 ||
+                      event.metaKey ||
+                      event.ctrlKey ||
+                      event.shiftKey ||
+                      event.altKey
+                    )
+                      return;
                     event.preventDefault();
-                    if (window.location.search || window.location.hash) window.history.pushState(null, '', '/');
+                    if (window.location.search || window.location.hash)
+                      window.history.pushState(null, "", "/");
                     window.scrollTo({ top: 0 });
                   }}
-                  aria-current={active ? href.includes('#') ? 'location' : 'page' : undefined}
-                  className={cn('inline-flex min-h-10 items-center whitespace-nowrap rounded-full px-2 text-sm font-medium hover:text-primary xl:px-3',
-                    active ? 'bg-primary/10 text-primary' : 'text-muted-foreground')}
+                  aria-current={
+                    active
+                      ? href.includes("#")
+                        ? "location"
+                        : "page"
+                      : undefined
+                  }
+                  className={cn(
+                    "inline-flex min-h-10 items-center whitespace-nowrap rounded-full px-2 text-sm font-medium hover:text-primary xl:px-3",
+                    active
+                      ? "bg-primary/10 text-primary"
+                      : "text-muted-foreground",
+                  )}
                 >
                   {name}
                 </Link>
@@ -135,7 +173,9 @@ export function StorefrontShell({ user, children, businessInfo, branches }: Stor
           <div className="flex items-center gap-2">
             {pathname === "/shop" && (
               <div ref={shopFiltersContainerRef} className="relative lg:hidden">
-                <Button variant={null} size={null}
+                <Button
+                  variant={null}
+                  size={null}
                   ref={shopFiltersButtonRef}
                   type="button"
                   aria-label="Search and filters"
@@ -163,11 +203,17 @@ export function StorefrontShell({ user, children, businessInfo, branches }: Stor
               <UserNav user={displayUser} showHelp />
             ) : (
               <div className="flex shrink-0 items-center gap-1">
-                <Link href="/login" className="inline-flex min-h-10 items-center rounded-md px-2 text-sm font-medium hover:bg-accent">
+                <Link
+                  href="/login"
+                  className="inline-flex min-h-10 items-center rounded-md px-2 text-sm font-medium hover:bg-accent"
+                >
                   Sign in
                 </Link>
-                <Link href="/register" className="inline-flex min-h-10 items-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground hover:bg-primary/90">
-                  Join
+                <Link
+                  href="/register"
+                  className="inline-flex min-h-10 items-center rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+                >
+                  Join us
                 </Link>
               </div>
             )}
@@ -175,8 +221,12 @@ export function StorefrontShell({ user, children, businessInfo, branches }: Stor
         </div>
       </header>
 
-      <main className={cn("min-h-[calc(100dvh-4rem)] pb-[calc(9rem+env(safe-area-inset-bottom))] lg:pb-24",
-        !hasPanoramicHero && "mx-auto max-w-7xl px-4 pt-6 sm:px-6 sm:pt-8")}>
+      <main
+        className={cn(
+          "min-h-[calc(100dvh-4rem)] w-full overflow-x-hidden pb-[calc(9rem+env(safe-area-inset-bottom))] lg:pb-24",
+          !hasPanoramicHero && "mx-auto max-w-7xl px-4 pt-6 sm:px-6 sm:pt-8",
+        )}
+      >
         <ShopFiltersProvider
           value={{
             open: shopFiltersOpen,
@@ -187,8 +237,16 @@ export function StorefrontShell({ user, children, businessInfo, branches }: Stor
         </ShopFiltersProvider>
       </main>
       <SupportChatLauncher />
-      <StorefrontFooter businessInfo={businessInfo} branches={branches} canBook={canAccessStorefront && displayUser?.scope === "customer"} />
-      <StorefrontMobileNavigation activeLink={activeLink} signedIn={Boolean(displayUser)} canBook={canAccessStorefront && displayUser?.scope === "customer"} />
+      <StorefrontFooter
+        businessInfo={businessInfo}
+        branches={branches}
+        canBook={canAccessStorefront && displayUser?.scope === "customer"}
+      />
+      <StorefrontMobileNavigation
+        activeLink={activeLink}
+        signedIn={Boolean(displayUser)}
+        canBook={canAccessStorefront && displayUser?.scope === "customer"}
+      />
     </div>
   );
 }

@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { CheckCircle2, Phone } from 'lucide-react';
+import { useState } from "react";
+import { CheckCircle2, Phone } from "lucide-react";
 import {
   requestPhoneVerificationAction,
   verifyPhoneVerificationAction,
-} from '@/data/actions/phone-verification';
-import { Input } from '@/components/ui/Input';
-import { Button } from '@/components/ui/Button';
-import { normalizePhilippineMobileNumber } from '@/lib/phone-number';
+} from "@/data/actions/phone-verification";
+import { Input } from "@/components/ui/Input";
+import { Button } from "@/components/ui/Button";
+import { normalizePhilippineMobileNumber } from "@/lib/phone-number";
 
 export function CheckoutPhoneVerification({
   fieldError,
@@ -24,53 +24,56 @@ export function CheckoutPhoneVerification({
   onVerificationChange: (verified: boolean) => void;
 }) {
   const [phoneNumber, setPhoneNumber] = useState(
-    !verificationRequired && initialPhoneNumber?.startsWith('+63')
+    !verificationRequired && initialPhoneNumber?.startsWith("+63")
       ? `0${initialPhoneNumber.slice(3)}`
-      : initialPhoneNumber ?? ''
+      : (initialPhoneNumber ?? ""),
   );
   const [verifiedPhoneNumber, setVerifiedPhoneNumber] = useState(
-    initialVerifiedPhoneNumber
+    initialVerifiedPhoneNumber,
   );
   const [challengeId, setChallengeId] = useState<string | null>(null);
-  const [challengePhoneNumber, setChallengePhoneNumber] = useState<string | null>(null);
-  const [code, setCode] = useState('');
+  const [challengePhoneNumber, setChallengePhoneNumber] = useState<
+    string | null
+  >(null);
+  const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const normalizedPhoneNumber = normalizePhilippineMobileNumber(phoneNumber);
   const isVerified = Boolean(
     verificationRequired &&
-      normalizedPhoneNumber &&
-      normalizedPhoneNumber === verifiedPhoneNumber
+    normalizedPhoneNumber &&
+    normalizedPhoneNumber === verifiedPhoneNumber,
   );
   const challengeMatchesPhone = Boolean(
-    challengeId && challengePhoneNumber === normalizedPhoneNumber
+    challengeId && challengePhoneNumber === normalizedPhoneNumber,
   );
 
   const changePhoneNumber = (value: string) => {
     const nextPhoneNumber = verificationRequired
-      ? value.replace(/[^\d+().\s-]/g, '').slice(0, 24)
-      : value.replace(/[^0-9]/g, '').slice(0, 11);
+      ? value.replace(/[^\d+().\s-]/g, "").slice(0, 24)
+      : value.replace(/[^0-9]/g, "").slice(0, 11);
     if (
       normalizePhilippineMobileNumber(nextPhoneNumber) !==
       normalizePhilippineMobileNumber(phoneNumber)
     ) {
       setChallengeId(null);
       setChallengePhoneNumber(null);
-      setCode('');
+      setCode("");
       setMessage(null);
       setError(null);
     }
     onVerificationChange(
       !verificationRequired ||
-        normalizePhilippineMobileNumber(nextPhoneNumber) === verifiedPhoneNumber
+        normalizePhilippineMobileNumber(nextPhoneNumber) ===
+          verifiedPhoneNumber,
     );
     setPhoneNumber(nextPhoneNumber);
   };
 
   const requestCode = async () => {
     if (!normalizedPhoneNumber) {
-      setError('Enter a valid Philippine mobile number.');
+      setError("Enter a valid Philippine mobile number.");
       return;
     }
     setBusy(true);
@@ -86,11 +89,14 @@ export function CheckoutPhoneVerification({
       }
       setChallengeId(result.data.challengeId);
       setChallengePhoneNumber(normalizedPhoneNumber);
-      setCode('');
-      setMessage('A verification code was sent to this number.');
+      setCode("");
+      setMessage("A verification code was sent to this number.");
     } catch (requestError) {
-      console.error('Could not request a checkout phone verification code.', requestError);
-      setError('A verification code could not be sent. Please try again.');
+      console.error(
+        "Could not request a checkout phone verification code.",
+        requestError,
+      );
+      setError("A verification code could not be sent. Please try again.");
     } finally {
       setBusy(false);
     }
@@ -112,11 +118,16 @@ export function CheckoutPhoneVerification({
       onVerificationChange(true);
       setChallengeId(null);
       setChallengePhoneNumber(null);
-      setCode('');
-      setMessage('Your phone number is verified.');
+      setCode("");
+      setMessage("Your phone number is verified.");
     } catch (verificationError) {
-      console.error('Could not verify the checkout phone number.', verificationError);
-      setError('Phone verification is temporarily unavailable. Please try again.');
+      console.error(
+        "Could not verify the checkout phone number.",
+        verificationError,
+      );
+      setError(
+        "Phone verification is temporarily unavailable. Please try again.",
+      );
     } finally {
       setBusy(false);
     }
@@ -129,22 +140,28 @@ export function CheckoutPhoneVerification({
         label="Contact number"
         type="tel"
         autoComplete="tel"
-        inputMode={verificationRequired ? 'tel' : 'numeric'}
-        pattern={verificationRequired ? undefined : '[0-9]{7,11}'}
+        inputMode={verificationRequired ? "tel" : "numeric"}
+        pattern={verificationRequired ? undefined : "[0-9]{7,11}"}
         minLength={verificationRequired ? undefined : 7}
-        maxLength={verificationRequired ? 24 : 11}
+        maxLength={11}
         value={phoneNumber}
         onChange={(event) => changePhoneNumber(event.target.value)}
         disabled={busy}
+        placeholder={verificationRequired ? "09XXXXXXXXX" : "Enter your number"}
         required
         leadingIcon={<Phone className="h-4 w-4" />}
-        helperText={verificationRequired
-          ? 'Use a Philippine mobile number. It will be saved to your account after verification.'
-          : 'Staff will manually verify this number before confirming your order.'}
+        helperText={
+          verificationRequired
+            ? "Use a Philippine mobile number. It will be saved to your account after verification."
+            : "Staff will manually verify this number before confirming your order."
+        }
         error={fieldError || error}
       />
       {verificationRequired && isVerified && (
-        <p className="flex items-center gap-2 text-sm font-medium text-primary" role="status">
+        <p
+          className="flex items-center gap-2 text-sm font-medium text-primary"
+          role="status"
+        >
           <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
           This phone number is verified.
         </p>
@@ -171,7 +188,7 @@ export function CheckoutPhoneVerification({
                 maxLength={6}
                 value={code}
                 onChange={(event) =>
-                  setCode(event.target.value.replace(/[^0-9]/g, '').slice(0, 6))
+                  setCode(event.target.value.replace(/[^0-9]/g, "").slice(0, 6))
                 }
                 disabled={busy}
                 required
@@ -199,7 +216,11 @@ export function CheckoutPhoneVerification({
         </div>
       )}
       {message && (
-        <p className="text-sm text-muted-foreground" role="status" aria-live="polite">
+        <p
+          className="text-sm text-muted-foreground"
+          role="status"
+          aria-live="polite"
+        >
           {message}
         </p>
       )}
