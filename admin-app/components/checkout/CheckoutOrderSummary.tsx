@@ -58,7 +58,7 @@ export function CheckoutOrderSummary({
   phoneVerificationReady: boolean;
 }) {
   return (
-    <aside className="h-fit min-w-0 space-y-4 rounded-xl border bg-card p-4 sm:p-5 lg:sticky lg:top-24">
+    <aside className="h-fit min-w-0 space-y-4 rounded-xl border bg-card p-4 sm:p-5 lg:sticky lg:top-28 lg:self-start">
       <h2 className="text-lg font-semibold">Order summary</h2>
       {couponInput}
       {itemsError && <p className="text-sm text-destructive" role="alert" tabIndex={-1} data-checkout-items-error>{itemsError}</p>}

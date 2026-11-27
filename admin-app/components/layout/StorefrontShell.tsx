@@ -223,7 +223,7 @@ export function StorefrontShell({
 
       <main
         className={cn(
-          "min-h-[calc(100dvh-4rem)] w-full overflow-x-hidden pb-[calc(9rem+env(safe-area-inset-bottom))] lg:pb-24",
+          "min-h-[calc(100dvh-4rem)] w-full overflow-x-clip pb-[calc(9rem+env(safe-area-inset-bottom))] lg:pb-24",
           !hasPanoramicHero && "mx-auto max-w-7xl px-4 pt-6 sm:px-6 sm:pt-8",
         )}
       >
