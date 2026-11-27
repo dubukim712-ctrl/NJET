@@ -50,7 +50,8 @@ export function LoginForm() {
     const result = await loginAction(formData);
 
     if (result.success) {
-      window.location.assign(addSignInNotice(new URL(result.data.redirectTo, window.location.origin)));
+      const destination = new URL(result.data.redirectTo, window.location.origin);
+      window.location.assign(result.data.requiresVerification ? destination : addSignInNotice(destination));
     } else if (result.verificationRequired) {
       rememberVerificationEmail(data.email);
       toast.info("Verify your email to finish signing in.");

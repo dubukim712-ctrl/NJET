@@ -1,7 +1,12 @@
-'use client';
+"use client";
 
-import { useRef, type ClipboardEvent, type KeyboardEvent } from 'react';
-import { SIGNUP_OTP_LENGTH } from '@/lib/validations/auth';
+import {
+  useEffect,
+  useRef,
+  type ClipboardEvent,
+  type KeyboardEvent,
+} from "react";
+import { SIGNUP_OTP_LENGTH } from "@/lib/validations/auth";
 
 export function OtpCodeInput({
   value,
@@ -16,12 +21,20 @@ export function OtpCodeInput({
 }) {
   const inputs = useRef<Array<HTMLInputElement | null>>([]);
 
+  const isEmpty = !value.some(Boolean);
+
+  useEffect(() => {
+    if (disabled || !isEmpty) return;
+    const timer = window.setTimeout(() => inputs.current[0]?.focus(), 50);
+    return () => window.clearTimeout(timer);
+  }, [disabled, isEmpty]);
+
   const enterDigits = (index: number, digits: string) => {
     const next = [...value];
     const accepted = digits
-      .replace(/\D/g, '')
+      .replace(/\D/g, "")
       .slice(0, SIGNUP_OTP_LENGTH - index);
-    accepted.split('').forEach((digit, offset) => {
+    accepted.split("").forEach((digit, offset) => {
       next[index + offset] = digit;
     });
     onChange(next);
@@ -35,32 +48,28 @@ export function OtpCodeInput({
 
   const handleKeyDown = (
     event: KeyboardEvent<HTMLInputElement>,
-    index: number
+    index: number,
   ) => {
-    if (event.key === 'ArrowLeft' && index > 0) {
+    if (event.key === "ArrowLeft" && index > 0) {
       event.preventDefault();
       inputs.current[index - 1]?.focus();
-    } else if (event.key === 'ArrowRight' && index < SIGNUP_OTP_LENGTH - 1) {
+    } else if (event.key === "ArrowRight" && index < SIGNUP_OTP_LENGTH - 1) {
       event.preventDefault();
       inputs.current[index + 1]?.focus();
-    } else if (
-      event.key === 'Backspace' &&
-      !value[index] &&
-      index > 0
-    ) {
+    } else if (event.key === "Backspace" && !value[index] && index > 0) {
       inputs.current[index - 1]?.focus();
     }
   };
 
   const handlePaste = (
     event: ClipboardEvent<HTMLInputElement>,
-    index: number
+    index: number,
   ) => {
-    const digits = event.clipboardData.getData('text').replace(/\D/g, '');
+    const digits = event.clipboardData.getData("text").replace(/\D/g, "");
     if (!digits) return;
 
     event.preventDefault();
-    enterDigits(index, digits);
+    enterDigits(digits.length >= SIGNUP_OTP_LENGTH ? 0 : index, digits);
   };
 
   return (
@@ -77,17 +86,17 @@ export function OtpCodeInput({
             }}
             aria-label={`Digit ${index + 1} of ${SIGNUP_OTP_LENGTH}`}
             aria-invalid={Boolean(error)}
-            aria-describedby={error ? 'verification-code-error' : undefined}
-            autoComplete={index === 0 ? 'one-time-code' : 'off'}
+            aria-describedby={error ? "verification-code-error" : undefined}
+            autoComplete={index === 0 ? "one-time-code" : "off"}
             inputMode="numeric"
             pattern="[0-9]*"
             type="text"
             maxLength={index === 0 ? SIGNUP_OTP_LENGTH : 1}
-            value={value[index] ?? ''}
+            value={value[index] ?? ""}
             onChange={(event) => {
               if (!event.currentTarget.value) {
                 const next = [...value];
-                next[index] = '';
+                next[index] = "";
                 onChange(next);
                 return;
               }
@@ -100,7 +109,11 @@ export function OtpCodeInput({
         ))}
       </div>
       {error && (
-        <p id="verification-code-error" className="text-sm text-destructive" role="alert">
+        <p
+          id="verification-code-error"
+          className="text-sm text-destructive"
+          role="alert"
+        >
           {error}
         </p>
       )}

@@ -1,8 +1,10 @@
 'use server';
 
+import { isVerificationRateLimited } from '@/data/auth/verification-email';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/data/supabase/server';
 import { queueWelcomeEmail } from '@/data/email/welcome-email';
+import { getSiteUrl } from '@/lib/site-url';
 import { surfaceHome } from '@/lib/permissions';
 import {
   resendSignupOtpSchema,
@@ -34,6 +36,10 @@ export async function verifySignupOtpAction(
       token: validation.data.token,
       type: 'signup',
     });
+
+    if (error && isVerificationRateLimited(error)) {
+      return { success: false, error: 'Too many verification attempts. Please wait and try again.', rateLimited: true };
+    }
 
     if (error || !data.user) {
       return {
@@ -82,12 +88,14 @@ export async function resendSignupOtpAction(
     const { error } = await supabase.auth.resend({
       type: 'signup',
       email: validation.data.email,
+      options: { emailRedirectTo: `${getSiteUrl()}/auth/confirm` },
     });
 
     if (error) {
       return {
         success: false,
         error: 'Could not send a code right now. Please wait and try again.',
+        rateLimited: isVerificationRateLimited(error),
       };
     }
 

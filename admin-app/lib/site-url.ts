@@ -38,7 +38,7 @@ export function getCustomerEmailSiteUrl() {
 export function getSiteUrl() {
   const isProduction = process.env.NODE_ENV === 'production';
   const explicit = process.env.NEXT_PUBLIC_SITE_URL?.trim();
-  const vercel = process.env.NEXT_PUBLIC_VERCEL_URL?.trim();
+  const vercel = process.env.NEXT_PUBLIC_VERCEL_URL?.trim() || process.env.VERCEL_URL?.trim();
   const configured = explicit || (vercel ? `https://${vercel}` : undefined);
   const url = parseOrigin(configured);
   const hostname = url?.hostname.replace(/\.$/, '');
@@ -57,7 +57,7 @@ export function getSiteUrl() {
   }
 
   if (isProduction) {
-    throw new Error('Password recovery requires a valid production HTTPS origin in NEXT_PUBLIC_SITE_URL or NEXT_PUBLIC_VERCEL_URL.');
+    throw new Error('Auth email redirects require a valid HTTPS origin in NEXT_PUBLIC_SITE_URL or the Vercel deployment environment.');
   }
 
   return 'http://localhost:3000';

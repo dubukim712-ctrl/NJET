@@ -1,6 +1,7 @@
 import { cache } from 'react';
 import { redirect } from 'next/navigation';
 import type { User } from '@supabase/supabase-js';
+import { needsAuthenticatorVerification } from '@/data/auth/mfa';
 import { createClient } from '@/data/supabase/server';
 import type { UserProfile } from '@/types/database';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
@@ -19,7 +20,7 @@ export const getAuthContext = cache(async (): Promise<AuthContext | null> => {
       error: userError,
     } = await supabase.auth.getUser();
 
-    if (userError || !user) {
+    if (userError || !user || await needsAuthenticatorVerification(supabase.auth, user)) {
       return null;
     }
 

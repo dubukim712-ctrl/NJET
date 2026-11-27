@@ -70,13 +70,24 @@ receipt. Inventory movements are visible under `/admin/products`.
 
    In the Supabase dashboard, set **Authentication → URL Configuration**:
 
-   - Site URL: `http://localhost:3000`
-   - Redirect URLs:
-     - `http://localhost:3000/auth/callback`
-     - `http://localhost:3000/auth/confirm`
+   - Site URL: `https://njet.vercel.app` for production. Use the corresponding
+     origin for a separate staging or local Supabase project.
+   - Redirect URLs for a project shared by these three storefront origins:
 
-   For a deployed environment, register the production origin and its corresponding
-   callback and confirm URLs instead.
+     ```text
+     http://localhost:3000/auth/callback
+     http://localhost:3000/auth/confirm
+     https://njet-staging.vercel.app/auth/callback
+     https://njet-staging.vercel.app/auth/confirm
+     https://njet.vercel.app/auth/callback
+     https://njet.vercel.app/auth/confirm
+     ```
+
+   Set `NEXT_PUBLIC_SITE_URL` to the matching environment origin. Signup and
+   resend emails can show `{{ .Token }}` for entry at `/verify-email`. If the reset
+   email uses a direct token-hash link, use
+   `{{ .RedirectTo }}?token_hash={{ .TokenHash }}&type=recovery`. The callback
+   exchanges the token or PKCE code before opening `/reset-password`.
 
 4. Create an account, then promote the first admin in the SQL editor:
 

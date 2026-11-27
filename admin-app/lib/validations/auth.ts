@@ -1,8 +1,22 @@
 import { z } from 'zod';
 
+export const emailSchema = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .min(1, 'Email is required')
+  .max(254, 'Email address is too long')
+  .email('Invalid email address')
+  .regex(/^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/, 'Invalid email address')
+  .refine((value) => !value.includes('..'), 'Email address cannot contain consecutive dots')
+  .refine((value) => {
+    const domain = value.split('@')[1] ?? '';
+    return !domain.endsWith('.con') && domain !== 'gmial.com';
+  }, 'Check the spelling of your email domain');
+
 // Login schema
 export const loginSchema = z.object({
-  email: z.string().min(1, 'Email is required').email('Invalid email address'),
+  email: emailSchema,
   password: z.string().min(1, 'Password is required').min(8, 'Password must be at least 8 characters'),
 });
 
@@ -11,7 +25,7 @@ export type LoginInput = z.infer<typeof loginSchema>;
 // Register schema
 export const registerSchema = z
   .object({
-    email: z.string().min(1, 'Email is required').email('Invalid email address'),
+    email: emailSchema,
     password: z
       .string()
       .min(1, 'Password is required')
@@ -33,7 +47,7 @@ export type RegisterInput = z.infer<typeof registerSchema>;
 export const SIGNUP_OTP_LENGTH = 6;
 
 export const verifySignupOtpSchema = z.object({
-  email: z.string().trim().email('Invalid email address'),
+  email: emailSchema,
   token: z
     .string()
     .length(SIGNUP_OTP_LENGTH, `Enter the ${SIGNUP_OTP_LENGTH}-digit code`)
@@ -41,12 +55,12 @@ export const verifySignupOtpSchema = z.object({
 });
 
 export const resendSignupOtpSchema = z.object({
-  email: z.string().trim().email('Invalid email address'),
+  email: emailSchema,
 });
 
 // Forgot password schema
 export const forgotPasswordSchema = z.object({
-  email: z.string().min(1, 'Email is required').email('Invalid email address'),
+  email: emailSchema,
 });
 
 export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;

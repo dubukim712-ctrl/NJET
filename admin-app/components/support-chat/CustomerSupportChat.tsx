@@ -11,6 +11,7 @@ import {
 } from '@/data/actions/support-chat-recovery';
 import { startGuestChatAction } from '@/data/actions/support-chat';
 import { ChatConversation } from '@/components/support-chat/ChatConversation';
+import { ChatRecoveryVerification } from '@/components/support-chat/ChatRecoveryVerification';
 import type { PendingGuestChatRecovery } from '@/data/support-chat/guest-session';
 
 const RESEND_COOLDOWN_SECONDS = 60;
@@ -39,7 +40,7 @@ export function CustomerSupportChat({
   const [contact, setContact] = useState('');
   const [recoveryEmail, setRecoveryEmail] = useState(initialRecovery?.email ?? '');
   const [recoveryName, setRecoveryName] = useState(initialRecovery?.name ?? '');
-  const [code, setCode] = useState('');
+  const [code, setCode] = useState<string[]>([]);
   const [notice, setNotice] = useState<string | null>(initialRecovery ? 'If a code can be sent, it will arrive shortly.' : null);
   const [error, setError] = useState(initialError);
   const [busy, setBusy] = useState(false);
@@ -112,13 +113,24 @@ export function CustomerSupportChat({
     setBusy(false);
   };
 
+  const editRecoveryEmail = () => {
+    setContactMethod('email');
+    setContact(recoveryEmail);
+    setName(recoveryName);
+    setRecoveryEmail('');
+    setCode([]);
+    setError(null);
+    setNotice(null);
+    setResendAvailableAt(null);
+  };
+
   const verifyRecovery = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setBusy(true);
     setError(null);
     const result = await verifyGuestChatEmailAccessAction({
       email: recoveryEmail,
-      code,
+      code: code.join(''),
     });
     if (!result.success) {
       setError(result.error);
@@ -131,7 +143,7 @@ export function CustomerSupportChat({
   };
 
   return (
-    <div className="mx-auto max-w-5xl">
+    <div className={`mx-auto w-full ${!threadId && mode === 'guest' && recoveryEmail ? 'max-w-lg' : 'max-w-5xl'}`}>
       <Link
         href="/"
         className="inline-flex min-h-10 items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground"
@@ -161,58 +173,18 @@ export function CustomerSupportChat({
           {error ?? 'Your account chat could not be opened.'}
         </section>
       ) : recoveryEmail ? (
-        <section className="max-w-xl rounded-2xl border bg-card p-5 shadow-sm sm:p-7">
-          <div className="flex items-start gap-3">
-            <div className="rounded-xl bg-primary/10 p-3 text-primary">
-              <Mail className="size-5" aria-hidden="true" />
-            </div>
-            <div>
-              <h2 className="text-lg font-semibold">Recover your conversation</h2>
-              <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                Verify your email with the 6-digit code sent to {recoveryEmail}. Codes expire after 10 minutes.
-              </p>
-            </div>
-          </div>
-          <form onSubmit={verifyRecovery} className="mt-6 space-y-4">
-            <Input label="Recovery code"
-              id="recovery-code"
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              pattern="[0-9]{6}"
-              maxLength={6}
-              required
-              value={code}
-              onChange={(event) => setCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
-              className="min-h-12 rounded-lg! bg-background! md:pointer-fine:text-lg! tracking-[0.3em]"
-            />
-            {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-            {notice && <p role="status" className="text-sm text-muted-foreground">{notice}</p>}
-            <div className="flex flex-wrap gap-3">
-              <Button size={null}
-                type="submit"
-                disabled={busy || code.length !== 6}
-                className="min-h-11 gap-2 rounded-lg px-4 text-base disabled:opacity-60"
-              >
-                {busy && <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />}
-                Verify and continue
-              </Button>
-              <Button variant={null} size={null}
-                type="button"
-                onClick={() => void requestRecovery()}
-                disabled={busy || resendCooldownSeconds > 0}
-                className="min-h-11 rounded-lg px-3 text-sm font-medium text-muted-foreground underline underline-offset-4 hover:text-foreground disabled:opacity-60"
-              >
-                {busy
-                  ? 'Sending code...'
-                  : resendCooldownSeconds > 0
-                    ? `Resend in ${Math.floor(resendCooldownSeconds / 60)}:${String(
-                        resendCooldownSeconds % 60,
-                      ).padStart(2, '0')}`
-                    : 'Send another code'}
-              </Button>
-            </div>
-          </form>
-        </section>
+        <ChatRecoveryVerification
+          email={recoveryEmail}
+          code={code}
+          error={error}
+          notice={notice}
+          busy={busy}
+          resendCooldownSeconds={resendCooldownSeconds}
+          onCodeChange={setCode}
+          onChangeEmail={editRecoveryEmail}
+          onVerify={verifyRecovery}
+          onResend={requestRecovery}
+        />
       ) : (
         <section className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_18rem]">
           <form onSubmit={startChat} className="rounded-2xl border bg-card p-5 shadow-sm sm:p-7">

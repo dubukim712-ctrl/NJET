@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import type { EmailOtpType } from '@supabase/supabase-js';
 import { createClient } from '@/data/supabase/server';
 import { queueWelcomeEmail } from '@/data/email/welcome-email';
+import { authenticatorVerificationPath, needsAuthenticatorVerification } from '@/data/auth/mfa';
 import { surfaceHome } from '@/lib/permissions';
 
 function safeNext(value: string | null): string | null {
@@ -20,28 +21,34 @@ export async function GET(request: NextRequest) {
   const tokenHash = searchParams.get('token_hash');
   const type = searchParams.get('type') as EmailOtpType | null;
   const requestedNext = safeNext(searchParams.get('next'));
-  const isOAuthCallback = Boolean(code) && requestedNext !== '/reset-password';
 
   const supabase = await createClient();
 
   try {
     let authenticated = false;
+    let isRecovery = false;
 
     if (code) {
-      const { error } = await supabase.auth.exchangeCodeForSession(code);
+      const { data, error } = await supabase.auth.exchangeCodeForSession(code);
       authenticated = !error;
+      isRecovery = authenticated && 'redirectType' in data && data.redirectType === 'recovery';
     } else if (tokenHash && type) {
       const { error } = await supabase.auth.verifyOtp({
         token_hash: tokenHash,
         type,
       });
       authenticated = !error;
+      isRecovery = authenticated && type === 'recovery';
     }
 
     if (authenticated) {
+      const isOAuthCallback = Boolean(code) && !isRecovery;
       const {
         data: { user },
       } = await supabase.auth.getUser();
+
+      if (!user) throw new Error('Auth callback did not establish a session.');
+      if (isRecovery) return NextResponse.redirect(new URL('/reset-password', origin));
 
       const emailIdentity = user?.identities?.find(
         (identity) => identity.provider === 'email'
@@ -81,9 +88,7 @@ export async function GET(request: NextRequest) {
       const home = surfaceHome(profile);
       let destination = home;
 
-      if (requestedNext === '/reset-password') {
-        destination = requestedNext;
-      } else if (requestedNext) {
+      if (requestedNext) {
         if (
           home === '/admin' &&
           (requestedNext.startsWith('/admin') ||
@@ -98,7 +103,7 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      if (user && profile?.scope === 'customer' && requestedNext !== '/reset-password') {
+      if (profile?.scope === 'customer') {
         // OAuth sign-in also uses this callback. Only welcome newly created Google accounts.
         const accountAge = Date.now() - Date.parse(user.created_at);
         const newGoogleAccount = isOAuthCallback && !emailIdentity && googleIdentity &&
@@ -106,8 +111,12 @@ export async function GET(request: NextRequest) {
         if ((!code && type === 'signup') || newGoogleAccount) queueWelcomeEmail(user);
       }
 
+      if (await needsAuthenticatorVerification(supabase.auth, user)) {
+        return NextResponse.redirect(new URL(authenticatorVerificationPath(destination), origin));
+      }
+
       const destinationUrl = new URL(destination, origin);
-      return NextResponse.redirect(isOAuthCallback && user ? addSignInNotice(destinationUrl) : destinationUrl);
+      return NextResponse.redirect(isOAuthCallback ? addSignInNotice(destinationUrl) : destinationUrl);
     }
   } catch {
     // Fall through to the error redirect below.

@@ -1,5 +1,7 @@
 "use server";
 
+import { authenticatorVerificationPath } from '@/data/auth/mfa';
+import { isVerificationRateLimited } from '@/data/auth/verification-email';
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/data/supabase/server";
 import { queueWelcomeEmail } from "@/data/email/welcome-email";
@@ -19,11 +21,12 @@ export type ActionResult<T = undefined> =
       error: string;
       fieldErrors?: Record<string, string[]>;
       verificationRequired?: boolean;
+      rateLimited?: boolean;
     };
 
 export async function loginAction(
   formData: FormData,
-): Promise<ActionResult<{ redirectTo: string }>> {
+): Promise<ActionResult<{ redirectTo: string; requiresVerification?: boolean }>> {
   const supabase = await createClient();
 
   const validation = loginSchema.safeParse({
@@ -94,6 +97,17 @@ export async function loginAction(
       redirectTo = "/no-access";
     }
 
+    const assurance = await supabase.auth.mfa.getAuthenticatorAssuranceLevel(data.session.access_token);
+    if (assurance.error) {
+      return { success: false, error: "Could not check your sign-in security. Please try again." };
+    }
+    if (assurance.data.nextLevel === 'aal2' && assurance.data.currentLevel !== 'aal2') {
+      return { success: true, data: {
+        redirectTo: authenticatorVerificationPath(redirectTo),
+        requiresVerification: true,
+      } };
+    }
+
     revalidatePath("/", "layout");
     return { success: true, data: { redirectTo } };
   } catch {
@@ -103,7 +117,7 @@ export async function loginAction(
 
 export async function registerAction(
   formData: FormData,
-): Promise<ActionResult> {
+): Promise<ActionResult<{ otpSent: boolean }>> {
   const supabase = await createClient();
 
   const validation = registerSchema.safeParse({
@@ -128,6 +142,7 @@ export async function registerAction(
       email,
       password,
       options: {
+        emailRedirectTo: `${getSiteUrl()}/auth/confirm`,
         data: { full_name: fullName ?? null },
       },
     });
@@ -146,12 +161,15 @@ export async function registerAction(
     if (error) {
       return {
         success: false,
-        error: "Unable to create your account. Please try again.",
+        error: isVerificationRateLimited(error)
+          ? "Too many verification requests. Please wait before trying again."
+          : "Unable to create your account. Please try again.",
+        rateLimited: isVerificationRateLimited(error),
       };
     }
 
     if (data.session && data.user) queueWelcomeEmail(data.user);
-    return { success: true, data: undefined };
+    return { success: true, data: { otpSent: !data.session } };
   } catch {
     return { success: false, error: "Something went wrong. Please try again." };
   }
@@ -178,7 +196,7 @@ export async function forgotPasswordAction(
     const { error } = await supabase.auth.resetPasswordForEmail(
       validation.data.email,
       {
-        redirectTo: `${getSiteUrl()}/auth/confirm?next=/reset-password`,
+        redirectTo: `${getSiteUrl()}/auth/confirm`,
       },
     );
 

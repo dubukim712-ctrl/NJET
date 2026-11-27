@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/Input";
 import { PasswordInput } from "@/components/auth/PasswordInput";
 import { PasswordStrength } from "@/components/auth/PasswordStrength";
 import { AuthOptions } from "@/components/auth/AuthOptions";
-import { rememberVerificationEmail } from "@/data/auth/verification-email";
+import { rememberVerificationEmail, startVerificationCooldown } from "@/data/auth/verification-email";
 import Link from "next/link";
 
 export function RegisterForm() {
@@ -48,6 +48,10 @@ export function RegisterForm() {
     if (data.fullName) formData.set("fullName", data.fullName);
 
     const result = await registerAction(formData);
+
+    if (result.success ? result.data.otpSent : result.rateLimited) {
+      startVerificationCooldown(data.email);
+    }
 
     if (result.success) {
       rememberVerificationEmail(data.email);

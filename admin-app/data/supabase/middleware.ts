@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { authenticatorDestination, authenticatorVerificationPath, needsAuthenticatorVerification } from '@/data/auth/mfa';
 import { hasPermission, PERMISSIONS, surfaceHome } from "@/lib/permissions";
 
 const PROTECTED_PATHS = [
@@ -14,7 +15,6 @@ const AUTH_PATHS = [
   "/register",
   "/verify-email",
   "/forgot-password",
-  "/reset-password",
 ];
 const ADMIN_PATHS = ["/admin"];
 const STOREFRONT_PATHS = ["/dashboard", "/checkout"];
@@ -119,6 +119,13 @@ export async function updateSession(request: NextRequest) {
     const url = new URL("/login", request.url);
     url.searchParams.set("redirect", pathname);
     return redirectWithCookies(url, supabaseResponse);
+  }
+
+  if (user && (isProtected || pathname === "/login") && await needsAuthenticatorVerification(supabase.auth, user)) {
+    const destination = isAuthPage
+      ? authenticatorDestination(request.nextUrl.searchParams.get("redirect") ?? undefined)
+      : pathname + request.nextUrl.search;
+    return redirectWithCookies(new URL(authenticatorVerificationPath(destination), request.url), supabaseResponse);
   }
 
   if (!user || (!isStorefrontPage && !isAuthPage)) {

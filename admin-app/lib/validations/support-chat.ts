@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { emailSchema } from './auth.ts';
 
 const guestPhoneSchema = z
   .string()
@@ -8,7 +9,7 @@ const guestPhoneSchema = z
 
 export const startGuestEmailChatSchema = z.object({
     name: z.string().trim().min(1).max(120),
-    email: z.string().trim().email().max(254),
+    email: emailSchema,
   });
 
 export const pendingGuestChatRecoverySchema = startGuestEmailChatSchema.extend({
@@ -21,7 +22,7 @@ export const startGuestPhoneChatSchema = z.object({
 });
 
 export const guestEmailAccessVerifySchema = z.object({
-  email: z.string().trim().email().max(254),
+  email: emailSchema,
   code: z.string().regex(/^\d{6}$/),
 });
 

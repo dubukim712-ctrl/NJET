@@ -1,8 +1,12 @@
+import { AuthenticatorSettings } from '@/components/auth/AuthenticatorSettings';
+import { requireCustomer } from '@/data/auth/guards';
 import { ChangePasswordForm } from '@/components/auth/ChangePasswordForm';
 
 export const metadata = { title: 'Settings' };
 
-export default function SettingsPage() {
+export default async function SettingsPage() {
+  const { user } = await requireCustomer('/dashboard/settings');
+  const factors = user.factors?.filter(({ factor_type, status }) => factor_type === 'totp' && status === 'verified') ?? [];
   return (
     <div className="max-w-2xl space-y-6">
       <div>
@@ -24,6 +28,7 @@ export default function SettingsPage() {
         </p>
         <ChangePasswordForm />
       </section>
+      <AuthenticatorSettings initialFactors={factors.map(({ id }) => id)} />
     </div>
   );
 }
