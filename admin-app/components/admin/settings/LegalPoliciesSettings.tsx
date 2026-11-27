@@ -7,7 +7,7 @@ import type { LegalPolicy, LegalPolicySlug } from '@/data/legal-policies';
 
 const POLICY_TABS: { slug: LegalPolicySlug; label: string }[] = [
   { slug: 'terms', label: 'Terms & Conditions' },
-  { slug: 'return-policy', label: 'Return & Refund' },
+  { slug: 'return-policy', label: 'Return Policy' },
   { slug: 'privacy', label: 'Privacy' },
 ];
 

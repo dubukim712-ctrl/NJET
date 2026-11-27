@@ -133,7 +133,7 @@ export const TERMS_POLICY: LegalPolicy = {
 };
 export const RETURN_POLICY: LegalPolicy = {
     slug: 'return-policy',
-    title: 'Return & Refund Policy',
+    title: 'Return Policy',
     version: RETURN_POLICY_VERSION,
     lastUpdated: 'November 25, 2026',
     intro: 'This policy explains how to report order problems and request an assessment, service, return, or refund from Noel & Jane E-bike Trading (NJET).',

@@ -6,7 +6,7 @@ import {
 import { getStorefrontLegalPolicy } from '@/data/commerce/legal-policies';
 
 export const metadata: Metadata = {
-  title: 'Return & Refund Policy',
+  title: 'Return Policy',
   description: 'Order issue, warranty service, return, and refund information for NJET customers.',
 };
 

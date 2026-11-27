@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 
 const POLICY_LINKS = [
   { slug: 'terms', title: 'Terms & Conditions', href: '/terms' },
-  { slug: 'return-policy', title: 'Return & Refund Policy', href: '/return-policy' },
+  { slug: 'return-policy', title: 'Return Policy', href: '/return-policy' },
   { slug: 'privacy', title: 'Privacy Policy', href: '/privacy' },
 ];
 

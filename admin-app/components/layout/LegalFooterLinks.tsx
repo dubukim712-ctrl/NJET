@@ -2,7 +2,7 @@ import Link from "next/link";
 
 const links = [
   ["/terms", "Terms & Conditions"],
-  ["/return-policy", "Return & Refund Policy"],
+  ["/return-policy", "Return Policy"],
   ["/privacy", "Privacy Policy"],
 ] as const;
 

@@ -10,7 +10,7 @@ import { customerHelpTopics, type HelpTopic } from '@/data/help/customer-help-to
 
 const policyLinks = [
   ['/terms', 'Terms & Conditions'],
-  ['/return-policy', 'Return & Refund Policy'],
+  ['/return-policy', 'Return Policy'],
   ['/privacy', 'Privacy Policy'],
 ] as const;
 

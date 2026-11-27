@@ -45,8 +45,8 @@ interface CheckoutFieldsProps extends Omit<
   onZoneChange: (value: string) => void;
   onIdentityFilesChange: (files: File[]) => void;
   onPhoneVerificationChange: (verified: boolean) => void;
-  onTermsChange: (accepted: boolean) => void;
-  onPrivacyChange: (accepted: boolean) => void;
+  policiesAccepted: boolean;
+  onPoliciesAcceptedChange: (accepted: boolean) => void;
 }
 
 export function CheckoutFields(props: CheckoutFieldsProps) {
@@ -277,8 +277,9 @@ export function CheckoutFields(props: CheckoutFieldsProps) {
 
       <CheckoutPolicyFields
         fieldErrors={props.fieldErrors}
-        onTermsChange={props.onTermsChange}
-        onPrivacyChange={props.onPrivacyChange}
+        legalPolicies={props.legalPolicies}
+        accepted={props.policiesAccepted}
+        onAcceptedChange={props.onPoliciesAcceptedChange}
       />
     </div>
   );

@@ -1,7 +1,7 @@
 import { unstable_rethrow } from 'next/navigation';
 import { createClient } from '@/data/supabase/server';
-import { getCurrentLegalPolicyVersions } from '@/data/commerce/legal-policies';
-import type { LegalPolicySlug } from '@/data/legal-policies';
+import { getCurrentLegalPolicies } from '@/data/commerce/legal-policies';
+import type { LegalPolicy, LegalPolicySlug } from '@/data/legal-policies';
 import type { PaymentProvider } from '@/types/commerce-tables';
 
 export type LegalPolicyVersions = Record<LegalPolicySlug, string>;
@@ -19,6 +19,7 @@ export type CheckoutOptions = {
     accountDetails: string;
   }[];
   policyVersions: LegalPolicyVersions;
+  legalPolicies: LegalPolicy[];
 };
 
 export async function getCheckoutOptions(userId: string): Promise<{
@@ -31,7 +32,7 @@ export async function getCheckoutOptions(userId: string): Promise<{
       { data: branches, error: branchError },
       { data: zones, error: zoneError },
       { data: recipients, error: recipientError },
-      policyVersions,
+      legalPolicies,
       { data: businessSettings, error: businessSettingsError },
       { data: customer, error: customerError },
     ] =
@@ -55,7 +56,7 @@ export async function getCheckoutOptions(userId: string): Promise<{
           .order('provider')
           .order('created_at')
           .limit(100),
-        getCurrentLegalPolicyVersions(supabase),
+        getCurrentLegalPolicies(supabase),
         supabase
           .from('business_settings')
           .select('phone_verification_required')
@@ -91,7 +92,8 @@ export async function getCheckoutOptions(userId: string): Promise<{
           customer.phone_number && customer.phone_verified_at
         ),
         paymentRecipients,
-        policyVersions,
+        legalPolicies,
+        policyVersions: Object.fromEntries(legalPolicies.map(({ slug, version }) => [slug, version])) as LegalPolicyVersions,
       },
       error: null,
     };

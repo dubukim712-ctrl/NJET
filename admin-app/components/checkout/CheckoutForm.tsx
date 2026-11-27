@@ -22,6 +22,7 @@ export function CheckoutForm({
   zones,
   paymentRecipients,
   policyVersions,
+  legalPolicies,
   phoneVerificationRequired,
   customerPhoneNumber,
   customerPhoneVerified,
@@ -156,10 +157,10 @@ export function CheckoutForm({
         paymentMethod,
         paymentProvider: paymentProofRequired ? activePaymentProvider : null,
         paymentRecipientId: paymentProofRequired ? activePaymentRecipientId : null,
-        termsAccepted: policyConsent.termsAccepted,
+        termsAccepted: policyConsent.accepted,
         termsVersion: policyConsent.versions.terms,
         returnPolicyVersion: policyConsent.versions['return-policy'],
-        privacyAccepted: policyConsent.privacyAccepted,
+        privacyAccepted: policyConsent.accepted,
         privacyVersion: policyConsent.versions.privacy,
         items: items.map((item) => ({ variantId: item.variantId, quantity: item.quantity })),
         couponCode: activePreview?.code ?? null,
@@ -225,8 +226,9 @@ export function CheckoutForm({
           onZoneChange={setZoneId}
           onIdentityFilesChange={setIdentityFiles}
           onPhoneVerificationChange={setPhoneVerificationReady}
-          onTermsChange={policyConsent.onTermsChange}
-          onPrivacyChange={policyConsent.onPrivacyChange}
+          legalPolicies={legalPolicies}
+          policiesAccepted={policyConsent.accepted}
+          onPoliciesAcceptedChange={policyConsent.onAcceptedChange}
         />
       }
       summary={

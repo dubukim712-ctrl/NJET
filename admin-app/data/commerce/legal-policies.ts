@@ -56,28 +56,6 @@ export async function getCurrentLegalPolicies(
   );
 }
 
-export async function getCurrentLegalPolicyVersions(
-  supabase: SupabaseClient
-): Promise<Record<LegalPolicySlug, string>> {
-  const results = await Promise.all(
-    LEGAL_POLICY_SLUGS.map((slug) =>
-      supabase
-        .rpc('current_storefront_legal_policy', { p_slug: slug })
-        .maybeSingle()
-    )
-  );
-  for (const result of results) {
-    if (result.error) throw result.error;
-  }
-
-  return {
-    terms: results[0].data?.version ?? DEFAULT_LEGAL_POLICIES.terms.version,
-    'return-policy':
-      results[1].data?.version ?? DEFAULT_LEGAL_POLICIES['return-policy'].version,
-    privacy: results[2].data?.version ?? DEFAULT_LEGAL_POLICIES.privacy.version,
-  };
-}
-
 export async function getStorefrontLegalPolicy(slug: LegalPolicySlug): Promise<{
   data: LegalPolicy | null;
   error: string | null;
