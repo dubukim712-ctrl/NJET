@@ -28,9 +28,9 @@ interface StorefrontShellProps {
 
 const sectionLinks = [
   { name: "Home", href: "/" },
-  { name: "Catalog", href: "/shop" },
+  { name: "Catalog", href: "/catalog" },
   { name: "Installments", href: "/#installments" },
-  { name: "Parts & Service", href: "/#service-center" },
+  { name: "Parts & Service", href: "/#services" },
   { name: "Branches", href: "/#branches" },
 ];
 
@@ -55,6 +55,16 @@ export function StorefrontShell({
     displayUser,
     PERMISSIONS.storefrontAccess,
   );
+
+  useEffect(() => {
+    if (pathname !== "/") return;
+    const id = window.location.hash.slice(1);
+    if (!["installments", "services", "branches"].includes(id)) return;
+    const frame = window.requestAnimationFrame(() => {
+      document.getElementById(id)?.scrollIntoView();
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [pathname]);
 
   useEffect(() => {
     if (!shopFiltersOpen) return;
@@ -86,7 +96,7 @@ export function StorefrontShell({
   }, [shopFiltersOpen]);
 
   return (
-    <div className="min-h-dvh bg-background pb-[calc(5rem+env(safe-area-inset-bottom))] md:pb-0">
+    <div className="min-h-dvh bg-background pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pb-0">
       <header
         id="storefront-header"
         className={cn(
@@ -97,13 +107,21 @@ export function StorefrontShell({
         )}
       >
         <div className="bg-primary px-3 py-1.5 text-center text-[11px] leading-4 text-primary-foreground sm:text-xs">
-          <strong>MEMBER PERKS:</strong> Sign in to book a service checkup,
-          track orders &amp; view your Certificate of Ownership.
+          {displayUser ? (
+            <Link href="/dashboard" className="underline-offset-2 hover:underline focus-visible:underline">
+              <strong>MEMBER PERKS:</strong> Track your orders, book a service checkup &amp; view your Certificate of Ownership →
+            </Link>
+          ) : (
+            <>
+              <strong>MEMBER PERKS:</strong> Sign in to book a service checkup,
+              track orders &amp; view your Certificate of Ownership.
+            </>
+          )}
         </div>
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-2 px-4 sm:px-6">
           <Link
             href="/"
-            className="flex min-w-0 items-center gap-2 text-base font-semibold tracking-tight sm:text-lg"
+            className="flex min-w-0 items-center gap-2 text-base font-semibold leading-none tracking-tight sm:text-lg"
           >
             {businessInfo?.logoUrl && (
               <Image
@@ -112,7 +130,7 @@ export function StorefrontShell({
                 width={36}
                 height={36}
                 unoptimized
-                className="size-9 shrink-0 rounded-md object-contain"
+                className="size-9 shrink-0 rounded-full object-contain"
               />
             )}
             <span className="hidden truncate sm:inline md:hidden lg:inline lg:max-w-40 xl:max-w-none">
@@ -123,7 +141,7 @@ export function StorefrontShell({
 
           <nav
             aria-label="Storefront navigation"
-            className="hidden items-center md:flex"
+            className="hidden items-center lg:flex"
           >
             {sectionLinks.map(({ name, href }) => {
               const active = href === activeLink;
@@ -131,6 +149,7 @@ export function StorefrontShell({
                 <Link
                   key={href}
                   href={href}
+                  scroll={pathname === "/" || !href.includes("#")}
                   prefetch={false}
                   onPointerEnter={() => router.prefetch(href)}
                   onFocus={() => router.prefetch(href)}
@@ -171,7 +190,7 @@ export function StorefrontShell({
             })}
           </nav>
           <div className="flex items-center gap-2">
-            {pathname === "/shop" && (
+            {(pathname === "/shop" || pathname === "/catalog") && (
               <div ref={shopFiltersContainerRef} className="relative lg:hidden">
                 <Button
                   variant={null}
@@ -242,11 +261,7 @@ export function StorefrontShell({
         branches={branches}
         canBook={canAccessStorefront && displayUser?.scope === "customer"}
       />
-      <StorefrontMobileNavigation
-        activeLink={activeLink}
-        signedIn={Boolean(displayUser)}
-        canBook={canAccessStorefront && displayUser?.scope === "customer"}
-      />
+      <StorefrontMobileNavigation activeLink={activeLink} />
     </div>
   );
 }

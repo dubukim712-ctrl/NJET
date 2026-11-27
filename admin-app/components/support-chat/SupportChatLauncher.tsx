@@ -50,17 +50,18 @@ export function SupportChatLauncher() {
   }
 
   return createPortal(
-    <div className="fixed right-4 bottom-[calc(5rem+env(safe-area-inset-bottom))] z-30 md:right-6 md:bottom-6">
+    <div className="fixed right-4 bottom-[calc(5rem+env(safe-area-inset-bottom))] z-30 md:right-6 lg:bottom-6">
       <DropdownMenu open={open} onOpenChange={toggleChannels} modal={false}>
         <DropdownMenuTrigger asChild>
           <Button size={null}
             type="button"
+            aria-label="Chat with us"
             aria-busy={checking}
-            className="pointer-events-auto min-h-12 gap-2 rounded-full px-4 text-base font-semibold shadow-lg transition-transform hover:-translate-y-0.5"
+            className="pointer-events-auto size-12 gap-2 rounded-full text-base font-semibold shadow-lg transition-transform hover:-translate-y-0.5 md:w-auto md:px-4"
           >
             {checking ? <LoaderCircle className="size-5 animate-spin" aria-hidden="true" />
               : <MessageCircle className="size-5" aria-hidden="true" />}
-            Chat with us
+            <span className="hidden md:inline">Chat with us</span>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent

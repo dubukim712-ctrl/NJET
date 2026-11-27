@@ -123,7 +123,7 @@ export function StorefrontFooter({
             <nav aria-label="Shop and branches" className={links}>
               <Link href="/shop">Catalog</Link>
               <Link href="/#installments">Installments</Link>
-              <Link href="/#service-center">Parts &amp; Service</Link>
+              <Link href="/#services">Parts &amp; Service</Link>
               {orderStorefrontBranches(branches).map((branch) => (
                 <Link
                   key={branch.id}

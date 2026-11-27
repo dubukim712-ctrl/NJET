@@ -14,9 +14,10 @@ const parts = [
 export function StorefrontServiceSection({ canBook }: { canBook: boolean }) {
   return (
     <section
-      id="service-center"
-      className="grid scroll-mt-32 gap-5 lg:grid-cols-[0.9fr_1.1fr]"
+      id="services"
+      className="relative grid scroll-mt-32 gap-5 lg:grid-cols-[0.9fr_1.1fr]"
     >
+      <span id="service-center" aria-hidden="true" className="absolute top-0 scroll-mt-32" />
       <div className="rounded-3xl border bg-card p-6 sm:p-8">
         <h2 className="text-l font-semibold text-primary tracking-tight sm:text-xl md:text-2xl">
           Parts & accessories

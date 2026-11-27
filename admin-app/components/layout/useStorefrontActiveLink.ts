@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react';
 
-const sections = ['installments', 'service-center', 'branches'] as const;
+const sections = ['installments', 'services', 'branches'] as const;
+const subscribeToNothing = () => () => {};
 
 function subscribe(onChange: () => void) {
   let frame = 0;
@@ -32,10 +33,12 @@ function visibleHomeLink() {
 }
 
 export function useStorefrontActiveLink(pathname: string) {
-  const routeLink = pathname === '/' ? '/' : pathname === '/shop' || pathname.startsWith('/shop/') ? '/shop' : null;
+  const home = pathname === '/';
+  const catalog = pathname === '/catalog' || pathname === '/shop' || pathname.startsWith('/shop/');
+  const routeLink = home ? '/' : catalog ? '/catalog' : null;
   return useSyncExternalStore(
-    subscribe,
-    () => pathname === '/' ? visibleHomeLink() : routeLink,
+    home ? subscribe : subscribeToNothing,
+    () => home ? visibleHomeLink() : routeLink,
     () => routeLink,
   );
 }
