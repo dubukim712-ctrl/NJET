@@ -3,6 +3,18 @@ import type { createClient } from '@/data/supabase/server';
 
 type Auth = Awaited<ReturnType<typeof createClient>>['auth'];
 
+export async function getPasswordResetStatus(auth: Pick<Auth, 'getSession' | 'mfa'>) {
+  const { data: { session }, error: sessionError } = await auth.getSession();
+  if (!session?.access_token) return 'expired';
+  if (sessionError) return 'unavailable';
+
+  // Supabase validates this token and reads the user's current factors.
+  const { data, error } = await auth.mfa.getAuthenticatorAssuranceLevel(session.access_token);
+  if (error || !data.currentLevel) return 'unavailable';
+  if (data.nextLevel === 'aal2' && data.currentLevel !== 'aal2') return 'challenge';
+  return 'ready';
+}
+
 export async function needsAuthenticatorVerification(auth: Pick<Auth, 'getClaims'>, user: User) {
   if (!user.factors?.some(({ status }) => status === 'verified')) return false;
   const { data, error } = await auth.getClaims();

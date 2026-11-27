@@ -1,6 +1,6 @@
 "use server";
 
-import { authenticatorVerificationPath } from '@/data/auth/mfa';
+import { authenticatorVerificationPath, getPasswordResetStatus } from '@/data/auth/mfa';
 import { isVerificationRateLimited } from '@/data/auth/verification-email';
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/data/supabase/server";
@@ -229,6 +229,14 @@ export async function resetPasswordAction(
   }
 
   try {
+    const status = await getPasswordResetStatus(supabase.auth);
+    if (status === 'challenge') {
+      return { success: false, error: 'Verify your authenticator code before changing your password. Refresh this page to continue.' };
+    }
+    if (status !== 'ready') {
+      return { success: false, error: 'Could not verify your recovery session. Open your password reset link and try again.' };
+    }
+
     const { error } = await supabase.auth.updateUser({
       password: validation.data.password,
     });

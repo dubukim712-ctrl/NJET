@@ -2,26 +2,29 @@
 
 import { useState, type FormEvent } from 'react';
 import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
+import { OtpCodeInput } from '@/components/auth/OtpCodeInput';
+import { SIGNUP_OTP_LENGTH } from '@/lib/validations/auth';
 import { verifyAuthenticator } from '@/data/actions/mfa';
 
-export function AuthenticatorCodeForm({ factorId, onVerified, setBusy }: {
+export function AuthenticatorCodeForm({ factorId, onVerified, setBusy, submitLabel }: {
   factorId?: string;
+  submitLabel?: string;
   onVerified: () => void;
   setBusy?: (busy: boolean) => void;
 }) {
-  const [code, setCode] = useState('');
+  const [code, setCode] = useState<string[]>([]);
+  const token = code.join('');
   const [error, setError] = useState('');
   const [busy, setSubmitting] = useState(false);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (busy) return;
+    if (busy || token.length !== SIGNUP_OTP_LENGTH) return;
     setSubmitting(true);
     setBusy?.(true);
     setError('');
     try {
-      const result = await verifyAuthenticator(code, factorId);
+      const result = await verifyAuthenticator(token, factorId);
       if (result.success) onVerified();
       else setError(result.error);
     } catch {
@@ -34,21 +37,9 @@ export function AuthenticatorCodeForm({ factorId, onVerified, setBusy }: {
 
   return (
     <form className="space-y-4" onSubmit={submit}>
-      <Input
-        label="Six-digit code"
-        inputMode="numeric"
-        autoComplete="one-time-code"
-        className="text-base"
-        maxLength={6}
-        pattern="[0-9]{6}"
-        value={code}
-        onChange={(event) => setCode(event.target.value.replace(/\D/g, ''))}
-        disabled={busy}
-        required
-        error={error || undefined}
-      />
-      <Button type="submit" loading={busy} disabled={code.length !== 6}>
-        {factorId ? 'Verify & Enable' : 'Verify and sign in'}
+      <OtpCodeInput value={code} onChange={setCode} disabled={busy} error={error || undefined} />
+      <Button type="submit" loading={busy} disabled={token.length !== SIGNUP_OTP_LENGTH}>
+        {submitLabel ?? (factorId ? 'Verify & Enable' : 'Verify and sign in')}
       </Button>
     </form>
   );
