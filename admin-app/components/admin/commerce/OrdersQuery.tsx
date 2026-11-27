@@ -20,8 +20,6 @@ const ORDER_REALTIME_TABLES: RealtimeTable[] = [
   'order_items',
   'order_documents',
   'order_invoices',
-  'order_certificates',
-  'order_receipts',
   'payment_recipients',
   'branches',
 ];

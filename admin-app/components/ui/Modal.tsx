@@ -10,6 +10,7 @@ interface ModalProps {
   onClose: () => void;
   children: ReactNode;
   footer?: ReactNode;
+  bodyClassName?: string;
   size?: "default" | "wide";
   placement?: "center" | "bottom";
 }
@@ -20,6 +21,7 @@ export function Modal({
   onClose,
   children,
   footer,
+  bodyClassName,
   size = "default",
   placement = "center",
 }: ModalProps) {
@@ -75,7 +77,7 @@ export function Modal({
               role="region"
               aria-label={title + " content"}
               tabIndex={0}
-              className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6"
+              className={`min-h-0 flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6 ${bodyClassName ?? ""}`}
             >
               {children}
             </div>

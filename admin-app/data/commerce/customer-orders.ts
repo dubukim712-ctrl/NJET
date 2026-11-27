@@ -23,8 +23,6 @@ export type CustomerOrder = Pick<
     > & { productId: string | null }
   )[];
   invoiceNo: string | null;
-  hasCertificate: boolean;
-  hasReceipt: boolean;
 };
 
 export type CustomerOrdersCursor = {
@@ -116,26 +114,14 @@ export async function getCustomerOrders(
       ? { createdAt: lastOrder.created_at, id: lastOrder.id }
       : null;
     const orderIds = orders.map((order) => order.id);
-    const [itemsByOrder, invoicesResult, certificatesResult, receiptsResult] = await Promise.all([
+    const [itemsByOrder, invoicesResult] = await Promise.all([
       loadOrderItems(supabase, orderIds),
       supabase
         .from('order_invoices')
         .select('order_id, invoice_no')
         .in('order_id', orderIds),
-      supabase
-        .from('order_certificates')
-        .select('order_id')
-        .in('order_id', orderIds),
-      supabase
-        .from('order_receipts')
-        .select('order_id')
-        .in('order_id', orderIds),
     ]);
     if (invoicesResult.error) throw invoicesResult.error;
-    if (certificatesResult.error) throw certificatesResult.error;
-    if (receiptsResult.error) throw receiptsResult.error;
-    const certificateOrderIds = new Set(certificatesResult.data.map(({ order_id }) => order_id));
-    const receiptOrderIds = new Set(receiptsResult.data.map(({ order_id }) => order_id));
 
     return {
       data: {
@@ -143,8 +129,6 @@ export async function getCustomerOrders(
           ...order,
           items: itemsByOrder.get(order.id) ?? [],
           invoiceNo: invoicesResult.data.find((invoice) => invoice.order_id === order.id)?.invoice_no ?? null,
-          hasCertificate: certificateOrderIds.has(order.id),
-          hasReceipt: receiptOrderIds.has(order.id),
         })),
         nextCursor,
       },
@@ -157,43 +141,4 @@ export async function getCustomerOrders(
       error: 'Order history could not be loaded. Please try again later.',
     };
   }
-}
-
-export type CustomerOrderDocumentKind = 'certificate' | 'receipt';
-
-const orderDocuments = {
-  certificate: { table: 'order_certificates', bucket: 'njet-order-certificates' },
-  receipt: { table: 'order_receipts', bucket: 'njet-order-receipts' },
-} as const;
-
-export async function getCustomerOrderDocumentUrl(
-  supabase: SupabaseClient,
-  userId: string,
-  orderId: string,
-  kind: CustomerOrderDocumentKind,
-): Promise<string | null> {
-  const { data: order, error: orderError } = await supabase
-    .from('orders')
-    .select('id')
-    .eq('id', orderId)
-    .eq('customer_id', userId)
-    .eq('status', 'completed')
-    .maybeSingle();
-  if (orderError) throw orderError;
-  if (!order) return null;
-
-  const { table, bucket } = orderDocuments[kind];
-  const { data: document, error: documentError } = await supabase
-    .from(table)
-    .select('object_path')
-    .eq('order_id', order.id)
-    .maybeSingle();
-  if (documentError) throw documentError;
-  if (!document) return null;
-
-  const { data, error } = await supabase.storage
-    .from(bucket)
-    .createSignedUrl(document.object_path, 60, { download: true });
-  if (error) throw error;
-  return data.signedUrl;
 }

@@ -105,7 +105,7 @@ export function UserNav({ user, showHelp = false }: UserNavProps) {
                 <DropdownMenuItem asChild>
                   <Link href="/dashboard/orders" className="flex items-center gap-2">
                     <Package className="size-4" aria-hidden="true" />
-                    Orders &amp; certificates
+                    My orders
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>

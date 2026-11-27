@@ -76,7 +76,7 @@ export const customerHelpTopics = [
   },
   {
     id: 'orders',
-    label: 'Paying & Downloading Receipts / Certificates',
+    label: 'Payments & Receipts',
     guides: [
       {
         title: 'How do I submit payment proof?',
@@ -88,12 +88,12 @@ export const customerHelpTopics = [
         ],
       },
       {
-        title: 'Where are my orders, receipts, and certificates?',
-        keywords: 'order history tracking status invoice pdf older orders',
+        title: 'Where are my orders and receipts?',
+        keywords: 'order history tracking status invoice print older orders',
         steps: [
           'Open Orders and choose Load older orders if the order is further back in your history.',
           'Awaiting payment means proof is still due. Awaiting confirmation means staff still need to confirm your order. Other badges include Confirmed, Completed, Cancelled, and Expired.',
-          'On a completed order, choose Download sales receipt or Download ownership certificate if the document is available.',
+          'On a completed order, choose View / Print Receipt.',
         ],
       },
     ],
@@ -123,11 +123,11 @@ export const customerHelpTopics = [
       },
       {
         title: 'Where do I get my warranty exchange record?',
-        keywords: 'replacement approved reserved stock handover returned bike original serial ownership certificate download',
+        keywords: 'replacement approved reserved stock handover returned bike original serial printable receipt',
         steps: [
           'Replacement approved means staff agreed to a replacement. Staff will arrange the exchange once an eligible unit is available.',
           'After you receive the replacement and staff record the handover, open Appointments, select the appointment, and choose Download exchange record. It lists both serial numbers and references your original order.',
-          'Keep the exchange record with your original sales receipt and ownership certificate. Ask staff which warranty terms apply to the replacement.',
+          'Keep the exchange record with your original sales receipt. Ask staff which warranty terms apply to the replacement.',
         ],
       },
       {

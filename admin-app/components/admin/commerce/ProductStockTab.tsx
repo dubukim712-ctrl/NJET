@@ -74,6 +74,7 @@ export function ProductStockTab({
         products={products}
         variants={variants}
         branches={inventoryBranches}
+        transferBranches={transferBranches}
         assignedBranchId={assignedBranchId}
         inventory={inventory}
         units={ebikeUnits}

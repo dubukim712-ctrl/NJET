@@ -12,7 +12,6 @@ export type OrderEmailDetails = {
   delivery_address: string | null;
   total_minor: number;
   balance_due_minor: number;
-  has_ebike: boolean;
   cancellation_reason?: string | null;
 };
 
@@ -28,8 +27,7 @@ function orderMessage(status: OrderEmailStatus, order: OrderEmailDetails) {
   if (status === 'completed') {
     return [
       'Thank you for your purchase!',
-      'Your official Sales Receipt' + (order.has_ebike ? ' and Ownership Certificate' : '') +
-        ' can be downloaded from your order details once generated.',
+      'Open your order details to view or print your Sales Receipt.',
     ];
   }
   if (status === 'cancelled') {

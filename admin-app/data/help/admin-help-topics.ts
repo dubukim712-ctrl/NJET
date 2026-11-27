@@ -16,11 +16,11 @@ export const adminHelpTopics = [
       },
       {
         title: 'Complete a sale and generate customer documents',
-        keywords: 'receipt certificate pdf complete payment home credit financing',
+        keywords: 'receipt print complete payment home credit financing',
         steps: [
           'Open View details on a confirmed order. Use Complete sale and record payment to enter the payment collected, then click Complete sale.',
           'For Home Credit, use Complete Home Credit sale. Enter the account and financing details, then click Complete sale.',
-          'On a completed order, use Generate receipt. Use Generate certificate where the order offers it. Customers can retrieve available documents from their order history.',
+          'On a completed order, choose Print Receipt. Customers can view or print the receipt from their order history.',
         ],
       },
     ],

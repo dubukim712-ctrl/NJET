@@ -4,8 +4,6 @@ export type RealtimeTable =
   | 'order_home_credit_details'
   | 'order_documents'
   | 'order_invoices'
-  | 'order_certificates'
-  | 'order_receipts'
   | 'payment_recipients'
   | 'service_appointments'
   | 'branch_inventory'

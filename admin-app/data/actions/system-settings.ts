@@ -7,22 +7,17 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import type { ActionResult } from '@/data/actions/auth';
 import { requireFullAccess } from '@/data/auth/guards';
-import { validateOwnershipCertificateTemplate, OwnershipCertificateTemplateError } from '@/data/commerce/ownership-certificate';
 import {
   removeStoredObject,
   validateSettingsImage,
 } from '@/data/commerce/system-settings-assets';
 import {
-  certificateTemplatePathSchema,
   paymentRecipientSettingsSchema,
   phoneVerificationSettingsSchema,
   settingsAssetPathSchema,
 } from '@/lib/validations/system-settings';
 
-const TEMPLATE_BUCKET = 'njet-certificate-templates';
-const RECEIPT_TEMPLATE_BUCKET = 'njet-sales-receipt-templates';
 const PAYMENT_MEDIA_BUCKET = 'njet-payment-recipient-media';
-const MAX_TEMPLATE_SIZE = 5 * 1024 * 1024;
 
 export async function savePhoneVerificationSettingsAction(
   payload: unknown
@@ -52,79 +47,6 @@ export async function savePhoneVerificationSettingsAction(
     return {
       success: false,
       error: toUserFriendlyError(error, 'Could not save the checkout verification setting. Please try again.'),
-    };
-  }
-}
-
-export async function saveOwnershipCertificateTemplateAction(
-  payload: unknown
-): Promise<ActionResult<{ version: string; warning?: string }>> {
-  const { supabase } = await requireFullAccess('/admin/settings');
-  const parsed = certificateTemplatePathSchema.safeParse(payload);
-  if (!parsed.success) {
-    return { success: false, error: 'Upload a valid certificate template.' };
-  }
-
-  try {
-    const { data: file, error: downloadError } = await supabase.storage
-      .from(TEMPLATE_BUCKET)
-      .download(parsed.data);
-    if (downloadError || !file) {
-      throw new OwnershipCertificateTemplateError(
-        'The uploaded certificate template could not be read.'
-      );
-    }
-    if (file.size < 1 || file.size > MAX_TEMPLATE_SIZE) {
-      throw new OwnershipCertificateTemplateError(
-        'The certificate template must be no larger than 5 MB.'
-      );
-    }
-    await validateOwnershipCertificateTemplate(
-      new Uint8Array(await file.arrayBuffer())
-    );
-
-    const previousResult = await supabase
-      .from('ownership_certificate_templates')
-      .select('object_path')
-      .eq('id', 1)
-      .maybeSingle();
-    if (previousResult.error) throw previousResult.error;
-
-    const version = `ownership-${Date.now().toString(36)}-${randomUUID().slice(0, 8)}`;
-    const { error } = await supabase
-      .from('ownership_certificate_templates')
-      .upsert({
-        id: 1,
-        object_path: parsed.data,
-        template_version: version,
-      }, { onConflict: 'id' });
-    if (error) throw error;
-
-    let warning: string | undefined;
-    if (
-      previousResult.data?.object_path &&
-      previousResult.data.object_path !== parsed.data
-    ) {
-      const removed = await removeStoredObject(
-        supabase,
-        TEMPLATE_BUCKET,
-        previousResult.data.object_path
-      );
-      if (!removed) {
-        warning = 'The new template is active, but the previous file could not be removed.';
-      }
-    }
-
-    revalidatePath('/admin/settings');
-    revalidatePath('/checkout');
-    return { success: true, data: { version, warning } };
-  } catch (error) {
-    console.error('Could not save the ownership certificate template.', error);
-    return {
-      success: false,
-      error: error instanceof OwnershipCertificateTemplateError
-        ? error.message
-        : toUserFriendlyError(error, 'Could not save the ownership certificate template.'),
     };
   }
 }
@@ -259,13 +181,9 @@ export async function removeUnusedSystemSettingsAssetAction(
     return { success: false, error: 'Select a valid unused settings file.' };
   }
 
-  const bucket = parsed.data.startsWith('templates/')
-    ? TEMPLATE_BUCKET
-    : parsed.data.startsWith('receipt-templates/')
-      ? RECEIPT_TEMPLATE_BUCKET
-      : parsed.data.startsWith('logos/') || parsed.data.startsWith('about/')
-        ? 'njet-storefront-branding'
-        : PAYMENT_MEDIA_BUCKET;
+  const bucket = parsed.data.startsWith('logos/') || parsed.data.startsWith('about/')
+    ? 'njet-storefront-branding'
+    : PAYMENT_MEDIA_BUCKET;
   const removed = await removeStoredObject(supabase, bucket, parsed.data);
   return removed
     ? { success: true, data: undefined }

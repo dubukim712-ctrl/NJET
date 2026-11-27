@@ -4,21 +4,18 @@ import { useState, type KeyboardEvent } from 'react';
 import { Select } from '@/components/ui/Select';
 import { BusinessInfoEditor } from '@/components/admin/settings/BusinessInfoEditor';
 import { BranchServiceHoursSettings } from '@/components/admin/settings/BranchServiceHoursSettings';
-import { OwnershipCertificateTemplateSettings } from '@/components/admin/settings/OwnershipCertificateTemplateSettings';
-import { SalesReceiptTemplateSettings } from '@/components/admin/settings/SalesReceiptTemplateSettings';
 import { PaymentRecipientEditor } from '@/components/admin/settings/PaymentRecipientEditor';
 import { LegalPoliciesSettings } from '@/components/admin/settings/LegalPoliciesSettings';
 import { CheckoutPhoneVerificationSettings } from '@/components/admin/settings/CheckoutPhoneVerificationSettings';
 import { PAYMENT_PROVIDER_OPTIONS } from '@/data/commerce/payment-recipients';
 import type { AdminSystemSettings } from '@/data/commerce/system-settings';
 
-type SettingsTab = 'business' | 'service-hours' | 'checkout' | 'payments' | 'documents' | 'policies';
+type SettingsTab = 'business' | 'service-hours' | 'checkout' | 'payments' | 'policies';
 const SETTINGS_TABS: { id: SettingsTab; label: string }[] = [
   { id: 'business', label: 'Business' },
   { id: 'service-hours', label: 'Service hours' },
   { id: 'checkout', label: 'Checkout' },
   { id: 'payments', label: 'Payment Accounts' },
-  { id: 'documents', label: 'Documents' },
   { id: 'policies', label: 'Policies' },
 ];
 
@@ -150,19 +147,6 @@ export function SystemSettingsManager({
               )}
             />
           ))}
-        </div>
-      </section>
-
-      <section
-        id="settings-documents-panel"
-        role="tabpanel"
-        aria-labelledby="settings-documents-tab"
-        tabIndex={0}
-        hidden={activeTab !== 'documents'}
-      >
-        <div className="grid min-w-0 gap-4 xl:grid-cols-2">
-          <OwnershipCertificateTemplateSettings template={settings.certificateTemplate} />
-          <SalesReceiptTemplateSettings template={settings.receiptTemplate} />
         </div>
       </section>
 

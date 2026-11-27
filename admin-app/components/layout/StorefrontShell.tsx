@@ -109,12 +109,11 @@ export function StorefrontShell({
         <div className="bg-primary px-3 py-1.5 text-center text-[11px] leading-4 text-primary-foreground sm:text-xs">
           {displayUser ? (
             <Link href="/dashboard" className="underline-offset-2 hover:underline focus-visible:underline">
-              <strong>MEMBER PERKS:</strong> Track your orders, book a service checkup &amp; view your Certificate of Ownership →
+              <strong>MEMBER PERKS:</strong> Track your orders, view receipts &amp; book a service checkup →
             </Link>
           ) : (
             <>
-              <strong>MEMBER PERKS:</strong> Sign in to book a service checkup,
-              track orders &amp; view your Certificate of Ownership.
+              <strong>MEMBER PERKS:</strong> Sign in to book a service checkup &amp; track orders.
             </>
           )}
         </div>

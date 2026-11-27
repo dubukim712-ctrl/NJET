@@ -2,17 +2,9 @@ import { z } from 'zod';
 
 const uuid = '[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}';
 
-export const certificateTemplatePathSchema = z.string().regex(
-  new RegExp(`^templates/${uuid}\\.pdf$`)
-);
-
-export const salesReceiptTemplatePathSchema = z.string().regex(
-  new RegExp(`^receipt-templates/${uuid}\\.pdf$`)
-);
-
 export const settingsAssetPathSchema = z.string().regex(
   new RegExp(
-    `^(templates/${uuid}\\.pdf|receipt-templates/${uuid}\\.pdf|logos/${uuid}\\.(jpg|png|webp)|about/${uuid}\\.(jpg|png|webp)|recipients/(gcash|bank_transfer|card)/qr/${uuid}\\.(jpg|png|webp))$`
+    `^(logos/${uuid}\\.(jpg|png|webp)|about/${uuid}\\.(jpg|png|webp)|recipients/(gcash|bank_transfer|card)/qr/${uuid}\\.(jpg|png|webp))$`
   )
 );
 

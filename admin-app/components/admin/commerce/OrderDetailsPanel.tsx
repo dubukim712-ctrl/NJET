@@ -113,14 +113,9 @@ export function OrderDetailsPanel({
 
       {order.status === "completed" && (
         <CompletedOrderDocuments
-          key={`${order.id}:${order.invoiceNo ?? ""}:${order.certificate?.certificateNumber ?? ""}`}
+          key={`${order.id}:${order.invoiceNo ?? ""}`}
           orderId={order.id}
           invoiceNo={order.invoiceNo}
-          isEbikeOrder={order.items.some(
-            (item) => item.product_type === "ebike",
-          )}
-          certificate={order.certificate}
-          receipt={order.receipt}
           canManage={canManage}
           onDataChanged={onDataChanged}
         />

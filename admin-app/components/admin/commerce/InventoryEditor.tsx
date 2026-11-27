@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useId, useState, type FormEvent } from "react";
 import { toast } from "sonner";
 import { Boxes } from "lucide-react";
 import { saveCommerceInventoryAction } from "@/data/actions/commerce-admin";
@@ -9,6 +9,7 @@ import { InventoryReceiptForm } from "@/components/admin/commerce/InventoryRecei
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
+import { Modal } from "@/components/ui/Modal";
 import { useInvalidateAdminProductsQuery } from "@/data/commerce/admin-products-client";
 import { useInvalidateInventoryValuationQuery } from "@/data/commerce/inventory-valuation-client";
 import type { Database } from "@/types/database";
@@ -17,6 +18,7 @@ import type { ProductType } from "@/types/commerce-tables";
 type Variant = {
   id: string;
   name: string;
+  modelName: string;
   sku: string;
   productType: ProductType;
 };
@@ -141,6 +143,8 @@ export function InventoryEditor({
   );
   const [variantId, setVariantId] = useState("");
   const [mode, setMode] = useState<"receipt" | "adjustment">("receipt");
+  const [receiptBusy, setReceiptBusy] = useState(false);
+  const receiptFormId = useId();
   const variant = variants.find((entry) => entry.id === variantId);
   const stock =
     inventory.find(
@@ -163,99 +167,121 @@ export function InventoryEditor({
   ).length;
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col gap-2 sm:flex-row">
-        <Button
-          type="button"
-          variant={mode === "receipt" ? "default" : "outline"}
-          onClick={() => setMode("receipt")}
-        >
-          Receive with costs
-        </Button>
-        <Button
-          type="button"
-          variant={mode === "adjustment" ? "default" : "outline"}
-          onClick={() => setMode("adjustment")}
-        >
-          Adjust stock / legacy IDs
-        </Button>
-      </div>
-      {mode === "receipt" ? (
-        <InventoryReceiptForm
-          branches={branches}
-          variants={variants}
-          branchId={branchId}
-          variantId={variantId}
-          onClose={onClose}
-        />
-      ) : (
-        <>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Select
-              label="Branch"
-              value={branchId}
-              onValueChange={(value) => setBranchId(value)}
-              required
-            >
-              <option value="">Select a branch</option>
-              {branches.map((branch) => (
-                <option key={branch.id} value={branch.id}>
-                  {branch.name}
-                </option>
-              ))}
-            </Select>
-            <Select
-              label="Product variant"
-              value={variantId}
-              onValueChange={(value) => setVariantId(value)}
-              required
-            >
-              <option value="">Select a variant</option>
-              {variants.map((entry) => (
-                <option key={entry.id} value={entry.id}>
-                  {entry.sku} - {entry.name}
-                </option>
-              ))}
-            </Select>
-          </div>
-          {!branchId || !variant ? (
-            <p className="text-sm text-muted-foreground">
-              Select a branch and variant to manage its inventory.
-            </p>
-          ) : variant.productType === "ebike" ? (
-            pendingUnits.length ? (
-              <div className="space-y-3">
-                <p className="text-sm text-muted-foreground">
-                  {sellableUnits} identified and sellable ·{" "}
-                  {pendingUnits.length} need serial and motor numbers
-                </p>
-                <EbikeUnitForm
-                  key={`${branchId}-${variantId}-${knownUnitCount}`}
-                  branchId={branchId}
-                  variantId={variantId}
-                  pendingUnits={pendingUnits}
-                  onCancel={onClose}
-                  onSaved={onClose}
-                />
-              </div>
-            ) : (
-              <p className="rounded-lg border p-4 text-sm text-muted-foreground">
-                No legacy e-bike units need identification. Record new units as
-                a costed receipt.
+    <Modal
+      open
+      title="Receive Stock"
+      size="wide"
+      onClose={() => { if (!receiptBusy) onClose(); }}
+      bodyClassName="max-h-[75vh] supports-[height:100dvh]:max-h-[75dvh]"
+      footer={mode === "receipt" ? (
+        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <Button type="button" variant="outline" onClick={onClose} disabled={receiptBusy}>
+            Cancel
+          </Button>
+          <Button type="submit" form={receiptFormId} loading={receiptBusy}>
+            Record receipt
+          </Button>
+        </div>
+      ) : undefined}
+    >
+      <div className="space-y-4">
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Button
+            type="button"
+            variant={mode === "receipt" ? "default" : "outline"}
+            onClick={() => setMode("receipt")}
+          >
+            Receive with costs
+          </Button>
+          <Button
+            type="button"
+            variant={mode === "adjustment" ? "default" : "outline"}
+            onClick={() => setMode("adjustment")}
+            disabled={receiptBusy}
+          >
+            Adjust stock / legacy IDs
+          </Button>
+        </div>
+        {mode === "receipt" ? (
+          <InventoryReceiptForm
+            id={receiptFormId}
+            busy={receiptBusy}
+            setBusy={setReceiptBusy}
+            branches={branches}
+            variants={variants}
+            branchId={branchId}
+            variantId={variantId}
+            onClose={onClose}
+          />
+        ) : (
+          <>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Select
+                label="Branch"
+                value={branchId}
+                onValueChange={(value) => setBranchId(value)}
+                required
+              >
+                <option value="">Select a branch</option>
+                {branches.map((branch) => (
+                  <option key={branch.id} value={branch.id}>
+                    {branch.name}
+                  </option>
+                ))}
+              </Select>
+              <Select
+                label="Product variant"
+                value={variantId}
+                onValueChange={(value) => setVariantId(value)}
+                required
+              >
+                <option value="">Select a variant</option>
+                {variants.map((entry) => (
+                  <option key={entry.id} value={entry.id}>
+                    {entry.sku} - {entry.name}
+                  </option>
+                ))}
+              </Select>
+            </div>
+            {!branchId || !variant ? (
+              <p className="text-sm text-muted-foreground">
+                Select a branch and variant to manage its inventory.
               </p>
-            )
-          ) : (
-            <BatchStockForm
-              key={`${branchId}-${variantId}-${stock}`}
-              branchId={branchId}
-              variantId={variantId}
-              stock={stock}
-              onCancel={onClose}
-              onSaved={onClose}
-            />
-          )}
-        </>
-      )}
-    </div>
+            ) : variant.productType === "ebike" ? (
+              pendingUnits.length ? (
+                <div className="space-y-3">
+                  <p className="text-sm text-muted-foreground">
+                    {sellableUnits} identified and sellable ·{" "}
+                    {pendingUnits.length} need serial and motor numbers
+                  </p>
+                  <EbikeUnitForm
+                    key={`${branchId}-${variantId}-${knownUnitCount}`}
+                    branchId={branchId}
+                    variantId={variantId}
+                    pendingUnits={pendingUnits}
+                    onCancel={onClose}
+                    onSaved={onClose}
+                  />
+                </div>
+              ) : (
+                <p className="rounded-lg border p-4 text-sm text-muted-foreground">
+                  No legacy e-bike units need identification. Record new units as
+                  a costed receipt.
+                </p>
+              )
+            ) : (
+              <BatchStockForm
+                key={`${branchId}-${variantId}-${stock}`}
+                branchId={branchId}
+                variantId={variantId}
+                stock={stock}
+                onCancel={onClose}
+                onSaved={onClose}
+              />
+            )}
+          </>
+        )}
+      </div>
+    </Modal>
   );
 }

@@ -16,7 +16,6 @@ const order = {
   delivery_address: null,
   total_minor: 150000,
   balance_due_minor: 100000,
-  has_ebike: true,
 };
 
 function render(status, details = order) {
@@ -36,12 +35,12 @@ test('confirmed email shows reservation, pickup balance, and delivery details wh
   assert.doesNotMatch(delivery.textContent, /Balance due at the store/);
 });
 
-test('completed email describes the available documents for each product type', () => {
-  const completed = render('completed');
-  assert.match(completed.subject, /Order completed/);
-  assert.match(completed.textContent, /Sales Receipt and Ownership Certificate.*once generated/);
-  assert.doesNotMatch(render('completed', { ...order, has_ebike: false }).htmlContent, /Ownership Certificate/);
+test('completed email points customers to their printable receipt', () => {
+  const email = render('completed');
+  assert.match(email.textContent, /view or print your Sales Receipt/);
+  assert.doesNotMatch(email.htmlContent, /Ownership Certificate/);
 });
+
 
 test('cancelled email asks for no further payment and safely includes a recorded reason', () => {
   const cancelled = render('cancelled', { ...order, cancellation_reason: '<Stock issue>' });

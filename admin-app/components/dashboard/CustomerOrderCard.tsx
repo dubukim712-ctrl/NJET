@@ -1,13 +1,11 @@
 'use client';
 
-import { useState, useTransition } from 'react';
 import Link from 'next/link';
 import { ArrowRight, Package } from 'lucide-react';
 import { OrderStatusBadge } from '@/components/commerce/OrderStatusBadge';
 import { ProductPrice } from '@/components/shop/ProductPrice';
 import { CustomerOrderReviewActions } from '@/components/dashboard/CustomerOrderReviewActions';
-import { getCustomerOrderDocumentUrlAction } from '@/data/actions/customer-orders';
-import type { CustomerOrder, CustomerOrderDocumentKind } from '@/data/commerce/customer-orders';
+import type { CustomerOrder } from '@/data/commerce/customer-orders';
 import { formatPhp } from '@/lib/commerce';
 
 export function CustomerOrderCard({
@@ -19,25 +17,6 @@ export function CustomerOrderCard({
   isPlaced: boolean;
   showDetailsLink?: boolean;
 }) {
-  const [downloadError, setDownloadError] = useState<string | null>(null);
-  const [downloading, startDownload] = useTransition();
-
-  function downloadDocument(kind: CustomerOrderDocumentKind) {
-    setDownloadError(null);
-    startDownload(async () => {
-      try {
-        const result = await getCustomerOrderDocumentUrlAction({ orderId: order.id, kind });
-        if (!result.success) {
-          setDownloadError(result.error);
-          return;
-        }
-        window.location.assign(result.data.url);
-      } catch {
-        setDownloadError('The document could not be downloaded. Please try again.');
-      }
-    });
-  }
-
   const noLongerDue = order.status === 'expired' || order.status === 'cancelled';
   const needsPayment = showDetailsLink && (
     order.status === 'awaiting_payment' ||
@@ -163,38 +142,17 @@ export function CustomerOrderCard({
           </p>
         )}
       </div>
-      {order.status === 'completed' &&
-        (order.invoiceNo || order.hasCertificate || order.hasReceipt || reviewItems.length > 0) && (
+      {order.status === 'completed' && (
           <section className="mt-4 flex flex-wrap items-center gap-3 border-t pt-4">
             {order.invoiceNo && (
               <p className="text-sm">
                 <span className="text-muted-foreground">Invoice number:</span> {order.invoiceNo}
               </p>
             )}
-            {order.hasCertificate && (
-              <button
-                type="button"
-                disabled={downloading}
-                onClick={() => downloadDocument('certificate')}
-                className="inline-flex min-h-11 items-center rounded-md border px-3 text-sm font-medium hover:bg-accent disabled:opacity-50"
-              >
-                Download ownership certificate
-              </button>
-            )}
-            {order.hasReceipt && (
-              <button
-                type="button"
-                disabled={downloading}
-                onClick={() => downloadDocument('receipt')}
-                className="inline-flex min-h-11 items-center rounded-md border px-3 text-sm font-medium hover:bg-accent disabled:opacity-50"
-              >
-                Download sales receipt
-              </button>
-            )}
-            {downloading && <p role="status" className="text-sm">Preparing download...</p>}
-            {downloadError && (
-              <p role="alert" className="basis-full text-sm text-destructive">{downloadError}</p>
-            )}
+            <Link href={`/dashboard/orders/${order.id}/receipt`} prefetch={false}
+              className="inline-flex min-h-11 items-center rounded-md border px-3 text-sm font-medium hover:bg-accent">
+              View / Print Receipt
+            </Link>
             {reviewItems.length > 0 && (
               <CustomerOrderReviewActions
                 orderId={order.id}
@@ -203,7 +161,7 @@ export function CustomerOrderCard({
               />
             )}
           </section>
-        )}
+      )}
       {showDetailsLink && (
         <div className="mt-3 flex justify-end">
           <Link

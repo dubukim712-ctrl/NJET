@@ -3,6 +3,22 @@ import { productDiscountRowsSchema } from '@/lib/validations/product-discount';
 
 type SupabaseClient = Awaited<ReturnType<typeof createClient>>;
 
+async function getInventoryUnits(supabase: SupabaseClient) {
+  const units: import('@/types/database').Database['public']['Tables']['ebike_units']['Row'][] = [];
+  const pageSize = 500;
+  for (let offset = 0; ; offset += pageSize) {
+    const { data, error } = await supabase.from('ebike_units')
+      .select('id, variant_id, branch_id, serial_number, motor_number, status, order_item_id, transfer_id, created_at')
+      .in('status', ['needs_identification', 'in_stock', 'in_transit', 'warranty_reserved'])
+      .order('created_at')
+      .order('id')
+      .range(offset, offset + pageSize - 1);
+    if (error) throw error;
+    units.push(...data);
+    if (data.length < pageSize) return units;
+  }
+}
+
 export async function getCommerceManagementData(supabase: SupabaseClient) {
   try {
     const [
@@ -25,11 +41,7 @@ export async function getCommerceManagementData(supabase: SupabaseClient) {
       supabase.rpc('transfer_branch_options'),
       supabase.from('product_categories').select('*').order('name').limit(300),
       supabase.from('product_subcategories').select('*').order('category_id').order('name').limit(300),
-      supabase.from('ebike_units')
-        .select('id, variant_id, branch_id, serial_number, motor_number, status, order_item_id, transfer_id, created_at')
-        .in('status', ['needs_identification', 'in_stock', 'in_transit'])
-        .order('created_at')
-        .limit(2000),
+      getInventoryUnits(supabase),
       supabase.from('inventory_movements').select('*').order('created_at', { ascending: false }).limit(200),
       supabase.from('branch_transfers').select('*').order('dispatched_at', { ascending: false }).limit(50),
       supabase.rpc('admin_product_discounts'),
@@ -41,7 +53,6 @@ export async function getCommerceManagementData(supabase: SupabaseClient) {
     if (transferBranchesResult.error) throw transferBranchesResult.error;
     if (categoriesResult.error) throw categoriesResult.error;
     if (subcategoriesResult.error) throw subcategoriesResult.error;
-    if (unitsResult.error) throw unitsResult.error;
     if (movementsResult.error) throw movementsResult.error;
     if (transfersResult.error) throw transfersResult.error;
     if (discountsResult.error) throw discountsResult.error;
@@ -74,7 +85,7 @@ export async function getCommerceManagementData(supabase: SupabaseClient) {
         transferBranches: transferBranchesResult.data,
         categories: categoriesResult.data,
         subcategories: subcategoriesResult.data,
-        ebikeUnits: unitsResult.data,
+        ebikeUnits: unitsResult,
         inventoryMovements: movementsResult.data,
         transfers: transfersResult.data,
         transferItems: transferItemsResult.data,

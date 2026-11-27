@@ -146,7 +146,7 @@ export function StorefrontFooter({
                 <>
                   <Link href="/dashboard">My dashboard</Link>
                   <Link href="/dashboard/orders">
-                    Orders &amp; certificates
+                    My orders
                   </Link>
                 </>
               ) : (

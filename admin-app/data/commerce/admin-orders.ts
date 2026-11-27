@@ -39,8 +39,6 @@ export type StaffOrder = Pick<
     'object_path'
   > & { url: string | null })[];
   invoiceNo: string | null;
-  certificate: { url: string | null; certificateNumber: string } | null;
-  receipt: { url: string | null } | null;
 };
 
 export type OrderBranchOption = Pick<
@@ -127,7 +125,7 @@ export async function getCommerceOrders(
           .in('order_id', orderIds)
           .limit(50)
       : Promise.resolve({ data: [], error: null });
-    const [itemsResult, documentsResult, invoicesResult, certificatesResult, receiptsResult, homeCreditDetailsResult] =
+    const [itemsResult, documentsResult, invoicesResult, homeCreditDetailsResult] =
       await Promise.all([
         supabase
           .from('order_items')
@@ -146,23 +144,11 @@ export async function getCommerceOrders(
           .select('id, order_id, invoice_no, created_at, updated_at')
           .in('order_id', orderIds)
           .limit(50),
-        supabase
-          .from('order_certificates')
-          .select('id, order_id, object_path, certificate_number')
-          .in('order_id', orderIds)
-          .limit(50),
-        supabase
-          .from('order_receipts')
-          .select('id, order_id, object_path')
-          .in('order_id', orderIds)
-          .limit(50),
         homeCreditDetailsQuery,
       ]);
     if (itemsResult.error) throw itemsResult.error;
     if (documentsResult.error) throw documentsResult.error;
     if (invoicesResult.error) throw invoicesResult.error;
-    if (certificatesResult.error) throw certificatesResult.error;
-    if (receiptsResult.error) throw receiptsResult.error;
     if (homeCreditDetailsResult.error) throw homeCreditDetailsResult.error;
     const recipientIds = [...new Set(
       orders.map((order) => order.payment_recipient_id).filter(
@@ -203,42 +189,6 @@ export async function getCommerceOrders(
         );
       }
     }
-    let certificateUrlByPath = new Map<string, string>();
-    if (certificatesResult.data.length) {
-      const { data, error } = await supabase.storage
-        .from('njet-order-certificates')
-        .createSignedUrls(
-          certificatesResult.data.map((certificate) => certificate.object_path),
-          60
-        );
-      if (error) {
-        console.error('Could not create private ownership-certificate links.', error);
-      } else {
-        certificateUrlByPath = new Map(
-          data.flatMap((entry) =>
-            entry.path && entry.signedUrl ? [[entry.path, entry.signedUrl] as const] : []
-          )
-        );
-      }
-    }
-    let receiptUrlByPath = new Map<string, string>();
-    if (receiptsResult.data.length) {
-      const { data, error } = await supabase.storage
-        .from('njet-order-receipts')
-        .createSignedUrls(
-          receiptsResult.data.map((receipt) => receipt.object_path),
-          60
-        );
-      if (error) {
-        console.error('Could not create private sales receipt links.', error);
-      } else {
-        receiptUrlByPath = new Map(
-          data.flatMap((entry) =>
-            entry.path && entry.signedUrl ? [[entry.path, entry.signedUrl] as const] : []
-          )
-        );
-      }
-    }
     return {
       data: orders.map((order) => ({
         ...order,
@@ -264,25 +214,6 @@ export async function getCommerceOrders(
             ...document,
             url: signedByPath.get(object_path) ?? null,
           })),
-        certificate: (() => {
-          const certificate = certificatesResult.data.find(
-            (entry) => entry.order_id === order.id
-          );
-          return certificate
-            ? {
-                url: certificateUrlByPath.get(certificate.object_path) ?? null,
-                certificateNumber: certificate.certificate_number,
-              }
-            : null;
-        })(),
-        receipt: (() => {
-          const receipt = receiptsResult.data.find(
-            (entry) => entry.order_id === order.id
-          );
-          return receipt
-            ? { url: receiptUrlByPath.get(receipt.object_path) ?? null }
-            : null;
-        })(),
       })),
       branches,
       error: null,

@@ -5,7 +5,6 @@ import { toast } from "sonner";
 import { createInventoryReceiptAction } from "@/data/actions/commerce-admin";
 import { useInvalidateAdminProductsQuery } from "@/data/commerce/admin-products-client";
 import { useInvalidateInventoryValuationQuery } from "@/data/commerce/inventory-valuation-client";
-import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import {
@@ -28,25 +27,19 @@ function toMinor(value: string) {
     : null;
 }
 
-function parseUnits(value: string) {
-  return value
-    .split(/\r?\n/)
-    .filter((line) => line.trim())
-    .map((line) => {
-      const parts = line.split(",").map((part) => part.trim());
-      const [serialNumber = "", motorNumber = ""] =
-        parts.length === 2 ? parts : [];
-      return { serialNumber, motorNumber };
-    });
-}
-
 export function InventoryReceiptForm({
+  id,
+  busy,
+  setBusy,
   branches,
   variants,
   branchId: initialBranchId,
   variantId: initialVariantId,
   onClose,
 }: {
+  id: string;
+  busy: boolean;
+  setBusy: (busy: boolean) => void;
   branches: { id: string; name: string }[];
   variants: ReceiptVariant[];
   branchId?: string;
@@ -64,14 +57,14 @@ export function InventoryReceiptForm({
       variantId: initialVariantId ?? variants[0]?.id ?? "",
       quantity: "1",
       supplierUnitCost: "",
-      units: "",
+      units: [],
     },
   ]);
-  const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (busy) return;
     setBusy(true);
     setError(null);
     const formData = new FormData(event.currentTarget);
@@ -81,7 +74,12 @@ export function InventoryReceiptForm({
         variantId: line.variantId,
         quantity: Number(line.quantity),
         unitSupplierCostMinor: toMinor(line.supplierUnitCost),
-        units: variant?.productType === "ebike" ? parseUnits(line.units) : [],
+        units: variant?.productType === "ebike"
+          ? line.units.map(({ serialNumber, motorNumber }) => ({
+              serialNumber: serialNumber.trim(),
+              motorNumber: motorNumber.trim(),
+            }))
+          : [],
       };
     });
     const sharedCostMinor = toMinor(String(formData.get("sharedCost") ?? ""));
@@ -97,7 +95,7 @@ export function InventoryReceiptForm({
           item.unitSupplierCostMinor === null ||
           (variants.find((variant) => variant.id === item.variantId)
             ?.productType === "ebike" &&
-            item.units.length !== item.quantity),
+            (item.units.length !== item.quantity || item.units.some(({ serialNumber, motorNumber }) => !serialNumber || !motorNumber))),
       ) ||
       !Number.isFinite(receivedAt.getTime())
     ) {
@@ -161,7 +159,7 @@ export function InventoryReceiptForm({
   };
 
   return (
-    <form className="space-y-5" onSubmit={submit}>
+    <form id={id} className="space-y-5" onSubmit={submit}>
       <div className="grid gap-3 sm:grid-cols-2">
         <Select
           label="Receiving branch"
@@ -216,19 +214,6 @@ export function InventoryReceiptForm({
           {error}
         </p>
       )}
-      <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onClose}
-          disabled={busy}
-        >
-          Cancel
-        </Button>
-        <Button type="submit" loading={busy}>
-          Record receipt
-        </Button>
-      </div>
     </form>
   );
 }

@@ -10,7 +10,7 @@ const discountTargetSchema = z.object({
 
 const couponCodeSchema = z.preprocess(
   (value) => typeof value === 'string' && value.trim()
-    ? value.trim().toUpperCase()
+    ? value.replace(/\s/g, '').toUpperCase()
     : null,
   z.string().regex(/^[A-Z0-9][A-Z0-9_-]{2,31}$/).nullable(),
 );
@@ -27,11 +27,11 @@ export const saveProductDiscountSchema = z.object({
   active: z.boolean(),
   targets: z.array(discountTargetSchema).min(1).max(100),
 }).superRefine((discount, context) => {
-  if (discount.discountType === 'percentage' && discount.value > 10000) {
+  if (discount.discountType === 'percentage' && (discount.value < 100 || discount.value > 10000)) {
     context.addIssue({
       code: 'custom',
       path: ['value'],
-      message: 'Percentage cannot exceed 100%.',
+      message: 'Percentage must be between 1% and 100%.',
     });
   }
   if (!discount.couponCode && discount.maxRedemptions !== null) {
@@ -42,11 +42,19 @@ export const saveProductDiscountSchema = z.object({
     });
   }
   if (discount.startsAt && discount.endsAt &&
-    Date.parse(discount.endsAt) <= Date.parse(discount.startsAt)) {
+    Date.parse(discount.endsAt) < Date.parse(discount.startsAt)) {
     context.addIssue({
       code: 'custom',
       path: ['endsAt'],
-      message: 'End date must be after the start date.',
+      message: 'End date must be on or after the start date.',
+    });
+  }
+  if (discount.targets.some((target) => target.productVariantId) &&
+    discount.targets.some((target) => target.productCategoryId)) {
+    context.addIssue({
+      code: 'custom',
+      path: ['targets'],
+      message: 'Choose either specific variants or whole categories.',
     });
   }
   const keys = discount.targets.map((target) =>

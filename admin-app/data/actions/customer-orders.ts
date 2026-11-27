@@ -4,7 +4,6 @@ import { z } from 'zod';
 import type { ActionResult } from '@/data/actions/auth';
 import { requireCustomer } from '@/data/auth/guards';
 import {
-  getCustomerOrderDocumentUrl,
   getCustomerOrders,
   type CustomerOrdersPage,
 } from '@/data/commerce/customer-orders';
@@ -31,31 +30,4 @@ export async function getCustomerOrdersAction(cursor: unknown = null): Promise<
     };
   }
   return { success: true, data: result.data };
-}
-
-const orderDocumentRequest = z.object({
-  orderId: z.string().uuid(),
-  kind: z.enum(['certificate', 'receipt']),
-});
-
-export async function getCustomerOrderDocumentUrlAction(
-  input: unknown,
-): Promise<ActionResult<{ url: string }>> {
-  const { supabase, user } = await requireCustomer('/dashboard/orders');
-  const request = orderDocumentRequest.safeParse(input);
-  if (!request.success) {
-    return { success: false, error: 'Choose a valid order document.' };
-  }
-
-  const { orderId, kind } = request.data;
-  try {
-    const url = await getCustomerOrderDocumentUrl(supabase, user.id, orderId, kind);
-    if (!url) {
-      return { success: false, error: 'This order document is unavailable.' };
-    }
-    return { success: true, data: { url } };
-  } catch (error) {
-    console.error('Could not sign a customer order document.', error);
-    return { success: false, error: 'The document could not be downloaded. Please try again.' };
-  }
 }

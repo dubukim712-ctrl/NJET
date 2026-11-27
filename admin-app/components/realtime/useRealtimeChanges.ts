@@ -68,7 +68,6 @@ function isRealtimeTable(value: string): value is RealtimeTable {
     'order_home_credit_details',
     'order_documents',
     'order_invoices',
-    'order_certificates',
     'payment_recipients',
     'service_appointments',
     'branch_inventory',

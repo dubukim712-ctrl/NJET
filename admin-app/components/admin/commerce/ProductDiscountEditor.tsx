@@ -2,13 +2,13 @@
 
 import { useState, type FormEvent } from 'react';
 import { toast } from 'sonner';
-import { Check } from 'lucide-react';
 import { saveProductDiscountAction } from '@/data/actions/product-discounts';
 import { useInvalidateAdminProductsQuery } from '@/data/commerce/admin-products-client';
+import { DiscountTargetSelector } from '@/components/admin/commerce/DiscountTargetSelector';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
-import { parsePhpAmount } from '@/lib/commerce';
+import { formatPhp, parsePhpAmount } from '@/lib/commerce';
 import type { ProductDiscountAdminRow } from '@/lib/validations/product-discount';
 import type { Database } from '@/types/database';
 
@@ -17,79 +17,29 @@ type Variant = Database['public']['Tables']['product_variants']['Row'];
 type Category = Database['public']['Tables']['product_categories']['Row'];
 type DiscountType = 'percentage' | 'fixed';
 
-function DiscountTargetSelector({
-  label,
-  helperText,
-  options,
-  selectedIds,
-  onToggle,
-}: {
-  label: string;
-  helperText: string;
-  options: { id: string; label: string }[];
-  selectedIds: string[];
-  onToggle: (id: string) => void;
-}) {
-  return (
-    <div role="group" aria-label={label} className="min-w-0 space-y-2">
-      <div className="flex items-center justify-between gap-2">
-        <p className="text-sm font-medium">{label}</p>
-        <span
-          className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${
-            selectedIds.length
-              ? 'bg-primary/10 text-primary'
-              : 'bg-muted text-muted-foreground'
-          }`}
-        >
-          {selectedIds.length} selected
-        </span>
-      </div>
-      <div className="max-h-48 space-y-1 overflow-y-auto rounded-lg border bg-muted/20 p-2">
-        {options.length ? (
-          options.map((option) => {
-            const isSelected = selectedIds.includes(option.id);
-            return (
-              <button
-                key={option.id}
-                type="button"
-                aria-pressed={isSelected}
-                onClick={() => onToggle(option.id)}
-                className={`flex min-h-11 w-full items-center gap-3 rounded-md border px-3 py-2 text-left text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
-                  isSelected
-                    ? 'border-primary bg-primary text-primary-foreground shadow-sm'
-                    : 'border-border bg-background text-foreground hover:border-primary/50 hover:bg-accent'
-                }`}
-              >
-                <span className="flex size-4 shrink-0 items-center justify-center">
-                  {isSelected && <Check className="size-4" aria-hidden="true" />}
-                </span>
-                <span className="min-w-0 flex-1 break-words">{option.label}</span>
-              </button>
-            );
-          })
-        ) : (
-          <p className="px-2 py-3 text-sm text-muted-foreground">
-            No options available.
-          </p>
-        )}
-      </div>
-      <p className="text-xs text-muted-foreground">{helperText}</p>
-    </div>
-  );
-}
-
-function toLocalDateTime(value: string | null | undefined) {
-  if (!value) return '';
-  const date = new Date(value);
+function toLocalDateTime(date: Date) {
   return new Date(date.getTime() - date.getTimezoneOffset() * 60_000)
     .toISOString()
     .slice(0, 16);
 }
 
-function toIsoDateTime(value: FormDataEntryValue | null) {
-  if (typeof value !== 'string' || !value) return null;
+function initialDateTime(value: string | null | undefined) {
+  return value ? toLocalDateTime(new Date(value)) : '';
+}
+
+function toIsoDateTime(value: string) {
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? null : date.toISOString();
+}
+
+function toggleId(ids: string[], id: string) {
+  return ids.includes(id) ? ids.filter((value) => value !== id) : [...ids, id];
+}
+
+function generateCouponCode() {
+  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const random = crypto.getRandomValues(new Uint8Array(4));
+  return 'NJET-' + Array.from(random, (byte) => alphabet[byte % alphabet.length]).join('');
 }
 
 export function ProductDiscountEditor({
@@ -109,26 +59,64 @@ export function ProductDiscountEditor({
 }) {
   const invalidateProducts = useInvalidateAdminProductsQuery();
   const [type, setType] = useState<DiscountType>(discount?.discount_type ?? 'percentage');
+  const [amount, setAmount] = useState(discount ? String(discount.value / 100) : '');
   const [variantIds, setVariantIds] = useState(
-    discount?.targets.flatMap((target) => target.product_variant_id ?? []) ?? []
+    discount?.targets.flatMap((target) => target.product_variant_id ?? []) ?? [],
   );
   const [categoryIds, setCategoryIds] = useState(
-    discount?.targets.flatMap((target) => target.product_category_id ?? []) ?? []
+    discount?.targets.flatMap((target) => target.product_category_id ?? []) ?? [],
   );
   const [couponCode, setCouponCode] = useState(discount?.coupon_code ?? '');
+  const [startsAt, setStartsAt] = useState(() => initialDateTime(discount?.starts_at));
+  const [endsAt, setEndsAt] = useState(() => initialDateTime(discount?.ends_at));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const percentage = type === 'percentage';
+  const value = parsePhpAmount(amount);
+  const validValue = value !== null && (percentage ? value >= 100 && value <= 10000 : value > 0);
+  const targetsVariants = variantIds.length > 0;
+  const startTime = toIsoDateTime(startsAt);
+  const endTime = toIsoDateTime(endsAt);
+  const invalidRange = Boolean(startTime && endTime && endTime < startTime);
+
+  const productsById = new Map(products.map(({ id, name }) => [id, name]));
+  const variantOptions = variants
+    .filter((variant) => variant.active || variantIds.includes(variant.id))
+    .map((variant) => ({
+      id: variant.id,
+      label: `${productsById.get(variant.product_id) ?? 'Product'} · ${variant.name} · ${variant.sku}`,
+    }));
+  const categoryOptions = categories.map(({ id, name }) => ({ id, label: name }));
+  const chosenIds = targetsVariants ? variantIds : categoryIds;
+  const chosenOptions = targetsVariants ? variantOptions : categoryOptions;
+  const targetLabel = chosenIds.length === 1
+    ? chosenOptions.find(({ id }) => id === chosenIds[0])?.label
+    : undefined;
+  const targetSummary = chosenIds.length
+    ? `Applies to ${targetLabel ?? (targetsVariants ? `${chosenIds.length} variant(s)` : `${chosenIds.length} categories`)}`
+    : 'Choose a target';
+  const valueSummary = validValue ? (percentage ? `${value / 100}% off` : `${formatPhp(value)} off`) : 'Enter a discount amount';
+
+  function setEndInDays(days: number) {
+    const end = startTime ? new Date(startTime) : new Date();
+    end.setDate(end.getDate() + days);
+    setEndsAt(toLocalDateTime(end));
+  }
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (busy) return;
-    setBusy(true);
     setError(null);
+    if (invalidRange || (startsAt && !startTime) || (endsAt && !endTime)) {
+      setError('Ends at must be on or after Starts at. Enter valid dates.');
+      return;
+    }
+    if (!validValue) {
+      setError(percentage ? 'Enter a percentage from 1 to 100.' : 'Enter a valid discount amount.');
+      return;
+    }
+    setBusy(true);
     const formData = new FormData(event.currentTarget);
-    const rawValue = String(formData.get('value') ?? '').trim();
-    const value = type === 'percentage'
-      ? Math.round(Number(rawValue) * 100)
-      : parsePhpAmount(rawValue);
     const limitInput = String(formData.get('maxRedemptions') ?? '').trim();
     const maxRedemptions = limitInput ? Number(limitInput) : null;
     try {
@@ -137,19 +125,20 @@ export function ProductDiscountEditor({
         name: formData.get('name'),
         discountType: type,
         value,
-        couponCode: formData.get('couponCode'),
-        startsAt: toIsoDateTime(formData.get('startsAt')),
-        endsAt: toIsoDateTime(formData.get('endsAt')),
-        maxRedemptions: Number.isInteger(maxRedemptions) ? maxRedemptions : null,
+        couponCode,
+        startsAt: startTime,
+        endsAt: endTime,
+        maxRedemptions,
         active: formData.get('active') === 'on',
-        targets: [
-          ...variantIds.map((productVariantId) => ({ productVariantId, productCategoryId: null })),
-          ...categoryIds.map((productCategoryId) => ({ productVariantId: null, productCategoryId })),
-        ],
+        targets: chosenIds.map((id) => ({
+          productVariantId: targetsVariants ? id : null,
+          productCategoryId: targetsVariants ? null : id,
+        })),
       });
       if (!result.success) {
-        setError(result.error);
-        toast.error(result.error);
+        const message = Object.values(result.fieldErrors ?? {}).flat()[0] ?? result.error;
+        setError(message);
+        toast.error(message);
         return;
       }
       toast.success(discount ? 'Discount updated.' : 'Discount created.');
@@ -164,10 +153,6 @@ export function ProductDiscountEditor({
     }
   };
 
-  const selectedProductByVariant = new Map(
-    products.map((product) => [product.id, product.name])
-  );
-
   return (
     <form className="space-y-4 rounded-lg border bg-background p-4" onSubmit={submit}>
       <Input label="Discount name" name="name" defaultValue={discount?.name ?? ''} maxLength={120} required />
@@ -177,33 +162,61 @@ export function ProductDiscountEditor({
           <option value="fixed">Fixed PHP amount</option>
         </Select>
         <Input
-          label={type === 'percentage' ? 'Percentage off' : 'PHP amount off'}
+          label={percentage ? 'Percentage off' : 'Discount amount (PHP)'}
           name="value"
           type="number"
-          min={type === 'percentage' ? '0.01' : '0.01'}
-          max={type === 'percentage' ? '100' : undefined}
-          step={type === 'percentage' ? '0.01' : '0.01'}
-          defaultValue={discount
-            ? type === 'percentage'
-              ? (discount.value / 100).toString()
-              : (discount.value / 100).toFixed(2)
-            : ''}
+          className="number-no-spinner"
+          min={percentage ? '1' : '0.01'}
+          max={percentage ? '100' : '21474836.47'}
+          step="0.01"
+          trailingIcon={percentage ? '%' : undefined}
+          leadingIcon={percentage ? undefined : '₱'}
+          value={amount}
+          onChange={(event) => setAmount(event.target.value)}
           required
         />
       </div>
-      <Input
-        label="Coupon code (leave blank for automatic discount)"
-        name="couponCode"
-        value={couponCode}
-        onChange={(event) => setCouponCode(event.target.value)}
-        maxLength={32}
-        autoCapitalize="characters"
-      />
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Input label="Starts at" name="startsAt" type="datetime-local" defaultValue={toLocalDateTime(discount?.starts_at)} />
-        <Input label="Ends at" name="endsAt" type="datetime-local" defaultValue={toLocalDateTime(discount?.ends_at)} />
+      <div>
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-end gap-2">
+          <Input
+            label="Coupon code"
+            name="couponCode"
+            value={couponCode}
+            onChange={(event) => setCouponCode(event.target.value.toUpperCase().replace(/\s/g, ''))}
+            className="font-mono uppercase"
+            maxLength={32}
+            autoCapitalize="characters"
+            spellCheck={false}
+          />
+          <Button type="button" variant="outline" className="min-h-11" onClick={() => setCouponCode(generateCouponCode())}>
+            Generate
+          </Button>
+        </div>
+        <p className="mt-1.5 text-xs text-muted-foreground">Leave blank for an automatic discount.</p>
       </div>
-      {couponCode.trim().length > 0 && (
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="min-w-0 space-y-2">
+          <Input label="Starts at" name="startsAt" type="datetime-local" value={startsAt}
+            onChange={(event) => setStartsAt(event.target.value)} />
+          <Button type="button" variant="outline" size="sm" className="rounded-full" onClick={() => setStartsAt(toLocalDateTime(new Date()))}>
+            Start now
+          </Button>
+        </div>
+        <div className="min-w-0 space-y-2">
+          <Input label="Ends at" name="endsAt" type="datetime-local" value={endsAt} min={startsAt || undefined}
+            onChange={(event) => setEndsAt(event.target.value)}
+            error={invalidRange ? 'Ends at must be on or after Starts at.' : undefined} />
+          <div className="flex flex-wrap gap-2">
+            <Button type="button" variant="outline" size="sm" className="rounded-full" onClick={() => setEndInDays(7)}>
+              +7 days
+            </Button>
+            <Button type="button" variant="outline" size="sm" className="rounded-full" onClick={() => setEndInDays(30)}>
+              +30 days
+            </Button>
+          </div>
+        </div>
+      </div>
+      {couponCode.length > 0 && (
         <Input
           label="Maximum coupon redemptions"
           name="maxRedemptions"
@@ -217,37 +230,22 @@ export function ProductDiscountEditor({
       <div className="grid gap-4 md:grid-cols-2">
         <DiscountTargetSelector
           label="Target variants"
-          helperText="Choose one or more variants, or leave empty to target categories."
-          options={variants
-            .filter((variant) => variant.active || variantIds.includes(variant.id))
-            .map((variant) => ({
-              id: variant.id,
-              label: `${selectedProductByVariant.get(variant.product_id) ?? 'Product'} · ${variant.name}`,
-            }))}
+          helperText="Choose one or more specific variants."
+          options={variantOptions}
           selectedIds={variantIds}
-          onToggle={(id) =>
-            setVariantIds((current) =>
-              current.includes(id)
-                ? current.filter((value) => value !== id)
-                : [...current, id],
-            )
-          }
+          onToggle={(id) => setVariantIds((current) => toggleId(current, id))}
+          onClear={() => setVariantIds([])}
         />
         <DiscountTargetSelector
           label="Target categories"
-          helperText="Select the categories this discount can apply to."
-          options={categories.map((category) => ({
-            id: category.id,
-            label: category.name,
-          }))}
+          helperText={targetsVariants
+            ? 'Specific variants selected. Clear variants to target whole categories instead.' +
+              (categoryIds.length ? ' Saving will exclude the selected categories.' : '')
+            : 'Select the categories this discount can apply to.'}
+          options={categoryOptions}
           selectedIds={categoryIds}
-          onToggle={(id) =>
-            setCategoryIds((current) =>
-              current.includes(id)
-                ? current.filter((value) => value !== id)
-                : [...current, id],
-            )
-          }
+          disabled={targetsVariants}
+          onToggle={(id) => setCategoryIds((current) => toggleId(current, id))}
         />
       </div>
       <label className="flex min-h-11 items-center gap-2 text-sm font-medium">
@@ -260,6 +258,9 @@ export function ProductDiscountEditor({
         Enable discount during its scheduled dates
       </label>
       {error && <p className="text-sm text-destructive" role="alert">{error}</p>}
+      <p className="w-fit rounded-lg bg-primary/10 px-3 py-2 text-sm font-medium text-primary">
+        {valueSummary} · {targetSummary} · {couponCode ? `Coupon required (${couponCode})` : 'Automatic discount'}
+      </p>
       <div className="flex flex-col-reverse justify-end gap-2 sm:flex-row">
         <Button type="button" variant="outline" onClick={onCancel} disabled={busy}>Cancel</Button>
         <Button type="submit" loading={busy}>Save discount</Button>

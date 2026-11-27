@@ -3,23 +3,41 @@
 import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { Select } from "@/components/ui/Select";
+import { SearchableSelect } from "@/components/ui/SearchableSelect";
 import type { ProductType } from "@/types/commerce-tables";
 import type { Dispatch, SetStateAction } from "react";
 
 export type ReceiptVariant = {
   id: string;
   name: string;
+  modelName: string;
   sku: string;
   productType: ProductType;
 };
+
+type ReceiptUnit = { serialNumber: string; motorNumber: string };
+
+const maxEbikeQuantity = 50;
+
+function ebikeQuantity(value: string) {
+  const quantity = Number(value);
+  return Number.isInteger(quantity) && quantity >= 1 && quantity <= maxEbikeQuantity
+    ? quantity
+    : 0;
+}
+
+function resizeUnits(units: ReceiptUnit[], quantity: number) {
+  return Array.from({ length: quantity }, (_, index) =>
+    units[index] ?? { serialNumber: "", motorNumber: "" },
+  );
+}
 
 export type ReceiptLine = {
   key: number;
   variantId: string;
   quantity: string;
   supplierUnitCost: string;
-  units: string;
+  units: ReceiptUnit[];
 };
 
 export function InventoryReceiptLines({
@@ -31,9 +49,9 @@ export function InventoryReceiptLines({
   lines: ReceiptLine[];
   setLines: Dispatch<SetStateAction<ReceiptLine[]>>;
 }) {
-  const updateLine = (key: number, patch: Partial<ReceiptLine>) => {
+  const updateLine = (key: number, patch: (line: ReceiptLine) => Partial<ReceiptLine>) => {
     setLines((current) =>
-      current.map((line) => (line.key === key ? { ...line, ...patch } : line)),
+      current.map((line) => (line.key === key ? { ...line, ...patch(line) } : line)),
     );
   };
 
@@ -57,7 +75,7 @@ export function InventoryReceiptLines({
                   )?.id ?? "",
                 quantity: "1",
                 supplierUnitCost: "",
-                units: "",
+                units: [],
               },
             ])
           }
@@ -68,6 +86,8 @@ export function InventoryReceiptLines({
       </div>
       {lines.map((line, index) => {
         const variant = variants.find((entry) => entry.id === line.variantId);
+        const isEbike = variant?.productType === "ebike";
+        const unitCount = isEbike ? ebikeQuantity(line.quantity) : 0;
         const usedVariantIds = lines
           .filter((entry) => entry.key !== line.key)
           .map((entry) => entry.variantId);
@@ -80,38 +100,41 @@ export function InventoryReceiptLines({
               Product {index + 1}
             </legend>
             <div className="grid gap-3 sm:grid-cols-3">
-              <Select
+              <SearchableSelect
                 label="Product variant"
+                placeholder="Type to search SKU, model, or color..."
+                emptyMessage="No matching variants."
                 value={line.variantId}
-                onValueChange={(value) =>
-                  updateLine(line.key, { variantId: value })
-                }
-                required
-              >
-                <option value="">Select a variant</option>
-                {variants
-                  .filter(
-                    (entry) =>
-                      !usedVariantIds.includes(entry.id) ||
-                      entry.id === line.variantId,
+                options={variants
+                  .filter((entry) => !usedVariantIds.includes(entry.id))
+                  .map((entry) => ({
+                    value: entry.id,
+                    label: `${entry.sku} · ${entry.modelName} · ${entry.name}`,
+                  }))}
+                onChange={(value) =>
+                  updateLine(line.key, (current) =>
+                    current.variantId === value ? {} : { variantId: value, units: [] },
                   )
-                  .map((entry) => (
-                    <option key={entry.id} value={entry.id}>
-                      {entry.sku} - {entry.name}
-                    </option>
-                  ))}
-              </Select>
+                }
+                browseOnFocus
+                required
+              />
               <Input
                 label="Quantity"
                 type="number"
                 min="1"
-                max={variant?.productType === "ebike" ? "50" : "1000000"}
+                max={isEbike ? maxEbikeQuantity : 1000000}
                 onWheel={(event) => event.currentTarget.blur()}
                 className="number-no-spinner"
                 value={line.quantity}
-                onChange={(event) =>
-                  updateLine(line.key, { quantity: event.target.value })
-                }
+                onChange={(event) => {
+                  const quantity = event.target.value;
+                  const count = isEbike ? ebikeQuantity(quantity) : 0;
+                  updateLine(line.key, (current) => ({
+                    quantity,
+                    units: count ? resizeUnits(current.units, count) : current.units,
+                  }));
+                }}
                 required
               />
               <Input
@@ -123,27 +146,41 @@ export function InventoryReceiptLines({
                 className="number-no-spinner"
                 value={line.supplierUnitCost}
                 onChange={(event) =>
-                  updateLine(line.key, {
+                  updateLine(line.key, () => ({
                     supplierUnitCost: event.target.value,
-                  })
+                  }))
                 }
                 required
               />
             </div>
-            {variant?.productType === "ebike" && (
-              <label className="block space-y-1 text-sm font-medium">
-                E-bike serial and motor numbers
-                <textarea
-                  className="min-h-28 w-full rounded-md border bg-background px-3 py-2 font-normal"
-                  value={line.units}
-                  onChange={(event) =>
-                    updateLine(line.key, { units: event.target.value })
-                  }
-                  placeholder="One unit per line: serial number, motor number"
-                  aria-label={`Serial and motor numbers for product ${index + 1}`}
-                  required
-                />
-              </label>
+            {unitCount > 0 && (
+              <div className="space-y-3">
+                {resizeUnits(line.units, unitCount).map((unit, unitIndex) => (
+                  <div key={unitIndex} className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    {(["serialNumber", "motorNumber"] as const).map((field) => {
+                      const label = field === "serialNumber" ? "Serial number" : "Motor number";
+                      return (
+                        <Input
+                          key={field}
+                          label={`Unit ${unitIndex + 1} ${label.toLowerCase()}`}
+                          placeholder={label}
+                          value={unit[field]}
+                          maxLength={100}
+                          required
+                          onChange={(event) => {
+                            const value = event.target.value;
+                            updateLine(line.key, (current) => ({
+                              units: resizeUnits(current.units, unitCount).map((entry, entryIndex) =>
+                                entryIndex === unitIndex ? { ...entry, [field]: value } : entry,
+                              ),
+                            }));
+                          }}
+                        />
+                      );
+                    })}
+                  </div>
+                ))}
+              </div>
             )}
             {lines.length > 1 && (
               <Button

@@ -20,8 +20,6 @@ const CUSTOMER_ORDER_REALTIME_TABLES: readonly RealtimeTable[] = [
   "order_items",
   "order_documents",
   "order_invoices",
-  "order_certificates",
-  "order_receipts",
 ];
 
 const statusFilters = [
