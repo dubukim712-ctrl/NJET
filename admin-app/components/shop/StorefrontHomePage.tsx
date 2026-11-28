@@ -89,7 +89,7 @@ export async function StorefrontHomePage({
                 id="storefront-hero-title"
                 className="mt-4 max-w-2xl text-4xl font-black leading-[0.98] tracking-tight sm:text-6xl"
               >
-                Ebikes for Daily Commute, School, Family &amp; Negosyo
+                Ebikes for Daily Commute, School, Family &amp; Business
               </h1>
               <p className="mt-5 max-w-md text-base leading-6 text-[#f4ede4] sm:text-lg sm:leading-7 md:max-w-lg">
                 Ride with comfort, save on fuel, and enjoy hassle-free travel
