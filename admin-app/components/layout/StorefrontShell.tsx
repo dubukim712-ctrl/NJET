@@ -42,7 +42,7 @@ export function StorefrontShell({
 }: StorefrontShellProps) {
   const pathname = usePathname();
   const activeLink = useStorefrontActiveLink(pathname);
-  const hasPanoramicHero = pathname === "/" || pathname === "/dashboard";
+  const hasPanoramicHero = pathname === "/";
   const [shopFiltersOpen, setShopFiltersOpen] = useState(false);
   const [shopFiltersPopoverRoot, setShopFiltersPopoverRoot] =
     useState<HTMLDivElement | null>(null);
@@ -105,7 +105,7 @@ export function StorefrontShell({
       >
         <div className="bg-[#264653] px-3 py-1.5 text-center text-[11px] leading-4 text-[#f4ede4] sm:text-xs">
           {displayUser ? (
-            <SmartLink href="/dashboard" className="underline-offset-2 hover:underline focus-visible:underline focus-visible:outline-white">
+            <SmartLink href="/orders" prefetch={true} className="underline-offset-2 hover:underline focus-visible:underline focus-visible:outline-white">
               <strong className="text-[#e0f2ef]">MEMBER PERKS:</strong> Track your orders, view receipts &amp; book a service checkup →
             </SmartLink>
           ) : (

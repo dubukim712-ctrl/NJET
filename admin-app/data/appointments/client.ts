@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { queryOptions, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   getCustomerServiceAppointmentBranchesAction,
   getCustomerServiceAppointmentsAction,
@@ -21,7 +21,11 @@ import type { ServiceAppointmentFilters } from '@/lib/validations/service-appoin
 export class ServiceAppointmentsQueryError extends Error {}
 
 export function useCustomerServiceAppointmentBranchesQuery(userId: string) {
-  return useQuery({
+  return useQuery(customerAppointmentBranchesOptions(userId));
+}
+
+export function customerAppointmentBranchesOptions(userId: string) {
+  return queryOptions({
     queryKey: [...customerServiceAppointmentsQueryKey, 'branches', userId],
     queryFn: async () => {
       const result = await getCustomerServiceAppointmentBranchesAction();
@@ -36,10 +40,14 @@ export function useCustomerServiceAppointmentBranchesQuery(userId: string) {
 }
 
 export function useCustomerServiceAppointmentsQuery(userId: string) {
-  return useQuery({
+  return useQuery(customerAppointmentsOptions(userId));
+}
+
+export function customerAppointmentsOptions(userId: string) {
+  return queryOptions({
     queryKey: [...customerServiceAppointmentsQueryKey, userId],
     queryFn: async () => {
-      const result = await getCustomerServiceAppointmentsAction();
+      const result = await getCustomerServiceAppointmentsAction(userId);
       if (!result.success) throw new ServiceAppointmentsQueryError(result.error);
       return result.data;
     },

@@ -3,7 +3,7 @@
 import { useCallback, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useAuth } from "@/components/auth/AuthProvider";
+import { useCustomerSessionId } from '@/components/dashboard/CustomerSession';
 import { Button } from "@/components/ui/Button";
 import { RealtimeStatus } from "@/components/realtime/RealtimeStatus";
 import {
@@ -30,9 +30,8 @@ const statusFilters = [
 ] as const;
 
 export function CustomerOrdersQuery() {
-  const { user } = useAuth();
   const [filter, setFilter] = useState<(typeof statusFilters)[number]["id"]>("all");
-  const userId = user?.id ?? "";
+  const userId = useCustomerSessionId();
   const placedOrderId = useSearchParams().get("placed") ?? undefined;
   const query = useCustomerOrdersQuery(userId);
   const invalidateOrders = useInvalidateCustomerOrdersQuery();
@@ -41,11 +40,11 @@ export function CustomerOrdersQuery() {
   }, [invalidateOrders]);
   const realtimeState = useRealtimeChanges(
     `customer-orders-${userId}`,
-    user ? CUSTOMER_ORDER_REALTIME_TABLES : [],
+    userId ? CUSTOMER_ORDER_REALTIME_TABLES : [],
     refreshOrders,
   );
 
-  if (!user) {
+  if (!userId) {
     return (
       <p
         className="rounded-lg border bg-card p-4 text-sm text-muted-foreground"
@@ -56,12 +55,30 @@ export function CustomerOrdersQuery() {
     );
   }
 
+  const filters = (
+    <div role="group" aria-label="Filter orders by status" className="flex max-w-full gap-2 overflow-x-auto overscroll-x-contain p-1">
+      {statusFilters.map(({ id, label }) => (
+        <Button
+          key={id}
+          type="button"
+          variant={filter === id ? "default" : "outline"}
+          aria-pressed={filter === id}
+          className="min-h-11 shrink-0 rounded-full"
+          onClick={() => setFilter(id)}
+        >
+          {label}
+        </Button>
+      ))}
+    </div>
+  );
+
   if (!query.data && query.isPending) {
     return (
       <div className="space-y-4">
         <div className="flex justify-end">
           <RealtimeStatus state={realtimeState} />
         </div>
+        {filters}
         <div role="status" aria-label="Loading orders" aria-busy="true">
           <div className="h-36 animate-pulse rounded-xl border bg-card" />
           <div className="mt-4 h-36 animate-pulse rounded-xl border bg-card" />
@@ -138,20 +155,7 @@ export function CustomerOrdersQuery() {
         </div>
       )}
 
-      <div role="group" aria-label="Filter orders by status" className="flex max-w-full gap-2 overflow-x-auto overscroll-x-contain p-1">
-        {statusFilters.map(({ id, label }) => (
-          <Button
-            key={id}
-            type="button"
-            variant={filter === id ? "default" : "outline"}
-            aria-pressed={filter === id}
-            className="min-h-11 shrink-0 rounded-full"
-            onClick={() => setFilter(id)}
-          >
-            {label}
-          </Button>
-        ))}
-      </div>
+      {filters}
       {visibleOrders.length ? (
         <ul className="space-y-4">
           {visibleOrders.map((order) => (

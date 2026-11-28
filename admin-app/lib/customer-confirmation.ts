@@ -3,7 +3,7 @@ export function orderConfirmationPath(orderId: string) {
 }
 
 export function appointmentConfirmationPath(appointmentId: string) {
-  return `/dashboard/appointments/submitted?appointmentId=${encodeURIComponent(appointmentId)}`;
+  return `/appointments/submitted?appointmentId=${encodeURIComponent(appointmentId)}`;
 }
 
 export function isPaymentProofDue(order: {

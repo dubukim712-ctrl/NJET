@@ -120,7 +120,7 @@ Routes are organized with App Router groups, which do not affect URLs:
 | `/` | Public |
 | `/login`, `/register`, `/forgot-password` | Public (redirects signed-in users) |
 | `/reset-password` | Requires a recovery session |
-| `/dashboard/*` | Storefront permission; customer role by default |
+| /appointments, /cart, /notifications, /orders, /profile, /settings, /checkout | Storefront permission; customer role by default |
 | `/admin/*` | Admin-panel permission; staff roles only |
 | `/no-access` | Signed-in users without access to their assigned surface |
 
@@ -142,8 +142,9 @@ The initial permission catalog is `admin.access`, `users.read`, `users.manage`,
 | Technician | `admin.access` |
 | Customer | `storefront.access` |
 
-Admins can preview the storefront at `/dashboard`. Customer roles cannot enter
-the admin panel; staff roles cannot enter the storefront unless explicitly
+The storefront homepage and help center are public. Legacy /dashboard links redirect permanently to their clean URLs.
+Customer roles cannot enter
+the admin panel; staff roles cannot access protected customer routes unless explicitly
 granted access. Future storefront features can add their own permissions.
 
 Roles are data, not code. Users with `roles.read` can view roles; users with

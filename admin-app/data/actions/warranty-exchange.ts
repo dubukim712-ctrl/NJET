@@ -52,6 +52,6 @@ export async function manageWarrantyExchangeAction(payload: unknown): Promise<Ac
       : toUserFriendlyError(error, 'Could not save the exchange. Check the current step, serial and branch stock.');
     return { success: false, error: message };
   }
-  revalidatePath('/dashboard/appointments/' + input.appointmentId);
+  revalidatePath('/appointments/' + input.appointmentId);
   return { success: true, data: undefined };
 }

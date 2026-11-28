@@ -172,7 +172,7 @@ export async function markOrderPhoneManuallyVerifiedAction(
     });
     if (error) throw error;
     revalidatePath('/admin/orders');
-    revalidatePath('/dashboard/orders');
+    revalidatePath('/orders');
     return { success: true, data: undefined };
   } catch (error) {
     console.error('Could not manually verify an order contact number.', error);

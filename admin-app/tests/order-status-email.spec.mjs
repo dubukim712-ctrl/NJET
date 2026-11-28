@@ -29,7 +29,7 @@ test('confirmed email shows reservation, pickup balance, and delivery details wh
   assert.match(pickup.htmlContent, /Balance due at the store: .*1,000\.00/);
   assert.match(pickup.htmlContent, /Order total: .*1,500\.00/);
   assert.match(pickup.htmlContent, /Sam &amp; Co/);
-  assert.match(pickup.htmlContent, /href="https:\/\/shop\.example\.test\/dashboard\/orders\/order-id"/);
+  assert.match(pickup.htmlContent, /href="https:\/\/shop\.example\.test\/orders\/order-id"/);
   const delivery = render('confirmed', { ...order, fulfillment: 'delivery', delivery_address: '27 Market Road' });
   assert.match(delivery.textContent, /Delivery: 27 Market Road/);
   assert.doesNotMatch(delivery.textContent, /Balance due at the store/);

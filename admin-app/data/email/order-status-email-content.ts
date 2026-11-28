@@ -58,7 +58,7 @@ export function buildOrderStatusEmail(
   siteOrigin: string,
 ) {
   const heading = headings[status];
-  const href = new URL('/dashboard/orders/' + encodeURIComponent(orderId), siteOrigin).href;
+  const href = new URL('/orders/' + encodeURIComponent(orderId), siteOrigin).href;
   const lines = [
     'Hi ' + (order.customer_name.trim() || 'Valued Customer') + ',',
     'Order ' + order.order_number,

@@ -6,7 +6,6 @@ export function CheckoutFormLayout({
   onSubmit,
   cartError,
   catalogError,
-  loadingCart,
   error,
   fields,
   summary,
@@ -14,7 +13,6 @@ export function CheckoutFormLayout({
   onSubmit: FormEventHandler<HTMLFormElement>;
   cartError: string | null;
   catalogError: string | null;
-  loadingCart: boolean;
   error: string | null;
   fields: ReactNode;
   summary: ReactNode;
@@ -27,9 +25,9 @@ export function CheckoutFormLayout({
             {cartError}
           </p>
         )}
-        {(catalogError || loadingCart) && (
+        {catalogError && (
           <p className="rounded-lg border bg-card p-4 text-sm text-muted-foreground" role="status">
-            {catalogError ?? 'Loading current product details...'}
+            {catalogError}
           </p>
         )}
         {error && (

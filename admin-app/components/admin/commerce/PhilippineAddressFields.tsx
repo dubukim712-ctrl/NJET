@@ -155,7 +155,7 @@ export function PhilippineAddressFields({
           value={cityCode}
           options={cities}
           disabled={disabled || !provinceCode || cityLoading || Boolean(cityError)}
-          helperText={cityLoading ? 'Loading cities and municipalities…' : 'Choose the city or municipality.'}
+          helperText={cityLoading ? 'Loading cities…' : 'Choose the city or municipality.'}
           emptyMessage="No matching city or municipality."
           required={required}
           onChange={selectedCity}

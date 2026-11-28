@@ -1,2 +1,2 @@
-export const serviceBookingPath = '/dashboard/appointments/new';
+export const serviceBookingPath = '/appointments/new';
 export const serviceSignInPath = `/login?redirect=${encodeURIComponent(serviceBookingPath)}`;

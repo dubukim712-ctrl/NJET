@@ -63,7 +63,7 @@ export function StorefrontServiceSection() {
         )}
         <div className="mt-5 flex flex-wrap w-full items-center gap-x-4 gap-y-2">
           <Link
-            href={canBook ? serviceBookingPath : serviceSignInPath}
+            href={canBook ? serviceBookingPath : serviceSignInPath} prefetch={true}
             className="inline-flex min-[320px]:max-[768px]:w-full min-h-11 min-[320px]:max-[768px]:justify-center items-center rounded-lg bg-primary-action px-4 text-sm font-semibold text-primary-foreground ring-1 ring-inset ring-white/40 hover:bg-primary-action-hover focus-visible:outline-white"
           >
             {canBook ? "Book a Service Checkup" : "Sign in to Book a Service"}

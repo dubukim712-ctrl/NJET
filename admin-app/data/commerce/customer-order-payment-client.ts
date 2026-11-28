@@ -13,7 +13,7 @@ export function useCustomerOrderPaymentQuery(userId: string, orderId: string) {
   return useQuery({
     queryKey: [...customerOrderPaymentQueryKey, userId, orderId],
     queryFn: async () => {
-      const result = await getCustomerOrderPaymentAction(orderId);
+      const result = await getCustomerOrderPaymentAction(orderId, userId);
       if (!result.success) {
         throw new CustomerOrderPaymentQueryError(result.error);
       }

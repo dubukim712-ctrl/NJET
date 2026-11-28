@@ -134,7 +134,7 @@ export async function getCartVariants(
   }
 }
 
-export function useCartVariantsQuery(variantIds: string[]) {
+export function useCartVariantsQuery(variantIds: string[], refreshOnMount = false) {
   const { user } = useAuth();
   const ids = [...new Set(variantIds)].sort();
 
@@ -146,6 +146,7 @@ export function useCartVariantsQuery(variantIds: string[]) {
       return result.data;
     },
     enabled: ids.length > 0,
+    refetchOnMount: refreshOnMount ? 'always' : true,
     staleTime: 15_000,
     gcTime: 15 * 60_000,
   });

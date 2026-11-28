@@ -53,7 +53,7 @@ export async function saveOrderInvoiceAction(
       };
     }
     revalidatePath('/admin/orders');
-    revalidatePath('/dashboard/orders');
+    revalidatePath('/orders');
     return { success: true, data: undefined };
   } catch (error) {
     console.error('Could not save the invoice number.', error);

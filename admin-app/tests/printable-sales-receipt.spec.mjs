@@ -84,7 +84,7 @@ test('receipt assembles per-item serials, promo labels, totals, and finance deta
     return require(name);
   }, compiled, compiled.exports);
   const html = renderToStaticMarkup(createElement(compiled.exports.PrintableSalesReceipt, {
-    receipt, logoUrl: null, backHref: '/dashboard/orders/example',
+    receipt, logoUrl: null, backHref: '/orders/example',
   }));
   assert.match(html, /<h1[^>]*>Sales Receipt<\/h1>/);
   assert.match(html, /Serial Number SN-1[^<]*Motor Number M-1/);

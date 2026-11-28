@@ -8,7 +8,7 @@ import {
 
 test('confirmation URLs encode IDs and keep separate confirmation routes', () => {
   assert.equal(orderConfirmationPath('order&other=1'), '/checkout/success?orderId=order%26other%3D1');
-  assert.equal(appointmentConfirmationPath('appointment/1'), '/dashboard/appointments/submitted?appointmentId=appointment%2F1');
+  assert.equal(appointmentConfirmationPath('appointment/1'), '/appointments/submitted?appointmentId=appointment%2F1');
 });
 
 test('payment proof is actionable only while an online payment or downpayment is outstanding', () => {

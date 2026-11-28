@@ -1,6 +1,6 @@
 'use client';
 
-import { SmartLink } from "@/components/ui/SmartLink";
+import { CustomerOrderLink } from "@/components/dashboard/CustomerOrderLink";
 import { ArrowRight, Package } from 'lucide-react';
 import { OrderStatusBadge } from '@/components/commerce/OrderStatusBadge';
 import { ProductPrice } from '@/components/shop/ProductPrice';
@@ -45,9 +45,9 @@ export function CustomerOrderCard({
           </span>
           <div>
             {needsPayment ? (
-              <SmartLink href={`/dashboard/orders/${order.id}`} className="inline-flex min-h-11 items-center font-semibold text-primary hover:underline">
+              <CustomerOrderLink orderId={order.id} className="inline-flex min-h-11 items-center font-semibold text-primary hover:underline">
                 {order.order_number}
-              </SmartLink>
+              </CustomerOrderLink>
             ) : (
               <h2 className="font-semibold">{order.order_number}</h2>
             )}
@@ -59,12 +59,12 @@ export function CustomerOrderCard({
         <div className="flex items-center gap-2">
           <OrderStatusBadge status={order.status} />
           {needsPayment && (
-            <SmartLink
-              href={`/dashboard/orders/${order.id}`}
+            <CustomerOrderLink
+              orderId={order.id}
               className="inline-flex min-h-11 items-center rounded-md border px-3 text-sm font-medium hover:bg-accent"
             >
               {order.status === 'awaiting_payment' ? 'Complete payment' : 'View payment'}
-            </SmartLink>
+            </CustomerOrderLink>
           )}
         </div>
       </div>
@@ -149,10 +149,10 @@ export function CustomerOrderCard({
                 <span className="text-muted-foreground">Invoice number:</span> {order.invoiceNo}
               </p>
             )}
-            <SmartLink href={`/dashboard/orders/${order.id}/receipt`} prefetch={false}
+            <CustomerOrderLink orderId={order.id} receipt
               className="inline-flex min-h-11 items-center rounded-md border px-3 text-sm font-medium hover:bg-accent">
               View / Print Receipt
-            </SmartLink>
+            </CustomerOrderLink>
             {reviewItems.length > 0 && (
               <CustomerOrderReviewActions
                 orderId={order.id}
@@ -164,13 +164,13 @@ export function CustomerOrderCard({
       )}
       {showDetailsLink && (
         <div className="mt-3 flex justify-end">
-          <SmartLink
-            href={`/dashboard/orders/${order.id}`}
+          <CustomerOrderLink
+            orderId={order.id}
             className="inline-flex min-h-11 items-center gap-2 rounded-md px-2 text-sm font-semibold text-primary hover:underline focus-visible:outline-2 focus-visible:outline-ring"
             aria-label={`View details for order ${order.order_number}`}
           >
             View details <ArrowRight className="size-4" aria-hidden="true" />
-          </SmartLink>
+          </CustomerOrderLink>
         </div>
       )}
     </li>

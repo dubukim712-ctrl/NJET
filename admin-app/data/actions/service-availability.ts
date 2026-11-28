@@ -35,7 +35,7 @@ export type CustomerServiceAvailability = {
 export async function getCustomerServiceAppointmentSlotsAction(
   payload: unknown
 ): Promise<ActionResult<CustomerServiceAppointmentSlots>> {
-  const { supabase } = await requireCustomer('/dashboard/appointments/new');
+  const { supabase } = await requireCustomer('/appointments/new');
   const parsed = serviceAppointmentSlotsSchema.safeParse(payload);
   if (!parsed.success) {
     return { success: false, error: 'Choose a valid branch and service date.' };
@@ -117,7 +117,7 @@ export async function getStaffServiceAppointmentSlotsAction(
 export async function getCustomerServiceAppointmentAvailabilityAction(
   payload: unknown
 ): Promise<ActionResult<CustomerServiceAvailability>> {
-  const { supabase } = await requireCustomer('/dashboard/appointments/new');
+  const { supabase } = await requireCustomer('/appointments/new');
   const parsed = customerServiceAvailabilitySchema.safeParse(payload);
   if (!parsed.success) {
     return { success: false, error: 'Choose a valid branch and 30-minute time slot.' };
@@ -196,6 +196,6 @@ export async function saveBranchServiceHoursAction(
   }
 
   revalidatePath('/admin/settings');
-  revalidatePath('/dashboard/appointments/new');
+  revalidatePath('/appointments/new');
   return { success: true, data: undefined };
 }

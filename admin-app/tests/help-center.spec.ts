@@ -12,7 +12,7 @@ async function checkHelpCenter(page: Page, path: string) {
     await expect(page).toHaveURL(new RegExp(`${path}$`));
     await expect(page.getByRole('heading', { name: 'Help Center', level: 1 })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Open live support chat' })).toHaveAttribute('href', '/chat');
-    await expect(page.getByRole('link', { name: 'View my orders' })).toHaveAttribute('href', '/dashboard/orders');
+    await expect(page.getByRole('link', { name: 'View my orders' })).toHaveAttribute('href', '/orders');
 
     const search = page.getByRole('searchbox', { name: 'Search help guides' });
     await search.fill('recovery code');
@@ -48,5 +48,5 @@ test('customer dashboard Help Center is searchable', async ({ page }) => {
   const credentials = e2eCredentials('USER');
   test.skip(!credentials, 'E2E_USER credentials are required for the dashboard Help Center');
   await logIn(page, credentials!);
-  await checkHelpCenter(page, '/dashboard/help');
+  await checkHelpCenter(page, '/help');
 });

@@ -143,8 +143,8 @@ export function StorefrontFooter({
             <nav aria-label="Customer account and help" className={links}>
               {canBook ? (
                 <>
-                  <SmartLink href="/dashboard">My dashboard</SmartLink>
-                  <SmartLink href="/dashboard/orders">
+                  <SmartLink href="/profile">My profile</SmartLink>
+                  <SmartLink href="/orders" prefetch={true}>
                     My orders
                   </SmartLink>
                 </>
@@ -154,7 +154,7 @@ export function StorefrontFooter({
                   <SmartLink href="/register">Join us</SmartLink>
                 </>
               )}
-              <SmartLink href={canBook ? serviceBookingPath : serviceSignInPath}>
+              <SmartLink href={canBook ? serviceBookingPath : serviceSignInPath} prefetch={true}>
                 Book a Service
               </SmartLink>
               <SmartLink href="/help">Help Center</SmartLink>

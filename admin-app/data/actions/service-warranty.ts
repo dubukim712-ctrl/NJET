@@ -32,7 +32,7 @@ export async function recordWarrantyHandoverAction(input: unknown): Promise<Acti
     p_order_id: orderId, p_unit_id: unitId, p_handover_on: handoverOn, p_wheel_count: Number(wheelCount),
   });
   if (error) return failure(error, 'Could not record the handover. Check the date and whether it was already recorded.');
-  revalidatePath('/dashboard/appointments/new');
+  revalidatePath('/appointments/new');
   return { success: true, data: undefined };
 }
 
@@ -68,7 +68,7 @@ export async function saveStaffWarrantyAction(input: unknown): Promise<ActionRes
     }[value.kind];
     return failure(result.error, message);
   }
-  revalidatePath('/dashboard/appointments/' + value.appointmentId);
+  revalidatePath('/appointments/' + value.appointmentId);
   return { success: true, data: undefined };
 }
 
@@ -77,6 +77,6 @@ export async function startStaffWarrantyReviewAction(appointmentId: string): Pro
   if (!z.uuid().safeParse(appointmentId).success) return { success: false, error: 'Choose a valid appointment.' };
   const { error } = await supabase.rpc('start_service_warranty_review', { p_appointment_id: appointmentId });
   if (error) return failure(error, 'Could not start warranty review. Check the appointment status and branch access.');
-  revalidatePath('/dashboard/appointments/' + appointmentId);
+  revalidatePath('/appointments/' + appointmentId);
   return { success: true, data: undefined };
 }

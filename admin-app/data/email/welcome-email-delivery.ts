@@ -11,7 +11,7 @@ export function buildWelcomeEmail(
   const htmlName = escapeEmailHtml(name);
   const links = [
     ['Browse e-bikes', '/shop'],
-    ['Book a service appointment', '/dashboard/appointments/new'],
+    ['Book a service appointment', '/appointments/new'],
     ['Get help', '/help'],
   ].map(([label, path]) => ({ label, href: new URL(path, siteOrigin).href }));
 

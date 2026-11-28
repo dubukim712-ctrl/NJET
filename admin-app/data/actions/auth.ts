@@ -6,7 +6,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/data/supabase/server";
 import { queueWelcomeEmail } from "@/data/email/welcome-email";
 import { getSiteUrl } from "@/lib/site-url";
-import { surfaceHome } from "@/lib/permissions";
+import { signInDestination } from "@/lib/permissions";
 import {
   loginSchema,
   registerSchema,
@@ -65,37 +65,7 @@ export async function loginAction(
       .eq("id", data.user.id)
       .single();
 
-    const home = surfaceHome(profile);
-    const requested = formData.get("redirectTo");
-    const safeRequested =
-      typeof requested === "string" &&
-      requested.startsWith("/") &&
-      !requested.startsWith("//") &&
-      !requested.startsWith("/\\")
-        ? requested
-        : null;
-
-    let redirectTo = home;
-
-    if (safeRequested) {
-      if (
-        home === "/admin" &&
-        (safeRequested.startsWith("/admin") ||
-          safeRequested.startsWith("/dashboard"))
-      ) {
-        redirectTo = safeRequested;
-      } else if (
-        (home === "/" || home === "/dashboard") &&
-        (safeRequested.startsWith("/dashboard") ||
-          safeRequested.startsWith("/checkout"))
-      ) {
-        redirectTo = safeRequested;
-      }
-    }
-
-    if (home === "/no-access") {
-      redirectTo = "/no-access";
-    }
+    const redirectTo = signInDestination(profile, formData.get("redirectTo"));
 
     const assurance = await supabase.auth.mfa.getAuthenticatorAssuranceLevel(data.session.access_token);
     if (assurance.error) {

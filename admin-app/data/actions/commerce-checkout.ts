@@ -131,7 +131,7 @@ export async function createCommerceOrderAction(
     }
   }
 
-  revalidatePath('/dashboard/orders');
+  revalidatePath('/orders');
   revalidatePath('/admin/orders');
   return { success: true, data: { orderId } };
 }
@@ -139,7 +139,7 @@ export async function createCommerceOrderAction(
 export async function submitOrderPaymentProofAction(
   payload: unknown
 ): Promise<ActionResult<{ orderId: string; warning: string | null }>> {
-  const { supabase } = await requireCustomer('/dashboard/orders');
+  const { supabase } = await requireCustomer('/orders');
   const validation = paymentProofSubmissionSchema.safeParse(payload);
   if (!validation.success) {
     return { success: false, error: 'Choose a valid payment proof and order.' };
@@ -190,8 +190,8 @@ export async function submitOrderPaymentProofAction(
   }
   if (result.expired) {
     const cleanupSucceeded = await removeUnlinkedDocuments(supabase, [objectPath]);
-    revalidatePath('/dashboard/orders');
-    revalidatePath(`/dashboard/orders/${orderId}`);
+    revalidatePath('/orders');
+    revalidatePath(`/orders/${orderId}`);
     return {
       success: false,
       error: cleanupSucceeded
@@ -207,8 +207,8 @@ export async function submitOrderPaymentProofAction(
       warning = 'The new proof was saved, but an older private file could not be removed.';
     }
   }
-  revalidatePath('/dashboard/orders');
-  revalidatePath(`/dashboard/orders/${orderId}`);
+  revalidatePath('/orders');
+  revalidatePath(`/orders/${orderId}`);
   revalidatePath('/admin/orders');
   return { success: true, data: { orderId, warning } };
 }

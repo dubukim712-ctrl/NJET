@@ -2,10 +2,12 @@
 
 import { formatAppointmentBikeName } from '@/lib/appointment-bike-name';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { SmartLink } from "@/components/ui/SmartLink";
 import { ArrowRight, CalendarDays } from 'lucide-react';
-import { useAuth } from '@/components/auth/AuthProvider';
+import { useCustomerSessionId } from '@/components/dashboard/CustomerSession';
+import { useQueryClient } from '@tanstack/react-query';
+import { appointmentFormOptions } from '@/data/appointments/customer-views-client';
 import { ServiceAppointmentStatusBadge } from '@/components/appointments/ServiceAppointmentStatusBadge';
 import { CustomerCancellationRequestForm } from '@/components/dashboard/CustomerCancellationRequestForm';
 import { CustomerServiceAppointmentsSkeleton } from '@/components/dashboard/CustomerServiceAppointmentsSkeleton';
@@ -13,7 +15,7 @@ import { RealtimeStatus } from '@/components/realtime/RealtimeStatus';
 import { Button } from '@/components/ui/Button';
 import {
   ServiceAppointmentsQueryError,
-  useCustomerServiceAppointmentsQuery,
+  useCustomerServiceAppointmentsQuery, customerAppointmentBranchesOptions,
   useInvalidateServiceAppointmentsQuery,
 } from '@/data/appointments/client';
 import { useCustomerServiceAppointmentsRealtime } from '@/components/realtime/useCustomerServiceAppointmentsRealtime';
@@ -162,17 +164,22 @@ export function CustomerAppointmentCard({ appointment, defaultExpanded = false }
 }
 
 export function CustomerServiceAppointments() {
-  const { user } = useAuth();
+  const client = useQueryClient();
   const [filter, setFilter] = useState<(typeof appointmentFilters)[number]['id']>('all');
-  const userId = user?.id ?? '';
+  const userId = useCustomerSessionId();
   const query = useCustomerServiceAppointmentsQuery(userId);
+  useEffect(() => {
+    if (!userId) return;
+    void client.prefetchQuery(appointmentFormOptions(userId));
+    void client.prefetchQuery(customerAppointmentBranchesOptions(userId));
+  }, [client, userId]);
   const invalidateAppointments = useInvalidateServiceAppointmentsQuery();
   const refreshAppointments = useCallback(() => {
     void invalidateAppointments();
   }, [invalidateAppointments]);
   const realtimeState = useCustomerServiceAppointmentsRealtime(userId, refreshAppointments);
 
-  if (!user) {
+  if (!userId) {
     return (
       <p className="rounded-lg border bg-card p-4 text-sm text-muted-foreground" role="alert">
         Your session has ended. Sign in to view your appointments.
@@ -180,8 +187,25 @@ export function CustomerServiceAppointments() {
     );
   }
 
+  const filters = (
+    <div role="group" aria-label="Filter appointments by status" className="flex max-w-full gap-2 overflow-x-auto overscroll-x-contain p-1">
+      {appointmentFilters.map(({ id, label }) => (
+        <Button
+          key={id}
+          type="button"
+          variant={filter === id ? 'default' : 'outline'}
+          aria-pressed={filter === id}
+          className="min-h-11 shrink-0 rounded-full"
+          onClick={() => setFilter(id)}
+        >
+          {label}
+        </Button>
+      ))}
+    </div>
+  );
+
   if (!query.data && query.isPending) {
-    return <CustomerServiceAppointmentsSkeleton realtimeState={realtimeState} />;
+    return <div className="space-y-4">{filters}<CustomerServiceAppointmentsSkeleton realtimeState={realtimeState} /></div>;
   }
   if (!query.data) {
     return (
@@ -214,20 +238,7 @@ export function CustomerServiceAppointments() {
           <Button type="button" variant="outline" onClick={() => { void query.refetch(); }}>Try again</Button>
         </div>
       )}
-      <div role="group" aria-label="Filter appointments by status" className="flex max-w-full gap-2 overflow-x-auto overscroll-x-contain p-1">
-        {appointmentFilters.map(({ id, label }) => (
-          <Button
-            key={id}
-            type="button"
-            variant={filter === id ? 'default' : 'outline'}
-            aria-pressed={filter === id}
-            className="min-h-11 shrink-0 rounded-full"
-            onClick={() => setFilter(id)}
-          >
-            {label}
-          </Button>
-        ))}
-      </div>
+      {filters}
       {visibleAppointments.length ? (
         <ul className="space-y-4">
           {visibleAppointments.map((appointment) => <CustomerAppointmentCard key={appointment.id} appointment={appointment} />)}
@@ -241,7 +252,7 @@ export function CustomerServiceAppointments() {
           <CalendarDays className="mx-auto h-8 w-8 text-primary" aria-hidden="true" />
           <h2 className="mt-3 font-semibold">No service appointments yet</h2>
           <p className="mt-2 text-sm text-muted-foreground">Book a branch visit or request service at home.</p>
-          <Button asChild className="mt-4"><SmartLink href="/dashboard/appointments/new">Book service</SmartLink></Button>
+          <Button asChild className="mt-4"><SmartLink href="/appointments/new" prefetch={true}>Book service</SmartLink></Button>
         </section>
       )}
     </div>

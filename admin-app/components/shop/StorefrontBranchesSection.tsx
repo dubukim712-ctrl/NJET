@@ -135,7 +135,7 @@ export function StorefrontBranchesSection({
                   asChild
                   className="col-span-2 min-h-11 w-full whitespace-normal"
                 >
-                  <Link href={canBook ? serviceBookingPath : serviceSignInPath}>
+                  <Link href={canBook ? serviceBookingPath : serviceSignInPath} prefetch={true}>
                     {canBook ? "Book a Service" : "Sign in to Book Service"}
                   </Link>
                 </Button>

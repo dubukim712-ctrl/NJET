@@ -1,4 +1,4 @@
-﻿import assert from 'node:assert/strict';
+import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 import { PGlite } from '@electric-sql/pglite';
@@ -30,7 +30,7 @@ test('schedule emails include the Philippine time slot, branch, service and bike
   assert.match(confirmed.textContent, /Avia Cruiser/);
   assert.match(confirmed.textContent, /SN-42/);
   assert.match(confirmed.htmlContent, /Sam &amp; Co/);
-  assert.match(confirmed.htmlContent, /href="https:\/\/shop\.example\.test\/dashboard\/appointments\/appointment-id"/);
+  assert.match(confirmed.htmlContent, /href="https:\/\/shop\.example\.test\/appointments\/appointment-id"/);
   const moved = render('rescheduled', { ...details, service_mode: 'home_service' });
   assert.match(moved.subject, /rescheduled/);
   assert.match(moved.textContent, /Home service/);

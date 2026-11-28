@@ -95,7 +95,6 @@ export async function saveBusinessSettingsAction(
       : undefined;
 
     revalidatePath('/admin/settings');
-    revalidatePath('/dashboard');
     revalidatePath('/');
     revalidatePath('/shop');
     revalidatePath('/checkout');

@@ -71,15 +71,13 @@ export function CheckoutOrderSummary({
                 alt={item.variant ? `${item.variant.productName} - ${item.variant.name}` : 'Unavailable item'}
                 className="size-12 shrink-0 rounded-md aspect-square"
               />
-              <div className="min-w-0 flex-1">
-                <p className="break-words font-medium leading-5">
+              <div className="min-h-14 min-w-0 flex-1">
+                <p className="min-h-5 break-words font-medium leading-5">
                   {item.variant?.productName ?? 'Unavailable item'}
                 </p>
-                {item.variant?.name && (
-                  <p className="mt-0.5 break-words text-xs text-muted-foreground">
-                    {item.variant.name}
-                  </p>
-                )}
+                <p className="mt-0.5 min-h-4 break-words text-xs text-muted-foreground">
+                  {item.variant?.name}
+                </p>
                 <p className="mt-1 text-xs text-muted-foreground">Qty {item.quantity}</p>
               </div>
             </div>
@@ -157,7 +155,7 @@ export function CheckoutOrderSummary({
           <p>{submissionError.message}</p>
           {submissionError.nextStep && (
             <Link
-              href={submissionError.nextStep === 'order-history' ? '/dashboard/orders' : '/login?redirect=%2Fcheckout'}
+              href={submissionError.nextStep === 'order-history' ? '/orders' : '/login?redirect=%2Fcheckout'}
               className="inline-flex min-h-11 items-center font-medium underline underline-offset-4"
             >
               {submissionError.nextStep === 'order-history' ? 'View order history' : 'Sign in to continue'}

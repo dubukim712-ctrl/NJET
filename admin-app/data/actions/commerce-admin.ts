@@ -32,7 +32,7 @@ async function updateCommerceOrderStatus(
     if (error) return failure(error, 'Could not update the order status.');
     queueOrderStatusEmail(parsed.data.orderId, rpc === 'confirm_commerce_order' ? 'confirmed' : 'cancelled');
     revalidatePath('/admin/orders');
-    revalidatePath('/dashboard/orders');
+    revalidatePath('/orders');
     return { success: true, data: undefined };
   } catch (error) {
     return failure(error, 'Could not update the order status.');
@@ -70,7 +70,7 @@ export async function completeHomeCreditCommerceOrderAction(
     if (error) return failure(error, 'Could not complete the Home Credit order.');
     queueOrderStatusEmail(parsed.data.orderId, 'completed');
     revalidatePath('/admin/orders');
-    revalidatePath('/dashboard/orders');
+    revalidatePath('/orders');
     return { success: true, data: undefined };
   } catch (error) {
     return failure(error, 'Could not complete the Home Credit order.');

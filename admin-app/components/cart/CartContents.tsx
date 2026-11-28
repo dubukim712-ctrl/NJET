@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useQueryClient } from "@tanstack/react-query";
+import { checkoutOptions } from "@/data/commerce/checkout-options-client";
 import { toast } from "sonner";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { useCart } from "@/components/cart/CartProvider";
@@ -21,6 +23,14 @@ export function CartContents({
 }) {
   const { user } = useAuth();
   const { items, error: cartError, setQuantity, removeItem } = useCart();
+  const client = useQueryClient();
+  const customerId = user && hasPermission(user, PERMISSIONS.storefrontAccess) ? user.id : null;
+  const hasItems = items.length > 0;
+
+  useEffect(() => {
+    if (customerId && hasItems) void client.prefetchQuery(checkoutOptions(customerId));
+  }, [client, customerId, hasItems]);
+
   const [checkoutNotice, setCheckoutNotice] = useState<
     "sign-in" | "access" | null
   >(null);
@@ -160,6 +170,7 @@ export function CartContents({
               <Button asChild className="mt-3 min-h-11 w-full whitespace-normal">
                 <Link
                   href="/checkout"
+                  prefetch={Boolean(customerId)}
                   onClick={(event) => {
                     if (!user) {
                       event.preventDefault();

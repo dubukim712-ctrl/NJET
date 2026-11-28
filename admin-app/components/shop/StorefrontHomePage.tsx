@@ -113,7 +113,7 @@ export async function StorefrontHomePage({
                   size={null}
                   className="min-h-11 gap-1 rounded-lg text-xs sm:text-sm border-white/40 bg-transparent px-4 font-semibold text-white hover:bg-white/10 hover:text-white"
                 >
-                  <SmartLink href="/dashboard/appointments/new">
+                  <SmartLink href="/appointments/new" prefetch={true}>
                     Book a Service{" "}
                     <ArrowRight className="size-4" aria-hidden="true" />
                   </SmartLink>

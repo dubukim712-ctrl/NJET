@@ -16,6 +16,7 @@ import type { UserProfile } from '@/types/database';
 
 interface AuthContextType {
   user: UserProfile | null;
+  sessionResolved: boolean;
   signOut: () => Promise<void>;
   refreshUser: () => Promise<void>;
 }
@@ -47,6 +48,7 @@ export function AuthProvider({
   initialUser: UserProfile | null;
 }) {
   const router = useRouter();
+  const [sessionResolved, setSessionResolved] = useState(Boolean(initialUser));
   const [user, setUser] = useState<UserProfile | null>(initialUser);
   const accessAssignment = useRef<Pick<UserProfile, 'id' | 'role_id' | 'branch_id'> | null>(
     initialUser
@@ -69,13 +71,17 @@ export function AuthProvider({
       const version = ++loadVersion;
       if (profileLoad) clearTimeout(profileLoad);
       if (!session) {
+        setSessionResolved(true);
         setUser(null);
         return;
       }
       // Defer Supabase calls until the auth callback has released its lock.
       profileLoad = setTimeout(() => {
         void loadProfile().then((profile) => {
-          if (version === loadVersion) setUser(profile);
+          if (version === loadVersion) {
+            setUser(profile);
+            setSessionResolved(true);
+          }
         }).catch(() => {});
       }, 0);
     });
@@ -221,6 +227,7 @@ export function AuthProvider({
     <AuthContext.Provider
       value={{
         user,
+        sessionResolved,
         signOut,
         refreshUser,
       }}

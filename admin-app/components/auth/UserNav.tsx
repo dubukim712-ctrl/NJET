@@ -103,13 +103,13 @@ export function UserNav({ user, showHelp = false }: UserNavProps) {
             {showHelp && displayUser.scope === "customer" && (
               <>
                 <DropdownMenuItem asChild>
-                  <SmartLink href="/dashboard/orders" className="flex items-center gap-2">
+                  <SmartLink href="/orders" prefetch={true} className="flex items-center gap-2">
                     <Package className="size-4" aria-hidden="true" />
                     My orders
                   </SmartLink>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <SmartLink href="/dashboard/appointments" className="flex items-center gap-2">
+                  <SmartLink href="/appointments" prefetch={true} className="flex items-center gap-2">
                     <CalendarDays className="size-4" aria-hidden="true" />
                     Service history
                   </SmartLink>
@@ -118,14 +118,14 @@ export function UserNav({ user, showHelp = false }: UserNavProps) {
             )}
             {showHelp && (
               <DropdownMenuItem asChild>
-                <SmartLink href="/dashboard/help" className="flex items-center gap-2">
+                <SmartLink href="/help" className="flex items-center gap-2">
                   <CircleHelp className="h-4 w-4" aria-hidden="true" />
                   Help
                 </SmartLink>
               </DropdownMenuItem>
             )}
             <DropdownMenuItem asChild>
-              <SmartLink href="/dashboard/settings" className="flex items-center gap-2">
+              <SmartLink href="/settings" className="flex items-center gap-2">
                 <Settings className="h-4 w-4" aria-hidden="true" />
                 Settings
               </SmartLink>
@@ -135,7 +135,7 @@ export function UserNav({ user, showHelp = false }: UserNavProps) {
         {(canUseAdmin || canUseStorefront) && (
           <DropdownMenuItem asChild>
             <SmartLink
-              href={canUseAdmin ? "/admin/profile" : "/dashboard/profile"}
+              href={canUseAdmin ? "/admin/profile" : "/profile"}
               className="flex items-center gap-2"
             >
               <User className="h-4 w-4" aria-hidden="true" />

@@ -17,7 +17,7 @@ test('disposable release warranty lifecycle and access boundaries', async ({ bro
   const customerId = process.env.E2E_RELEASE_CUSTOMER_ID;
   const appointments = '/admin/appointments?q=SVC-CI-RELEASE';
   const crm = '/admin/crm/' + customerId;
-  const details = '/dashboard/appointments/' + appointmentId;
+  const details = '/appointments/' + appointmentId;
   const downloadPath = details + '/exchange-record';
 
   const wrongBranch = await signedIn(browser, baseURL, 'WRONG_STAFF');

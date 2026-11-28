@@ -9,10 +9,10 @@ import {
 import { customerOrderIdSchema } from '@/lib/validations/commerce';
 
 export async function getCustomerOrderPaymentAction(
-  orderId: string
-): Promise<ActionResult<CustomerOrderPayment>> {
-  const { supabase } = await requireCustomer('/dashboard/orders');
-  if (!customerOrderIdSchema.safeParse(orderId).success) {
+  orderId: string, customerId: string
+): Promise<ActionResult<{ details: CustomerOrderPayment; serverNow: number }>> {
+  const { supabase, user } = await requireCustomer('/orders');
+  if (user.id !== customerId || !customerOrderIdSchema.safeParse(orderId).success) {
     return { success: false, error: 'This payment-required order could not be found.' };
   }
 
@@ -24,5 +24,5 @@ export async function getCustomerOrderPaymentAction(
     };
   }
 
-  return { success: true, data: result.data };
+  return { success: true, data: { details: result.data, serverNow: Date.now() } };
 }
