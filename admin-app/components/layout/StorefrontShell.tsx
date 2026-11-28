@@ -105,12 +105,18 @@ export function StorefrontShell({
       >
         <div className="bg-[#264653] px-3 py-1.5 text-center text-[11px] leading-4 text-[#f4ede4] sm:text-xs">
           {displayUser ? (
-            <SmartLink href="/orders" prefetch={true} className="underline-offset-2 hover:underline focus-visible:underline focus-visible:outline-white">
-              <strong className="text-[#e0f2ef]">MEMBER PERKS:</strong> Track your orders, view receipts &amp; book a service checkup →
+            <SmartLink
+              href="/orders"
+              prefetch={true}
+              className="underline-offset-2 hover:underline focus-visible:underline focus-visible:outline-white"
+            >
+              <strong className="text-[#e0f2ef]">MEMBER PERKS:</strong> Track
+              your orders, view receipts &amp; book a service checkup →
             </SmartLink>
           ) : (
             <>
-              <strong className="text-[#e0f2ef]">MEMBER PERKS:</strong> Sign in to book a service checkup &amp; track orders.
+              <strong className="text-[#e0f2ef]">MEMBER PERKS:</strong> Sign in
+              to book a service checkup &amp; track orders.
             </>
           )}
         </div>
@@ -144,23 +150,37 @@ export function StorefrontShell({
                 <SmartLink
                   key={href}
                   href={href}
-                  scroll={pathname === "/" || !href.includes("#")}
+                  scroll={true}
                   onClick={(event) => {
                     if (
-                      href !== "/" ||
-                      pathname !== "/" ||
                       event.defaultPrevented ||
                       event.button !== 0 ||
                       event.metaKey ||
                       event.ctrlKey ||
                       event.shiftKey ||
                       event.altKey
-                    )
+                    ) {
                       return;
-                    event.preventDefault();
-                    if (window.location.search || window.location.hash)
-                      window.history.pushState(null, "", "/");
-                    window.scrollTo({ top: 0 });
+                    }
+
+                    if (href === "/" && pathname === "/") {
+                      event.preventDefault();
+                      if (window.location.search || window.location.hash) {
+                        window.history.pushState(null, "", "/");
+                      }
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                      return;
+                    }
+
+                    if (href.startsWith("/#") && pathname === "/") {
+                      event.preventDefault();
+                      const id = href.slice(2);
+                      const target = document.getElementById(id);
+                      if (target) {
+                        window.history.pushState(null, "", href);
+                        target.scrollIntoView({ behavior: "smooth" });
+                      }
+                    }
                   }}
                   aria-current={
                     active
@@ -181,6 +201,7 @@ export function StorefrontShell({
               );
             })}
           </nav>
+
           <div className="flex items-center gap-2">
             {(pathname === "/shop" || pathname === "/catalog") && (
               <div ref={shopFiltersContainerRef} className="relative lg:hidden">
