@@ -1,10 +1,11 @@
 'use client';
-import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { ArrowLeft, MessageCircle, Search } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { subscribeStaffChatInbox } from '@/data/support-chat/staff-inbox-realtime';
-import { listSupportChatThreadsAction } from '@/data/actions/support-chat';
+import { useInfiniteQuery, useQueryClient, type InfiniteData } from '@tanstack/react-query';
+import { isCompleteInbox, staffInboxOptions, type InboxCursor, type InboxStatus } from '@/data/support-chat/staff-inbox-client';
 import { MessengerBadge } from '@/components/support-chat/MessengerBadge';
 import { ChatConversation } from '@/components/support-chat/ChatConversation';
 import { StaffChatEmptyState } from '@/components/support-chat/StaffChatEmptyState';
@@ -13,57 +14,53 @@ import type { SupportChatThread } from '@/types/support-chat';
 
 export function StaffChatInbox({ userId }: { userId: string }) {
   const viewportRef = useChatViewport();
-  const [threads, setThreads] = useState<SupportChatThread[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showMobileConversation, setShowMobileConversation] = useState(false);
-  const [status, setStatus] = useState<'all' | 'open' | 'resolved'>('open');
+  const [status, setStatus] = useState<InboxStatus>('open');
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [hasMore, setHasMore] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [realtime, setRealtime] = useState<'connecting' | 'connected' | 'offline'>('connecting');
-  const loadedCount = useRef(0);
-  const requestId = useRef(0);
-  const loadThreads = useCallback(async (
-    append = false,
-    cursor?: { lastMessageAt: string; threadId: string },
-  ) => {
-    const id = ++requestId.current;
-    const rows: SupportChatThread[] = [];
-    let more = false;
-    let after = cursor;
-    do {
-      const result = await listSupportChatThreadsAction({
-        status, search,
-        beforeLastMessageAt: after?.lastMessageAt,
-        beforeThreadId: after?.threadId,
-      });
-      if (id !== requestId.current) return;
-      if (!result.success) {
-        setError(result.error);
-        setLoading(false);
-        setLoadingMore(false);
-        return;
-      }
-      rows.push(...result.data);
-      more = result.data.length === 50;
-      const last = result.data.at(-1);
-      after = last && { lastMessageAt: last.last_message_at, threadId: last.id };
-    } while (!append && more && rows.length < loadedCount.current);
+  const client = useQueryClient();
+  const allKey = staffInboxOptions(userId, search, 'all').queryKey;
+  const scope = useMemo(() => ['staff-chat-inbox', userId], [userId]);
+  const query = useInfiniteQuery({
+    ...staffInboxOptions(userId, search, status),
+    initialData: () => {
+      if (status === 'all') return undefined;
+      const all = client.getQueryState<InfiniteData<SupportChatThread[], InboxCursor>>(allKey);
+      if (!all?.data || all.isInvalidated || !isCompleteInbox(all.data.pages)) return undefined;
+      const rows = all.data.pages.flat().filter((thread) => thread.status === status);
+      return rows.length < 50 ? { pages: [rows], pageParams: [null] } : undefined;
+    },
+    initialDataUpdatedAt: () => client.getQueryState(allKey)?.dataUpdatedAt,
+    placeholderData: (previous, previousQuery) => {
+      if (status === 'all') return previousQuery?.queryKey[2] === search ? previous : undefined;
+      const cached = client.getQueryData<InfiniteData<SupportChatThread[], InboxCursor>>(allKey);
+      if (!cached) return previousQuery?.queryKey[2] === search && previous
+        ? { ...previous, pages: [[]], pageParams: [null] }
+        : undefined;
+      return { ...cached, pages: cached.pages.map((page) => page.filter((thread) => thread.status === status)) };
+    },
+  });
+  const threads = useMemo(() => {
+    const byId = new Map<string, SupportChatThread>();
+    for (const thread of query.data?.pages.flat() ?? []) {
+      if (status === 'all' || thread.status === status) byId.set(thread.id, thread);
+    }
+    return [...byId.values()];
+  }, [query.data, status]);
+  const loadingMore = query.isFetchingNextPage;
+  const hasMore = query.hasNextPage && !query.isPlaceholderData;
+  const error = query.error?.message;
 
-    loadedCount.current = append ? loadedCount.current + rows.length : rows.length;
-    setThreads((current) => append ? [...current, ...rows] : rows);
-    setHasMore(more);
-    setError(null);
-    setLoading(false);
-    setLoadingMore(false);
-  }, [search, status]);
   useEffect(() => {
-    const timer = setTimeout(() => void loadThreads(), 0);
-    return () => clearTimeout(timer);
-  }, [loadThreads]);
+    if (query.isFetching || !query.data || status === 'all') return;
+    const timer = window.setTimeout(() => {
+      void client.prefetchInfiniteQuery(staffInboxOptions(userId, search, 'all'));
+    }, 700);
+    return () => window.clearTimeout(timer);
+  }, [client, query.data, query.isFetching, search, status, userId]);
+
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | undefined;
     const unsubscribe = subscribeStaffChatInbox((event) => {
@@ -73,58 +70,55 @@ export function StaffChatInbox({ userId }: { userId: string }) {
       }
       if (event === 'connected') setRealtime('connected');
       if (timer) clearTimeout(timer);
-      timer = setTimeout(() => void loadThreads(), 200);
+      timer = setTimeout(() => void client.invalidateQueries({ queryKey: scope }), 200);
     });
     return () => {
       if (timer) clearTimeout(timer);
       unsubscribe();
     };
-  }, [loadThreads]);
+  }, [client, scope]);
+
   useEffect(() => {
     if (realtime === 'connected') return;
-    const timer = setInterval(() => void loadThreads(), 30_000);
+    const timer = window.setInterval(() => {
+      void client.invalidateQueries({ queryKey: scope });
+    }, 30_000);
     return () => clearInterval(timer);
-  }, [loadThreads, realtime]);
+  }, [client, realtime, scope]);
   const selectedThread = threads.find((thread) => thread.id === selectedId);
   const mobileConversationOpen = showMobileConversation && Boolean(selectedThread);
   const searchSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const nextSearch = searchInput.trim();
     if (nextSearch === search) return;
-    requestId.current++;
-    loadedCount.current = 0;
-    setThreads([]);
     setSelectedId(null);
     setShowMobileConversation(false);
-    setLoading(true);
     setSearch(nextSearch);
   };
-  const changeStatus = (next: 'all' | 'open' | 'resolved') => {
+  const changeStatus = (next: InboxStatus) => {
     if (next === status) return;
-    requestId.current++;
-    loadedCount.current = 0;
-    setThreads([]);
     setSelectedId(null);
     setShowMobileConversation(false);
-    setLoading(true);
     setStatus(next);
   };
+  const warmStatus = (next: InboxStatus) => {
+    if (next !== status) void client.prefetchInfiniteQuery(staffInboxOptions(userId, search, next));
+  };
+
   const loadMore = () => {
-    const last = threads[threads.length - 1];
-    if (!last || loadingMore) return;
-    setLoadingMore(true);
-    void loadThreads(true, {
-      lastMessageAt: last.last_message_at,
-      threadId: last.id,
-    });
+    if (hasMore && !query.isFetching) void query.fetchNextPage({ cancelRefetch: false });
   };
   const updateStatus = (next: 'open' | 'resolved') => {
-    setThreads((current) =>
-      current.map((thread) =>
-        thread.id === selectedId ? { ...thread, status: next } : thread,
-      ),
+    client.setQueriesData<InfiniteData<SupportChatThread[], InboxCursor>>(
+      { queryKey: scope },
+      (current) => current && ({
+        ...current,
+        pages: current.pages.map((page) => page.map((thread) =>
+          thread.id === selectedId ? { ...thread, status: next } : thread,
+        )),
+      }),
     );
-    void loadThreads();
+    void client.invalidateQueries({ queryKey: scope });
   };
 
   return (
@@ -152,6 +146,7 @@ export function StaffChatInbox({ userId }: { userId: string }) {
               <Input containerClassName="flex-1"
                 id="chat-search"
                 value={searchInput}
+                maxLength={100}
                 onChange={(event) => setSearchInput(event.target.value)}
                 placeholder="Search name, contact, message"
                 className="min-h-10! rounded-lg! bg-background!"
@@ -170,6 +165,8 @@ export function StaffChatInbox({ userId }: { userId: string }) {
                   type="button"
                   key={filter}
                   onClick={() => changeStatus(filter)}
+                  onMouseEnter={() => warmStatus(filter)}
+                  onFocus={() => warmStatus(filter)}
                   aria-pressed={status === filter}
                   className={`min-h-9 flex-1 rounded-md px-2 text-xs font-medium capitalize ${status === filter ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                 >
@@ -182,20 +179,21 @@ export function StaffChatInbox({ userId }: { userId: string }) {
           {error && (
             <div role="alert" className="px-4 py-3 text-sm text-destructive">
               {error}{' '}
-              <Button variant={null} size={null} type="button" className="text-inherit underline" onClick={() => void loadThreads()}>
+              <Button variant={null} size={null} type="button" className="text-inherit underline" onClick={() => void query.refetch()}>
                 Retry
               </Button>
             </div>
           )}
 
-          {loading ? (
+          {query.isPlaceholderData && <p className="px-4 py-2 text-xs text-muted-foreground" role="status">Updating chats…</p>}
+          {query.isPending ? (
             <div className="space-y-2 p-3" role="status" aria-label="Loading chats">
               {[0, 1, 2, 3].map((item) => (
                 <div key={item} className="h-20 animate-pulse rounded-xl bg-muted" />
               ))}
             </div>
           ) : threads.length === 0 ? (
-            <StaffChatEmptyState search={search} status={status} />
+            query.isPlaceholderData || error ? null : <StaffChatEmptyState search={search} status={status} />
           ) : (
             <ul className="min-h-0 flex-1 space-y-1 overflow-y-auto p-2">
               {threads.map((thread) => {

@@ -1,4 +1,5 @@
 import { getOrderView, ORDER_VIEW_STATUSES } from '@/lib/order-queue';
+import { addCalendarDays, getManilaToday } from '@/lib/reports/order-sales-dates';
 import type { createClient } from '@/data/supabase/server';
 import type { Database } from '@/types/database';
 import type { OrderFilters } from '@/lib/validations/order-filters';
@@ -34,10 +35,7 @@ export type StaffOrder = Pick<
     termsMonths: number;
     monthlyPaymentMinor: number;
   } | null;
-  documents: (Omit<
-    Pick<OrderDocumentRow, 'id' | 'order_id' | 'kind' | 'content_type' | 'file_size' | 'created_at'>,
-    'object_path'
-  > & { url: string | null })[];
+  documents: Pick<OrderDocumentRow, 'id' | 'order_id' | 'kind' | 'content_type' | 'file_size' | 'created_at'>[];
   invoiceNo: string | null;
 };
 
@@ -80,6 +78,11 @@ export async function getCommerceOrders(
     const viewStatuses = ORDER_VIEW_STATUSES[view];
     if (viewStatuses.length) orderQuery = orderQuery.in('status', viewStatuses);
     if (view === 'attention') orderQuery = orderQuery.order('status');
+    if (view === 'today') {
+      const today = getManilaToday();
+      orderQuery = orderQuery.gte('created_at', today + 'T00:00:00+08:00')
+        .lt('created_at', addCalendarDays(today, 1) + 'T00:00:00+08:00');
+    }
     if (filters.status) orderQuery = orderQuery.eq('status', filters.status);
     const branchId = branchScope ?? filters.branch;
     if (branchId) orderQuery = orderQuery.eq('branch_id', branchId);
@@ -135,7 +138,7 @@ export async function getCommerceOrders(
           .limit(1500),
         supabase
           .from('order_documents')
-          .select('id, order_id, kind, object_path, content_type, file_size, created_at')
+          .select('id, order_id, kind, content_type, file_size, created_at')
           .in('order_id', orderIds)
           .order('created_at')
           .limit(300),
@@ -170,25 +173,6 @@ export async function getCommerceOrders(
         recipientNameById.set(recipient.id, recipient.recipient_name);
       }
     }
-    let signedByPath = new Map<string, string>();
-    if (documentsResult.data.length) {
-      const { data, error } = await supabase.storage
-        .from('njet-order-documents')
-        .createSignedUrls(
-          documentsResult.data.map((document) => document.object_path),
-          60,
-          { download: true }
-        );
-      if (error) {
-        console.error('Could not create private order-document links.', error);
-      } else {
-        signedByPath = new Map(
-          data.flatMap((entry) =>
-            entry.path && entry.signedUrl ? [[entry.path, entry.signedUrl] as const] : []
-          )
-        );
-      }
-    }
     return {
       data: orders.map((order) => ({
         ...order,
@@ -209,11 +193,7 @@ export async function getCommerceOrders(
             : null;
         })(),
         documents: documentsResult.data
-          .filter((document) => document.order_id === order.id)
-          .map(({ object_path, ...document }) => ({
-            ...document,
-            url: signedByPath.get(object_path) ?? null,
-          })),
+          .filter((document) => document.order_id === order.id),
       })),
       branches,
       error: null,

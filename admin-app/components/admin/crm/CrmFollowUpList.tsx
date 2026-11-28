@@ -35,7 +35,7 @@ export function CrmFollowUpList({ entries, canManage, showCustomer = false, embe
               <div className="flex flex-wrap items-center gap-2">
                 <span className={'rounded-full px-2.5 py-1 text-xs font-semibold ' + dueStyles[dueState]}>{dueState}</span>
                 {showCustomer && (
-                  <SmartLink href={'/admin/crm/' + entry.customer_id} className="inline-flex min-h-11 items-center break-words text-sm font-medium text-primary underline underline-offset-4">
+                  <SmartLink prefetch={true} href={'/admin/crm/' + entry.customer_id} className="inline-flex min-h-11 items-center break-words text-sm font-medium text-primary underline underline-offset-4">
                     {entry.customer_name}
                   </SmartLink>
                 )}

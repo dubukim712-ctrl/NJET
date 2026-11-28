@@ -46,7 +46,7 @@ export function RolesQuery({
     <div className="space-y-6">
       {query.data.canManage && (
         <div className="flex justify-end">
-          <Link
+          <Link prefetch={true}
             href="/admin/roles/new"
             className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >

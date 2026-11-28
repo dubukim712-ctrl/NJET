@@ -1,7 +1,6 @@
 'use client';
 
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
@@ -13,15 +12,15 @@ import type { CustomerRelease } from '@/types/customer-releases';
 
 type ReleaseItem = CustomerRelease & { photoUrl: string };
 
-export function CustomerReleaseManager({ items, orders, linkedOrderIds, orderNumbers, userId, canApprove }: {
+export function CustomerReleaseManager({ items, orders, linkedOrderIds, orderNumbers, userId, canApprove, onDataChanged }: {
   items: ReleaseItem[];
   orders: ReleaseOrderOption[];
   linkedOrderIds: string[];
   orderNumbers: Record<string, string>;
   userId: string;
   canApprove: boolean;
+  onDataChanged: () => void;
 }) {
-  const router = useRouter();
   const [editor, setEditor] = useState<ReleaseItem | null>(null);
   const [removing, setRemoving] = useState<ReleaseItem | null>(null);
   const [busy, setBusy] = useState(false);
@@ -36,7 +35,7 @@ export function CustomerReleaseManager({ items, orders, linkedOrderIds, orderNum
     try {
       const result = await updateCustomerRelease(item.id, { is_approved: !item.is_approved });
       if (result.error) setStatus(result.error);
-      else router.refresh();
+      else onDataChanged();
     } catch {
       setStatus('The release could not be changed.');
     } finally {
@@ -54,7 +53,7 @@ export function CustomerReleaseManager({ items, orders, linkedOrderIds, orderNum
       else {
         setStatus(result.warning ?? 'Release removed.');
         setRemoving(null);
-        router.refresh();
+        onDataChanged();
       }
     } catch {
       setDeleteError('The release could not be removed.');
@@ -68,7 +67,7 @@ export function CustomerReleaseManager({ items, orders, linkedOrderIds, orderNum
       <section className="min-w-0 space-y-4 rounded-xl border bg-card p-4 sm:p-5">
         <h2 className="text-lg font-semibold">Upload a release photo</h2>
         <CustomerReleaseForm orders={availableOrders} userId={userId} canApprove={canApprove}
-          onSaved={() => { setStatus(canApprove ? 'Release saved.' : 'Photo submitted for admin review.'); router.refresh(); }} />
+          onSaved={() => { setStatus(canApprove ? 'Release saved.' : 'Photo submitted for admin review.'); onDataChanged(); }} />
       </section>
       <section className="min-w-0 space-y-4 rounded-xl border bg-card p-4 sm:p-5">
         <h2 className="text-lg font-semibold">{canApprove ? 'Gallery and approval queue' : 'Your release photos'}</h2>
@@ -79,7 +78,7 @@ export function CustomerReleaseManager({ items, orders, linkedOrderIds, orderNum
             <li key={item.id} className="min-w-0 overflow-hidden rounded-xl border">
               <div className="relative aspect-[4/3] bg-muted">
                 <Image src={item.photoUrl} alt={item.model_name ?? 'Customer release photo'} fill
-                  sizes="(min-width: 768px) 30vw, 100vw" className="object-cover" />
+                  quality={70} sizes="(min-width: 1280px) 25vw, (min-width: 640px) 50vw, 100vw" className="object-cover" />
               </div>
               <div className="space-y-2 p-3">
                 <div className="flex flex-wrap gap-2 text-xs font-semibold">
@@ -110,7 +109,7 @@ export function CustomerReleaseManager({ items, orders, linkedOrderIds, orderNum
       </section>
       <Modal open={Boolean(editor)} title="Edit release photo" onClose={() => setEditor(null)}>
         {editor && <CustomerReleaseForm key={editor.id} orders={orders.filter(({ orderId }) => orderId === editor.order_id || !linked.has(orderId))} userId={userId} canApprove={canApprove}
-          release={editor} onSaved={() => { setEditor(null); router.refresh(); }} />}
+          release={editor} onSaved={() => { setEditor(null); onDataChanged(); }} />}
       </Modal>
       <ConfirmDialog open={Boolean(removing)} onOpenChange={(open) => { if (!open) setRemoving(null); }}
         title="Delete release photo?" description="This removes the release from the gallery and deletes its stored image."

@@ -25,9 +25,9 @@ import {
 import {
   SERVICE_APPOINTMENT_STATUSES,
   type ServiceAppointmentFilters,
+  type StaffAppointmentView,
 } from "@/lib/validations/service-appointments";
 import type { RealtimeTable } from "@/types/realtime";
-
 const EMPTY_FILTERS: ServiceAppointmentFilters = {
   view: "attention",
   status: "",
@@ -35,7 +35,6 @@ const EMPTY_FILTERS: ServiceAppointmentFilters = {
   date: "",
   search: "",
 };
-
 const APPOINTMENT_REALTIME_TABLES: RealtimeTable[] = [
   "service_appointments",
   "service_appointment_internal_notes",
@@ -49,17 +48,20 @@ const MANAGED_APPOINTMENT_REALTIME_TABLES: RealtimeTable[] = [
 export function StaffServiceAppointments({
   userId,
   initialSearch = "",
+  initialView = "attention",
   canManage,
   canWork,
 }: {
   userId: string;
   initialSearch?: string;
+  initialView?: StaffAppointmentView;
   canManage: boolean;
   canWork: boolean;
 }) {
   const [activeTab, setActiveTab] =
     useState<StaffAppointmentsTab>("appointments");
-  const [filters, setFilters] = useState(() => initialSearch ? { ...EMPTY_FILTERS, view: "all" as const, search: initialSearch } : EMPTY_FILTERS);
+  const [visitedManagementTabs, setVisitedManagementTabs] = useState<StaffAppointmentsTab[]>([]);
+  const [filters, setFilters] = useState(() => ({ ...EMPTY_FILTERS, view: initialView, search: initialSearch }));
   const [searchValue, setSearchValue] = useState(initialSearch);
   const [openAppointmentId, setOpenAppointmentId] = useState<string | null>(
     null,
@@ -81,12 +83,10 @@ export function StaffServiceAppointments({
     selectedTab === "appointments" &&
     !appointmentsQuery.data &&
     appointmentsQuery.isPending;
-
   function updateFilter(field: Exclude<keyof ServiceAppointmentFilters, "view">, value: string) {
     setOpenAppointmentId(null);
     setFilters((current) => ({ ...current, [field]: value }));
   }
-
   useEffect(() => {
     const search = searchValue.trim();
     if (search === filters.search) return;
@@ -96,7 +96,6 @@ export function StaffServiceAppointments({
     }, 300);
     return () => window.clearTimeout(timeout);
   }, [filters.search, searchValue]);
-
   return (
     <div className="mx-auto max-w-7xl space-y-6">
       <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
@@ -115,13 +114,16 @@ export function StaffServiceAppointments({
           <RealtimeStatus state={realtimeState} />
         )}
       </header>
-
       <StaffServiceAppointmentTabList
         canManage={canManage}
         selectedTab={selectedTab}
-        onSelect={setActiveTab}
+        onSelect={(tab) => {
+          setActiveTab(tab);
+          if (tab !== "appointments") {
+            setVisitedManagementTabs((current) => current.includes(tab) ? current : [...current, tab]);
+          }
+        }}
       />
-
       <section
         id="appointments-appointments-panel"
         role="tabpanel"
@@ -190,7 +192,7 @@ export function StaffServiceAppointments({
               value={filters.date}
               onChange={(date) => {
                 setOpenAppointmentId(null);
-                setFilters((current) => ({ ...current, date, view: date ? "all" : current.view }));
+                setFilters((current) => ({ ...current, date, view: date ? "history" : current.view }));
               }}
             />
           </div>
@@ -246,6 +248,7 @@ export function StaffServiceAppointments({
                   loaded data.
                 </p>
               )}
+              {appointmentsQuery.isPlaceholderData && <p className="text-sm text-muted-foreground" role="status">Updating appointments…</p>}
               {appointmentsQuery.data.length ? (
                 <div className="space-y-4">
                   {appointmentsQuery.data.map((appointment) => (
@@ -258,7 +261,7 @@ export function StaffServiceAppointments({
                       canWork={canWork}
                       cardOpen={openAppointmentId === appointment.id}
                       onCardOpenChange={(open) =>
-                        setOpenAppointmentId(open ? appointment.id : null)
+                        setOpenAppointmentId(open && !appointmentsQuery.isPlaceholderData ? appointment.id : null)
                       }
                     />
                   ))}
@@ -266,7 +269,7 @@ export function StaffServiceAppointments({
                     Showing up to 100 appointments per filter.
                   </p>
                 </div>
-              ) : (
+              ) : !appointmentsQuery.isPlaceholderData && (
                 <div className="rounded-xl border bg-card p-8 text-center">
                   <h2 className="font-semibold">
                     {filters.view === "attention" && !filters.search && !filters.branchId && !filters.status
@@ -282,9 +285,9 @@ export function StaffServiceAppointments({
           )}
         </div>
       </section>
-
       {canManage && (
         <StaffServiceAppointmentManagementTabs
+          visitedTabs={visitedManagementTabs}
           userId={userId}
           branches={branches}
           selectedTab={selectedTab}

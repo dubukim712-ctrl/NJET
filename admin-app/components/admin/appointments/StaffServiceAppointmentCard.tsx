@@ -18,7 +18,6 @@ import { reviewServiceAppointmentCancellationAction } from '@/data/actions/servi
 import { StaffAppointmentDetails } from '@/components/admin/appointments/StaffAppointmentDetails';
 import { canStartStaffWarrantyReview } from '@/lib/service-warranty';
 import { StaffWarrantyPanel } from '@/components/admin/appointments/StaffWarrantyPanel';
-import { StaffCancelAppointment } from '@/components/admin/appointments/StaffCancelAppointment';
 import { formatStaffAppointmentDate, isClosedStaffAppointment } from '@/lib/staff-appointment-editing';
 import type { StaffServiceAppointment } from '@/data/appointments/queries';
 import type { ServiceAppointmentStatus } from '@/types/commerce-tables';
@@ -190,20 +189,15 @@ export function StaffServiceAppointmentCard({
         )}
 
         {canManage && !closed && (
-          <>
-            <StaffAppointmentManageForm
-              key={[appointment.status, appointment.scheduled_at, appointment.assigned_technician_id,
-                appointment.estimate_minor, appointment.final_total_minor].join(':')}
-              appointment={appointment}
-              userId={userId}
-              statusOptions={[appointment.status, ...nextStatuses[appointment.status]].filter(
-                (status) => status !== 'cancelled' && (status !== 'ready_for_pickup' || appointment.service_mode === 'branch_visit')
-              )}
-            />
-            {!appointment.cancellation_request && ['requested', 'confirmed'].includes(appointment.status) && (
-              <StaffCancelAppointment appointmentId={appointment.id} reference={appointment.appointment_number} />
+          <StaffAppointmentManageForm
+            key={[appointment.status, appointment.scheduled_at, appointment.assigned_technician_id,
+              appointment.estimate_minor, appointment.final_total_minor].join(':')}
+            appointment={appointment}
+            userId={userId}
+            statusOptions={[appointment.status, ...nextStatuses[appointment.status]].filter(
+              (status) => status !== 'cancelled' && (status !== 'ready_for_pickup' || appointment.service_mode === 'branch_visit')
             )}
-          </>
+          />
         )}
 
         {!hideWorkActions && (

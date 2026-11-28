@@ -1,6 +1,6 @@
 'use client';
 
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
 import { getAdminUsersAction } from '@/data/actions/admin-users';
 
 export const adminUsersQueryKey = ['rbac', 'admin-users'] as const;
@@ -16,12 +16,14 @@ export function useAdminUsersQuery(
 ) {
   return useQuery({
     queryKey: [...adminUsersQueryKey, userId, canManage, search, roleId, page],
+    placeholderData: keepPreviousData,
     queryFn: async () => {
       const result = await getAdminUsersAction({ search, roleId, page });
       if (!result.success) throw new AdminUsersQueryError(result.error);
       return result.data;
     },
     retry: false,
+    refetchOnMount: 'always',
     staleTime: 30_000,
     gcTime: 30 * 60_000,
   });

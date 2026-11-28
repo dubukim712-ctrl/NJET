@@ -1,16 +1,10 @@
-import { RolesContent } from '@/components/rbac/RolesContent';
+import { AdminRolesView } from '@/components/rbac/AdminRolesView';
+import { requirePermission } from '@/data/auth/guards';
+import { PERMISSIONS } from '@/lib/permissions';
 
 export const metadata = { title: 'Roles' };
 
-export default function RolesPage() {
-  return (
-    <div className="space-y-6">
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">Team &amp; Security</p>
-        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Roles</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Review roles and their permissions.</p>
-      </div>
-      <RolesContent />
-    </div>
-  );
+export default async function Page() {
+  await requirePermission(PERMISSIONS.rolesRead, '/admin/roles');
+  return <AdminRolesView />;
 }

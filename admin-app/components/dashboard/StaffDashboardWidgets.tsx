@@ -126,7 +126,7 @@ export function LoadError({ message, href }: { message: string; href: string }) 
   return (
     <div className="p-5">
       <p className="text-sm text-destructive" role="alert">{message}</p>
-      <SmartLink href={href} className="mt-2 inline-block text-sm font-medium text-primary underline">
+      <SmartLink prefetch={true} href={href} className="mt-2 inline-block text-sm font-medium text-primary underline">
         Open workspace
       </SmartLink>
     </div>

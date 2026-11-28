@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { ScrollText } from 'lucide-react';
 import { AuditLogsLoadingSkeleton } from '@/components/audit/AuditLogsLoadingSkeleton';
 import { AuditLogFilters } from '@/components/audit/AuditLogFilters';
@@ -35,20 +34,19 @@ export function AuditLogsQuery({
   table?: AuditTable;
   page: number;
 }) {
-  const router = useRouter();
   const query = useAdminAuditLogsQuery(userId, canClear, action, table, page);
   const totalPages = query.data
     ? Math.max(1, Math.ceil(query.data.total / query.data.pageSize))
     : 1;
   const outOfRange = Boolean(
-    query.data && query.data.total > 0 && page > totalPages
+    !query.isPlaceholderData && query.data && query.data.total > 0 && page > totalPages
   );
 
   useEffect(() => {
     if (outOfRange) {
-      router.replace(buildAuditLogsHref({ page: totalPages, action, table }));
+      window.history.replaceState(null, '', buildAuditLogsHref({ page: totalPages, action, table }));
     }
-  }, [action, outOfRange, page, router, table, totalPages]);
+  }, [action, outOfRange, page, table, totalPages]);
 
   if (!query.data && query.isPending) {
     return (
@@ -91,6 +89,8 @@ export function AuditLogsQuery({
     <div className="space-y-6">
       <AuditLogFilters action={action} table={table} />
 
+      {query.isPlaceholderData && <p className="text-sm text-muted-foreground" role="status">Updating audit logs…</p>}
+
       {(query.isError || error) && (
         <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive" role="alert">
           {error
@@ -100,15 +100,15 @@ export function AuditLogsQuery({
       )}
       {!error && (
         <>
-          {logs.length === 0 && (
+          {!query.isPlaceholderData && logs.length === 0 && (
             <EmptyState
               icon={ScrollText}
               title="No audit events found"
               description="Changes to users, roles, and role permissions will appear here automatically."
             />
           )}
-          <AuditLogsTable logs={logs} canClear={canClearFromServer} />
-          {total > 0 && (
+          <AuditLogsTable logs={logs} canClear={canClearFromServer && !query.isPlaceholderData} />
+          {!query.isPlaceholderData && total > 0 && (
             <AuditPagination
               page={page}
               pageSize={pageSize}

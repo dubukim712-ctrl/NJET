@@ -1,5 +1,7 @@
 'use client';
 
+import { storefrontCatalogQueryKey } from '@/data/commerce/catalog-query-keys';
+
 import { useState, type FormEvent } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Textarea } from '@/components/ui/Textarea';
@@ -64,6 +66,7 @@ export function ProductReviewForm({
         queryClient.invalidateQueries({
           queryKey: ['my-product-review-items', userId, productId],
         }),
+        queryClient.invalidateQueries({ queryKey: storefrontCatalogQueryKey }),
         queryClient.invalidateQueries({ queryKey: ['product-reviews', productId] }),
         queryClient.invalidateQueries({ queryKey: ['product-rating-summary', productId] }),
       ]);

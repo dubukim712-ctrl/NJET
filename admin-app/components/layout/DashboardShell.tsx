@@ -78,7 +78,7 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
             <Menu className="h-5 w-5" aria-hidden="true" />
           </button>
 
-          <SmartLink href="/admin" className="text-lg font-bold">
+          <SmartLink prefetch={true} href="/admin" className="text-lg font-bold">
             Admin Portal
           </SmartLink>
 

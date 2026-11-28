@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { Search } from 'lucide-react';
 import type { RoleOption } from '@/data/rbac/queries';
 import { buildUsersHref, normalizeSearch } from '@/lib/rbac';
@@ -18,7 +17,6 @@ interface UsersFiltersProps {
 }
 
 export function UsersFilters({ roles, search, roleId }: UsersFiltersProps) {
-  const router = useRouter();
   const [searchValue, setSearchValue] = useState(search ?? '');
   const [roleValue, setRoleValue] = useState(roleId ?? '');
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -40,12 +38,11 @@ export function UsersFilters({ roles, search, roleId }: UsersFiltersProps) {
   const scheduleFilterUpdate = (nextSearch: string, nextRoleId: string) => {
     if (debounceTimer.current) clearTimeout(debounceTimer.current);
     debounceTimer.current = setTimeout(() => {
-      router.replace(
+      window.history.replaceState(null, '',
         buildUsersHref({
           search: normalizeSearch(nextSearch),
           roleId: nextRoleId || undefined,
-        }),
-        { scroll: false }
+        })
       );
       debounceTimer.current = null;
     }, FILTER_DEBOUNCE_MS);
@@ -81,7 +78,9 @@ export function UsersFilters({ roles, search, roleId }: UsersFiltersProps) {
           onValueChange={(value) => {
             const nextRoleId = value;
             setRoleValue(nextRoleId);
-            scheduleFilterUpdate(searchValue, nextRoleId);
+            if (debounceTimer.current) clearTimeout(debounceTimer.current);
+            debounceTimer.current = null;
+            window.history.replaceState(null, '', buildUsersHref({ search: normalizeSearch(searchValue), roleId: nextRoleId || undefined }));
           }}
           containerClassName="space-y-1"
         >
@@ -96,10 +95,15 @@ export function UsersFilters({ roles, search, roleId }: UsersFiltersProps) {
 
       <div className="flex items-end">
         {hasFilters ? (
-          <Link
+          <Link prefetch={false}
             href="/admin/users"
-            onClick={() => {
+            onNavigate={(event) => {
+              event.preventDefault();
               if (debounceTimer.current) clearTimeout(debounceTimer.current);
+              debounceTimer.current = null;
+              setSearchValue("");
+              setRoleValue("");
+              window.history.replaceState(null, "", "/admin/users");
             }}
             className="inline-flex h-10 w-full items-center justify-center rounded-md border border-input px-5 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground lg:w-auto"
           >

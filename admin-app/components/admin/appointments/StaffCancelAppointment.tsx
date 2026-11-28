@@ -34,7 +34,7 @@ export function StaffCancelAppointment({ appointmentId, reference }: { appointme
 
   return (
     <>
-      <Button type="button" variant="outline" className="min-h-11 text-destructive" onClick={() => {
+      <Button type="button" variant="outline" className="min-h-11 w-full text-destructive sm:w-auto" onClick={() => {
         setError(null);
         setOpen(true);
       }}>

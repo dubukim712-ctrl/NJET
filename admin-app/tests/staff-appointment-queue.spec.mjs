@@ -53,7 +53,8 @@ test('today and upcoming divide scheduled work at midnight in Philippine time', 
   assert.match(upcoming.get('scheduled_at'), /^gte\..*T16:00:00\.000Z$/);
 
   const history = await captureQueueQuery('history');
-  assert.equal(history.get('status'), 'in.(completed,cancelled,no_show)');
+  assert.equal(history.has('status'), false);
+  assert.equal(history.has('scheduled_at'), false);
   assert.match(history.get('order'), /^scheduled_at\.desc/);
 });
 

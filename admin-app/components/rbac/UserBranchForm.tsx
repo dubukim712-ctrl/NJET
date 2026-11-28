@@ -13,9 +13,11 @@ import { Select } from '@/components/ui/Select';
 export function UserBranchForm({
   user,
   branches,
+  compact = false,
 }: {
   user: ManagedUser;
   branches: UserBranchOption[] | null;
+  compact?: boolean;
 }) {
   const router = useRouter();
   const invalidateUsers = useInvalidateAdminUsersQuery();
@@ -59,13 +61,13 @@ export function UserBranchForm({
 
   return (
     <div className="space-y-1">
-      <form onSubmit={submit} className="flex flex-col gap-2 sm:flex-row sm:items-end">
+      <form onSubmit={submit} className={compact ? "flex items-end gap-2" : "flex flex-col gap-2 sm:flex-row sm:items-end"}>
         <Select
           label={<span className="sr-only">Branch for {user.email}</span>}
           value={selected}
           onValueChange={(value) => setSelected(value)}
           disabled={saving}
-          containerClassName="w-full sm:w-48"
+          containerClassName={compact ? "min-w-0 flex-1" : "w-full sm:w-48"}
         >
           <option value="">Unassigned</option>
           {branches.map((branch) => (

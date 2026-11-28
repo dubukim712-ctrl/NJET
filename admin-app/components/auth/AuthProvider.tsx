@@ -12,6 +12,7 @@ import {
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/data/supabase/client';
+import { postgresRealtimeTopic } from '@/data/supabase/postgres-realtime-topic';
 import type { UserProfile } from '@/types/database';
 
 interface AuthContextType {
@@ -176,7 +177,7 @@ export function AuthProvider({
       }
     };
     const channel = supabase
-      .channel(`auth-access-${userId}`)
+      .channel(postgresRealtimeTopic(`auth-access-${userId}`))
       .on(
         'postgres_changes',
         {

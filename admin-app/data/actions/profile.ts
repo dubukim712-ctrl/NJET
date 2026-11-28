@@ -119,6 +119,7 @@ export async function updateProfileAction(formData: FormData): Promise<ActionRes
 
     revalidatePath('/(customer)', 'layout');
     revalidatePath('/admin', 'layout');
+    revalidatePath('/checkout');
     return { success: true, data: undefined };
   } catch {
     return { success: false, error: 'Something went wrong. Please try again.' };

@@ -11,9 +11,11 @@ import {
   reportOrderStatus,
 } from '@/lib/reports/order-sales-format';
 import type { OrderSalesReportRows } from '@/lib/validations/order-sales-report';
-import { OrderDetailsDialog } from '@/components/admin/reports/OrderDetailsDialog';
+import dynamic from 'next/dynamic';
 
 type ReportOrder = OrderSalesReportRows['rows'][number];
+
+const OrderDetailsDialog = dynamic(() => import('./OrderDetailsDialog').then((module) => module.OrderDetailsDialog));
 
 export function ReportLedger({
   ledger,
@@ -177,7 +179,7 @@ export function ReportLedger({
           </div>
         </div>
       )}
-      <OrderDetailsDialog
+      {selectedOrder && <OrderDetailsDialog
         order={selectedOrder}
         canManage={canManage}
         onClose={() => setSelectedOrder(null)}
@@ -185,7 +187,7 @@ export function ReportLedger({
           await onPaymentRecorded();
           setSelectedOrder(null);
         }}
-      />
+      />}
     </section>
   );
 }

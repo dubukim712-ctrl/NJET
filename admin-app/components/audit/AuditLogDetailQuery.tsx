@@ -104,7 +104,7 @@ export function AuditLogDetailQuery({
 
 function BackLink() {
   return (
-    <Link
+    <Link prefetch={true}
       href="/admin/audit-logs"
       className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
     >

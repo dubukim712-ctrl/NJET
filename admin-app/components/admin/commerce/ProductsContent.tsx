@@ -1,13 +1,15 @@
+'use client';
+
+import { useAdminProfile } from '@/components/providers/AdminProvider';
 import { ProductsQuery } from '@/components/admin/commerce/ProductsQuery';
-import { requirePermission } from '@/data/auth/guards';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 
-export async function ProductsContent() {
-  const { user, profile } = await requirePermission(PERMISSIONS.productsRead, '/admin/products');
+export function ProductsContent() {
+  const profile = useAdminProfile();
 
   return (
     <ProductsQuery
-      userId={user.id}
+      userId={profile.id}
       canManageProducts={hasPermission(profile, PERMISSIONS.productsManage)}
       canModerateProductReviews={hasPermission(
         profile,

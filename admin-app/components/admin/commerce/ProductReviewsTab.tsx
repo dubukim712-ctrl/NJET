@@ -1,5 +1,7 @@
 'use client';
 
+import { storefrontCatalogQueryKey } from '@/data/commerce/catalog-query-keys';
+
 import { useState } from 'react';
 import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import {
@@ -42,6 +44,7 @@ export function ProductReviewsTab({ userId }: { userId: string }) {
         setActionError(result.error);
         return;
       }
+      await queryClient.invalidateQueries({ queryKey: storefrontCatalogQueryKey });
       await queryClient.invalidateQueries({ queryKey: reviewQueueKey(userId) });
       await queryClient.invalidateQueries({ queryKey: ['product-reviews'] });
       await queryClient.invalidateQueries({ queryKey: ['product-rating-summary'] });

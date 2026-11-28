@@ -1,13 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import dynamic from 'next/dynamic';
+
+import { useCallback, useMemo, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 import { BranchInventoryDetails } from "@/components/admin/commerce/BranchInventoryDetails";
 import { TablePagination } from "@/components/ui/TablePagination";
 import { Select } from "@/components/ui/Select";
-import { InventoryEditor } from "@/components/admin/commerce/InventoryEditor";
 import { BranchInventoryRows, type InventoryStock } from "@/components/admin/commerce/BranchInventoryRows";
 import type { Database } from "@/types/database";
 
@@ -18,6 +19,8 @@ type Inventory = Database["public"]["Tables"]["branch_inventory"]["Row"];
 type Unit = Database["public"]["Tables"]["ebike_units"]["Row"];
 
 const pageSize = 10;
+
+const InventoryEditor = dynamic(() => import('./InventoryEditor').then((module) => module.InventoryEditor));
 
 export function BranchInventorySection({
   products,
@@ -46,10 +49,10 @@ export function BranchInventorySection({
   const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<Inventory | null>(null);
   const [receiveStockOpen, setReceiveStockOpen] = useState(false);
-  const branchById = new Map(branches.map((branch) => [branch.id, branch]));
-  const variantById = new Map(variants.map((variant) => [variant.id, variant]));
-  const productById = new Map(products.map((product) => [product.id, product]));
-  const stockVariants = variants.flatMap((variant) => {
+  const branchById = useMemo(() => new Map(branches.map((branch) => [branch.id, branch])), [branches]);
+  const variantById = useMemo(() => new Map(variants.map((variant) => [variant.id, variant])), [variants]);
+  const productById = useMemo(() => new Map(products.map((product) => [product.id, product])), [products]);
+  const stockVariants = useMemo(() => variants.flatMap((variant) => {
     const product = productById.get(variant.product_id);
     return product && product.active && variant.active
       ? [
@@ -62,30 +65,33 @@ export function BranchInventorySection({
           },
         ]
       : [];
-  });
-  const unitsByRow = new Map<string, Unit[]>();
-  const unitCounts = new Map<
-    string,
-    { available: number; reserved: number; needsIds: number }
-  >();
-  for (const unit of units) {
-    if (unit.status !== "in_stock" && unit.status !== "needs_identification" && unit.status !== "warranty_reserved")
-      continue;
-    const key = `${unit.branch_id}:${unit.variant_id}`;
-    const held = unitsByRow.get(key) ?? [];
-    held.push(unit);
-    unitsByRow.set(key, held);
-    const counts = unitCounts.get(key) ?? { available: 0, reserved: 0, needsIds: 0 };
-    if (unit.status === "needs_identification") counts.needsIds += 1;
-    else if (unit.status === "warranty_reserved" || unit.order_item_id) counts.reserved += 1;
-    else counts.available += 1;
-    unitCounts.set(key, counts);
-  }
+  }), [variants, productById]);
+  const { unitsByRow, unitCounts } = useMemo(() => {
+    const unitsByRow = new Map<string, Unit[]>();
+    const unitCounts = new Map<
+      string,
+      { available: number; reserved: number; needsIds: number }
+    >();
+    for (const unit of units) {
+      if (unit.status !== "in_stock" && unit.status !== "needs_identification" && unit.status !== "warranty_reserved")
+        continue;
+      const key = `${unit.branch_id}:${unit.variant_id}`;
+      const held = unitsByRow.get(key) ?? [];
+      held.push(unit);
+      unitsByRow.set(key, held);
+      const counts = unitCounts.get(key) ?? { available: 0, reserved: 0, needsIds: 0 };
+      if (unit.status === "needs_identification") counts.needsIds += 1;
+      else if (unit.status === "warranty_reserved" || unit.order_item_id) counts.reserved += 1;
+      else counts.available += 1;
+      unitCounts.set(key, counts);
+    }
+    return { unitsByRow, unitCounts };
+  }, [units]);
   const selectedBranchId = assignedBranchId ?? branchId;
-  const branchRows = inventory.filter(
+  const branchRows = useMemo(() => inventory.filter(
     (row) => selectedBranchId === "all" || row.branch_id === selectedBranchId,
-  );
-  const stockFor = (row: Inventory): InventoryStock => {
+  ), [inventory, selectedBranchId]);
+  const stockFor = useCallback((row: Inventory): InventoryStock => {
     const variant = variantById.get(row.variant_id);
     const isEbike = productById.get(variant?.product_id ?? "")?.product_type === "ebike";
     const counts = unitCounts.get(`${row.branch_id}:${row.variant_id}`);
@@ -95,9 +101,9 @@ export function BranchInventorySection({
       needsIds: counts?.needsIds ?? 0,
       isEbike,
     };
-  };
+  }, [variantById, productById, unitCounts]);
   const searchTerm = search.trim().toLowerCase();
-  const rows = branchRows.filter((row) => {
+  const rows = useMemo(() => branchRows.filter((row) => {
     const variant = variantById.get(row.variant_id);
     const product = productById.get(variant?.product_id ?? "");
     if (searchTerm && ![product?.name, variant?.name, variant?.sku].some(
@@ -108,7 +114,7 @@ export function BranchInventorySection({
     if (status === "out-of-stock") return stock.available === 0;
     if (status === "needs-ids") return stock.needsIds > 0;
     return true;
-  });
+  }), [branchRows, variantById, productById, searchTerm, status, stockFor]);
   const currentPage = Math.min(page, Math.max(1, Math.ceil(rows.length / pageSize)));
   const pageStart = (currentPage - 1) * pageSize;
   const pageRows = rows.slice(pageStart, pageStart + pageSize);

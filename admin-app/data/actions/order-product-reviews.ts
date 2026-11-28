@@ -1,6 +1,6 @@
 'use server';
 
-import { revalidatePath } from 'next/cache';
+import { revalidateStorefrontCatalog } from '@/data/commerce/revalidate-storefront';
 import type { ActionResult } from '@/data/actions/auth';
 import { getAuthContext } from '@/data/auth/guards';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
@@ -211,7 +211,7 @@ export async function submitProductReviewAction(
     });
     if (error) throw error;
     if (data !== 'pending') throw new Error('Unexpected product review status.');
-    revalidatePath('/shop');
+    revalidateStorefrontCatalog();
     return { success: true, data: { status: 'pending' } };
   } catch (error) {
     console.error('Could not submit product review.', error);

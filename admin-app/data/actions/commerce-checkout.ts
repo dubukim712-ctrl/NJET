@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { revalidateStorefrontCatalog } from '@/data/commerce/revalidate-storefront';
 import type { ActionResult } from '@/data/actions/auth';
 import { toUserFriendlyError } from '@/data/supabase/user-friendly-errors';
 import { getAuthContext, requireCustomer } from '@/data/auth/guards';
@@ -131,6 +132,7 @@ export async function createCommerceOrderAction(
     }
   }
 
+  revalidateStorefrontCatalog();
   revalidatePath('/orders');
   revalidatePath('/admin/orders');
   return { success: true, data: { orderId } };
@@ -190,6 +192,7 @@ export async function submitOrderPaymentProofAction(
   }
   if (result.expired) {
     const cleanupSucceeded = await removeUnlinkedDocuments(supabase, [objectPath]);
+    revalidateStorefrontCatalog();
     revalidatePath('/orders');
     revalidatePath(`/orders/${orderId}`);
     return {
@@ -207,6 +210,7 @@ export async function submitOrderPaymentProofAction(
       warning = 'The new proof was saved, but an older private file could not be removed.';
     }
   }
+  revalidateStorefrontCatalog();
   revalidatePath('/orders');
   revalidatePath(`/orders/${orderId}`);
   revalidatePath('/admin/orders');

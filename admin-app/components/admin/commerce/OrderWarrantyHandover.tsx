@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type FormEvent } from 'react';
+import { useState, type FormEvent, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { Button } from '@/components/ui/Button';
@@ -9,7 +9,11 @@ import { Select } from '@/components/ui/Select';
 import { getOrderWarrantyUnitsAction, recordWarrantyHandoverAction } from '@/data/actions/service-warranty';
 import { formatWarrantyDate } from '@/lib/service-warranty';
 
-export function OrderWarrantyHandover({ orderId }: { orderId: string }) {
+export function OrderWarrantyHandover({ orderId, showHandover, receiptAction }: {
+  orderId: string;
+  showHandover: boolean;
+  receiptAction: ReactNode;
+}) {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
   const [feedback, setFeedback] = useState('');
@@ -17,7 +21,7 @@ export function OrderWarrantyHandover({ orderId }: { orderId: string }) {
   const [saving, setSaving] = useState(false);
   const query = useQuery({
     queryKey: ['order-warranty-handovers', user?.id, orderId],
-    enabled: open && Boolean(user),
+    enabled: showHandover && open && Boolean(user),
     retry: false,
     queryFn: async () => {
       const result = await getOrderWarrantyUnitsAction(orderId);
@@ -48,11 +52,8 @@ export function OrderWarrantyHandover({ orderId }: { orderId: string }) {
   }
 
   return (
-    <section className="space-y-3 border-t pt-4">
-      <Button type="button" variant="outline" className="min-h-11" aria-expanded={open} disabled={saving} onClick={() => setOpen((value) => !value)}>
-        {open ? 'Hide warranty handovers' : 'Warranty handovers'}
-      </Button>
-      {open && (
+    <>
+      {showHandover && open && (
         <div className="space-y-3">
           {query.isPending && <p role="status" className="text-sm text-muted-foreground">Loading purchased bikes...</p>}
           {query.isError && (
@@ -82,6 +83,14 @@ export function OrderWarrantyHandover({ orderId }: { orderId: string }) {
           {feedback && <p role={failed ? 'alert' : 'status'} className={failed ? 'text-sm text-destructive' : 'text-sm text-muted-foreground'}>{feedback}</p>}
         </div>
       )}
-    </section>
+      <footer className="mt-4 flex flex-col-reverse gap-2.5 border-t border-border/60 pt-4 sm:flex-row sm:items-center sm:justify-between">
+        {showHandover && (
+          <Button type="button" variant="outline" className="min-h-11 w-full sm:w-auto" aria-expanded={open} disabled={saving} onClick={() => setOpen((value) => !value)}>
+            {open ? 'Hide warranty handovers' : 'Warranty handovers'}
+          </Button>
+        )}
+        {receiptAction}
+      </footer>
+    </>
   );
 }

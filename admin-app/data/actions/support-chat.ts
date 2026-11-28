@@ -200,6 +200,7 @@ export async function deleteSupportChatMessageAction(
 
 export async function listSupportChatThreadsAction(
   input: unknown,
+  userId: string,
 ): Promise<ActionResult<SupportChatThread[]>> {
   const validation = supportChatInboxSchema.safeParse(input);
   if (!validation.success) {
@@ -208,7 +209,7 @@ export async function listSupportChatThreadsAction(
 
   try {
     const context = await getAuthContext();
-    if (!context || !hasPermission(context.profile, PERMISSIONS.supportChatManage)) {
+    if (!context || context.user.id !== userId || !hasPermission(context.profile, PERMISSIONS.supportChatManage)) {
       return { success: false, error: 'You do not have permission to view customer chats.' };
     }
 

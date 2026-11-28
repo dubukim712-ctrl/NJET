@@ -187,9 +187,11 @@ export function AppointmentClosureCalendar({
             helperText="Internal note for staff; customers only see that the slot is unavailable."
           />
           {error && <p className="text-sm text-destructive" role="alert">{error}</p>}
-          <Button type="submit" loading={busy} disabled={busy || !branchId}>
-            Add closure
-          </Button>
+          <div className="mt-4 flex sm:justify-end">
+            <Button type="submit" className="w-full sm:w-auto" loading={busy} disabled={busy || !branchId}>
+              Add closure
+            </Button>
+          </div>
         </form>
 
         <section aria-label="Upcoming branch closures" className="space-y-3">

@@ -1,5 +1,6 @@
 'use client';
 
+import { useAdminProfile } from '@/components/providers/AdminProvider';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   getOrderSalesReportAction,
@@ -15,22 +16,25 @@ export function useOrderSalesReportQuery(
   userId: string,
   filters: OrderSalesReportFilters
 ) {
+  const { branch_id, is_full_access } = useAdminProfile();
   return useQuery({
-    queryKey: [...orderSalesReportQueryKey, userId, filters],
+    queryKey: [...orderSalesReportQueryKey, userId, branch_id, is_full_access, filters],
     queryFn: async () => {
       const result = await getOrderSalesReportAction(filters);
       if (!result.success) throw new OrderSalesReportQueryError(result.error);
       return result.data;
     },
     retry: false,
+    refetchOnMount: 'always',
     staleTime: 15_000,
     placeholderData: (previousData) => previousData,
   });
 }
 
 export function useOrderSalesReportOptionsQuery(userId: string) {
+  const { branch_id, is_full_access } = useAdminProfile();
   return useQuery({
-    queryKey: [...orderSalesReportQueryKey, 'options', userId],
+    queryKey: [...orderSalesReportQueryKey, 'options', userId, branch_id, is_full_access],
     queryFn: async () => {
       const result = await getOrderSalesReportOptionsAction();
       if (!result.success) throw new OrderSalesReportQueryError(result.error);

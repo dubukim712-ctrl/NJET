@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { revalidateStorefrontCatalog } from '@/data/commerce/revalidate-storefront';
 import type { ActionResult } from '@/data/actions/auth';
 import { requirePermission } from '@/data/auth/guards';
 import { commerceActionFailure as failure } from '@/data/commerce/action-failure';
@@ -39,8 +40,7 @@ export async function saveCommerceVariantAction(payload: unknown): Promise<Actio
     if (result.error) return failure(result.error, 'Could not save this product variant.');
 
     revalidatePath('/admin/products');
-    revalidatePath('/shop');
-    revalidatePath('/shop/view-product/[slug]', 'page');
+    revalidateStorefrontCatalog();
     return { success: true, data: undefined };
   } catch (error) {
     return failure(error, 'Could not save this product variant.');

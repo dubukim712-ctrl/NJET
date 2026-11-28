@@ -1,23 +1,10 @@
-import {
-  OrdersContent,
-  type OrdersSearchParams,
-} from '@/components/admin/commerce/OrdersContent';
+import { AdminOrdersView } from '@/components/admin/commerce/AdminOrdersView';
+import { requirePermission } from '@/data/auth/guards';
+import { PERMISSIONS } from '@/lib/permissions';
 
 export const metadata = { title: 'Orders' };
 
-export default function OrdersPage({
-  searchParams,
-}: {
-  searchParams: Promise<OrdersSearchParams>;
-}) {
-  return (
-    <div className="space-y-6">
-      <header>
-        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">Commerce</p>
-        <h1 className="mt-1 text-3xl font-semibold tracking-tight">Orders</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Manage online orders and completed walk-in sales. Online order stock is deducted atomically on confirmation.</p>
-      </header>
-      <OrdersContent searchParams={searchParams} />
-    </div>
-  );
+export default async function Page() {
+  await requirePermission(PERMISSIONS.ordersRead, '/admin/orders');
+  return <AdminOrdersView />;
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import type { StaffOrder } from "@/data/commerce/admin-orders";
 import {
@@ -74,42 +75,44 @@ export function OrderDetailsPanel({
     >
       <OrderOverviewSections order={order} storeDue={storeDue} />
 
-      {order.order_source === "online" && (
-        <section className="space-y-3 border-t pt-4">
-          <div>
-            <h3 className="text-sm font-semibold">Phone number verification</h3>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {order.phone_verification_status === "manual_pending"
-                ? "Pending staff verification"
-                : order.phone_verification_status === "manual_verified"
-                  ? "Verified manually by staff"
-                  : order.phone_verification_status === "otp_verified"
-                    ? "Verified by SMS code"
-                    : "Not required"}
-            </p>
-          </div>
-          {canManage &&
-            order.phone_verification_status === "manual_pending" &&
-            order.status === "awaiting_confirmation" && (
-              <Button
-                type="button"
-                variant="secondary"
-                loading={verifyingPhone}
-                disabled={isAnyOrderBusy}
-                onClick={markPhoneVerified}
-              >
-                Mark phone as manually verified
-              </Button>
+      <div className={order.order_source === "online" && order.documents.length ? "grid grid-cols-1 gap-4 md:grid-cols-2" : undefined}>
+        {order.order_source === "online" && (
+          <section className="min-w-0 space-y-3 rounded-xl border border-border/60 bg-background/60 p-4">
+            <div>
+              <h3 className="text-sm font-semibold">Phone number verification</h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {order.phone_verification_status === "manual_pending"
+                  ? "Pending staff verification"
+                  : order.phone_verification_status === "manual_verified"
+                    ? "Verified manually by staff"
+                    : order.phone_verification_status === "otp_verified"
+                      ? "Verified by SMS code"
+                      : "Not required"}
+              </p>
+            </div>
+            {canManage &&
+              order.phone_verification_status === "manual_pending" &&
+              order.status === "awaiting_confirmation" && (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="h-auto w-full whitespace-normal text-left sm:w-auto"
+                  loading={verifyingPhone}
+                  disabled={isAnyOrderBusy}
+                  onClick={markPhoneVerified}
+                >
+                  Mark phone as manually verified
+                </Button>
+              )}
+            {phoneVerificationError && (
+              <p className="text-sm text-destructive" role="alert">
+                {phoneVerificationError}
+              </p>
             )}
-          {phoneVerificationError && (
-            <p className="text-sm text-destructive" role="alert">
-              {phoneVerificationError}
-            </p>
-          )}
-        </section>
-      )}
-
-      <OrderPrivateDocuments documents={order.documents} />
+          </section>
+        )}
+        <OrderPrivateDocuments documents={order.documents} />
+      </div>
 
       {order.status === "completed" && (
         <CompletedOrderDocuments
@@ -121,15 +124,22 @@ export function OrderDetailsPanel({
         />
       )}
 
-      {canManage && order.status === 'completed' && order.items.some((item) => item.product_type === 'ebike') && (
-        <OrderWarrantyHandover orderId={order.id} />
-      )}
-
-      {canManage && (
-        <footer className="flex flex-wrap gap-2 border-t pt-4">
+      {canManage && ["awaiting_payment", "awaiting_confirmation", "confirmed"].includes(order.status) && (
+        <footer className="mt-4 flex flex-col-reverse gap-2.5 border-t border-border/60 pt-4 sm:flex-row sm:items-center sm:justify-end">
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full border-destructive/50 text-destructive hover:bg-destructive/10 hover:text-destructive sm:w-auto"
+            loading={busyAction === "cancel"}
+            disabled={isAnyOrderBusy || verifyingPhone}
+            onClick={() => setCancelDialogOpen(true)}
+          >
+            Cancel order
+          </Button>
           {order.status === "awaiting_confirmation" && (
             <Button
               type="button"
+              className="w-full sm:w-auto"
               loading={busyAction === "confirm"}
               disabled={
                 isAnyOrderBusy ||
@@ -147,6 +157,7 @@ export function OrderDetailsPanel({
               <Button
                 type="button"
                 variant="secondary"
+                className="w-full sm:w-auto"
                 disabled={isAnyOrderBusy}
                 onClick={() => setCompletingHomeCredit(true)}
               >
@@ -156,26 +167,26 @@ export function OrderDetailsPanel({
               <Button
                 type="button"
                 variant="secondary"
+                className="w-full sm:w-auto"
                 disabled={isAnyOrderBusy}
                 onClick={() => setCompletingSale(true)}
               >
                 Record payment
               </Button>
             ))}
-          {["awaiting_payment", "awaiting_confirmation", "confirmed"].includes(
-            order.status,
-          ) && (
-            <Button
-              type="button"
-              variant="destructive"
-              loading={busyAction === "cancel"}
-              disabled={isAnyOrderBusy || verifyingPhone}
-              onClick={() => setCancelDialogOpen(true)}
-            >
-              Cancel order
-            </Button>
-          )}
         </footer>
+      )}
+
+      {order.status === "completed" && (
+        <OrderWarrantyHandover
+          orderId={order.id}
+          showHandover={canManage && order.items.some((item) => item.product_type === "ebike")}
+          receiptAction={
+            <Button asChild className="w-full sm:ml-auto sm:w-auto">
+              <Link href={`/admin/orders/${order.id}/receipt`} prefetch={true}>Print Receipt</Link>
+            </Button>
+          }
+        />
       )}
 
       <ConfirmDialog

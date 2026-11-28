@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from 'react';
 import { addCrmFollowUp, addCrmNote, setCrmFollowUpStatus } from '@/data/actions/crm';
+import { useInvalidateCrm } from '@/data/crm/client';
 import { Button } from '@/components/ui/Button';
 import { DatePicker } from '@/components/ui/DatePicker';
 import { Select } from '@/components/ui/Select';
@@ -15,6 +16,7 @@ function Feedback({ state }: { state: Awaited<ReturnType<typeof addCrmNote>> }) 
 export function CrmWriteForms({ customerId, staff, mode }: {
   customerId: string; staff: CrmStaffOption[]; mode: 'note' | 'follow-up';
 }) {
+  const invalidate = useInvalidateCrm();
   const branches = [...new Map(staff.map((person) => [person.branch_id, person.branch_name]))];
   const [branch, setBranch] = useState(branches.length === 1 ? branches[0][0] : '');
   const [assignment, setAssignment] = useState(staff.length === 1 ? staff[0].branch_id + ':' + staff[0].id : '');
@@ -25,7 +27,7 @@ export function CrmWriteForms({ customerId, staff, mode }: {
     state: Awaited<ReturnType<typeof addCrmNote>>, form: FormData,
   ) => {
     const result = await addCrmNote(customerId, state, form);
-    if (result && !result.error) setBody('');
+    if (result && !result.error) { setBody(''); void invalidate(); }
     return result;
   }, null);
   const [followUpState, followUpAction, savingFollowUp] = useActionState(async (
@@ -33,6 +35,7 @@ export function CrmWriteForms({ customerId, staff, mode }: {
   ) => {
     const result = await addCrmFollowUp(customerId, state, form);
     if (result && !result.error) {
+      void invalidate();
       setNextAction('');
       setDueOn('');
     }
@@ -74,7 +77,12 @@ export function CrmWriteForms({ customerId, staff, mode }: {
 
 export function CrmFollowUpStatusButton({ followUp }: { followUp: CrmFollowUp }) {
   const nextStatus = followUp.status === 'open' ? 'completed' : 'open';
-  const [state, action, pending] = useActionState(setCrmFollowUpStatus.bind(null, followUp.id, nextStatus), null);
+  const invalidate = useInvalidateCrm();
+  const [state, action, pending] = useActionState(async (previous: Awaited<ReturnType<typeof setCrmFollowUpStatus>>, form: FormData) => {
+    const result = await setCrmFollowUpStatus(followUp.id, nextStatus, previous, form);
+    if (result && !result.error) void invalidate();
+    return result;
+  }, null);
   return (
     <form action={action} className="space-y-1">
       <Button type="submit" variant="outline" loading={pending} className="min-h-11">

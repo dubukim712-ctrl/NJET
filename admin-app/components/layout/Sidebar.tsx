@@ -225,7 +225,7 @@ export function Sidebar({ user, className, onNavigate }: SidebarProps) {
 
     return (
       <li key={item.name}>
-        <SmartLink
+        <SmartLink prefetch={true}
           href={item.href}
           onClick={onNavigate}
           aria-current={active ? "page" : undefined}

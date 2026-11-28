@@ -62,7 +62,7 @@ export function WalkInSaleActions({
             </ul>
           )}
           {error.outcomeUncertain && (
-            <Link href="/admin/orders" className="inline-flex min-h-11 items-center font-medium underline underline-offset-4">
+            <Link prefetch={true} href="/admin/orders" className="inline-flex min-h-11 items-center font-medium underline underline-offset-4">
               View orders
             </Link>
           )}
@@ -74,7 +74,7 @@ export function WalkInSaleActions({
           <Button type="button" variant="outline" disabled className="min-h-11">Cancel</Button>
         ) : (
           <Button variant="outline" asChild className="min-h-11">
-            <Link href="/admin/orders">Cancel</Link>
+            <Link prefetch={true} href="/admin/orders">Cancel</Link>
           </Button>
         )}
         <Button type="submit" className="min-h-11" loading={busy} disabled={Boolean(blockingReason)}>

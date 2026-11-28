@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { Users } from 'lucide-react';
 import { EmptyState } from '@/components/layout/EmptyState';
 import { UsersLoadingSkeleton } from '@/components/rbac/UsersLoadingSkeleton';
@@ -28,20 +27,19 @@ export function UsersQuery({
   roleId?: string;
   page: number;
 }) {
-  const router = useRouter();
   const query = useAdminUsersQuery(userId, canManage, search, roleId, page);
   const totalPages = query.data
     ? Math.max(1, Math.ceil(query.data.total / query.data.pageSize))
     : 1;
   const outOfRange = Boolean(
-    query.data && query.data.total > 0 && page > totalPages
+    !query.isPlaceholderData && query.data && query.data.total > 0 && page > totalPages
   );
 
   useEffect(() => {
     if (outOfRange) {
-      router.replace(buildUsersHref({ page: totalPages, search, roleId }));
+      window.history.replaceState(null, '', buildUsersHref({ page: totalPages, search, roleId }));
     }
-  }, [outOfRange, page, roleId, router, search, totalPages]);
+  }, [outOfRange, page, roleId, search, totalPages]);
 
   if (!query.data && query.isPending) {
     return (
@@ -86,6 +84,8 @@ export function UsersQuery({
     <div className="space-y-6">
       <UsersFilters roles={roles} search={search} roleId={roleId} />
 
+      {query.isPlaceholderData && <p className="text-sm text-muted-foreground" role="status">Updating users…</p>}
+
       {(query.isError || errors.users || errors.roles || errors.branches) && (
         <div
           className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive"
@@ -103,7 +103,7 @@ export function UsersQuery({
         </div>
       )}
 
-      {users.length === 0 ? (
+      {users.length === 0 ? !query.isPlaceholderData && (
         <EmptyState
           icon={Users}
           title="No users found"
@@ -120,15 +120,14 @@ export function UsersQuery({
             roles={roles}
             branches={branches}
             actor={actor}
-            canManage={query.data.canManage}
+            canManage={query.data.canManage && !query.isPlaceholderData}
           />
-          <TablePagination
+          {!query.isPlaceholderData && <TablePagination
             page={page}
             pageSize={pageSize}
             total={total}
-            previousHref={buildUsersHref({ page: page - 1, search, roleId })}
-            nextHref={buildUsersHref({ page: page + 1, search, roleId })}
-          />
+            onPageChange={(nextPage) => window.history.pushState(null, '', buildUsersHref({ page: nextPage, search, roleId }))}
+          />}
         </>
       )}
     </div>

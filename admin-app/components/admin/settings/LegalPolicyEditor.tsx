@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
+import { useInvalidateCheckoutOptionsQuery } from '@/data/commerce/checkout-options-client';
 import { saveStorefrontLegalPolicyAction } from '@/data/actions/legal-policies';
 import { useInvalidateAdminSystemSettingsQuery } from '@/data/commerce/admin-system-settings-client';
 import { LegalPolicySectionEditor } from '@/components/admin/settings/LegalPolicySectionEditor';
@@ -16,6 +17,7 @@ function textareaClassName() {
 export function LegalPolicyEditor({ policy }: { policy: LegalPolicy }) {
   const router = useRouter();
   const invalidateSettings = useInvalidateAdminSystemSettingsQuery();
+  const invalidateCheckout = useInvalidateCheckoutOptionsQuery();
   const [draft, setDraft] = useState(policy);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -170,7 +172,7 @@ export function LegalPolicyEditor({ policy }: { policy: LegalPolicy }) {
         router.refresh();
         throw new Error(result.error);
       }
-      await invalidateSettings();
+      await Promise.all([invalidateSettings(), invalidateCheckout()]);
       router.refresh();
       setDraft((current) => ({ ...current, version: result.data.version }));
       toast.success(`${policy.title} saved as ${result.data.version}.`);

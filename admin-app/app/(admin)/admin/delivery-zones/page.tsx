@@ -1,16 +1,10 @@
-import { DeliveryZonesContent } from '@/components/admin/commerce/DeliveryZonesContent';
+import { AdminDeliveryZonesView } from '@/components/admin/commerce/AdminDeliveryZonesView';
+import { requirePermission } from '@/data/auth/guards';
+import { PERMISSIONS } from '@/lib/permissions';
 
 export const metadata = { title: 'Delivery zones' };
 
-export default function DeliveryZonesPage() {
-  return (
-    <div className="space-y-6">
-      <header>
-        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-primary">Locations</p>
-        <h1 className="mt-1 text-3xl font-semibold tracking-tight">Delivery zones</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Set delivery areas and PHP delivery fees used during checkout.</p>
-      </header>
-      <DeliveryZonesContent />
-    </div>
-  );
+export default async function Page() {
+  await requirePermission(PERMISSIONS.deliveryZonesRead, '/admin/delivery-zones');
+  return <AdminDeliveryZonesView />;
 }

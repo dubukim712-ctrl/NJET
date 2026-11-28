@@ -26,25 +26,24 @@ import { parsePhpAmount } from '@/lib/commerce';
 export function WalkInSaleForm({
   branches,
   initialBranchId,
-  initialCatalog,
+  userId,
   canChooseBranch,
 }: {
   branches: WalkInBranchOption[];
   initialBranchId: string;
-  initialCatalog: WalkInCatalogItem[];
+  userId: string;
   canChooseBranch: boolean;
 }) {
   const queryClient = useQueryClient();
   const { busy, error, clearError, submit } = useWalkInSaleSubmission();
   const [branchId, setBranchId] = useState(initialBranchId);
   const catalogQuery = useQuery({
-    ...walkInCatalogQueryOptions(branchId),
+    ...walkInCatalogQueryOptions(userId, branchId),
     enabled: Boolean(branchId),
-    initialData: branchId === initialBranchId ? initialCatalog : undefined,
   });
-  const catalog = catalogQuery.data ?? initialCatalog;
-  const catalogBusy =
-    useIsFetching({ queryKey: ['commerce', 'walk-in-catalog'] }) > 0;
+  const catalog = catalogQuery.data ?? [];
+  const catalogBusy = useIsFetching({ queryKey: ['commerce', 'walk-in-catalog', userId] }) > 0
+    || Boolean(branchId && !catalogQuery.data && catalogQuery.isPending);
   const [cart, setCart] = useState<WalkInCartLine[]>([]);
   const [customerName, setCustomerName] = useState('');
   const [contactNumber, setContactNumber] = useState('');
@@ -84,7 +83,7 @@ export function WalkInSaleForm({
     clearError();
     onCleared();
     try {
-      await queryClient.fetchQuery(walkInCatalogQueryOptions(nextBranchId));
+      await queryClient.fetchQuery(walkInCatalogQueryOptions(userId, nextBranchId));
       setBranchId(nextBranchId);
     } catch (actionError) {
       if (actionError instanceof WalkInCatalogQueryError) {
@@ -134,6 +133,7 @@ export function WalkInSaleForm({
 
   const blockingReason = !branchId
     ? 'Select a selling branch before completing the sale.'
+    : catalogQuery.isError ? 'Reload branch stock before completing the sale.'
     : catalogBusy
       ? 'Wait for branch stock to finish loading.'
       : !cart.length
@@ -202,9 +202,10 @@ export function WalkInSaleForm({
         }
       />
 
-      {catalogError && (
+      {(catalogError || catalogQuery.isError) && (
         <p className="rounded-lg border border-destructive/30 bg-destructive/5 p-3 text-sm text-destructive" role="alert">
-          {catalogError}
+          {catalogError ?? 'Branch stock could not be loaded.'}
+          {catalogQuery.isError && <button type="button" className="ml-2 underline" onClick={() => void catalogQuery.refetch()}>Try again</button>}
         </p>
       )}
       {branchId ? (

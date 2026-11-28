@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { revalidateStorefrontCatalog } from '@/data/commerce/revalidate-storefront';
 import type { ActionResult } from '@/data/actions/auth';
 import { getAuthContext } from '@/data/auth/guards';
 import { createClient } from '@/data/supabase/server';
@@ -125,7 +126,7 @@ export async function moderateProductReviewAction(
     });
     if (error) throw error;
     revalidatePath('/admin/products');
-    revalidatePath('/shop');
+    revalidateStorefrontCatalog();
     return { success: true, data: undefined };
   } catch (error) {
     console.error('Could not moderate product review.', error);

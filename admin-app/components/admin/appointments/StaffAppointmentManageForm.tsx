@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { getScheduleBlockingReason } from "@/components/admin/appointments/schedule-save-availability";
 import { formatStaffAppointmentDate } from '@/lib/staff-appointment-editing';
 import { AppointmentDateTimeFields } from "@/components/appointments/AppointmentDateTimeFields";
+import { StaffCancelAppointment } from "@/components/admin/appointments/StaffCancelAppointment";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
@@ -274,9 +275,14 @@ export function StaffAppointmentManageForm({
             Retry availability check
           </Button>
         )}
-        <Button type="submit" className="min-h-11 w-full" loading={saving} disabled={Boolean(blockingReason)}>
-          {appointment.status === "requested" ? "Confirm appointment" : rescheduling ? "Save new schedule" : "Save changes"}
-        </Button>
+        <div className="flex flex-col-reverse gap-2.5 sm:flex-row sm:items-center sm:justify-end sm:gap-3">
+          {!appointment.cancellation_request && ["requested", "confirmed"].includes(appointment.status) && (
+            <StaffCancelAppointment appointmentId={appointment.id} reference={appointment.appointment_number} />
+          )}
+          <Button type="submit" className="min-h-11 w-full sm:w-auto" loading={saving} disabled={Boolean(blockingReason)}>
+            {appointment.status === "requested" ? "Confirm appointment" : rescheduling ? "Save new schedule" : "Save changes"}
+          </Button>
+        </div>
       </div>
     </form>
   );

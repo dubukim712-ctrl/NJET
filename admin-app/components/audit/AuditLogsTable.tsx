@@ -199,7 +199,7 @@ export function AuditLogsTable({
                         {changeCount} field{changeCount === 1 ? '' : 's'}
                       </td>
                       <td className="px-4 py-3 text-right">
-                        <Link href={detailHref(log.id)} className="font-medium text-primary hover:underline">
+                        <Link prefetch={true} href={detailHref(log.id)} className="font-medium text-primary hover:underline">
                           View
                         </Link>
                       </td>
@@ -245,7 +245,7 @@ export function AuditLogsTable({
                   <p className="mt-1 text-xs text-muted-foreground">
                     {changeCount} field{changeCount === 1 ? '' : 's'} changed
                   </p>
-                  <Link href={detailHref(log.id)} className="mt-3 inline-flex text-sm font-medium text-primary hover:underline">
+                  <Link prefetch={true} href={detailHref(log.id)} className="mt-3 inline-flex text-sm font-medium text-primary hover:underline">
                     View changes
                   </Link>
                 </li>

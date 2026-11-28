@@ -1,6 +1,8 @@
 "use client";
 
 import { SmartLink } from "@/components/ui/SmartLink";
+import { useCallback, useEffect, useMemo } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useSearchParams } from "next/navigation";
 import {
   ArrowUpRight,
@@ -14,7 +16,7 @@ import {
 } from "lucide-react";
 import { hasPermission, PERMISSIONS } from "@/lib/permissions";
 import { useAdminProfile } from "@/components/providers/AdminProvider";
-import { useAdminDashboardQuery } from "@/data/dashboard/admin-dashboard-client";
+import { adminDashboardOptions, useAdminDashboardQuery } from "@/data/dashboard/admin-dashboard-client";
 import type { DashboardBranchContext } from "@/data/dashboard/branch-context";
 import type { RealtimeTable } from "@/types/realtime";
 import { DashboardBranchSelector } from "./DashboardBranchSelector";
@@ -25,6 +27,25 @@ export function StaffLandingPage() {
   const profile = useAdminProfile();
   const requestedBranchId = useSearchParams().get("branch");
   const query = useAdminDashboardQuery(profile, requestedBranchId);
+  const client = useQueryClient();
+  const branchOptions = query.data?.branchContext.branches;
+  const canWarmBranches = Boolean(query.data?.branchContext.canSelectBranch);
+  const adjacentBranches = useMemo(() => {
+    if (!canWarmBranches || !branchOptions) return [];
+    const branches = [null, ...branchOptions.map(({ id }) => id)];
+    const current = Math.max(0, branches.indexOf(requestedBranchId === "all" ? null : requestedBranchId));
+    return [branches[current + 1], branches[current - 1], branches[current + 2]]
+      .filter((branch) => branch !== undefined).slice(0, 2);
+  }, [branchOptions, canWarmBranches, requestedBranchId]);
+  const warmBranches = useCallback(() => {
+    for (const branch of adjacentBranches) void client.prefetchQuery(adminDashboardOptions(profile, branch));
+  }, [adjacentBranches, client, profile]);
+
+  useEffect(() => {
+    if (!adjacentBranches.length || query.isFetching) return;
+    const timer = window.setTimeout(warmBranches, 700);
+    return () => window.clearTimeout(timer);
+  }, [adjacentBranches, query.isFetching, warmBranches]);
   const isBranchScopedStaff =
     profile.scope === "staff" && !profile.is_full_access;
   const branchContext: DashboardBranchContext = query.data?.branchContext ?? {
@@ -129,7 +150,7 @@ export function StaffLandingPage() {
       >
         <div className="flex w-max min-w-full gap-2">
           {quickActions.map((action) => (
-            <SmartLink
+            <SmartLink prefetch={true}
               key={action.href}
               href={action.href}
               className="flex min-h-12 shrink-0 items-center gap-2 whitespace-nowrap rounded-md border border-border bg-card px-3 py-3 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
@@ -156,8 +177,6 @@ export function StaffLandingPage() {
             </span>
             <DashboardRealtimeRefresh
               profile={profile}
-              branchId={branchContext.selectedBranchId}
-              requestedBranchId={requestedBranchId}
               tables={realtimeTables}
             />
           </div>
@@ -176,9 +195,15 @@ export function StaffLandingPage() {
           </p>
         </div>
         <div className="flex w-full flex-col gap-3 self-start sm:w-auto sm:flex-row sm:items-end sm:self-auto">
-          <DashboardBranchSelector context={branchContext} />
+          <DashboardBranchSelector
+            context={branchContext}
+            value={(query.isPlaceholderData && branchOptions?.some(({ id }) => id === requestedBranchId)
+              ? requestedBranchId : query.isPlaceholderData ? null : branchContext.selectedBranchId) ?? "all"}
+            updating={query.isPlaceholderData && query.isFetching}
+            onWarm={warmBranches}
+          />
           {isAdmin && (
-            <SmartLink
+            <SmartLink prefetch={true}
               href="/"
               className="hidden min-h-11 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 sm:inline-flex"
             >

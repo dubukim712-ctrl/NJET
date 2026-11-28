@@ -91,7 +91,7 @@ export function AdminNotificationBell({ userId }: { userId: string }) {
 
         <div className="border-t p-2">
           <DropdownMenuItem asChild className="justify-center font-medium">
-            <SmartLink href="/admin/notifications">View all notifications</SmartLink>
+            <SmartLink prefetch={true} href="/admin/notifications">View all notifications</SmartLink>
           </DropdownMenuItem>
         </div>
       </DropdownMenuContent>
