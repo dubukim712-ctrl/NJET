@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { SmartLink } from "@/components/ui/SmartLink";
 import { useSearchParams } from "next/navigation";
 import {
   ArrowUpRight,
@@ -129,7 +129,7 @@ export function StaffLandingPage() {
       >
         <div className="flex w-max min-w-full gap-2">
           {quickActions.map((action) => (
-            <Link
+            <SmartLink
               key={action.href}
               href={action.href}
               className="flex min-h-12 shrink-0 items-center gap-2 whitespace-nowrap rounded-md border border-border bg-card px-3 py-3 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
@@ -139,7 +139,7 @@ export function StaffLandingPage() {
                 aria-hidden="true"
               />
               <span>{action.label}</span>
-            </Link>
+            </SmartLink>
           ))}
         </div>
       </div>
@@ -178,14 +178,14 @@ export function StaffLandingPage() {
         <div className="flex w-full flex-col gap-3 self-start sm:w-auto sm:flex-row sm:items-end sm:self-auto">
           <DashboardBranchSelector context={branchContext} />
           {isAdmin && (
-            <Link
+            <SmartLink
               href="/"
               className="hidden min-h-11 shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 sm:inline-flex"
             >
               <ShoppingBag className="h-4 w-4" aria-hidden="true" />
               Preview storefront
               <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
-            </Link>
+            </SmartLink>
           )}
         </div>
       </header>

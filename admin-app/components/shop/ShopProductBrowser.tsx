@@ -1,5 +1,6 @@
 'use client';
 
+import type { ShopCatalogPage } from '@/data/commerce/catalog';
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useSearchParams } from 'next/navigation';
@@ -25,7 +26,7 @@ function updateCatalogUrl(changes: Partial<Record<CatalogParam, string | null>>,
   else window.history.pushState(null, '', url);
 }
 
-export function ShopProductBrowser({ branches }: { branches: { id: string; name: string }[] }) {
+export function ShopProductBrowser({ branches, initialData }: { branches: { id: string; name: string }[]; initialData?: ShopCatalogPage }) {
   const { open: filtersOpen, popoverRoot: filterPopoverRoot } = useShopFilters();
   const params = useSearchParams();
   const committedSearch = params.get('q')?.trim().slice(0, 120) ?? '';
@@ -50,7 +51,8 @@ export function ShopProductBrowser({ branches }: { branches: { id: string; name:
     sort: shopCatalogFiltersSchema.shape.sort.catch('featured').parse(params.get('sort')),
     page: shopCatalogFiltersSchema.shape.page.catch(1).parse(Number(params.get('page'))),
   });
-  const query = useShopCatalogPage(filters);
+  const defaultFilters = !filters.search && !filters.category && !filters.subcategory && !filters.branch && !filters.inStock && filters.sort === "featured" && filters.page === 1;
+  const query = useShopCatalogPage(filters, defaultFilters ? initialData : undefined);
   const resultsHeadingRef = useRef<HTMLHeadingElement>(null);
   const facets = query.data?.facets ?? [];
   const categories = [...new Map(facets.map((facet) => [facet.category_id, facet.category_name])).entries()];
@@ -58,7 +60,7 @@ export function ShopProductBrowser({ branches }: { branches: { id: string; name:
     .filter((facet) => !filters.category || facet.category_id === filters.category)
     .map((facet) => [facet.subcategory_id, facet.subcategory_name])).entries()]
     .sort((a, b) => a[1].localeCompare(b[1]));
-  const loading = query.isPending || query.isPlaceholderData;
+  const loading = query.isPending || (query.isPlaceholderData && !defaultFilters);
   const products = loading ? [] : query.data?.products ?? [];
   const total = query.data?.total ?? 0;
   const pageCount = Math.ceil(total / shopPageSize);

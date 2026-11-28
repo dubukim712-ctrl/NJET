@@ -126,7 +126,7 @@ export function SupportChatLauncher() {
           className="w-72 max-w-[calc(100vw-2rem)] rounded-2xl border-border bg-card p-2 text-card-foreground shadow-xl"
         >
           <DropdownMenuItem asChild className={channelClass}>
-            <Link href="/chat" prefetch={false}>
+            <Link href="/chat">
               <MessageCircle className="size-5 text-foreground" aria-hidden="true" />
               Chat on Website
             </Link>

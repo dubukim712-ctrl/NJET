@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import { SmartLink } from "@/components/ui/SmartLink";
 import { Bell, CheckCheck } from 'lucide-react';
 import { NotificationList } from '@/components/admin/notifications/NotificationList';
 import {
@@ -91,7 +91,7 @@ export function AdminNotificationBell({ userId }: { userId: string }) {
 
         <div className="border-t p-2">
           <DropdownMenuItem asChild className="justify-center font-medium">
-            <Link href="/admin/notifications">View all notifications</Link>
+            <SmartLink href="/admin/notifications">View all notifications</SmartLink>
           </DropdownMenuItem>
         </div>
       </DropdownMenuContent>

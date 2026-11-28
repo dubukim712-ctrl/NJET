@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import { SmartLink } from "@/components/ui/SmartLink";
 import { DropdownMenuItem } from '@/components/ui/DropdownMenu';
 import type { AdminNotification } from '@/types/database';
 
@@ -33,7 +33,7 @@ export function NotificationList({
     <ul className="divide-y">
       {visibleNotifications.map((notification) => {
         const link = (
-          <Link
+          <SmartLink
             href={notification.href}
             onClick={() => {
               if (!notification.read_at) onMarkRead(notification.id);
@@ -67,7 +67,7 @@ export function NotificationList({
                 </time>
               </span>
             </div>
-          </Link>
+          </SmartLink>
         );
 
         return (

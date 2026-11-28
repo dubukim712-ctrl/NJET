@@ -3,7 +3,7 @@
 import { formatAppointmentBikeName } from '@/lib/appointment-bike-name';
 
 import { useCallback, useState } from 'react';
-import Link from 'next/link';
+import { SmartLink } from "@/components/ui/SmartLink";
 import { ArrowRight, CalendarDays } from 'lucide-react';
 import { useAuth } from '@/components/auth/AuthProvider';
 import { ServiceAppointmentStatusBadge } from '@/components/appointments/ServiceAppointmentStatusBadge';
@@ -241,7 +241,7 @@ export function CustomerServiceAppointments() {
           <CalendarDays className="mx-auto h-8 w-8 text-primary" aria-hidden="true" />
           <h2 className="mt-3 font-semibold">No service appointments yet</h2>
           <p className="mt-2 text-sm text-muted-foreground">Book a branch visit or request service at home.</p>
-          <Button asChild className="mt-4"><Link href="/dashboard/appointments/new">Book service</Link></Button>
+          <Button asChild className="mt-4"><SmartLink href="/dashboard/appointments/new">Book service</SmartLink></Button>
         </section>
       )}
     </div>

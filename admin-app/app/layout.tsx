@@ -1,3 +1,4 @@
+import NextTopLoader from "nextjs-toploader";
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { AuthSignInNotice } from "@/components/auth/AuthSignInNotice";
@@ -5,17 +6,17 @@ import { ToastProvider } from "@/components/ui/Toast";
 import { AuthProvider } from "@/components/auth/AuthProvider";
 import { CartProvider } from "@/components/cart/CartProvider";
 import { QueryProvider } from "@/components/providers/QueryProvider";
-import { createClient } from "@/data/supabase/server";
-import type { UserProfile } from "@/types/database";
 import "./globals.css";
 
 const geistSans = Geist({
   subsets: ["latin"],
+  preload: false,
   variable: "--font-geist-sans",
 });
 
 const geistMono = Geist_Mono({
   subsets: ["latin"],
+  preload: false,
   variable: "--font-geist-mono",
 });
 
@@ -34,26 +35,11 @@ export const viewport: Viewport = {
   ],
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  let profile: UserProfile | null = null;
-  if (user) {
-    const { data } = await supabase
-      .from("user_profiles")
-      .select("*")
-      .eq("id", user.id)
-      .single();
-    profile = data ?? null;
-  }
-
   return (
     <html
       lang="en"
@@ -61,13 +47,14 @@ export default async function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable}`}
     >
       <body className="min-h-dvh bg-background font-sans antialiased">
-        <AuthProvider key={profile?.id ?? "anonymous"} initialUser={profile}>
+        <NextTopLoader color="var(--primary)" showSpinner={false} height={3} showForHashAnchor={false} />
+        <AuthProvider initialUser={null}>
+          <AuthSignInNotice />
           <CartProvider>
             <QueryProvider>{children}</QueryProvider>
           </CartProvider>
         </AuthProvider>
         <ToastProvider position="top-right" visibleToasts={3}>
-          <AuthSignInNotice signedIn={Boolean(user)} />
         </ToastProvider>
       </body>
     </html>

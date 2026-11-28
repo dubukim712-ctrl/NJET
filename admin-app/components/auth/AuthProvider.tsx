@@ -10,6 +10,7 @@ import {
   type ReactNode,
 } from 'react';
 import { toast } from 'sonner';
+import { useRouter } from 'next/navigation';
 import { createClient } from '@/data/supabase/client';
 import type { UserProfile } from '@/types/database';
 
@@ -45,6 +46,7 @@ export function AuthProvider({
   children: ReactNode;
   initialUser: UserProfile | null;
 }) {
+  const router = useRouter();
   const [user, setUser] = useState<UserProfile | null>(initialUser);
   const accessAssignment = useRef<Pick<UserProfile, 'id' | 'role_id' | 'branch_id'> | null>(
     initialUser
@@ -61,25 +63,28 @@ export function AuthProvider({
   useEffect(() => {
     const supabase = createClient();
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event) => {
-      if (
-        event === 'SIGNED_IN' ||
-        event === 'TOKEN_REFRESHED' ||
-        event === 'USER_UPDATED'
-      ) {
-        try {
-          setUser(await loadProfile());
-        } catch {
-          // Keep the last known profile on transient failures.
-        }
-      } else if (event === 'SIGNED_OUT') {
+    let loadVersion = 0;
+    let profileLoad: ReturnType<typeof setTimeout> | undefined;
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      const version = ++loadVersion;
+      if (profileLoad) clearTimeout(profileLoad);
+      if (!session) {
         setUser(null);
+        return;
       }
+      // Defer Supabase calls until the auth callback has released its lock.
+      profileLoad = setTimeout(() => {
+        void loadProfile().then((profile) => {
+          if (version === loadVersion) setUser(profile);
+        }).catch(() => {});
+      }, 0);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      if (profileLoad) clearTimeout(profileLoad);
+      loadVersion++;
+      subscription.unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
@@ -147,7 +152,8 @@ export function AuthProvider({
           }
 
           setUser(null);
-          window.location.replace('/login');
+          router.replace('/login');
+          router.refresh();
           return;
         }
 
@@ -183,7 +189,7 @@ export function AuthProvider({
       active = false;
       void supabase.removeChannel(channel);
     };
-  }, [userId]);
+  }, [router, userId]);
 
   const signOut = useCallback(async () => {
     if (signOutPending.current) return signOutPending.current;

@@ -14,9 +14,11 @@ import { PasswordInput } from "@/components/auth/PasswordInput";
 import { AuthOptions } from "@/components/auth/AuthOptions";
 import { rememberVerificationEmail } from "@/data/auth/verification-email";
 import Link from "next/link";
+import { useAuth } from "@/components/auth/AuthProvider";
 
 export function LoginForm() {
   const router = useRouter();
+  const { refreshUser } = useAuth();
   const searchParams = useSearchParams();
   const requestedRedirect = searchParams.get("redirect");
   const safeRedirect =
@@ -51,7 +53,11 @@ export function LoginForm() {
 
     if (result.success) {
       const destination = new URL(result.data.redirectTo, window.location.origin);
-      window.location.assign(result.data.requiresVerification ? destination : addSignInNotice(destination));
+      if (!result.data.requiresVerification) {
+        addSignInNotice(destination);
+        void refreshUser();
+      }
+      router.replace(destination.pathname + destination.search + destination.hash);
     } else if (result.verificationRequired) {
       rememberVerificationEmail(data.email);
       toast.info("Verify your email to finish signing in.");
@@ -107,12 +113,12 @@ export function LoginForm() {
             <label htmlFor="password" className="text-sm font-medium">
               Password
             </label>
-            <a
+            <Link
               href="/forgot-password"
               className="text-sm font-medium text-foreground hover:underline"
             >
               Forgot password?
-            </a>
+            </Link>
           </div>
           <PasswordInput
             id="password"

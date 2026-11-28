@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { SmartLink } from "@/components/ui/SmartLink";
 
 const links = [
   ["/terms", "Terms & Conditions"],
@@ -13,13 +13,13 @@ export function LegalFooterLinks() {
       className="mt-3 flex flex-col items-start gap-2.5 border-t border-white/20 pt-3 text-xs leading-5"
     >
       {links.map(([href, label]) => (
-        <Link
+        <SmartLink
           key={href}
           className="underline-offset-4 hover:underline"
           href={href}
         >
           {label}
-        </Link>
+        </SmartLink>
       ))}
     </nav>
   );

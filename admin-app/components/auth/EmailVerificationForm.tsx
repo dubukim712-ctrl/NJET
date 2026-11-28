@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/components/auth/AuthProvider';
 import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -20,6 +22,8 @@ import {
 import { resendSignupOtpSchema, SIGNUP_OTP_LENGTH } from '@/lib/validations/auth';
 
 export function EmailVerificationForm() {
+  const router = useRouter();
+  const { refreshUser } = useAuth();
   const [email, setEmail] = useState('');
   const [draftEmail, setDraftEmail] = useState('');
   const [editing, setEditing] = useState(false);
@@ -68,7 +72,8 @@ export function EmailVerificationForm() {
       const result = await verifySignupOtpAction(formData);
       if (result.success) {
         clearRememberedVerificationEmail();
-        window.location.assign(result.data.redirectTo);
+        void refreshUser();
+        router.replace(result.data.redirectTo);
         return;
       }
       if (result.rateLimited) {

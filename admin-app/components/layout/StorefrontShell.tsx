@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
+import { SmartLink } from "@/components/ui/SmartLink";
 import Image from "next/image";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { Search, X } from "lucide-react";
 import { useAuth } from "@/components/auth/AuthProvider";
 import { UserNav } from "@/components/auth/UserNav";
@@ -43,7 +43,6 @@ export function StorefrontShell({
   const pathname = usePathname();
   const activeLink = useStorefrontActiveLink(pathname);
   const hasPanoramicHero = pathname === "/" || pathname === "/dashboard";
-  const router = useRouter();
   const [shopFiltersOpen, setShopFiltersOpen] = useState(false);
   const [shopFiltersPopoverRoot, setShopFiltersPopoverRoot] =
     useState<HTMLDivElement | null>(null);
@@ -106,9 +105,9 @@ export function StorefrontShell({
       >
         <div className="bg-[#264653] px-3 py-1.5 text-center text-[11px] leading-4 text-[#f4ede4] sm:text-xs">
           {displayUser ? (
-            <Link href="/dashboard" className="underline-offset-2 hover:underline focus-visible:underline focus-visible:outline-white">
+            <SmartLink href="/dashboard" className="underline-offset-2 hover:underline focus-visible:underline focus-visible:outline-white">
               <strong className="text-[#e0f2ef]">MEMBER PERKS:</strong> Track your orders, view receipts &amp; book a service checkup →
-            </Link>
+            </SmartLink>
           ) : (
             <>
               <strong className="text-[#e0f2ef]">MEMBER PERKS:</strong> Sign in to book a service checkup &amp; track orders.
@@ -116,7 +115,7 @@ export function StorefrontShell({
           )}
         </div>
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-2 px-3 sm:px-6">
-          <Link
+          <SmartLink
             href="/"
             className="flex min-w-0 items-center gap-2 text-base font-semibold leading-none tracking-tight sm:text-lg"
           >
@@ -126,7 +125,6 @@ export function StorefrontShell({
                 alt=""
                 width={36}
                 height={36}
-                unoptimized
                 className="size-9 shrink-0 rounded-full object-contain"
               />
             )}
@@ -134,7 +132,7 @@ export function StorefrontShell({
               {businessInfo?.businessName || "NJET"}
             </span>
             <span className="sm:hidden md:inline lg:hidden">NJET</span>
-          </Link>
+          </SmartLink>
 
           <nav
             aria-label="Storefront navigation"
@@ -143,13 +141,10 @@ export function StorefrontShell({
             {sectionLinks.map(({ name, href }) => {
               const active = href === activeLink;
               return (
-                <Link
+                <SmartLink
                   key={href}
                   href={href}
                   scroll={pathname === "/" || !href.includes("#")}
-                  prefetch={false}
-                  onPointerEnter={() => router.prefetch(href)}
-                  onFocus={() => router.prefetch(href)}
                   onClick={(event) => {
                     if (
                       href !== "/" ||
@@ -182,7 +177,7 @@ export function StorefrontShell({
                   )}
                 >
                   {name}
-                </Link>
+                </SmartLink>
               );
             })}
           </nav>
@@ -219,18 +214,18 @@ export function StorefrontShell({
               <UserNav user={displayUser} showHelp />
             ) : (
               <div className="flex shrink-0 items-center gap-1">
-                <Link
+                <SmartLink
                   href="/login"
                   className="inline-flex min-h-10 items-center rounded-md px-2 text-sm font-medium hover:bg-accent"
                 >
                   Sign in
-                </Link>
-                <Link
+                </SmartLink>
+                <SmartLink
                   href="/register"
                   className="inline-flex min-h-10 items-center rounded-md bg-primary-action px-3 text-sm font-medium text-primary-foreground hover:bg-primary-action-hover"
                 >
                   Join us
-                </Link>
+                </SmartLink>
               </div>
             )}
           </div>

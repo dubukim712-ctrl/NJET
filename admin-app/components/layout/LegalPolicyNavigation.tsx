@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import { SmartLink } from "@/components/ui/SmartLink";
 import { useEffect, useState } from 'react';
 
 const POLICY_LINKS = [
@@ -52,7 +52,7 @@ export function LegalPolicyNavigation({
       <ul className="space-y-1">
         {POLICY_LINKS.map((link) => (
           <li key={link.slug}>
-            <Link
+            <SmartLink
               href={link.href}
               aria-current={policySlug === link.slug ? 'page' : undefined}
               className={`flex min-h-11 items-center rounded-md px-3 text-sm ${
@@ -62,7 +62,7 @@ export function LegalPolicyNavigation({
               }`}
             >
               {link.title}
-            </Link>
+            </SmartLink>
             {policySlug === link.slug && (
               <nav
                 aria-label={`${policyTitle} sections`}
@@ -73,7 +73,7 @@ export function LegalPolicyNavigation({
                     const active = activeSectionId === section.id;
                     return (
                       <li key={section.id}>
-                        <a
+                        <SmartLink
                           href={`#${section.id}`}
                           aria-current={active ? 'location' : undefined}
                           className={`block rounded-md px-2 py-1.5 text-sm leading-5 ${
@@ -83,7 +83,7 @@ export function LegalPolicyNavigation({
                           }`}
                         >
                           {index + 1}. {section.title}
-                        </a>
+                        </SmartLink>
                       </li>
                     );
                   })}

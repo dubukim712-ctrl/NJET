@@ -1,4 +1,8 @@
+"use client";
+
 import Link from "next/link";
+import { useAuth } from "@/components/auth/AuthProvider";
+import { hasPermission, PERMISSIONS } from "@/lib/permissions";
 import { ArrowUpRight, Wrench } from "lucide-react";
 import {
   serviceBookingPath,
@@ -11,7 +15,9 @@ const parts = [
   ["Tires & Spare Parts", "tire"],
 ];
 
-export function StorefrontServiceSection({ canBook }: { canBook: boolean }) {
+export function StorefrontServiceSection() {
+  const { user } = useAuth();
+  const canBook = user?.scope === "customer" && hasPermission(user, PERMISSIONS.storefrontAccess);
   return (
     <section
       id="services"

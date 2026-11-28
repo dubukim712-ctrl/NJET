@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { SmartLink } from "@/components/ui/SmartLink";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
   Users,
@@ -200,7 +200,6 @@ const ADMIN_NAVIGATION: NavGroup[] = [
 
 export function Sidebar({ user, className, onNavigate }: SidebarProps) {
   const pathname = usePathname();
-  const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
 
   const isCollapsible = !onNavigate;
@@ -226,11 +225,8 @@ export function Sidebar({ user, className, onNavigate }: SidebarProps) {
 
     return (
       <li key={item.name}>
-        <Link
+        <SmartLink
           href={item.href}
-          prefetch={false}
-          onPointerEnter={() => router.prefetch(item.href)}
-          onFocus={() => router.prefetch(item.href)}
           onClick={onNavigate}
           aria-current={active ? "page" : undefined}
           aria-label={isCustomerChats && collapsed ? item.name : undefined}
@@ -249,7 +245,7 @@ export function Sidebar({ user, className, onNavigate }: SidebarProps) {
           {isCustomerChats && (
             <SupportChatUnreadCount userId={user?.id ?? null} compact={collapsed} />
           )}
-        </Link>
+        </SmartLink>
       </li>
     );
   };

@@ -6,7 +6,7 @@ import {
   useSyncExternalStore,
   type ReactNode,
 } from "react";
-import Link from "next/link";
+import { SmartLink } from "@/components/ui/SmartLink";
 import { Menu, Moon, Sun, X } from "lucide-react";
 import { UserNav } from "@/components/auth/UserNav";
 import { AdminNotificationBell } from "@/components/admin/notifications/AdminNotificationBell";
@@ -78,9 +78,9 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
             <Menu className="h-5 w-5" aria-hidden="true" />
           </button>
 
-          <Link href="/admin" className="text-lg font-bold">
+          <SmartLink href="/admin" className="text-lg font-bold">
             Admin Portal
-          </Link>
+          </SmartLink>
 
           <div className="ml-auto flex items-center gap-3">
             <button

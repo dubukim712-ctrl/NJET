@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { SmartLink } from "@/components/ui/SmartLink";
 import { ChevronRight } from 'lucide-react';
 import type { CrmCustomer } from '@/types/crm';
 
@@ -24,7 +24,7 @@ export function CrmCustomerDirectory({ customers }: { customers: CrmCustomer[] }
           const hasActivity = Boolean(customer.recent_branch_name || customer.last_interaction_at);
           return (
             <li key={customer.id}>
-              <Link href={'/admin/crm/' + customer.id}
+              <SmartLink href={'/admin/crm/' + customer.id}
                 className={desktopColumns + ' grid min-h-11 min-w-0 gap-2 px-4 py-3.5 transition-colors hover:bg-accent/60 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary sm:px-5'}>
                 <div className="flex min-w-0 items-center gap-3">
                   <span aria-hidden="true" className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
@@ -59,7 +59,7 @@ export function CrmCustomerDirectory({ customers }: { customers: CrmCustomer[] }
                 ) : <span className="hidden text-sm text-muted-foreground xl:inline"><span aria-hidden="true">&mdash;</span><span className="sr-only">No open follow-ups</span></span>}
 
                 <ChevronRight className="hidden size-4 text-muted-foreground xl:block" aria-hidden="true" />
-              </Link>
+              </SmartLink>
             </li>
           );
         })}
