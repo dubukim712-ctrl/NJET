@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { e2eCredentials, logIn } from "./e2e-login";
 
-const ordersPath = "/dashboard/orders";
+const ordersPath = "/orders";
 const customer = e2eCredentials("USER");
 const unknownOrder = "00000000-0000-4000-8000-000000000001";
 

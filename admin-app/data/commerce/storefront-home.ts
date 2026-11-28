@@ -3,10 +3,10 @@ import { unstable_rethrow } from 'next/navigation';
 import { z } from 'zod';
 import { getStorefrontBranches } from '@/data/commerce/storefront-branches';
 import { getStorefrontBusinessInfo } from '@/data/commerce/system-settings';
-import { createClient } from '@/data/supabase/server';
+import { createPublicClient } from '@/data/supabase/public';
 
 export const getPublicStorefrontInfo = cache(async () => {
-  const client = await createClient();
+  const client = createPublicClient();
   const [business, branches] = await Promise.all([
     getStorefrontBusinessInfo(client),
     getStorefrontBranches(),
@@ -24,7 +24,7 @@ export type StorefrontHomeReview = z.infer<typeof reviewsSchema>[number];
 
 export async function getStorefrontHomeReviews(): Promise<StorefrontHomeReview[]> {
   try {
-    const client = await createClient();
+    const client = createPublicClient();
     const { data, error } = await client.rpc('storefront_home_reviews');
     if (error) throw error;
     return reviewsSchema.parse(data).filter((review) => Boolean(review.comment?.trim()));

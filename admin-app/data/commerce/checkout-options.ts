@@ -1,4 +1,5 @@
 import { unstable_rethrow } from 'next/navigation';
+import { resolveCheckoutAddress, savedAddressColumns } from '@/data/commerce/checkout-address';
 import { createClient } from '@/data/supabase/server';
 import { getCurrentLegalPolicies } from '@/data/commerce/legal-policies';
 import type { LegalPolicy, LegalPolicySlug } from '@/data/legal-policies';
@@ -12,6 +13,7 @@ export type CheckoutOptions = {
   phoneVerificationRequired: boolean;
   customerPhoneNumber: string | null;
   customerPhoneVerified: boolean;
+  initialAddress: ReturnType<typeof resolveCheckoutAddress>;
   paymentRecipients: {
     id: string;
     provider: PaymentProvider;
@@ -64,7 +66,7 @@ export async function getCheckoutOptions(userId: string): Promise<{
           .maybeSingle(),
         supabase
           .from('users')
-          .select('phone_number, phone_verified_at')
+          .select(`phone_number, phone_verified_at, ${savedAddressColumns}`)
           .eq('id', userId)
           .maybeSingle(),
       ]);
@@ -88,6 +90,7 @@ export async function getCheckoutOptions(userId: string): Promise<{
         zones,
         phoneVerificationRequired: businessSettings.phone_verification_required,
         customerPhoneNumber: customer.phone_number,
+        initialAddress: resolveCheckoutAddress(customer),
         customerPhoneVerified: Boolean(
           customer.phone_number && customer.phone_verified_at
         ),

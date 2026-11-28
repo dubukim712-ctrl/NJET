@@ -20,12 +20,12 @@ import { Button } from '@/components/ui/Button';
 
 export function OrderPaymentPanel({
   details,
-  serverNow,
+  serverClockOffsetMs,
   userId,
   orderId,
 }: {
   details: CustomerOrderPayment;
-  serverNow: string;
+  serverClockOffsetMs: number;
   userId: string;
   orderId: string;
 }) {
@@ -35,11 +35,10 @@ export function OrderPaymentPanel({
     userId,
     orderId
   );
-  const serverNowMs = Date.parse(serverNow);
   const deadlineMs = details.payment_expires_at
     ? Date.parse(details.payment_expires_at)
     : null;
-  const [now, setNow] = useState(serverNowMs);
+  const [now, setNow] = useState(() => Date.now() + serverClockOffsetMs);
   const [reference, setReference] = useState(details.payment_reference ?? '');
   const [proof, setProof] = useState<File | null>(null);
   const [fileInputKey, setFileInputKey] = useState(0);
@@ -49,10 +48,9 @@ export function OrderPaymentPanel({
   const refreshedAtExpiry = useRef(false);
 
   useEffect(() => {
-    const offset = serverNowMs - Date.now();
-    const interval = window.setInterval(() => setNow(Date.now() + offset), 1000);
+    const interval = window.setInterval(() => setNow(Date.now() + serverClockOffsetMs), 1000);
     return () => window.clearInterval(interval);
-  }, [serverNowMs]);
+  }, [serverClockOffsetMs]);
 
   const secondsLeft = deadlineMs === null
     ? 0

@@ -9,7 +9,7 @@ const { completeCommerceOrderWithPaymentAction } = await import('../data/actions
 test('customer cannot read staff orders or complete an order', async () => {
   const context = actionContext({ scope: 'customer', permissions: ['storefront.access'] });
   await context.run(async () => {
-    const denial = { destination: '/dashboard?error=insufficient_permissions' };
+    const denial = { destination: '/?error=insufficient_permissions' };
     await assert.rejects(() => getCommerceOrdersAction({ q: '', status: '', branch: '' }), denial);
     await assert.rejects(() => completeCommerceOrderWithPaymentAction({ orderId: randomUUID() }), denial);
   });

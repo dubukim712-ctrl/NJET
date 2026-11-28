@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { CheckCircle2, Phone } from "lucide-react";
 import {
   requestPhoneVerificationAction,
@@ -25,10 +25,10 @@ export function CheckoutPhoneVerification({
   verificationRequired: boolean;
   onVerificationChange: (verified: boolean) => void;
 }) {
-  const [phoneNumber, setPhoneNumber] = useState(() => formatSavedPhilippineMobileNumber(initialPhoneNumber));
-  const [verifiedPhoneNumber, setVerifiedPhoneNumber] = useState(
-    () => formatSavedPhilippineMobileNumber(initialVerifiedPhoneNumber) || null,
-  );
+  const [phoneEdit, setPhoneNumber] = useState<string>();
+  const [locallyVerifiedNumber, setVerifiedPhoneNumber] = useState<string>();
+  const phoneNumber = phoneEdit ?? formatSavedPhilippineMobileNumber(initialPhoneNumber);
+  const verifiedPhoneNumber = locallyVerifiedNumber ?? formatSavedPhilippineMobileNumber(initialVerifiedPhoneNumber);
   const [challengeId, setChallengeId] = useState<string | null>(null);
   const [challengePhoneNumber, setChallengePhoneNumber] = useState<
     string | null
@@ -42,6 +42,10 @@ export function CheckoutPhoneVerification({
     phoneNumber &&
     phoneNumber === verifiedPhoneNumber,
   );
+  useEffect(() => {
+    onVerificationChange(!verificationRequired || isVerified);
+  }, [isVerified, onVerificationChange, verificationRequired]);
+
   const challengeMatchesPhone = Boolean(
     challengeId && challengePhoneNumber === phoneNumber,
   );
@@ -63,6 +67,7 @@ export function CheckoutPhoneVerification({
       setError(PHILIPPINE_MOBILE_ERROR);
       return;
     }
+    setPhoneNumber(phoneNumber);
     setBusy(true);
     setError(null);
     setMessage(null);
@@ -137,64 +142,67 @@ export function CheckoutPhoneVerification({
         }
         error={fieldError || error}
       />
-      {verificationRequired && isVerified && (
-        <p
-          className="flex items-center gap-2 rounded-md bg-accent p-2 text-sm font-medium text-accent-foreground"
-          role="status"
-        >
-          <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
-          This phone number is verified.
-        </p>
-      )}
-      {verificationRequired && !isVerified && (
-        <div className="space-y-3">
-          {!challengeMatchesPhone ? (
-            <Button
-              type="button"
-              variant="outline"
-              loading={busy}
-              disabled={!phoneNumber.trim()}
-              onClick={requestCode}
-            >
-              Send verification code
-            </Button>
-          ) : (
-            <>
-              <Input
-                label="6-digit verification code"
-                inputMode="numeric"
-                autoComplete="one-time-code"
-                pattern="[0-9]{6}"
-                maxLength={6}
-                value={code}
-                onChange={(event) =>
-                  setCode(event.target.value.replace(/[^0-9]/g, "").slice(0, 6))
-                }
-                disabled={busy}
-                required
-              />
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  type="button"
-                  loading={busy}
-                  disabled={code.length !== 6}
-                  onClick={verifyCode}
-                >
-                  Verify number
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
+      <div className="min-h-11">
+        {verificationRequired && isVerified && (
+          <p
+            className="flex min-h-11 items-center gap-2 rounded-md bg-accent p-2 text-sm font-medium text-accent-foreground"
+            role="status"
+          >
+            <CheckCircle2 className="h-4 w-4 shrink-0" aria-hidden="true" />
+            This phone number is verified.
+          </p>
+        )}
+        {verificationRequired && !isVerified && (
+          <div className="space-y-3">
+            {!challengeMatchesPhone ? (
+              <Button
+                type="button"
+                variant="outline"
+                loading={busy}
+                className="min-h-11"
+                disabled={!phoneNumber.trim()}
+                onClick={requestCode}
+              >
+                Send verification code
+              </Button>
+            ) : (
+              <>
+                <Input
+                  label="6-digit verification code"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  pattern="[0-9]{6}"
+                  maxLength={6}
+                  value={code}
+                  onChange={(event) =>
+                    setCode(event.target.value.replace(/[^0-9]/g, "").slice(0, 6))
+                  }
                   disabled={busy}
-                  onClick={requestCode}
-                >
-                  Send another code
-                </Button>
-              </div>
-            </>
-          )}
-        </div>
-      )}
+                  required
+                />
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    loading={busy}
+                    disabled={code.length !== 6}
+                    onClick={verifyCode}
+                  >
+                    Verify number
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={busy}
+                    onClick={requestCode}
+                  >
+                    Send another code
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
+        )}
+      </div>
       {message && (
         <p
           className="text-sm text-muted-foreground"

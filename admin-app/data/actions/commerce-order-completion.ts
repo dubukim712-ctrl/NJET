@@ -33,7 +33,7 @@ export async function completeCommerceOrderWithPaymentAction(
     queueOrderStatusEmail(parsed.data.orderId, 'completed');
     revalidatePath('/admin/orders');
     revalidatePath('/admin/reports');
-    revalidatePath('/dashboard/orders');
+    revalidatePath('/orders');
     return { success: true, data: undefined };
   } catch (error) {
     console.error('Could not complete the order with its payment.', error);

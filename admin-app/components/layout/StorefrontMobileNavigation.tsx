@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import { SmartLink } from "@/components/ui/SmartLink";
 import { usePathname } from 'next/navigation';
 import { CalendarDays, House, MapPin, ShoppingBag, Wrench } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
@@ -32,7 +32,7 @@ export function StorefrontMobileNavigation({ activeLink }: { activeLink: string 
               active ? 'bg-primary/10 font-semibold text-primary-action dark:text-primary' : 'text-muted-foreground',
             )}
           >
-            <Link href={href} scroll={pathname === '/' || !href.includes('#')} aria-current={active ? (href.includes('#') ? 'location' : 'page') : undefined} onClick={(event) => {
+            <SmartLink href={href} scroll={pathname === '/' || !href.includes('#')} aria-current={active ? (href.includes('#') ? 'location' : 'page') : undefined} onClick={(event) => {
               if (href !== '/' || pathname !== '/' || event.defaultPrevented || event.button !== 0
                 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
               event.preventDefault();
@@ -41,7 +41,7 @@ export function StorefrontMobileNavigation({ activeLink }: { activeLink: string 
             }}>
               <Icon className="size-5" strokeWidth={active ? 2.75 : 2} aria-hidden="true" />
               {label}
-            </Link>
+            </SmartLink>
           </Button>
         );
       })}

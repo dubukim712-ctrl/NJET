@@ -3,7 +3,7 @@ import type { StorefrontHomeReview } from "@/data/commerce/storefront-home";
 import { CustomerReleaseGallery } from "@/components/shop/CustomerReleaseGallery";
 import type { getPublishedCustomerReleases } from "@/data/commerce/customer-releases";
 import Image from "next/image";
-import Link from "next/link";
+import { SmartLink } from "@/components/ui/SmartLink";
 import { ArrowRight, MapPin } from "lucide-react";
 
 export function StorefrontAboutSection({
@@ -42,20 +42,20 @@ export function StorefrontAboutSection({
           maintenance services to help keep you moving.
         </p>
         <div className="flex max-[375px]:w-full  flex-wrap gap-3 pt-1">
-          <Link
+          <SmartLink
             href="/shop"
             className="inline-flex max-[375px]:w-full max-[375px]:justify-center min-h-11 items-center gap-2 rounded-md bg-primary-action px-5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary-action-hover"
           >
             Explore the shop
             <ArrowRight className="size-4" aria-hidden="true" />
-          </Link>
-          <Link
+          </SmartLink>
+          <SmartLink
             href="#branches"
             className="inline-flex max-[375px]:w-full max-[375px]:justify-center min-h-11 items-center gap-2 rounded-md border px-5 text-sm font-medium hover:bg-accent"
           >
             <MapPin className="size-4" aria-hidden="true" />
             Find a store
-          </Link>
+          </SmartLink>
         </div>
       </div>
 
@@ -67,7 +67,6 @@ export function StorefrontAboutSection({
               alt="From the Noel & Jane E-bike Trading story"
               fill
               sizes="(min-width: 1024px) 45vw, 100vw"
-              unoptimized
               className="object-cover"
             />
             <div
@@ -132,12 +131,12 @@ export function StorefrontAboutSection({
                     <span className="font-semibold">
                       {review.reviewer_name ?? "Anonymous customer"}
                     </span>
-                    <Link
+                    <SmartLink
                       href={`/shop/view-product/${review.slug}`}
                       className="text-foreground hover:underline"
                     >
                       {review.product_name}
-                    </Link>
+                    </SmartLink>
                   </figcaption>
                 </figure>
               ))}

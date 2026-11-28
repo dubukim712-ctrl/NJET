@@ -1,11 +1,12 @@
 import Image from 'next/image';
+import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { PrintReceiptButton } from '@/components/commerce/PrintReceiptButton';
 import { formatPhp } from '@/lib/commerce';
 import type { SalesReceiptData } from '@/data/commerce/sales-receipt-data';
 
-export function PrintableSalesReceipt({ receipt, logoUrl, backHref }: {
-  receipt: SalesReceiptData; logoUrl: string | null; backHref: string;
+export function PrintableSalesReceipt({ receipt, logoUrl, backHref, backLink }: {
+  receipt: SalesReceiptData; logoUrl: string | null; backHref?: string; backLink?: ReactNode;
 }) {
   const { business, homeCredit } = receipt;
   const metadata = [
@@ -45,7 +46,7 @@ export function PrintableSalesReceipt({ receipt, logoUrl, backHref }: {
         }
       `}</style>
       <div className="mx-auto mb-4 flex max-w-3xl items-center justify-between gap-3 print:hidden">
-        <Link className="text-sm font-medium text-foreground underline" href={backHref}>Back to Order</Link>
+        {backLink ?? (backHref && <Link className="text-sm font-medium text-foreground underline" href={backHref}>Back to Order</Link>)}
         <PrintReceiptButton />
       </div>
       <article className="sales-receipt mx-auto max-w-3xl space-y-5 rounded-lg border border-neutral-300 bg-white p-4 text-black sm:p-8">

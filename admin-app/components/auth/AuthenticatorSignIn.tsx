@@ -1,18 +1,22 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { useAuth } from '@/components/auth/AuthProvider';
 import { AuthenticatorCodeForm } from '@/components/auth/AuthenticatorCodeForm';
 import { addSignInNotice } from '@/lib/auth-sign-in-notice';
 
 export function AuthenticatorSignIn(props: { destination: string; passwordReset?: never } | { passwordReset: true; destination?: never }) {
   const router = useRouter();
+  const { refreshUser } = useAuth();
 
   function onVerified() {
     if (props.passwordReset) {
       router.refresh();
       return;
     }
-    window.location.assign(addSignInNotice(new URL(props.destination, window.location.origin)));
+    const destination = addSignInNotice(new URL(props.destination, window.location.origin));
+    void refreshUser();
+    router.replace(destination.pathname + destination.search + destination.hash);
   }
 
   return (

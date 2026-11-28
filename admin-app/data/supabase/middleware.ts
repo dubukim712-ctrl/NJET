@@ -1,15 +1,10 @@
+import { isWithinRoute, PROTECTED_CUSTOMER_ROUTES } from "@/lib/customer-routes";
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { authenticatorDestination, authenticatorVerificationPath, needsAuthenticatorVerification } from '@/data/auth/mfa';
 import { hasPermission, PERMISSIONS, surfaceHome } from "@/lib/permissions";
 
-const PROTECTED_PATHS = [
-  "/dashboard",
-  "/admin",
-  "/settings",
-  "/profile",
-  "/checkout",
-];
+const PROTECTED_PATHS = [...PROTECTED_CUSTOMER_ROUTES, "/admin"];
 const AUTH_PATHS = [
   "/login",
   "/register",
@@ -17,7 +12,6 @@ const AUTH_PATHS = [
   "/forgot-password",
 ];
 const ADMIN_PATHS = ["/admin"];
-const STOREFRONT_PATHS = ["/dashboard", "/checkout"];
 
 type SurfaceProfile = {
   scope: "staff" | "customer";
@@ -47,9 +41,7 @@ function redirectWithCookies(url: URL, source: NextResponse) {
 }
 
 function matches(pathname: string, paths: string[]) {
-  return paths.some(
-    (path) => pathname === path || pathname.startsWith(`${path}/`),
-  );
+  return paths.some((path) => isWithinRoute(pathname, path));
 }
 
 function insufficientRedirect(
@@ -65,7 +57,7 @@ function insufficientRedirect(
   const isAdminPage = matches(pathname, ADMIN_PATHS);
 
   if (isAdminPage && hasPermission(profile, PERMISSIONS.storefrontAccess)) {
-    const url = new URL("/dashboard", request.url);
+    const url = new URL("/", request.url);
     url.searchParams.set("error", "insufficient_permissions");
     return redirectWithCookies(url, source);
   }
@@ -113,11 +105,11 @@ export async function updateSession(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const isProtected = matches(pathname, PROTECTED_PATHS);
   const isAuthPage = matches(pathname, AUTH_PATHS);
-  const isStorefrontPage = matches(pathname, STOREFRONT_PATHS);
+  const isStorefrontPage = matches(pathname, PROTECTED_CUSTOMER_ROUTES);
 
   if (isProtected && !user) {
     const url = new URL("/login", request.url);
-    url.searchParams.set("redirect", pathname);
+    url.searchParams.set("redirect", pathname + request.nextUrl.search);
     return redirectWithCookies(url, supabaseResponse);
   }
 

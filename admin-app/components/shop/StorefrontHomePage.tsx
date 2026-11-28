@@ -1,13 +1,9 @@
+import { storefrontImageBlur } from "@/lib/storefront-image";
+import { Suspense } from "react";
 import Image from "next/image";
 import defaultHero from "./njet-storefront-hero.jpg";
-import Link from "next/link";
-import {
-  ArrowRight,
-  MapPin,
-  IdCard,
-  ShieldCheck,
-} from "lucide-react";
-import { getAuthContext } from "@/data/auth/guards";
+import { SmartLink } from "@/components/ui/SmartLink";
+import { ArrowRight, MapPin, IdCard, ShieldCheck } from "lucide-react";
 import { getPublishedCustomerReleases } from "@/data/commerce/customer-releases";
 import { getFeaturedStorefrontBikes } from "@/data/commerce/catalog";
 import {
@@ -15,7 +11,6 @@ import {
   getStorefrontHomeReviews,
 } from "@/data/commerce/storefront-home";
 import { getStartingVariant } from "@/data/commerce/storefront-starting-variant";
-import { hasPermission, PERMISSIONS } from "@/lib/permissions";
 import { Button } from "@/components/ui/Button";
 import { ProductCard } from "@/components/shop/ProductCard";
 import { HomeCreditEstimator } from "@/components/shop/HomeCreditEstimator";
@@ -47,17 +42,13 @@ export async function StorefrontHomePage({
 }: {
   permissionError?: boolean;
 }) {
-  const [products, { business, branches }, context, reviews, releases] =
+  const [products, { business, branches }, reviews, releases] =
     await Promise.all([
       getFeaturedStorefrontBikes(),
       getPublicStorefrontInfo(),
-      getAuthContext(),
       getStorefrontHomeReviews(),
       getPublishedCustomerReleases(),
     ]);
-  const canBook =
-    context?.profile?.scope === "customer" &&
-    hasPermission(context.profile, PERMISSIONS.storefrontAccess);
   const models = (products ?? []).flatMap((product) => {
     const variant = getStartingVariant(product);
     if (!variant || variant.price_minor <= 0 || product.is_demo) return [];
@@ -101,18 +92,20 @@ export async function StorefrontHomePage({
                 Ebikes for Daily Commute, School, Family &amp; Business
               </h1>
               <p className="mt-5 max-w-md text-base leading-6 text-[#f4ede4] sm:text-lg sm:leading-7 md:max-w-lg">
-                Ride with comfort, save on fuel, and enjoy hassle-free travel with your very own e-bike.
+                Ride with comfort, save on fuel, and enjoy hassle-free travel
+                with your very own e-bike.
               </p>
               <div className="mt-7 flex flex-wrap gap-2.5">
                 <Button
-                  asChild variant={null}
+                  asChild
+                  variant={null}
                   size={null}
                   className="min-h-11 gap-1 rounded-lg text-xs sm:text-sm bg-primary-action px-4 font-semibold text-primary-foreground ring-1 ring-inset ring-white/40 hover:bg-primary-action-hover focus-visible:outline-white focus-visible:ring-[#f4ede4]"
                 >
-                  <Link href="/shop">
+                  <SmartLink href="/shop">
                     Explore the shop{" "}
                     <ArrowRight className="size-4" aria-hidden="true" />
-                  </Link>
+                  </SmartLink>
                 </Button>
                 <Button
                   asChild
@@ -120,10 +113,10 @@ export async function StorefrontHomePage({
                   size={null}
                   className="min-h-11 gap-1 rounded-lg text-xs sm:text-sm border-white/40 bg-transparent px-4 font-semibold text-white hover:bg-white/10 hover:text-white"
                 >
-                  <Link href="/dashboard/appointments/new">
+                  <SmartLink href="/appointments/new" prefetch={true}>
                     Book a Service{" "}
                     <ArrowRight className="size-4" aria-hidden="true" />
-                  </Link>
+                  </SmartLink>
                 </Button>
               </div>
             </div>
@@ -131,7 +124,11 @@ export async function StorefrontHomePage({
           <div className="pointer-events-none relative aspect-[4/3] sm:aspect-video lg:absolute lg:inset-0 lg:aspect-auto">
             <Image
               src={business.data?.heroImageUrl ?? defaultHero}
-              placeholder={business.data?.heroImageUrl ? "empty" : "blur"}
+              placeholder="blur"
+              blurDataURL={
+                business.data?.heroImageUrl ? storefrontImageBlur : undefined
+              }
+              quality={70}
               alt=""
               fill
               preload
@@ -161,13 +158,13 @@ export async function StorefrontHomePage({
             >
               Featured E-Bikes
             </h2>
-            <Link
+            <SmartLink
               href="/shop"
               className="hidden sm:inline-flex min-h-10 items-center gap-2 text-sm font-semibold text-foreground hover:underline"
             >
               View all products{" "}
               <ArrowRight className="size-4" aria-hidden="true" />
-            </Link>
+            </SmartLink>
           </div>
           {products?.length ? (
             <>
@@ -182,13 +179,13 @@ export async function StorefrontHomePage({
                 ))}
               </div>
 
-              <Link
+              <SmartLink
                 href="/shop"
                 className="inline-flex w-full mt-5 sm:hidden min-h-10 justify-center items-center gap-2 text-sm font-semibold text-foreground hover:underline"
               >
                 View all products{" "}
                 <ArrowRight className="size-4" aria-hidden="true" />
-              </Link>
+              </SmartLink>
             </>
           ) : (
             <p className="mt-5 rounded-xl border bg-card p-5 text-sm text-muted-foreground">
@@ -223,17 +220,25 @@ export async function StorefrontHomePage({
           </ol>
         </section>
 
-        <StorefrontServiceSection canBook={canBook} />
+        <StorefrontServiceSection />
         <StorefrontAboutSection
           imageUrl={business.data?.aboutImageUrl ?? null}
           reviews={reviews}
           releases={releases}
         />
-        <StorefrontBranchesSection
-          branches={branches.data}
-          hours={business.data?.businessHours}
-          canBook={canBook}
-        />
+        <Suspense
+          fallback={
+            <div
+              id="branches"
+              className="min-h-96 scroll-mt-32 rounded-2xl border bg-card"
+            />
+          }
+        >
+          <StorefrontBranchesSection
+            branches={branches.data}
+            hours={business.data?.businessHours}
+          />
+        </Suspense>
       </div>
     </div>
   );

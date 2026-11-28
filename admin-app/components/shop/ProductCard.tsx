@@ -2,7 +2,7 @@
 
 import { useAuth } from "@/components/auth/AuthProvider";
 import { getStorefrontStockLabel } from "@/data/commerce/storefront-stock-label";
-import Link from "next/link";
+import { SmartLink } from "@/components/ui/SmartLink";
 import { ArrowUpRight, Star } from "lucide-react";
 import type { CatalogProduct } from "@/data/commerce/catalog";
 import { ProductImage } from "@/components/shop/ProductImage";
@@ -79,7 +79,7 @@ export function ProductCard({
       : "";
 
   return (
-    <Link
+    <SmartLink
       href={`/shop/view-product/${product.slug}`}
       aria-label={`View product: ${product.name}. ${
         reviewCount
@@ -99,6 +99,7 @@ export function ProductCard({
             path={product.image_path}
             alt={product.name}
             loading={loading}
+            sizes={featuredBranches ? "(max-width: 1023px) 256px, 25vw" : "(max-width: 1279px) 50vw, 25vw"}
           />
           <span
             aria-hidden="true"
@@ -218,6 +219,6 @@ export function ProductCard({
           )}
         </div>
       </article>
-    </Link>
+    </SmartLink>
   );
 }

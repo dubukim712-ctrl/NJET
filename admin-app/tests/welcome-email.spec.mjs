@@ -13,7 +13,7 @@ test('builds HTML and plain-text versions with safe names and storefront links',
   assert.deepEqual(payload.to, [{ email: recipient.email }]);
   assert.match(payload.htmlContent, /&lt;Customer &amp; Co&gt;/);
   assert.match(payload.textContent, /Hi <Customer & Co>,/);
-  for (const path of ['/shop', '/dashboard/appointments/new', '/help']) {
+  for (const path of ['/shop', '/appointments/new', '/help']) {
     const href = new URL(path, getOrigin()).href;
     assert.ok(payload.htmlContent.includes('href="' + href + '"'));
     assert.ok(payload.textContent.includes(href));

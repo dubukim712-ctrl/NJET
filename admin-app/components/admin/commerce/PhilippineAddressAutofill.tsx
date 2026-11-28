@@ -197,7 +197,7 @@ export function PhilippineAddressAutofill({
           {' '}© <a
             href="https://www.openstreetmap.org/copyright"
             target="_blank"
-            rel="noreferrer"
+            rel="noopener noreferrer"
             className="underline underline-offset-2"
           >OpenStreetMap contributors</a>.
         </p>

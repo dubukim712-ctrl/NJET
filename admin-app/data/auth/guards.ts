@@ -43,7 +43,7 @@ function insufficientPermissionRedirect(
     return '/admin?error=insufficient_permissions';
   }
   if (hasPermission(profile, PERMISSIONS.storefrontAccess)) {
-    return '/dashboard?error=insufficient_permissions';
+    return '/?error=insufficient_permissions';
   }
   return '/no-access';
 }
@@ -77,7 +77,7 @@ export async function requireStaff(redirectTo = '/admin') {
   return requirePermission(PERMISSIONS.adminAccess, redirectTo);
 }
 
-export async function requireCustomer(redirectTo = '/dashboard') {
+export async function requireCustomer(redirectTo = '/') {
   return requirePermission(PERMISSIONS.storefrontAccess, redirectTo);
 }
 

@@ -51,7 +51,22 @@ interface CheckoutFieldsProps extends Omit<
 
 export function CheckoutFields(props: CheckoutFieldsProps) {
   const errorFor = (name: string) => props.fieldErrors?.[name]?.join(" ");
-  const [address, setAddress] = useState(props.initialAddress);
+  const [customerName, setCustomerName] = useState<string>();
+  const [addressEdits, setAddressEdits] = useState<Partial<PhilippineAddressValues>>({});
+  const address = { ...props.initialAddress, ...addressEdits };
+
+  function changeAddress(next: PhilippineAddressValues) {
+    const edits: Partial<PhilippineAddressValues> = {};
+    for (const field of ['addressLine1', 'postalCode'] as const) {
+      if (next[field] !== address[field]) edits[field] = next[field];
+    }
+    // Region names and codes must stay consistent when a region changes.
+    const regionFields = ['province', 'city', 'barangay', 'provinceCode', 'cityCode', 'barangayCode'] as const;
+    if (regionFields.some((field) => next[field] !== address[field])) {
+      for (const field of regionFields) edits[field] = next[field];
+    }
+    setAddressEdits((current) => ({ ...current, ...edits }));
+  }
   const providerRecipients = props.paymentRecipients.filter(
     (recipient) => recipient.provider === props.paymentProvider,
   );
@@ -74,7 +89,8 @@ export function CheckoutFields(props: CheckoutFieldsProps) {
         <div className="grid gap-4 sm:grid-cols-2">
           <Input
             name="customerName"
-            defaultValue={props.initialCustomerName}
+            value={customerName ?? props.initialCustomerName}
+            onChange={(event) => setCustomerName(event.target.value)}
             error={errorFor("customerName")}
             label="Full name"
             autoComplete="name"
@@ -92,7 +108,7 @@ export function CheckoutFields(props: CheckoutFieldsProps) {
         <PhilippineAddressFields
           values={address}
           fieldErrors={props.fieldErrors}
-          onChange={setAddress}
+          onChange={changeAddress}
           disabled={false}
           required
         />

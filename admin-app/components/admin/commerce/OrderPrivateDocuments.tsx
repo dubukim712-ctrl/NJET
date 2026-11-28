@@ -20,7 +20,7 @@ export function OrderPrivateDocuments({
               <a
                 href={document.url}
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
                 className="inline-flex items-center min-h-10 gap-2 rounded-md border px-3 text-sm font-medium hover:bg-accent"
               >
                 <Download className="h-4 w-4" />

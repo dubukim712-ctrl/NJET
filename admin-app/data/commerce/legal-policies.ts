@@ -1,5 +1,5 @@
 import { unstable_rethrow } from 'next/navigation';
-import { createClient } from '@/data/supabase/server';
+import { createPublicClient } from '@/data/supabase/public';
 import {
   DEFAULT_LEGAL_POLICIES,
   LEGAL_POLICY_SLUGS,
@@ -8,7 +8,7 @@ import {
 } from '@/data/legal-policies';
 import { legalPolicySaveSchema } from '@/lib/validations/legal-policies';
 
-type SupabaseClient = Awaited<ReturnType<typeof createClient>>;
+type SupabaseClient = Pick<ReturnType<typeof createPublicClient>, 'rpc'>;
 
 function formatPolicyDate(value: string) {
   return new Date(value).toLocaleDateString('en-US', {
@@ -61,7 +61,7 @@ export async function getStorefrontLegalPolicy(slug: LegalPolicySlug): Promise<{
   error: string | null;
 }> {
   try {
-    const data = await getCurrentLegalPolicy(await createClient(), slug);
+    const data = await getCurrentLegalPolicy(createPublicClient(), slug);
     return { data, error: null };
   } catch (error) {
     unstable_rethrow(error);

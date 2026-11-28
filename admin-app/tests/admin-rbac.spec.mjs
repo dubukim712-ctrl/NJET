@@ -58,7 +58,7 @@ test('audit readers cannot clear any or all logs, and customers cannot list audi
 
   const customer = actionContext({ scope: 'customer', permissions: ['storefront.access'] });
   await assert.rejects(() => customer.run(() => getAdminAuditLogsAction({ page: 1 })), {
-    destination: '/dashboard?error=insufficient_permissions',
+    destination: '/?error=insufficient_permissions',
   });
   assert.deepEqual(customer.calls, []);
 });

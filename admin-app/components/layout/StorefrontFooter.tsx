@@ -1,5 +1,5 @@
 import Image from "next/image";
-import Link from "next/link";
+import { SmartLink } from "@/components/ui/SmartLink";
 import { Clock3, Mail, Phone } from "lucide-react";
 import { LegalFooterLinks } from "@/components/layout/LegalFooterLinks";
 import type { StorefrontBusinessInfo } from "@/data/commerce/system-settings";
@@ -36,7 +36,7 @@ export function StorefrontFooter({
       <div className="mx-auto max-w-7xl px-4 py-9 sm:px-6 sm:py-11">
         <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:gap-x-8 lg:grid-cols-[1.1fr_1.15fr_1fr_1fr]">
           <section className="col-span-2 sm:col-span-1">
-            <Link
+            <SmartLink
               href="/"
               className="inline-flex items-center gap-2 text-lg font-semibold"
             >
@@ -46,12 +46,11 @@ export function StorefrontFooter({
                   alt=""
                   width={40}
                   height={40}
-                  unoptimized
                   className="size-10 shrink-0 rounded-md object-contain"
                 />
               )}
               {businessInfo?.businessName || "NJET"}
-            </Link>
+            </SmartLink>
             <p className="mt-3 text-sm leading-6 text-[#f4ede4]">
               Serving Cavite e-bike riders since 2023
             </p>
@@ -121,11 +120,11 @@ export function StorefrontFooter({
           <section>
             <h2 className={heading}>Quick Links &amp; Branches</h2>
             <nav aria-label="Shop and branches" className={links}>
-              <Link href="/shop">Catalog</Link>
-              <Link href="/#installments">Installments</Link>
-              <Link href="/#services">Parts &amp; Service</Link>
+              <SmartLink href="/shop">Catalog</SmartLink>
+              <SmartLink href="/#installments">Installments</SmartLink>
+              <SmartLink href="/#services">Parts &amp; Service</SmartLink>
               {orderStorefrontBranches(branches).map((branch) => (
-                <Link
+                <SmartLink
                   key={branch.id}
                   href={{
                     pathname: "/",
@@ -134,7 +133,7 @@ export function StorefrontFooter({
                   }}
                 >
                   {footerBranchName(branch)}
-                </Link>
+                </SmartLink>
               ))}
             </nav>
           </section>
@@ -144,22 +143,22 @@ export function StorefrontFooter({
             <nav aria-label="Customer account and help" className={links}>
               {canBook ? (
                 <>
-                  <Link href="/dashboard">My dashboard</Link>
-                  <Link href="/dashboard/orders">
+                  <SmartLink href="/profile">My profile</SmartLink>
+                  <SmartLink href="/orders" prefetch={true}>
                     My orders
-                  </Link>
+                  </SmartLink>
                 </>
               ) : (
                 <>
-                  <Link href="/login">Sign in</Link>
-                  <Link href="/register">Join us</Link>
+                  <SmartLink href="/login">Sign in</SmartLink>
+                  <SmartLink href="/register">Join us</SmartLink>
                 </>
               )}
-              <Link href={canBook ? serviceBookingPath : serviceSignInPath}>
+              <SmartLink href={canBook ? serviceBookingPath : serviceSignInPath} prefetch={true}>
                 Book a Service
-              </Link>
-              <Link href="/help">Help Center</Link>
-              <Link href="/chat">Chat on Website</Link>
+              </SmartLink>
+              <SmartLink href="/help">Help Center</SmartLink>
+              <SmartLink href="/chat">Chat on Website</SmartLink>
             </nav>
             <LegalFooterLinks />
           </section>

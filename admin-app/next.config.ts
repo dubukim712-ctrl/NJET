@@ -21,7 +21,17 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: process.env.ALLOWED_DEV_ORIGINS?.split(',')
     .map((host) => host.trim())
     .filter((host) => /^(?:[a-z0-9-]+\.)*[a-z0-9-]+$/i.test(host)) ?? [],
-  images: { remotePatterns: storagePatterns() },
+  async redirects() {
+    return [
+      { source: '/dashboard', destination: '/', permanent: true },
+      { source: '/dashboard/:path+', destination: '/:path+', permanent: true },
+    ];
+  },
+  images: {
+    remotePatterns: storagePatterns(),
+    formats: ['image/avif', 'image/webp'],
+    qualities: [70, 75],
+  },
 };
 
 export default nextConfig;

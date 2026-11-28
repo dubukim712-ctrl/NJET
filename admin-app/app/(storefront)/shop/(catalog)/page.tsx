@@ -1,12 +1,17 @@
+import { getShopCatalogPage } from "@/data/commerce/catalog";
 import { getPublicStorefrontInfo } from '@/data/commerce/storefront-home';
 import { Suspense } from 'react';
 import { ShopCatalogSkeleton } from '@/components/shop/ShopCatalogSkeleton';
 import { ShopProductBrowser } from '@/components/shop/ShopProductBrowser';
 
+export const revalidate = 300;
 export const metadata = { title: 'Shop' };
 
 export default async function ShopPage() {
-  const { branches } = await getPublicStorefrontInfo();
+  const [{ branches }, initialData] = await Promise.all([
+    getPublicStorefrontInfo(),
+    getShopCatalogPage({ search: '', category: null, subcategory: null, branch: null, inStock: false, sort: 'featured', page: 1 }, true),
+  ]);
   return (
     <div className="mx-auto max-w-7xl space-y-8">
       <header className="rounded-2xl bg-[#264653] px-5 py-12 text-[#f4ede4] sm:px-10 md:py-16">
@@ -17,7 +22,7 @@ export default async function ShopPage() {
         </p>
       </header>
       <Suspense fallback={<ShopCatalogSkeleton showHero={false} />}>
-        <ShopProductBrowser branches={(branches.data ?? []).map(({ id, name }) => ({ id, name }))} />
+        <ShopProductBrowser initialData={initialData ?? undefined} branches={(branches.data ?? []).map(({ id, name }) => ({ id, name }))} />
       </Suspense>
     </div>
   );

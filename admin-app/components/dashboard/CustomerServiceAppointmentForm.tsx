@@ -3,7 +3,8 @@
 import Link from 'next/link';
 import { useCallback, useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/components/auth/AuthProvider';
+import { useCustomerSessionId } from '@/components/dashboard/CustomerSession';
+import { appointmentFormOptions } from '@/data/appointments/customer-views-client';
 import { Button } from '@/components/ui/Button';
 import type { ComponentProps } from 'react';
 import { CustomerAppointmentBikeFields } from '@/components/dashboard/CustomerAppointmentBikeFields';
@@ -26,19 +27,33 @@ import {
   customerServiceAppointmentRequestSchema,
   SERVICE_APPOINTMENT_TYPES,
 } from '@/lib/validations/service-appointments';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 function fieldError(errors: Record<string, string[] | undefined>, name: string) {
   return errors[name]?.[0];
 }
 
-export function CustomerServiceAppointmentForm({ initialPhoneNumber, initialAddress, previousBikes }: {
+export function CustomerServiceAppointmentForm() {
+  const userId = useCustomerSessionId();
+  const query = useQuery(appointmentFormOptions(userId));
+  if (!userId) return <p role="alert">Sign in to book a service appointment.</p>;
+  if (query.data) return <AppointmentForm key={userId} {...query.data} />;
+  if (query.isPending) return <CustomerServiceAppointmentFormSkeleton />;
+  return (
+    <div role="alert" className="space-y-2">
+      <p>Service form options could not be loaded.</p>
+      <Button variant="outline" onClick={() => void query.refetch()}>Try again</Button>
+    </div>
+  );
+}
+
+function AppointmentForm({ initialPhoneNumber, initialAddress, previousBikes }: {
   initialPhoneNumber: string;
   initialAddress: PhilippineAddressValues;
   previousBikes: ComponentProps<typeof CustomerAppointmentBikeFields>['previousBikes'];
 }) {
-  const { user } = useAuth();
-  const userId = user?.id ?? '';
+  const userId = useCustomerSessionId();
+
   const router = useRouter();
   const queryClient = useQueryClient();
   const branchesQuery = useCustomerServiceAppointmentBranchesQuery(userId);
@@ -121,14 +136,6 @@ export function CustomerServiceAppointmentForm({ initialPhoneNumber, initialAddr
     } finally {
       setSubmitting(false);
     }
-  }
-
-  if (!user) {
-    return (
-      <p className="rounded-lg border bg-card p-4 text-sm text-muted-foreground" role="alert">
-        Your session has ended. Sign in to book a service appointment.
-      </p>
-    );
   }
 
   if (branchesQuery.isPending) {
@@ -260,7 +267,7 @@ export function CustomerServiceAppointmentForm({ initialPhoneNumber, initialAddr
           </p>
           <div className="flex flex-wrap gap-3">
             <Button type="submit" loading={submitting}>Send appointment request</Button>
-            <Button asChild type="button" variant="outline"><Link href="/dashboard/appointments">Cancel</Link></Button>
+            <Button asChild type="button" variant="outline"><Link href="/appointments" prefetch={true}>Cancel</Link></Button>
           </div>
         </div>
         <CustomerAppointmentAvailabilityPanel

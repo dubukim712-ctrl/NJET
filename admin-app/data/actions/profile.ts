@@ -23,7 +23,7 @@ export type CustomerProfile = Pick<
 export async function getCustomerProfileAction(): Promise<
   ActionResult<CustomerProfile>
 > {
-  const { profile, supabase } = await requireCustomer('/dashboard/profile');
+  const { profile, supabase } = await requireCustomer('/profile');
   const { data: contact, error } = await supabase
     .from('users')
     .select('phone_number, phone_verified_at, street_address, province_code, province_name, city_code, city_name, barangay_code, barangay_name, postal_code')
@@ -46,7 +46,7 @@ export async function getCustomerProfileAction(): Promise<
 }
 
 export async function updateCustomerProfileAction(payload: unknown): Promise<ActionResult> {
-  const { supabase } = await requireCustomer('/dashboard/profile');
+  const { supabase } = await requireCustomer('/profile');
   const validation = profileContactSchema.safeParse(payload);
   const identity = updateProfileSchema.safeParse(payload);
   if (!identity.success) {
@@ -73,7 +73,7 @@ export async function updateCustomerProfileAction(payload: unknown): Promise<Act
       p_postal_code: input.postalCode || null,
     });
     if (error || !data) return { success: false, error: toUserFriendlyError(error, fallback) };
-    revalidatePath('/dashboard', 'layout');
+    revalidatePath('/(customer)', 'layout');
     revalidatePath('/checkout');
     return { success: true, data: undefined };
   } catch (error) {
@@ -117,7 +117,7 @@ export async function updateProfileAction(formData: FormData): Promise<ActionRes
       return { success: false, error: toUserFriendlyError(error, 'Could not update your profile. Please try again.') };
     }
 
-    revalidatePath('/dashboard', 'layout');
+    revalidatePath('/(customer)', 'layout');
     revalidatePath('/admin', 'layout');
     return { success: true, data: undefined };
   } catch {
@@ -168,7 +168,7 @@ export async function changePasswordAction(formData: FormData): Promise<ActionRe
       return { success: false, error: toUserFriendlyError(error, 'Could not change your password. Please try again.') };
     }
 
-    revalidatePath('/', 'layout');
+    revalidatePath('/(customer)', 'layout');
     return { success: true, data: undefined };
   } catch {
     return { success: false, error: 'Something went wrong. Please try again.' };

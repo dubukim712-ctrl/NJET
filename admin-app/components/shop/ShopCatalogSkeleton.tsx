@@ -21,7 +21,7 @@ export function ShopCatalogSkeleton({ showHero = true, showFilters = true }: { s
       )}
 
       <div className={showFilters ? "grid gap-6 lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-8" : undefined}>
-        {showFilters && <aside className="h-fit rounded-xl border bg-card p-4">
+        {showFilters && <aside className="hidden h-fit rounded-xl border bg-card p-4 lg:block">
           <div className="h-5 w-32 animate-pulse rounded bg-muted" />
           <div className="mt-4 space-y-4">
             {FILTERS.map((filter) => (

@@ -16,8 +16,8 @@ const policyLinks = [
 
 const customerQuickLinks = [
   { href: '/chat', label: 'Open live support chat' },
-  { href: '/dashboard/orders', label: 'View my orders' },
-  { href: '/dashboard/appointments/new', label: 'Book service' },
+  { href: '/orders', label: 'View my orders' },
+  { href: '/appointments/new', label: 'Book service' },
 ];
 
 type HelpCenterProps = {
@@ -63,7 +63,7 @@ export function HelpCenter({
           <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
             {quickLinks.map(({ href, label }, index) => (
               <Button key={href} asChild variant={index === 0 ? 'default' : 'outline'} className="min-h-11">
-                <Link href={href}>{href === '/chat' && <MessageCircle aria-hidden="true" />}{label}</Link>
+                <Link href={href} prefetch={href === '/appointments/new' ? true : undefined}>{href === '/chat' && <MessageCircle aria-hidden="true" />}{label}</Link>
               </Button>
             ))}
           </div>
@@ -133,7 +133,7 @@ export function HelpCenter({
       {showPolicies && (
         <nav aria-label="Help Center policies" className="flex flex-wrap gap-x-5 border-t pt-2">
           {policyLinks.map(([href, label]) => (
-            <Link key={href} href={href} className="inline-flex min-h-11 items-center text-sm font-medium text-foreground underline underline-offset-4">
+            <Link key={href} href={href} prefetch={true} className="inline-flex min-h-11 items-center text-sm font-medium text-foreground underline underline-offset-4">
               {label}
             </Link>
           ))}

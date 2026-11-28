@@ -1,10 +1,15 @@
+import { Suspense } from 'react';
 import { StorefrontHomePage } from '@/components/shop/StorefrontHomePage';
+import { StorefrontPermissionNotice } from '@/components/shop/StorefrontPermissionNotice';
 
 export const metadata = { title: 'Home' };
+export const revalidate = 300;
 
-export default async function HomePage({ searchParams }: {
-  searchParams: Promise<{ error?: string | string[] }>;
-}) {
-  const params = await searchParams;
-  return <StorefrontHomePage permissionError={params.error === 'insufficient_permissions'} />;
+export default function HomePage() {
+  return (
+    <>
+      <Suspense fallback={null}><StorefrontPermissionNotice /></Suspense>
+      <StorefrontHomePage />
+    </>
+  );
 }

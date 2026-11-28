@@ -1,3 +1,4 @@
+import { createPublicClient } from '@/data/supabase/public';
 import { getAuthContext } from '@/data/auth/guards';
 import { createClient } from '@/data/supabase/server';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
@@ -87,7 +88,7 @@ async function getReleaseOrderOptions(client: Supabase): Promise<ReleaseOrderOpt
 
 export async function getPublishedCustomerReleases() {
   try {
-    const client = await createClient();
+    const client = createPublicClient();
     const { data, error } = await client.from('customer_releases')
       .select('id, image_path, customer_name, model_name, branch_name, caption')
       .eq('is_approved', true).order('display_order').order('created_at', { ascending: false })

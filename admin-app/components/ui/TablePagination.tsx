@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { SmartLink } from "@/components/ui/SmartLink";
 import { Button } from '@/components/ui/Button';
 
 type TablePaginationProps = {
@@ -35,7 +35,7 @@ export function TablePagination({
       );
     }
     if (!disabled && href) {
-      return <Link href={href} className={controlClass}>{label}</Link>;
+      return <SmartLink href={href} className={controlClass}>{label}</SmartLink>;
     }
     return <span aria-disabled="true" className={controlClass + ' pointer-events-none opacity-50'}>{label}</span>;
   }

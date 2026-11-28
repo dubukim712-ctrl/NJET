@@ -1,3 +1,4 @@
+import { isWithinRoute, normalizeAuthDestination, PROTECTED_CUSTOMER_ROUTES } from '@/lib/customer-routes';
 import type { UserProfile } from '@/types/database';
 
 export const PERMISSIONS = {
@@ -64,11 +65,26 @@ export function surfaceHome(
   if (hasPermission(profile, PERMISSIONS.adminAccess)) {
     return '/admin';
   }
-  if (isCustomer(profile)) {
+  if (hasPermission(profile, PERMISSIONS.storefrontAccess)) {
     return '/';
   }
-  if (hasPermission(profile, PERMISSIONS.storefrontAccess)) {
-    return '/dashboard';
-  }
   return '/no-access';
+}
+
+export function signInDestination(
+  profile: Parameters<typeof surfaceHome>[0],
+  requested: unknown,
+) {
+  const home = surfaceHome(profile);
+  const destination = normalizeAuthDestination(requested);
+  if (!destination) return home;
+
+  const pathname = destination.split(/[?#]/, 1)[0];
+  if (home === '/admin' && isWithinRoute(pathname, '/admin')) return destination;
+
+  const isCustomerDestination = pathname === '/' ||
+    PROTECTED_CUSTOMER_ROUTES.some((route) => isWithinRoute(pathname, route));
+  if (isCustomerDestination && hasPermission(profile, PERMISSIONS.storefrontAccess)) return destination;
+
+  return home;
 }

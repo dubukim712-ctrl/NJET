@@ -1,3 +1,4 @@
+import { createPublicClient } from '@/data/supabase/public';
 import { shopCatalogPageSchema, shopPageSize, type ShopCatalogFilters } from '@/lib/validations/storefront-catalog-page';
 import { unstable_rethrow } from 'next/navigation';
 import { createClient } from '@/data/supabase/server';
@@ -96,9 +97,9 @@ async function readCatalogPage(
   return shopCatalogPageSchema.parse(result.data);
 }
 
-export async function getShopCatalogPage(filters: ShopCatalogFilters): Promise<ShopCatalogPage | null> {
+export async function getShopCatalogPage(filters: ShopCatalogFilters, publicOnly = false): Promise<ShopCatalogPage | null> {
   try {
-    return await readCatalogPage(await createClient(), filters, shopPageSize);
+    return await readCatalogPage(publicOnly ? createPublicClient() : await createClient(), filters, shopPageSize);
   } catch (error) {
     unstable_rethrow(error);
     console.error('Could not load the storefront catalog page.', catalogErrorDetails(error));
@@ -108,7 +109,7 @@ export async function getShopCatalogPage(filters: ShopCatalogFilters): Promise<S
 
 export async function getFeaturedStorefrontBikes(): Promise<CatalogProduct[] | null> {
   try {
-    const page = await readCatalogPage(await createClient(), {
+    const page = await readCatalogPage(createPublicClient(), {
       search: '', category: null, subcategory: null, inStock: false, sort: 'featured', page: 1,
     }, 4, undefined, 'ebike');
     return page.products;
@@ -119,9 +120,9 @@ export async function getFeaturedStorefrontBikes(): Promise<CatalogProduct[] | n
   }
 }
 
-export async function getStoreCatalog(slug?: string): Promise<CatalogResult> {
+export async function getStoreCatalog(slug?: string, publicOnly = false): Promise<CatalogResult> {
   try {
-    const supabase = await createClient();
+    const supabase = publicOnly ? createPublicClient() : await createClient();
     const [page, branches] = await Promise.all([
       readCatalogPage(supabase, { search: '', category: null, subcategory: null, inStock: false, sort: 'featured', page: 1 }, slug ? 1 : 3, slug),
       supabase.rpc('storefront_branch_options'),

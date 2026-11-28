@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { e2eCredentials, logIn } from './e2e-login';
 
-const bookingPath = '/dashboard/appointments/new';
+const bookingPath = '/appointments/new';
 const customer = e2eCredentials('USER');
 const admin = e2eCredentials('ADMIN');
 const appointmentId = process.env.E2E_WARRANTY_APPOINTMENT_ID?.trim();
@@ -53,11 +53,11 @@ test('a customer can view their saved assessment', async ({ page }) => {
     'Set E2E_WARRANTY_APPOINTMENT_ID to an existing assessment owned by the E2E customer.');
   if (!customer || !appointmentId) return;
   await logIn(page, customer);
-  await page.goto('/dashboard/appointments/' + appointmentId);
+  await page.goto('/appointments/' + appointmentId);
   await expect(page.getByRole('heading', { name: 'Warranty assessment' })).toBeVisible();
   await expect(page.getByText('Request submitted', { exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Record decision' })).toHaveCount(0);
-  await page.goto('/dashboard/appointments/submitted?' + new URLSearchParams({ appointmentId }));
+  await page.goto('/appointments/submitted?' + new URLSearchParams({ appointmentId }));
   await expect(page.getByRole('heading', { name: 'Appointment request submitted' })).toBeVisible();
 });
 

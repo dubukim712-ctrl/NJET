@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -53,12 +54,12 @@ export function ForgotPasswordForm() {
           If an account exists for that address, we sent a link to reset your
           password.
         </p>
-        <a
+        <Link
           href="/login"
           className="mt-6 inline-block text-sm font-medium text-foreground hover:underline"
         >
           Back to sign in
-        </a>
+        </Link>
       </div>
     );
   }
@@ -117,9 +118,9 @@ export function ForgotPasswordForm() {
 
       <p className="mt-6 text-center text-sm text-muted-foreground">
         Remembered it?{' '}
-        <a href="/login" className="font-medium text-foreground hover:underline">
+        <Link href="/login" className="font-medium text-foreground hover:underline">
           Sign in
-        </a>
+        </Link>
       </p>
     </div>
   );

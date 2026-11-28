@@ -40,7 +40,7 @@ export function ResetPasswordForm() {
 
     if (result.success) {
       toast.success('Password updated. You can now sign in.');
-      router.push('/dashboard');
+      router.push('/');
       router.refresh();
     } else {
       setServerError(result.error);

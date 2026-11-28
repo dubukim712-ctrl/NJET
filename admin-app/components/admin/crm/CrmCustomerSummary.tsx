@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { Building2, Mail, MapPin, Phone } from 'lucide-react';
 import type { CrmCustomer } from '@/types/crm';
 
@@ -15,9 +16,9 @@ export function CrmCustomerSummary({ customer }: { customer: CrmCustomer }) {
           )}
         </div>
         {customer.open_follow_ups > 0 && (
-          <a href="#customer-follow-ups" className="inline-flex min-h-11 items-center rounded-full bg-primary/10 px-3 text-sm font-semibold text-primary underline-offset-4 hover:underline">
+          <Link href="#customer-follow-ups" className="inline-flex min-h-11 items-center rounded-full bg-primary/10 px-3 text-sm font-semibold text-primary underline-offset-4 hover:underline">
             {customer.open_follow_ups} open {customer.open_follow_ups === 1 ? 'follow-up' : 'follow-ups'}
-          </a>
+          </Link>
         )}
       </div>
       <dl className="grid gap-4 border-t pt-4 text-sm sm:grid-cols-2 xl:grid-cols-3">

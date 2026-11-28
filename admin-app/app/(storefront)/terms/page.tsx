@@ -5,6 +5,8 @@ import {
 } from '@/components/layout/LegalPolicyPage';
 import { getStorefrontLegalPolicy } from '@/data/commerce/legal-policies';
 
+export const dynamic = 'force-static';
+
 export const metadata: Metadata = {
   title: 'Terms & Conditions',
   description: 'Terms for using the Noel & Jane E-bike Trading storefront and placing orders.',

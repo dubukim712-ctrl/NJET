@@ -1,3 +1,4 @@
+import { isWithinRoute, normalizeAuthDestination } from '@/lib/customer-routes';
 import type { User } from '@supabase/supabase-js';
 import type { createClient } from '@/data/supabase/server';
 
@@ -26,9 +27,7 @@ export function authenticatorVerificationPath(destination: string) {
 }
 
 export function authenticatorDestination(value: string | undefined) {
-  if (typeof value !== 'string' || !value.startsWith('/') || value.startsWith('//') || /[\\\s]/.test(value)) return '/dashboard';
-  const base = 'https://local.invalid';
-  const url = new URL(value, base);
-  if (url.origin !== base || url.pathname.startsWith('//') || url.pathname === '/verify-authenticator') return '/dashboard';
-  return url.pathname + url.search + url.hash;
+  const destination = normalizeAuthDestination(value);
+  if (!destination || isWithinRoute(destination.split(/[?#]/, 1)[0], '/verify-authenticator')) return '/';
+  return destination;
 }

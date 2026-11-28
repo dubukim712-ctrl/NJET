@@ -24,7 +24,7 @@ export function useCheckoutPricing({
   zones: CheckoutOptions['zones'];
 }) {
   const { data: variants = [], error: queryError, isFetching } =
-    useCartVariantsQuery(items.map((item) => item.variantId));
+    useCartVariantsQuery(items.map((item) => item.variantId), true);
   const catalogError = queryError instanceof Error
     ? queryError.message
     : queryError ? 'Cart item details could not be loaded.' : null;

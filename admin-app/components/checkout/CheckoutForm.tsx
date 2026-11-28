@@ -120,7 +120,7 @@ export function CheckoutForm({
 
   function getCheckoutError() {
     if (!phoneVerificationReady) return 'Verify this contact number before placing your order.';
-    if (loadingCart || !allVariantsLoaded) return catalogError ?? 'Some cart items are no longer available.';
+    if (loadingCart || catalogError || !allVariantsLoaded) return catalogError ?? 'Some cart items are no longer available.';
     if (!stockAvailable) return 'The selected fulfillment option does not have enough stock for this cart.';
     if (!paymentAvailable) return 'Choose an active payment account for the selected payment method.';
     if (hasEbike && !identityFiles.length) return 'Upload at least one valid ID for an e-bike order.';
@@ -182,7 +182,6 @@ export function CheckoutForm({
       onSubmit={submitOrder}
       cartError={cartError}
       catalogError={catalogError}
-      loadingCart={loadingCart}
       error={error}
       fields={
         <CheckoutFields

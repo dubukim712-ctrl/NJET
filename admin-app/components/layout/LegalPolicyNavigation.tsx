@@ -1,7 +1,8 @@
 'use client';
 
-import Link from 'next/link';
+import { SmartLink } from "@/components/ui/SmartLink";
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 const POLICY_LINKS = [
   { slug: 'terms', title: 'Terms & Conditions', href: '/terms' },
@@ -23,6 +24,7 @@ export function LegalPolicyNavigation({
   policyTitle: string;
   sections: LegalSectionLink[];
 }) {
+  const router = useRouter();
   const [activeSectionId, setActiveSectionId] = useState(sections[0]?.id ?? '');
 
   useEffect(() => {
@@ -47,13 +49,20 @@ export function LegalPolicyNavigation({
     return () => observer.disconnect();
   }, [sections]);
 
+  useEffect(() => {
+    // Mobile policy links are hidden until the menu opens.
+    for (const link of POLICY_LINKS) {
+      if (link.slug !== policySlug) router.prefetch(link.href);
+    }
+  }, [policySlug, router]);
+
   const policyLinks = (
     <nav aria-label="Legal policies">
       <ul className="space-y-1">
         {POLICY_LINKS.map((link) => (
           <li key={link.slug}>
-            <Link
-              href={link.href}
+            <SmartLink
+              href={link.href} prefetch={true}
               aria-current={policySlug === link.slug ? 'page' : undefined}
               className={`flex min-h-11 items-center rounded-md px-3 text-sm ${
                 policySlug === link.slug
@@ -62,7 +71,7 @@ export function LegalPolicyNavigation({
               }`}
             >
               {link.title}
-            </Link>
+            </SmartLink>
             {policySlug === link.slug && (
               <nav
                 aria-label={`${policyTitle} sections`}
@@ -73,7 +82,7 @@ export function LegalPolicyNavigation({
                     const active = activeSectionId === section.id;
                     return (
                       <li key={section.id}>
-                        <a
+                        <SmartLink
                           href={`#${section.id}`}
                           aria-current={active ? 'location' : undefined}
                           className={`block rounded-md px-2 py-1.5 text-sm leading-5 ${
@@ -83,7 +92,7 @@ export function LegalPolicyNavigation({
                           }`}
                         >
                           {index + 1}. {section.title}
-                        </a>
+                        </SmartLink>
                       </li>
                     );
                   })}

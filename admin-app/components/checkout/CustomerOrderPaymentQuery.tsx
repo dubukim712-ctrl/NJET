@@ -2,7 +2,6 @@
 
 import { useCallback } from 'react';
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { OrderPaymentPanel } from '@/components/checkout/OrderPaymentPanel';
 import { CustomerOrderPaymentSkeleton } from '@/components/checkout/CustomerOrderPaymentSkeleton';
@@ -25,11 +24,9 @@ const CUSTOMER_ORDER_PAYMENT_REALTIME_TABLES: readonly RealtimeTable[] = [
 export function CustomerOrderPaymentQuery({
   userId,
   orderId,
-  serverNow,
 }: {
   userId: string;
   orderId: string;
-  serverNow: string;
 }) {
   const query = useCustomerOrderPaymentQuery(userId, orderId);
   const invalidatePayment = useInvalidateCustomerOrderPaymentQuery(userId, orderId);
@@ -53,7 +50,7 @@ export function CustomerOrderPaymentQuery({
         <div className="flex justify-end">
           <RealtimeStatus state={realtimeState} />
         </div>
-        <h1 className="font-semibold">Payment details unavailable</h1>
+        <h2 className="font-semibold">Payment details unavailable</h2>
         <p className="text-sm text-muted-foreground" role="alert">
           {query.error instanceof CustomerOrderPaymentQueryError
             ? query.error.message
@@ -64,7 +61,7 @@ export function CustomerOrderPaymentQuery({
             Try again
           </Button>
           <Button asChild variant="link">
-            <Link href="/dashboard/orders">Return to orders</Link>
+            <Link href="/orders">Return to orders</Link>
           </Button>
         </div>
       </section>
@@ -76,17 +73,11 @@ export function CustomerOrderPaymentQuery({
       <div className="flex justify-end">
         <RealtimeStatus state={realtimeState} />
       </div>
-      <Link
-        href="/dashboard/orders"
-        className="inline-flex min-h-10 items-center gap-2 text-sm font-medium text-foreground hover:underline"
-      >
-        <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Back to orders
-      </Link>
       <header>
         <p className="text-xs font-semibold uppercase tracking-[0.12em] text-foreground">Order payment</p>
-        <h1 className="mt-1 break-words text-3xl font-semibold tracking-tight">{query.data.order_number}</h1>
+        <h2 className="mt-1 break-words text-3xl font-semibold tracking-tight">{query.data.details.order_number}</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          Your order status is {query.data.status.replaceAll('_', ' ')}.
+          Your order status is {query.data.details.status.replaceAll('_', ' ')}.
         </p>
       </header>
       {query.isError && (
@@ -95,8 +86,8 @@ export function CustomerOrderPaymentQuery({
         </p>
       )}
       <OrderPaymentPanel
-        details={query.data}
-        serverNow={serverNow}
+        details={query.data.details}
+        serverClockOffsetMs={query.data.serverNow - query.dataUpdatedAt}
         userId={userId}
         orderId={orderId}
       />

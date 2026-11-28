@@ -4,23 +4,13 @@ import type { EmailOtpType } from '@supabase/supabase-js';
 import { createClient } from '@/data/supabase/server';
 import { queueWelcomeEmail } from '@/data/email/welcome-email';
 import { authenticatorVerificationPath, needsAuthenticatorVerification } from '@/data/auth/mfa';
-import { surfaceHome } from '@/lib/permissions';
-
-function safeNext(value: string | null): string | null {
-  return value &&
-    value.startsWith('/') &&
-    !value.startsWith('//') &&
-    !value.startsWith('/\\')
-    ? value
-    : null;
-}
+import { signInDestination } from '@/lib/permissions';
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get('code');
   const tokenHash = searchParams.get('token_hash');
   const type = searchParams.get('type') as EmailOtpType | null;
-  const requestedNext = safeNext(searchParams.get('next'));
 
   const supabase = await createClient();
 
@@ -85,23 +75,7 @@ export async function GET(request: NextRequest) {
         profile = data;
       }
 
-      const home = surfaceHome(profile);
-      let destination = home;
-
-      if (requestedNext) {
-        if (
-          home === '/admin' &&
-          (requestedNext.startsWith('/admin') ||
-            requestedNext.startsWith('/dashboard'))
-        ) {
-          destination = requestedNext;
-        } else if (
-          home === '/dashboard' &&
-          requestedNext.startsWith('/dashboard')
-        ) {
-          destination = requestedNext;
-        }
-      }
+      const destination = signInDestination(profile, searchParams.get('next'));
 
       if (profile?.scope === 'customer') {
         // OAuth sign-in also uses this callback. Only welcome newly created Google accounts.

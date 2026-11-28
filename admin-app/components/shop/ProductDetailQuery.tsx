@@ -6,8 +6,8 @@ import { ProductPurchasePanel } from '@/components/shop/ProductPurchasePanel';
 import { ProductDetailSkeleton } from '@/components/shop/ProductDetailSkeleton';
 import { Button } from '@/components/ui/Button';
 import { ProductImage } from '@/components/shop/ProductImage';
-import { ProductReviewsSection } from '@/components/shop/ProductReviewsSection';
-import type { CatalogProduct } from '@/data/commerce/catalog';
+import dynamic from 'next/dynamic';
+import type { CatalogData, CatalogProduct } from '@/data/commerce/catalog';
 import {
   StorefrontCatalogQueryError,
   useStorefrontCatalogQuery,
@@ -15,8 +15,13 @@ import {
 
 import { useState } from 'react';
 
-export function ProductDetailQuery({ slug }: { slug: string }) {
-  const query = useStorefrontCatalogQuery(slug);
+const ProductReviewsSection = dynamic(
+  () => import('@/components/shop/ProductReviewsSection').then((module) => module.ProductReviewsSection),
+  { loading: () => <div className="min-h-48 rounded-xl border bg-card" /> },
+);
+
+export function ProductDetailQuery({ slug, initialData }: { slug: string; initialData?: CatalogData }) {
+  const query = useStorefrontCatalogQuery(slug, initialData);
 
   if (!query.data && query.isPending) {
     return (
@@ -109,13 +114,13 @@ function ProductDetailContent({
                   onClick={() => setImagePath(photo)}
                   className={`size-14 shrink-0 overflow-hidden rounded-lg border bg-card ${photo === activePhoto ? 'border-foreground' : 'border-border'}`}
                 >
-                  <ProductImage path={photo} alt="" className="size-full" />
+                  <ProductImage path={photo} alt="" sizes="56px" className="size-full" />
                 </Button>
               ))}
             </div>
           )}
           <div className="min-w-0 flex-1 rounded-2xl border bg-card p-2 sm:p-3">
-            <ProductImage path={activePhoto ?? null} alt={product.name} className="rounded-xl" />
+            <ProductImage path={activePhoto ?? null} alt={product.name} preload={imagePath === product.image_path} sizes="(max-width: 639px) 100vw, (max-width: 1023px) calc(100vw - 120px), (max-width: 1280px) 45vw, 520px" className="rounded-xl" />
           </div>
         </div>
         <ProductPurchasePanel product={product} branches={branches} onImagePathChange={setImagePath} />

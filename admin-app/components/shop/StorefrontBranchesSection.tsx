@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { useAuth } from "@/components/auth/AuthProvider";
+import { hasPermission, PERMISSIONS } from "@/lib/permissions";
 import { useSearchParams } from "next/navigation";
 import { ArrowUpRight, Clock3, MapPin, Navigation } from "lucide-react";
 import { GoogleMapsEmbed } from "@/components/maps/GoogleMapsEmbed";
@@ -18,12 +20,12 @@ import {
 export function StorefrontBranchesSection({
   branches,
   hours,
-  canBook,
 }: {
   branches: StorefrontBranchLocation[] | null;
   hours: string | undefined;
-  canBook: boolean;
 }) {
+  const { user } = useAuth();
+  const canBook = user?.scope === "customer" && hasPermission(user, PERMISSIONS.storefrontAccess);
   const searchParams = useSearchParams();
   const locations = orderStorefrontBranches(branches ?? []);
   const selected =
@@ -133,7 +135,7 @@ export function StorefrontBranchesSection({
                   asChild
                   className="col-span-2 min-h-11 w-full whitespace-normal"
                 >
-                  <Link href={canBook ? serviceBookingPath : serviceSignInPath}>
+                  <Link href={canBook ? serviceBookingPath : serviceSignInPath} prefetch={true}>
                     {canBook ? "Book a Service" : "Sign in to Book Service"}
                   </Link>
                 </Button>

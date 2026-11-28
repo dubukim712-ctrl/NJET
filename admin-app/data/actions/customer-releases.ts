@@ -15,7 +15,6 @@ function isLinkedOrderConflict(error: { code: string; message: string } | null) 
 function refreshGallery() {
   revalidatePath(releasesPath);
   revalidatePath('/');
-  revalidatePath('/dashboard');
 }
 
 export async function createCustomerRelease(payload: unknown, imagePath: unknown) {

@@ -22,7 +22,7 @@ import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 export async function getCustomerServiceAppointmentBranchesAction(): Promise<
   ActionResult<{ branches: { id: string; name: string }[] }>
 > {
-  const { supabase } = await requireCustomer('/dashboard/appointments/new');
+  const { supabase } = await requireCustomer('/appointments/new');
   const { data, error } = await supabase.rpc('storefront_branch_options');
   if (error) {
     console.error('Could not load service appointment branches.', error);
@@ -31,10 +31,11 @@ export async function getCustomerServiceAppointmentBranchesAction(): Promise<
   return { success: true, data: { branches: data } };
 }
 
-export async function getCustomerServiceAppointmentsAction(): Promise<
+export async function getCustomerServiceAppointmentsAction(customerId: string): Promise<
   ActionResult<NonNullable<Awaited<ReturnType<typeof getCustomerServiceAppointments>>['data']>>
 > {
-  const { supabase } = await requireCustomer('/dashboard/appointments');
+  const { supabase, user } = await requireCustomer('/appointments');
+  if (user.id !== customerId) return { success: false, error: 'Your session has changed.' };
   const result = await getCustomerServiceAppointments(supabase);
   if (!result.data) return { success: false, error: result.error ?? 'Appointments are unavailable.' };
   return { success: true, data: result.data };
@@ -43,7 +44,7 @@ export async function getCustomerServiceAppointmentsAction(): Promise<
 export async function requestServiceAppointmentAction(
   payload: unknown
 ): Promise<ActionResult<{ id: string }>> {
-  const { supabase } = await requireCustomer('/dashboard/appointments/new');
+  const { supabase } = await requireCustomer('/appointments/new');
   const parsed = customerServiceAppointmentRequestSchema.safeParse(payload);
   if (!parsed.success) {
     return {

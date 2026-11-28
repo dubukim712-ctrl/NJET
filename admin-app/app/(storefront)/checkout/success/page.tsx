@@ -27,7 +27,7 @@ export default async function CheckoutSuccessPage({
   if (!order) notFound();
 
   const proofDue = isPaymentProofDue(order);
-  const details = `/dashboard/orders/${id.data}`;
+  const details = `/orders/${id.data}`;
   const amountDue = order.home_credit_downpayment_due_minor || order.online_due_minor;
 
   return (

@@ -63,7 +63,7 @@ export function buildAppointmentStatusEmail(
   siteOrigin: string,
 ) {
   const heading = headings[event];
-  const href = new URL('/dashboard/appointments/' + encodeURIComponent(details.appointment_id), siteOrigin).href;
+  const href = new URL('/appointments/' + encodeURIComponent(details.appointment_id), siteOrigin).href;
   const lines = [
     'Hi ' + (details.customer_name.trim() || 'Valued Customer') + ',',
     'Appointment ' + details.appointment_number,

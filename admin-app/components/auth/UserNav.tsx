@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from '@/components/ui/Button';
-import Link from "next/link";
+import { SmartLink } from "@/components/ui/SmartLink";
 import { useRouter } from "next/navigation";
 import { CalendarDays, CircleHelp, Package, LogOut, User, Settings, Shield } from "lucide-react";
 import { toast } from "sonner";
@@ -103,52 +103,52 @@ export function UserNav({ user, showHelp = false }: UserNavProps) {
             {showHelp && displayUser.scope === "customer" && (
               <>
                 <DropdownMenuItem asChild>
-                  <Link href="/dashboard/orders" className="flex items-center gap-2">
+                  <SmartLink href="/orders" prefetch={true} className="flex items-center gap-2">
                     <Package className="size-4" aria-hidden="true" />
                     My orders
-                  </Link>
+                  </SmartLink>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link href="/dashboard/appointments" className="flex items-center gap-2">
+                  <SmartLink href="/appointments" prefetch={true} className="flex items-center gap-2">
                     <CalendarDays className="size-4" aria-hidden="true" />
                     Service history
-                  </Link>
+                  </SmartLink>
                 </DropdownMenuItem>
               </>
             )}
             {showHelp && (
               <DropdownMenuItem asChild>
-                <a href="/dashboard/help" className="flex items-center gap-2">
+                <SmartLink href="/help" className="flex items-center gap-2">
                   <CircleHelp className="h-4 w-4" aria-hidden="true" />
                   Help
-                </a>
+                </SmartLink>
               </DropdownMenuItem>
             )}
             <DropdownMenuItem asChild>
-              <a href="/dashboard/settings" className="flex items-center gap-2">
+              <SmartLink href="/settings" className="flex items-center gap-2">
                 <Settings className="h-4 w-4" aria-hidden="true" />
                 Settings
-              </a>
+              </SmartLink>
             </DropdownMenuItem>
           </>
         )}
         {(canUseAdmin || canUseStorefront) && (
           <DropdownMenuItem asChild>
-            <a
-              href={canUseAdmin ? "/admin/profile" : "/dashboard/profile"}
+            <SmartLink
+              href={canUseAdmin ? "/admin/profile" : "/profile"}
               className="flex items-center gap-2"
             >
               <User className="h-4 w-4" aria-hidden="true" />
               Profile
-            </a>
+            </SmartLink>
           </DropdownMenuItem>
         )}
         {canUseAdmin && (
           <DropdownMenuItem asChild>
-            <a href="/admin" className="flex items-center gap-2">
+            <SmartLink href="/admin" className="flex items-center gap-2">
               <Shield className="h-4 w-4" aria-hidden="true" />
               Dashboard
-            </a>
+            </SmartLink>
           </DropdownMenuItem>
         )}
         <DropdownMenuSeparator />

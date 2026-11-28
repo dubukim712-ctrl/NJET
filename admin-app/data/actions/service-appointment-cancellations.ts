@@ -15,7 +15,7 @@ import {
 export async function requestServiceAppointmentCancellationAction(
   payload: unknown
 ): Promise<ActionResult> {
-  const { supabase } = await requireCustomer('/dashboard/appointments');
+  const { supabase } = await requireCustomer('/appointments');
   const parsed = serviceAppointmentCancellationRequestSchema.safeParse(payload);
   if (!parsed.success) {
     return {

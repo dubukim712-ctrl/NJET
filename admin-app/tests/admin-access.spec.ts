@@ -124,7 +124,7 @@ test("regular customers are denied every static admin route", async ({ page }) =
     await test.step(path, async () => {
       await page.goto(path);
       await expect(page).toHaveURL((url) =>
-        url.pathname === "/dashboard" &&
+        url.pathname === "/" &&
         url.searchParams.get("error") === "insufficient_permissions"
       );
     });

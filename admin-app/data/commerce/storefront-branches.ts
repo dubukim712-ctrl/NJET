@@ -1,5 +1,5 @@
 import { unstable_rethrow } from 'next/navigation';
-import { createClient } from '@/data/supabase/server';
+import { createPublicClient } from '@/data/supabase/public';
 import { StorefrontBranchLocationsSchema } from '@/lib/validations/storefront-branches';
 import type { StorefrontBranchLocation } from '@/lib/validations/storefront-branches';
 
@@ -9,7 +9,7 @@ type StorefrontBranchesResult =
 
 export async function getStorefrontBranches(): Promise<StorefrontBranchesResult> {
   try {
-    const supabase = await createClient();
+    const supabase = createPublicClient();
     const { data, error } = await supabase.rpc('storefront_branch_locations');
     if (error) throw error;
 

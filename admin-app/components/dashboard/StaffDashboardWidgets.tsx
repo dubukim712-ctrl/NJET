@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { SmartLink } from "@/components/ui/SmartLink";
 import { type LucideIcon } from 'lucide-react';
 import type { UserProfile } from '@/types/database';
 import type { StaffDashboardData } from '@/data/dashboard/queries';
@@ -126,9 +126,9 @@ export function LoadError({ message, href }: { message: string; href: string }) 
   return (
     <div className="p-5">
       <p className="text-sm text-destructive" role="alert">{message}</p>
-      <Link href={href} className="mt-2 inline-block text-sm font-medium text-primary underline">
+      <SmartLink href={href} className="mt-2 inline-block text-sm font-medium text-primary underline">
         Open workspace
-      </Link>
+      </SmartLink>
     </div>
   );
 }
