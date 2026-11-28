@@ -3,6 +3,7 @@ import type { RoleScope } from '@/types/database';
 
 interface RoleBadgesProps {
   scope: RoleScope;
+  roleName?: string;
   isFullAccess?: boolean;
   isSystem?: boolean;
 }
@@ -16,9 +17,19 @@ const STYLES = {
 
 export function RoleBadges({
   scope,
+  roleName,
   isFullAccess = false,
   isSystem = false,
 }: RoleBadgesProps) {
+  if (roleName) {
+    return (
+      <span className={cn('max-w-[40%] shrink-0 wrap-anywhere rounded-full px-2 py-0.5 text-xs font-medium',
+        isFullAccess ? STYLES.fullAccess : scope === 'customer' ? STYLES.customer : STYLES.staff)}>
+        {roleName}
+      </span>
+    );
+  }
+
   return (
     <div className="flex flex-wrap items-center gap-1.5">
       {isFullAccess && (

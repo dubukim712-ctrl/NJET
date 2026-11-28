@@ -19,9 +19,10 @@ interface UserRoleFormProps {
   user: ManagedUser;
   roles: RoleOption[];
   actor: UserListActor;
+  compact?: boolean;
 }
 
-export function UserRoleForm({ user, roles, actor }: UserRoleFormProps) {
+export function UserRoleForm({ user, roles, actor, compact = false }: UserRoleFormProps) {
   const router = useRouter();
   const invalidateRoles = useInvalidateAdminRolesQuery();
   const invalidateUsers = useInvalidateAdminUsersQuery();
@@ -80,15 +81,15 @@ export function UserRoleForm({ user, roles, actor }: UserRoleFormProps) {
     <div>
       <form
         onSubmit={handleSubmit}
-        className="flex flex-col gap-2 sm:flex-row sm:items-center"
+        className={compact ? "flex items-center gap-2 pt-1" : "flex flex-col gap-2 sm:flex-row sm:items-center"}
       >
         <Select
-          id={`role-${user.id}`}
+          id={'role-' + user.id + (compact ? '-card' : '')}
           label={<span className="sr-only">Role for {user.email}</span>}
           value={selected}
           onValueChange={(value) => setSelected(value)}
           disabled={isSaving}
-          containerClassName="w-full sm:w-44"
+          containerClassName={compact ? "min-w-0 flex-1" : "w-full sm:w-44"}
         >
           {assignableRoles.map((role) => (
             <option key={role.id} value={role.id}>

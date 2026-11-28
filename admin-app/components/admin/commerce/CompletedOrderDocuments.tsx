@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, type FormEvent } from 'react';
-import Link from 'next/link';
 import { toast } from 'sonner';
 import { saveOrderInvoiceAction } from '@/data/actions/order-documents';
 import { Button } from '@/components/ui/Button';
@@ -46,9 +45,6 @@ export function CompletedOrderDocuments({ orderId, invoiceNo, canManage, onDataC
           </Button>
         </form>
       ) : invoiceNo ? <p className="text-sm">Invoice number {invoiceNo}</p> : null}
-      <Button asChild>
-        <Link href={`/admin/orders/${orderId}/receipt`} prefetch={true}>Print Receipt</Link>
-      </Button>
     </section>
   );
 }

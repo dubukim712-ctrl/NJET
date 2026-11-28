@@ -35,10 +35,7 @@ export type StaffOrder = Pick<
     termsMonths: number;
     monthlyPaymentMinor: number;
   } | null;
-  documents: (Omit<
-    Pick<OrderDocumentRow, 'id' | 'order_id' | 'kind' | 'content_type' | 'file_size' | 'created_at'>,
-    'object_path'
-  > & { url: string | null })[];
+  documents: Pick<OrderDocumentRow, 'id' | 'order_id' | 'kind' | 'content_type' | 'file_size' | 'created_at'>[];
   invoiceNo: string | null;
 };
 
@@ -141,7 +138,7 @@ export async function getCommerceOrders(
           .limit(1500),
         supabase
           .from('order_documents')
-          .select('id, order_id, kind, object_path, content_type, file_size, created_at')
+          .select('id, order_id, kind, content_type, file_size, created_at')
           .in('order_id', orderIds)
           .order('created_at')
           .limit(300),
@@ -176,25 +173,6 @@ export async function getCommerceOrders(
         recipientNameById.set(recipient.id, recipient.recipient_name);
       }
     }
-    let signedByPath = new Map<string, string>();
-    if (documentsResult.data.length) {
-      const { data, error } = await supabase.storage
-        .from('njet-order-documents')
-        .createSignedUrls(
-          documentsResult.data.map((document) => document.object_path),
-          60,
-          { download: true }
-        );
-      if (error) {
-        console.error('Could not create private order-document links.', error);
-      } else {
-        signedByPath = new Map(
-          data.flatMap((entry) =>
-            entry.path && entry.signedUrl ? [[entry.path, entry.signedUrl] as const] : []
-          )
-        );
-      }
-    }
     return {
       data: orders.map((order) => ({
         ...order,
@@ -215,11 +193,7 @@ export async function getCommerceOrders(
             : null;
         })(),
         documents: documentsResult.data
-          .filter((document) => document.order_id === order.id)
-          .map(({ object_path, ...document }) => ({
-            ...document,
-            url: signedByPath.get(object_path) ?? null,
-          })),
+          .filter((document) => document.order_id === order.id),
       })),
       branches,
       error: null,

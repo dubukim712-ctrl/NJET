@@ -1,5 +1,6 @@
 'use server';
 
+import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
 import type { ActionResult } from '@/data/actions/auth';
 import { requirePermission } from '@/data/auth/guards';
@@ -59,4 +60,24 @@ export async function saveOrderInvoiceAction(
     console.error('Could not save the invoice number.', error);
     return { success: false, error: 'Could not save the invoice number.' };
   }
+}
+
+export async function getOrderDocumentPreviewAction(documentId: string): Promise<ActionResult<string>> {
+  const { supabase } = await requirePermission(PERMISSIONS.ordersRead, '/admin/orders');
+  const parsed = z.string().uuid().safeParse(documentId);
+  const unavailable = { success: false as const, error: 'This private document is unavailable.' };
+  if (!parsed.success) return unavailable;
+
+  const { data: document, error } = await supabase
+    .from('order_documents')
+    .select('object_path')
+    .eq('id', parsed.data)
+    .maybeSingle();
+  if (error || !document) return unavailable;
+
+  const { data, error: signingError } = await supabase.storage
+    .from('njet-order-documents')
+    .createSignedUrl(document.object_path, 60);
+  if (signingError || !data?.signedUrl) return unavailable;
+  return { success: true, data: data.signedUrl };
 }
