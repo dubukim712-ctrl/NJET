@@ -133,7 +133,7 @@ export function HelpCenter({
       {showPolicies && (
         <nav aria-label="Help Center policies" className="flex flex-wrap gap-x-5 border-t pt-2">
           {policyLinks.map(([href, label]) => (
-            <Link key={href} href={href} className="inline-flex min-h-11 items-center text-sm font-medium text-foreground underline underline-offset-4">
+            <Link key={href} href={href} prefetch={true} className="inline-flex min-h-11 items-center text-sm font-medium text-foreground underline underline-offset-4">
               {label}
             </Link>
           ))}

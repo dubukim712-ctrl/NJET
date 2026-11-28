@@ -5,6 +5,8 @@ import {
 } from '@/components/layout/LegalPolicyPage';
 import { getStorefrontLegalPolicy } from '@/data/commerce/legal-policies';
 
+export const dynamic = 'force-static';
+
 export const metadata: Metadata = {
   title: 'Return Policy',
   description: 'Order issue, warranty service, return, and refund information for NJET customers.',

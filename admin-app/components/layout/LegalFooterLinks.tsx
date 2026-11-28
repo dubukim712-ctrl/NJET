@@ -16,7 +16,7 @@ export function LegalFooterLinks() {
         <SmartLink
           key={href}
           className="underline-offset-4 hover:underline"
-          href={href}
+          href={href} prefetch={true}
         >
           {label}
         </SmartLink>
