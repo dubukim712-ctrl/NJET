@@ -152,23 +152,16 @@ export function StorefrontShell({
                   href={href}
                   scroll={true}
                   onClick={(event) => {
-                    if (
-                      event.defaultPrevented ||
-                      event.button !== 0 ||
-                      event.metaKey ||
-                      event.ctrlKey ||
-                      event.shiftKey ||
-                      event.altKey
-                    ) {
-                      return;
-                    }
+                    // Close your mobile drawer/menu state here first, e.g. setMobileMenuOpen(false);
 
                     if (href === "/" && pathname === "/") {
                       event.preventDefault();
                       if (window.location.search || window.location.hash) {
                         window.history.pushState(null, "", "/");
                       }
-                      window.scrollTo({ top: 0, behavior: "smooth" });
+                      requestAnimationFrame(() => {
+                        window.scrollTo({ top: 0, behavior: "smooth" });
+                      });
                       return;
                     }
 
@@ -178,7 +171,12 @@ export function StorefrontShell({
                       const target = document.getElementById(id);
                       if (target) {
                         window.history.pushState(null, "", href);
-                        target.scrollIntoView({ behavior: "smooth" });
+                        requestAnimationFrame(() => {
+                          target.scrollIntoView({
+                            behavior: "smooth",
+                            block: "start",
+                          });
+                        });
                       }
                     }
                   }}
