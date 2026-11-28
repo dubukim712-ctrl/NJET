@@ -19,6 +19,7 @@ export function useAdminSystemSettingsQuery(userId: string) {
       return result.data;
     },
     retry: false,
+    refetchOnMount: 'always',
     staleTime: 30_000,
     gcTime: Infinity,
   });

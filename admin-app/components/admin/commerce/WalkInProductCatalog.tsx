@@ -77,7 +77,7 @@ export function WalkInProductCatalog({
                 <ProductImage
                   path={product.product_image_path}
                   alt={product.product_name}
-                  className="w-24 shrink-0 rounded-md"
+                  sizes="96px" className="w-24 shrink-0 rounded-md"
                 />
                 <div className="min-w-0">
                   <h3 className="font-semibold">{product.product_name}</h3>

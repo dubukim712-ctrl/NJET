@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { revalidateStorefrontCatalog } from '@/data/commerce/revalidate-storefront';
 import type { ActionResult } from '@/data/actions/auth';
 import type { createClient } from '@/data/supabase/server';
 import { getAuthContext, requirePermission } from '@/data/auth/guards';
@@ -52,8 +53,7 @@ export async function saveProductDiscountAction(payload: unknown): Promise<Actio
     }
 
     revalidatePath('/admin/products');
-    revalidatePath('/shop');
-    revalidatePath('/shop/view-product/[slug]', 'page');
+    revalidateStorefrontCatalog();
     return { success: true, data: undefined };
   } catch (error) {
     console.error('Could not save product discount.', error);

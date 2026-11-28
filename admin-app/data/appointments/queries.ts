@@ -150,8 +150,6 @@ export async function getStaffServiceAppointments(
       query = filters.view === 'today'
         ? query.gte('scheduled_at', midnight.toISOString()).lt('scheduled_at', tomorrow)
         : query.gte('scheduled_at', tomorrow);
-    } else if (filters.view === 'history') {
-      query = query.in('status', ['completed', 'cancelled', 'no_show']);
     }
     if (filters.status) query = query.eq('status', filters.status);
     if (filters.branchId) query = query.eq('branch_id', filters.branchId);

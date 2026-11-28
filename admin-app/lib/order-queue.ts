@@ -1,19 +1,18 @@
 import type { StaffOrder } from '@/data/commerce/admin-orders';
 import type { OrderStatus } from '@/types/commerce-tables';
 
-export const ORDER_VIEWS = ['attention', 'confirmed', 'completed', 'closed', 'all'] as const;
+export const ORDER_VIEWS = ['attention', 'today', 'upcoming', 'history'] as const;
 export type OrderView = (typeof ORDER_VIEWS)[number];
 
 export const ORDER_VIEW_STATUSES: Record<OrderView, readonly OrderStatus[]> = {
   attention: ['awaiting_confirmation', 'awaiting_payment'],
-  confirmed: ['confirmed'],
-  completed: ['completed'],
-  closed: ['expired', 'cancelled'],
-  all: [],
+  today: [],
+  upcoming: ['confirmed'],
+  history: [],
 };
 
 export function getOrderView(filters: { view?: OrderView; status: OrderStatus | '' }): OrderView {
-  return filters.view ?? (filters.status ? 'all' : 'attention');
+  return filters.view ?? 'attention';
 }
 
 type OrderNextStepFields = Pick<StaffOrder, 'status' | 'phone_verification_status' | 'documents'>;

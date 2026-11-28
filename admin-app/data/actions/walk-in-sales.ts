@@ -1,10 +1,12 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { revalidateStorefrontCatalog } from '@/data/commerce/revalidate-storefront';
 import type { ActionResult } from '@/data/actions/auth';
 import { toUserFriendlyError } from '@/data/supabase/user-friendly-errors';
-import { requirePermission } from '@/data/auth/guards';
+import { requirePermission, requireStaff } from '@/data/auth/guards';
 import {
+  getWalkInBranchOptions,
   getWalkInCatalog,
   type WalkInCatalogItem,
 } from '@/data/commerce/walk-in-sales';
@@ -12,13 +14,24 @@ import { PERMISSIONS } from '@/lib/permissions';
 import { walkInSaleSchema } from '@/lib/validations/walk-in-sale';
 import { z } from 'zod';
 
+export async function getWalkInBranchesAction(userId: string) {
+  await requireStaff('/admin/orders/new');
+  const { supabase, user } = await requirePermission(PERMISSIONS.ordersManage, '/admin/orders/new');
+  if (user.id !== userId) throw new Error('Your admin session has changed.');
+  const result = await getWalkInBranchOptions(supabase);
+  if (result.error || !result.data) throw new Error('Branch data is unavailable.');
+  return result.data;
+}
+
 export async function getWalkInCatalogAction(
-  payload: unknown
+  payload: unknown, userId: string
 ): Promise<ActionResult<WalkInCatalogItem[]>> {
-  const { supabase } = await requirePermission(
+  await requireStaff('/admin/orders/new');
+  const { supabase, user } = await requirePermission(
     PERMISSIONS.ordersManage,
     '/admin/orders/new'
   );
+  if (user.id !== userId) return { success: false, error: 'Your admin session has changed.' };
   const branchId = z.string().uuid().safeParse(payload);
   if (!branchId.success) {
     return { success: false, error: 'Choose a valid branch.' };
@@ -44,6 +57,7 @@ const unconfirmedSale = {
 export async function createWalkInSaleAction(
   payload: unknown
 ): Promise<WalkInSaleResult> {
+  await requireStaff('/admin/orders/new');
   const { supabase } = await requirePermission(
     PERMISSIONS.ordersManage,
     '/admin/orders/new'
@@ -105,6 +119,7 @@ export async function createWalkInSaleAction(
     if (!data) return unconfirmedSale;
     revalidatePath('/admin/orders');
     revalidatePath('/admin/products');
+    revalidateStorefrontCatalog();
     return { success: true, data: { orderId: data } };
   } catch (error) {
     console.error('Could not create walk-in sale.', error);

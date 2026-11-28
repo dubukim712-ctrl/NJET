@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { revalidateStorefrontCatalog } from '@/data/commerce/revalidate-storefront';
 import { queueOrderStatusEmail } from '@/data/email/order-status-email';
 import type { ActionResult } from '@/data/actions/auth';
 import { toUserFriendlyError } from '@/data/supabase/user-friendly-errors';
@@ -34,6 +35,7 @@ export async function completeCommerceOrderWithPaymentAction(
     revalidatePath('/admin/orders');
     revalidatePath('/admin/reports');
     revalidatePath('/orders');
+    revalidateStorefrontCatalog();
     return { success: true, data: undefined };
   } catch (error) {
     console.error('Could not complete the order with its payment.', error);

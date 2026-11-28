@@ -1,32 +1,21 @@
+'use client';
+
+import { useAdminProfile } from '@/components/providers/AdminProvider';
+import { useSearchParams } from 'next/navigation';
 import { OrdersQuery } from '@/components/admin/commerce/OrdersQuery';
-import { requirePermission } from '@/data/auth/guards';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 import { orderFiltersSchema } from '@/lib/validations/order-filters';
 
-export type OrdersSearchParams = {
-  view?: string | string[];
-  q?: string | string[];
-  status?: string | string[];
-  branch?: string | string[];
-};
-
-function firstSearchParam(value?: string | string[]) {
-  return Array.isArray(value) ? value[0] : value;
-}
-
-export async function OrdersContent({
-  searchParams,
-}: {
-  searchParams: Promise<OrdersSearchParams>;
-}) {
-  const params = await searchParams;
+export function OrdersContent() {
+  const profile = useAdminProfile();
+  const params = useSearchParams();
+  const rawView = params.get('view');
   const filters = orderFiltersSchema.parse({
-    view: firstSearchParam(params.view),
-    q: firstSearchParam(params.q),
-    status: firstSearchParam(params.status),
-    branch: firstSearchParam(params.branch),
+    view: rawView ?? undefined,
+    q: params.get('q') ?? undefined,
+    status: params.get('status') ?? (rawView === 'completed' ? 'completed' : undefined),
+    branch: params.get('branch') ?? undefined,
   });
-  const { profile } = await requirePermission(PERMISSIONS.ordersRead, '/admin/orders');
   const branchLocked =
     profile.scope === 'staff' && !profile.is_full_access;
   const assignedBranchId = branchLocked ? profile.branch_id : null;
@@ -38,9 +27,10 @@ export async function OrdersContent({
     );
   }
   const canManage = hasPermission(profile, PERMISSIONS.ordersManage);
-  const scopedFilters = assignedBranchId
-    ? { ...filters, branch: assignedBranchId }
-    : filters;
+  const scopedFilters = {
+    ...filters,
+    branch: assignedBranchId ?? filters.branch,
+  };
   return (
     <OrdersQuery
       filters={scopedFilters}

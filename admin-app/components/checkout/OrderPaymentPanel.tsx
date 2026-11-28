@@ -1,5 +1,8 @@
 'use client';
 
+import { checkoutOptionsQueryKey } from '@/data/commerce/checkout-options-client';
+import { cartVariantsQueryKey, storefrontCatalogQueryKey } from '@/data/commerce/catalog-query-keys';
+
 import { useQueryClient } from '@tanstack/react-query';
 import Image from 'next/image';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
@@ -102,6 +105,7 @@ export function OrderPaymentPanel({
       });
       if (!result.success) {
         setError(result.error);
+        void Promise.all([invalidateCustomerOrders(), invalidatePaymentDetails()]);
         return;
       }
       const successMessage = result.data.warning
@@ -111,6 +115,9 @@ export function OrderPaymentPanel({
       else toast.success('Payment proof submitted.');
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: adminOrdersQueryKey }),
+        queryClient.invalidateQueries({ queryKey: checkoutOptionsQueryKey }),
+        queryClient.invalidateQueries({ queryKey: cartVariantsQueryKey }),
+        queryClient.invalidateQueries({ queryKey: storefrontCatalogQueryKey }),
         invalidateCustomerOrders(),
         invalidatePaymentDetails(),
       ]);

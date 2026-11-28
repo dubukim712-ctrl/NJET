@@ -1,13 +1,9 @@
 'use client';
 
+import dynamic from 'next/dynamic';
+
 import { useState, type KeyboardEvent } from 'react';
-import { WarrantyReturnsTab } from '@/components/admin/commerce/WarrantyReturnsTab';
 import { ProductCatalogTab } from '@/components/admin/commerce/ProductCatalogTab';
-import { ProductEditor } from '@/components/admin/commerce/ProductEditor';
-import { ProductStockTab } from '@/components/admin/commerce/ProductStockTab';
-import { ProductVariantsTab } from '@/components/admin/commerce/ProductVariantsTab';
-import { ProductDiscountsTab } from '@/components/admin/commerce/ProductDiscountsTab';
-import { ProductReviewsTab } from '@/components/admin/commerce/ProductReviewsTab';
 import { Modal } from '@/components/ui/Modal';
 import { Select } from '@/components/ui/Select';
 import type { ProductDiscountAdminRow } from '@/lib/validations/product-discount';
@@ -34,6 +30,13 @@ const PRODUCT_TABS = [
 ] as const;
 
 type ProductTab = (typeof PRODUCT_TABS)[number]['id'];
+
+const ProductEditor = dynamic(() => import('./ProductEditor').then((module) => module.ProductEditor));
+const ProductStockTab = dynamic(() => import('./ProductStockTab').then((module) => module.ProductStockTab));
+const ProductVariantsTab = dynamic(() => import('./ProductVariantsTab').then((module) => module.ProductVariantsTab));
+const ProductDiscountsTab = dynamic(() => import('./ProductDiscountsTab').then((module) => module.ProductDiscountsTab));
+const WarrantyReturnsTab = dynamic(() => import('./WarrantyReturnsTab').then((module) => module.WarrantyReturnsTab));
+const ProductReviewsTab = dynamic(() => import('./ProductReviewsTab').then((module) => module.ProductReviewsTab));
 
 export function ProductManager({
   products,

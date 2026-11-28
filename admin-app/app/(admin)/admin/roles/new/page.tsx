@@ -8,7 +8,7 @@ export default function NewRolePage() {
   return (
     <div className="space-y-6">
       <div>
-        <Link
+        <Link prefetch={true}
           href="/admin/roles"
           className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
         >

@@ -1,32 +1,29 @@
 'use client';
 
-import { useTransition } from 'react';
-import { useRouter } from 'next/navigation';
 import { Select } from '@/components/ui/Select';
 import type { DashboardBranchContext } from '@/data/dashboard/branch-context';
 
 export function DashboardBranchSelector({
-  context,
+  context, value, updating, onWarm,
 }: {
   context: DashboardBranchContext;
+  value: string;
+  updating: boolean;
+  onWarm: () => void;
 }) {
-  const router = useRouter();
-  const [isPending, startTransition] = useTransition();
-
-  const selectBranch = (branchId: string) => {
-    startTransition(() => {
-      router.push(`/admin?branch=${encodeURIComponent(branchId)}`);
-    });
-  };
-
   return (
-    <div className="w-full sm:w-56">
+    <div className="w-full sm:w-56" onPointerEnter={onWarm} onFocusCapture={onWarm}>
       {context.canSelectBranch ? (
         <Select
           label="Branch"
-          value={context.selectedBranchId ?? 'all'}
-          onValueChange={(value) => selectBranch(value)}
-          disabled={isPending || context.branches.length === 0}
+          value={value}
+          onValueChange={(branchId) => {
+            const url = new URL(window.location.href);
+            if (branchId === 'all') url.searchParams.delete('branch');
+            else url.searchParams.set('branch', branchId);
+            window.history.pushState(null, '', url);
+          }}
+          disabled={context.branches.length === 0}
           containerClassName="w-full"
         >
           <option value="all">All branches</option>
@@ -46,7 +43,8 @@ export function DashboardBranchSelector({
           </option>
         </Select>
       )}
-      {context.error && (
+      {updating && <p className="mt-1 text-xs text-muted-foreground" role="status">Updating branch totals…</p>}
+      {context.error && !updating && (
         <p className="mt-1 text-xs text-destructive" role="status">{context.error}</p>
       )}
     </div>

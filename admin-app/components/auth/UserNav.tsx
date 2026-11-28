@@ -135,7 +135,7 @@ export function UserNav({ user, showHelp = false }: UserNavProps) {
         {(canUseAdmin || canUseStorefront) && (
           <DropdownMenuItem asChild>
             <SmartLink
-              href={canUseAdmin ? "/admin/profile" : "/profile"}
+              href={canUseAdmin ? "/admin/profile" : "/profile"} prefetch={true}
               className="flex items-center gap-2"
             >
               <User className="h-4 w-4" aria-hidden="true" />
@@ -145,7 +145,7 @@ export function UserNav({ user, showHelp = false }: UserNavProps) {
         )}
         {canUseAdmin && (
           <DropdownMenuItem asChild>
-            <SmartLink href="/admin" className="flex items-center gap-2">
+            <SmartLink prefetch={true} href="/admin" className="flex items-center gap-2">
               <Shield className="h-4 w-4" aria-hidden="true" />
               Dashboard
             </SmartLink>

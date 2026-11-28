@@ -69,7 +69,7 @@ export function ProfileForm({ profile, contact }: {
         return;
       }
 
-      await Promise.all([refreshUser(), invalidateProfile(), contact && invalidateCheckout()]);
+      await Promise.all([refreshUser(), invalidateProfile(), invalidateCheckout()]);
       toast.success('Profile updated.');
       router.refresh();
     } catch {

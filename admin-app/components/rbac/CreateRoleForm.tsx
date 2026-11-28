@@ -192,7 +192,7 @@ export function CreateRoleForm({ permissions }: CreateRoleFormProps) {
       )}
 
       <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-        <Link
+        <Link prefetch={true}
           href="/admin/roles"
           className="inline-flex h-10 items-center justify-center rounded-md border border-input px-4 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
         >

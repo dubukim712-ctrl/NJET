@@ -12,8 +12,8 @@ const dateTime = new Intl.DateTimeFormat('en-PH', {
 });
 
 function activityHref(entry: CrmActivity) {
-  if (entry.kind === 'Order') return buildOrdersHref({ search: entry.reference, view: 'all' });
-  if (entry.kind === 'Service') return '/admin/appointments?' + new URLSearchParams({ q: entry.reference });
+  if (entry.kind === 'Order') return buildOrdersHref({ search: entry.reference, view: 'history' });
+  if (entry.kind === 'Service') return '/admin/appointments?' + new URLSearchParams({ view: "history", q: entry.reference });
   return '/admin/chats';
 }
 
@@ -65,7 +65,7 @@ export function CrmCustomerActivity({ activity, notes }: { activity: CrmActivity
                       </>
                     ) : (
                       <>
-                        <SmartLink href={activityHref(item.entry)} className="inline-flex min-h-11 items-center text-sm font-medium underline">
+                        <SmartLink prefetch={true} href={activityHref(item.entry)} className="inline-flex min-h-11 items-center text-sm font-medium underline">
                           {item.entry.reference}
                         </SmartLink>
                         <p className="break-words text-sm capitalize">{[item.entry.kind, item.entry.detail, item.entry.status.replaceAll('_', ' ')].filter(Boolean).join(' / ')}</p>
@@ -92,7 +92,7 @@ export function CrmCustomerActivity({ activity, notes }: { activity: CrmActivity
                 <p className="font-medium">{bike.name} / {bike.variant}</p>
                 {bike.replacement && <p className="text-muted-foreground">Warranty replacement. Coverage requires staff review</p>}
                 {bike.serial && <p className="text-muted-foreground">Serial number {bike.serial}</p>}
-                <SmartLink className="inline-flex min-h-11 items-center underline" href={activityHref(entry)}>{entry.reference}</SmartLink>
+                <SmartLink prefetch={true} className="inline-flex min-h-11 items-center underline" href={activityHref(entry)}>{entry.reference}</SmartLink>
               </li>
             ))}
           </ul>

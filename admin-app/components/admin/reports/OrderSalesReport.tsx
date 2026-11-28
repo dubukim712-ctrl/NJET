@@ -11,7 +11,7 @@ import {
   useOrderSalesReportOptionsQuery,
   useOrderSalesReportQuery,
 } from '@/data/commerce/order-sales-report-client';
-import { ReportCharts } from '@/components/admin/reports/ReportCharts';
+import dynamic from 'next/dynamic';
 import { ReportFilters } from '@/components/admin/reports/ReportFilters';
 import { ReportLedger } from '@/components/admin/reports/ReportLedger';
 import { ReportSummary } from '@/components/admin/reports/ReportSummary';
@@ -20,6 +20,10 @@ import {
   type OrderSalesDatePreset,
 } from '@/lib/reports/order-sales-dates';
 import type { OrderSalesReportFilters } from '@/lib/validations/order-sales-report';
+
+const ReportCharts = dynamic(() => import('./ReportCharts').then((module) => module.ReportCharts), {
+  loading: () => <div role="status" aria-label="Loading report charts" className="h-64 animate-pulse rounded-xl border bg-muted" />,
+});
 
 export function OrderSalesReport({
   userId,

@@ -1,3 +1,5 @@
+'use client';
+
 import Link from 'next/link';
 import { buildAuditLogsHref } from '@/lib/audit';
 
@@ -28,8 +30,9 @@ export function AuditPagination({
 
       <div className="flex w-full items-center gap-2 sm:w-auto">
         {page > 1 ? (
-          <Link
+          <Link prefetch={false}
             href={buildAuditLogsHref({ page: page - 1, action, table })}
+            onNavigate={(event) => { event.preventDefault(); window.history.pushState(null, "", buildAuditLogsHref({ page: page - 1, action, table })); }}
             className="inline-flex h-9 flex-1 items-center justify-center rounded-md border border-input px-4 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground sm:flex-none"
           >
             Previous
@@ -48,8 +51,9 @@ export function AuditPagination({
         </span>
 
         {page < totalPages ? (
-          <Link
+          <Link prefetch={false}
             href={buildAuditLogsHref({ page: page + 1, action, table })}
+            onNavigate={(event) => { event.preventDefault(); window.history.pushState(null, "", buildAuditLogsHref({ page: page + 1, action, table })); }}
             className="inline-flex h-9 flex-1 items-center justify-center rounded-md border border-input px-4 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground sm:flex-none"
           >
             Next

@@ -1,5 +1,8 @@
 "use client";
 
+import { useQueryClient } from '@tanstack/react-query';
+import { checkoutOptionsQueryKey } from '@/data/commerce/checkout-options-client';
+import { customerProfileQueryKey } from '@/data/commerce/customer-query-keys';
 import { useEffect, useState } from "react";
 import { CheckCircle2, Phone } from "lucide-react";
 import {
@@ -25,6 +28,7 @@ export function CheckoutPhoneVerification({
   verificationRequired: boolean;
   onVerificationChange: (verified: boolean) => void;
 }) {
+  const queryClient = useQueryClient();
   const [phoneEdit, setPhoneNumber] = useState<string>();
   const [locallyVerifiedNumber, setVerifiedPhoneNumber] = useState<string>();
   const phoneNumber = phoneEdit ?? formatSavedPhilippineMobileNumber(initialPhoneNumber);
@@ -112,6 +116,8 @@ export function CheckoutPhoneVerification({
       setChallengePhoneNumber(null);
       setCode("");
       setMessage("Your phone number is verified.");
+      void queryClient.invalidateQueries({ queryKey: checkoutOptionsQueryKey });
+      void queryClient.invalidateQueries({ queryKey: customerProfileQueryKey });
     } catch (verificationError) {
       console.error(
         "Could not verify the checkout phone number.",

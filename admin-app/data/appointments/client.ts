@@ -1,7 +1,8 @@
 'use client';
 
+import { useAdminProfile } from '@/components/providers/AdminProvider';
 import { useCallback } from 'react';
-import { queryOptions, useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, queryOptions, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   getCustomerServiceAppointmentBranchesAction,
   getCustomerServiceAppointmentsAction,
@@ -62,8 +63,11 @@ export function useStaffServiceAppointmentsQuery(
   userId: string,
   filters: ServiceAppointmentFilters
 ) {
+  const { branch_id, is_full_access } = useAdminProfile();
   return useQuery({
-    queryKey: [...staffServiceAppointmentsQueryKey, userId, filters],
+    queryKey: [...staffServiceAppointmentsQueryKey, userId, branch_id, is_full_access, filters],
+    placeholderData: keepPreviousData,
+    refetchOnMount: 'always',
     refetchInterval: filters.view && filters.view !== 'history' ? 60_000 : false,
     queryFn: async () => {
       const result = await getStaffServiceAppointmentsAction(filters);
@@ -77,8 +81,10 @@ export function useStaffServiceAppointmentsQuery(
 }
 
 export function useMyAssignedServiceAppointmentsQuery(userId: string) {
+  const { branch_id, is_full_access } = useAdminProfile();
   return useQuery({
-    queryKey: [...myAssignedServiceAppointmentsQueryKey, userId],
+    queryKey: [...myAssignedServiceAppointmentsQueryKey, userId, branch_id, is_full_access],
+    refetchOnMount: 'always',
     queryFn: async () => {
       const result = await getMyAssignedServiceAppointmentsAction();
       if (!result.success) throw new ServiceAppointmentsQueryError(result.error);

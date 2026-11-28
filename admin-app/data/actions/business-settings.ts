@@ -3,6 +3,7 @@
 import { toUserFriendlyError } from '@/data/supabase/user-friendly-errors';
 
 import { revalidatePath } from 'next/cache';
+import { revalidateStorefrontCatalog } from '@/data/commerce/revalidate-storefront';
 import type { ActionResult } from '@/data/actions/auth';
 import { requireFullAccess } from '@/data/auth/guards';
 import {
@@ -95,8 +96,8 @@ export async function saveBusinessSettingsAction(
       : undefined;
 
     revalidatePath('/admin/settings');
-    revalidatePath('/');
-    revalidatePath('/shop');
+    revalidatePath('/(storefront)', 'layout');
+    revalidateStorefrontCatalog();
     revalidatePath('/checkout');
     return { success: true, data: { warning } };
   } catch (error) {

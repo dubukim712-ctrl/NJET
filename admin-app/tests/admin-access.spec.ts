@@ -21,6 +21,9 @@ const adminRoutes = [
   },
   { path: "/admin/chats", heading: "Chats" },
   { path: "/admin/notifications", heading: "Notifications" },
+  { path: "/admin/crm", heading: "Customer CRM" },
+  { path: "/admin/crm/follow-ups", heading: "Follow-ups" },
+  { path: "/admin/customer-releases", heading: "Customer Releases" },
   { path: "/admin/users", heading: "Users" },
   { path: "/admin/roles", heading: "Roles" },
   { path: "/admin/roles/new", heading: "New role" },
@@ -129,4 +132,83 @@ test("regular customers are denied every static admin route", async ({ page }) =
       );
     });
   }
+});
+
+test("admin filters reuse the current route and keep controls visible", async ({ page }) => {
+  test.skip(!admin, "Set E2E_ADMIN_EMAIL and E2E_ADMIN_PASSWORD.");
+  if (!admin) return;
+  test.setTimeout(90_000);
+  await logIn(page, admin);
+
+  const routeRequests: string[] = [];
+  const main = page.getByRole("main");
+  let observedPath = "";
+  page.on("request", (request) => {
+    const url = new URL(request.url());
+    if (request.method() === "GET" && url.pathname === observedPath && (request.isNavigationRequest() || request.headers().rsc === "1")) {
+      routeRequests.push(url.pathname + url.search);
+    }
+  });
+
+  await page.goto("/admin");
+  const branch = main.getByRole("combobox", { name: "Branch" });
+  await expect(branch).toBeEnabled();
+  await branch.click();
+  const branchChoices = page.getByRole("option");
+  if (await branchChoices.count() > 1) {
+    observedPath = "/admin";
+    await branchChoices.nth(1).click();
+    await expect(page).toHaveURL((url) => Boolean(url.searchParams.get("branch")));
+    await expect(main.getByRole("heading", { name: /^Welcome back,/ })).toBeVisible();
+    await page.goBack();
+    await expect(page).toHaveURL((url) => url.pathname === "/admin" && !url.search);
+  } else {
+    await page.keyboard.press("Escape");
+  }
+
+  observedPath = "";
+  await page.goto("/admin/orders");
+  const orderViews = main.getByRole("group", { name: "Order views" });
+  await expect(orderViews.getByRole("button", { name: "History", exact: true })).toBeVisible();
+  observedPath = "/admin/orders";
+  await orderViews.getByRole("button", { name: "History", exact: true }).click();
+  await expect(page).toHaveURL((url) => url.searchParams.get("view") === "history");
+  await expect(orderViews.getByRole("button", { name: "History", exact: true })).toHaveAttribute("aria-pressed", "true");
+
+  observedPath = "";
+  await page.goto("/admin/chats");
+  await expect(main.getByRole("heading", { name: "Chats", exact: true })).toBeVisible();
+  observedPath = "/admin/chats";
+  for (const tab of ["Resolved", "All", "Open"]) {
+    const button = main.getByRole("button", { name: new RegExp("^" + tab + "$", "i") });
+    await button.click({ timeout: 10_000 });
+    await expect(button).toHaveAttribute("aria-pressed", "true");
+  }
+  expect(routeRequests).toEqual([]);
+});
+
+test("admin realtime routes can remount during sidebar navigation", async ({ page }) => {
+  test.skip(!admin, "Set E2E_ADMIN_EMAIL and E2E_ADMIN_PASSWORD.");
+  if (!admin) return;
+  test.setTimeout(90_000);
+  const realtimeErrors: string[] = [];
+  const recordError = (message: string) => {
+    if (/cannot add.*postgres_changes.*after.*subscribe/i.test(message)) realtimeErrors.push(message);
+  };
+  page.on("pageerror", (error) => recordError(error.message));
+  page.on("console", (message) => {
+    if (message.type() === "error") recordError(message.text());
+  });
+  await logIn(page, admin);
+  await page.goto("/admin");
+
+  const sidebar = page.getByRole("complementary", { name: "Sidebar navigation" });
+  for (const path of ["/admin/products", "/admin/orders", "/admin/products", "/admin/appointments", "/admin/chats", "/admin", "/admin/products"]) {
+    const route = adminRoutes.find((entry) => entry.path === path);
+    await sidebar.locator('a[href="' + path + '"]').click();
+    await expect(page).toHaveURL((url) => url.pathname === path);
+    await expect(page.getByRole("main").getByRole("heading", { level: 1, name: route?.heading, exact: true })).toBeVisible();
+    await expect(page.getByRole("main").getByRole("heading", { name: "Could not load this admin page" })).toHaveCount(0);
+  }
+  expect(realtimeErrors).toEqual([]);
 });

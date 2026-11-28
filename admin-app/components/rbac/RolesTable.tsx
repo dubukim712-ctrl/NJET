@@ -71,7 +71,7 @@ export function RolesTable({ roles, canManage }: RolesTableProps) {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-1">
-                      <Link
+                      <Link prefetch={true}
                         href={`/admin/roles/${role.id}`}
                         className="inline-flex h-9 items-center rounded-md px-3 text-sm font-medium text-primary transition-colors hover:bg-accent"
                       >
@@ -131,7 +131,7 @@ export function RolesTable({ roles, canManage }: RolesTableProps) {
               </p>
 
               <div className="mt-3 flex items-center gap-1">
-                <Link
+                <Link prefetch={true}
                   href={`/admin/roles/${role.id}`}
                   className="inline-flex h-9 items-center rounded-md px-3 text-sm font-medium text-primary transition-colors hover:bg-accent"
                 >

@@ -47,7 +47,7 @@ export function CompletedOrderDocuments({ orderId, invoiceNo, canManage, onDataC
         </form>
       ) : invoiceNo ? <p className="text-sm">Invoice number {invoiceNo}</p> : null}
       <Button asChild>
-        <Link href={`/admin/orders/${orderId}/receipt`} prefetch={false}>Print Receipt</Link>
+        <Link href={`/admin/orders/${orderId}/receipt`} prefetch={true}>Print Receipt</Link>
       </Button>
     </section>
   );

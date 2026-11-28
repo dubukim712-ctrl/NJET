@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
@@ -26,9 +25,9 @@ export function OrdersFilters({
   filters: OrderFilters;
   branchLocked?: boolean;
 }) {
-  const router = useRouter();
   const view = getOrderView(filters);
-  const availableStatuses = view === "all" ? ORDER_FILTER_STATUSES : ORDER_VIEW_STATUSES[view];
+  const availableStatuses = ORDER_VIEW_STATUSES[view].length ? ORDER_VIEW_STATUSES[view] : ORDER_FILTER_STATUSES;
+  const showStatus = availableStatuses.length > 1;
   const [searchValue, setSearchValue] = useState(filters.q);
   const [statusValue, setStatusValue] = useState(filters.status);
   const [branchValue, setBranchValue] = useState(filters.branch);
@@ -52,14 +51,13 @@ export function OrdersFilters({
   }, [filters]);
 
   const applyFilters = (search: string, status: string, branchId: string, nextView: OrderView) => {
-    router.replace(
+    window.history.replaceState(null, '',
       buildOrdersHref({
         view: nextView,
         search,
         status,
         branchId,
       }),
-      { scroll: false }
     );
   };
 
@@ -91,7 +89,9 @@ export function OrdersFilters({
       />
       <form
         onSubmit={(event) => event.preventDefault()}
-        className="grid gap-3 rounded-xl border bg-card p-4 sm:grid-cols-2 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,1fr)_auto]"
+        className={showStatus
+          ? "grid gap-3 rounded-xl border bg-card p-4 sm:grid-cols-2 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,1fr)_auto]"
+          : "grid gap-3 rounded-xl border bg-card p-4 sm:grid-cols-2 lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_auto]"}
       >
         <Input
           id="q"
@@ -109,24 +109,26 @@ export function OrdersFilters({
           leadingIcon={<Search className="h-4 w-4" />}
         />
 
-        <Select
-          id="status"
-          name="status"
-          label="Status"
-          value={statusValue}
-          onValueChange={(value) => {
-            const nextStatus = value as OrderFilters['status'];
-            setStatusValue(nextStatus);
-            applySelection(nextStatus, branchValue);
-          }}
-        >
-          <option value="">All statuses</option>
-          {availableStatuses.map((status) => (
-            <option key={status} value={status}>
-              {status.replaceAll('_', ' ').replace(/^\w/, (letter) => letter.toUpperCase())}
-            </option>
-          ))}
-        </Select>
+        {showStatus && (
+          <Select
+            id="status"
+            name="status"
+            label="Status"
+            value={statusValue}
+            onValueChange={(value) => {
+              const nextStatus = value as OrderFilters['status'];
+              setStatusValue(nextStatus);
+              applySelection(nextStatus, branchValue);
+            }}
+          >
+            <option value="">All statuses</option>
+            {availableStatuses.map((status) => (
+              <option key={status} value={status}>
+                {status.replaceAll('_', ' ').replace(/^\w/, (letter) => letter.toUpperCase())}
+              </option>
+            ))}
+          </Select>
+        )}
 
         <Select
           id="branch"
@@ -156,9 +158,11 @@ export function OrdersFilters({
             >
               Clear
             </span>
-            <Link
+            <Link prefetch={false}
               href={buildOrdersHref({ view })}
-              onClick={() => {
+              onNavigate={(event) => {
+                event.preventDefault();
+                window.history.replaceState(null, '', buildOrdersHref({ view }));
                 if (debounceTimer.current) {
                   clearTimeout(debounceTimer.current);
                   debounceTimer.current = null;

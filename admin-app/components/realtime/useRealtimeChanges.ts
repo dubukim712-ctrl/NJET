@@ -1,14 +1,16 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useEffectEvent, useState } from 'react';
 import { createClient } from '@/data/supabase/client';
+import { postgresRealtimeTopic } from '@/data/supabase/postgres-realtime-topic';
 import type { RealtimeConnectionState, RealtimeTable } from '@/types/realtime';
 
 export function useRealtimeChanges(
   channelName: string,
   tables: readonly RealtimeTable[],
-  onChange: () => void
+  onChange: (table?: RealtimeTable) => void
 ) {
+  const notifyChange = useEffectEvent(onChange);
   const tableKey = tables.join(',');
   const subscriptionKey = `${channelName}:${tableKey}`;
   const [connection, setConnection] = useState<{
@@ -27,18 +29,23 @@ export function useRealtimeChanges(
     const watchedTables = tableKey.split(',').filter(isRealtimeTable);
     let active = true;
     let refreshTimer: ReturnType<typeof setTimeout> | undefined;
-    let channel = supabase.channel(channelName);
-    const scheduleChange = () => {
+    const channel = supabase.channel(postgresRealtimeTopic(channelName));
+    let changedTable: RealtimeTable | undefined;
+    const scheduleChange = (table: RealtimeTable) => {
       if (!active) return;
       if (refreshTimer) clearTimeout(refreshTimer);
-      refreshTimer = setTimeout(onChange, 200);
+      if (!changedTable || table === 'roles' || table === 'users') changedTable = table;
+      refreshTimer = setTimeout(() => {
+        notifyChange(changedTable);
+        changedTable = undefined;
+      }, 200);
     };
 
     for (const table of watchedTables) {
-      channel = channel.on(
+      channel.on(
         'postgres_changes',
         { event: '*', schema: 'public', table },
-        scheduleChange
+        () => scheduleChange(table)
       );
     }
 
@@ -56,7 +63,7 @@ export function useRealtimeChanges(
       if (refreshTimer) clearTimeout(refreshTimer);
       void supabase.removeChannel(channel);
     };
-  }, [channelName, onChange, subscriptionKey, tableKey]);
+  }, [channelName, subscriptionKey, tableKey]);
 
   return currentConnection;
 }

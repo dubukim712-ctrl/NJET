@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { revalidateStorefrontCatalog } from '@/data/commerce/revalidate-storefront';
 import type { ActionResult } from '@/data/actions/auth';
 import { requirePermission } from '@/data/auth/guards';
 import { commerceActionFailure as failure } from '@/data/commerce/action-failure';
@@ -26,8 +27,7 @@ export async function saveCommerceInventoryAction(payload: unknown): Promise<Act
     });
     if (error) return failure(error, 'Could not update stock.');
     revalidatePath('/admin/products');
-    revalidatePath('/shop');
-    revalidatePath('/shop/view-product/[slug]', 'page');
+    revalidateStorefrontCatalog();
     return { success: true, data: undefined };
   } catch (error) {
     return failure(error, 'Could not update stock.');
@@ -64,8 +64,7 @@ export async function createInventoryReceiptAction(payload: unknown): Promise<Ac
     if (error) return failure(error, 'Could not record this inventory receipt.');
     revalidatePath('/admin/products');
     revalidatePath('/admin/inventory');
-    revalidatePath('/shop');
-    revalidatePath('/shop/view-product/[slug]', 'page');
+    revalidateStorefrontCatalog();
     return { success: true, data: undefined };
   } catch (error) {
     return failure(error, 'Could not record this inventory receipt.');
@@ -88,8 +87,7 @@ export async function registerEbikeUnitsAction(payload: unknown): Promise<Action
     });
     if (error) return failure(error, 'Could not save e-bike inventory.');
     revalidatePath('/admin/products');
-    revalidatePath('/shop');
-    revalidatePath('/shop/view-product/[slug]', 'page');
+    revalidateStorefrontCatalog();
     return { success: true, data: undefined };
   } catch (error) {
     return failure(error, 'Could not save e-bike inventory.');
@@ -111,8 +109,7 @@ export async function dispatchBranchTransferAction(payload: unknown): Promise<Ac
     });
     if (error) return failure(error, 'Could not dispatch this transfer.');
     revalidatePath('/admin/products');
-    revalidatePath('/shop');
-    revalidatePath('/shop/view-product/[slug]', 'page');
+    revalidateStorefrontCatalog();
     return { success: true, data: undefined };
   } catch (error) {
     return failure(error, 'Could not dispatch this transfer.');
@@ -129,8 +126,7 @@ export async function receiveBranchTransferAction(payload: unknown): Promise<Act
     });
     if (error) return failure(error, 'Could not receive this transfer.');
     revalidatePath('/admin/products');
-    revalidatePath('/shop');
-    revalidatePath('/shop/view-product/[slug]', 'page');
+    revalidateStorefrontCatalog();
     return { success: true, data: undefined };
   } catch (error) {
     return failure(error, 'Could not receive this transfer.');

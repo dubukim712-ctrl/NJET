@@ -1,5 +1,6 @@
 'use client';
 
+import { useAdminProfile } from '@/components/providers/AdminProvider';
 import { useCallback } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { getCommerceOrdersAction } from '@/data/actions/commerce-orders';
@@ -15,15 +16,17 @@ export function useCommerceOrdersQuery(
   canManage: boolean,
   filters: OrderFilters
 ) {
+  const { branch_id, is_full_access } = useAdminProfile();
   const queryClient = useQueryClient();
   const query = useQuery({
-    queryKey: [...adminOrdersQueryKey, userId, canManage, filters],
+    queryKey: [...adminOrdersQueryKey, userId, branch_id, is_full_access, canManage, filters],
     queryFn: async () => {
       const result = await getCommerceOrdersAction(filters);
       if (!result.success) throw new AdminOrdersQueryError(result.error);
       return result.data;
     },
     retry: false,
+    refetchOnMount: 'always',
     staleTime: 15_000,
     gcTime: 30 * 60_000,
     placeholderData: (previousData) => previousData,

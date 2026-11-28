@@ -1,9 +1,10 @@
 "use client";
 
+import dynamic from 'next/dynamic';
+
 import { useRef, useState } from "react";
 import { MoreVertical, Pencil, Plus, Search } from "lucide-react";
 import { ProductCategoryManager } from "@/components/admin/commerce/ProductCategoryManager";
-import { ProductEditor } from "@/components/admin/commerce/ProductEditor";
 import { ProductSubcategoryManager } from "@/components/admin/commerce/ProductSubcategoryManager";
 import { Button } from "@/components/ui/Button";
 import {
@@ -24,6 +25,8 @@ type Category = Database["public"]["Tables"]["product_categories"]["Row"];
 type Subcategory = Database["public"]["Tables"]["product_subcategories"]["Row"];
 
 type CatalogModal = { kind: "product"; product: Product } | null;
+
+const ProductEditor = dynamic(() => import('./ProductEditor').then((module) => module.ProductEditor));
 
 export function ProductCatalogTab({
   products,

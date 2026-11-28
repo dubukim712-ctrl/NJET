@@ -1,5 +1,8 @@
 'use client';
 
+import { checkoutOptionsQueryKey } from '@/data/commerce/checkout-options-client';
+import { cartVariantsQueryKey, storefrontCatalogQueryKey } from '@/data/commerce/catalog-query-keys';
+
 import { useEffect, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
@@ -128,6 +131,9 @@ export function useCheckoutSubmission(clear: () => { success: boolean }) {
 
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: adminOrdersQueryKey }),
+        queryClient.invalidateQueries({ queryKey: checkoutOptionsQueryKey }),
+        queryClient.invalidateQueries({ queryKey: cartVariantsQueryKey }),
+        queryClient.invalidateQueries({ queryKey: storefrontCatalogQueryKey }),
         invalidateCustomerOrders(),
         queryClient.invalidateQueries({ queryKey: [...customerProfileQueryKey, customerId] }),
       ]);

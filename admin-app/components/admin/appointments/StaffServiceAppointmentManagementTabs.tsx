@@ -1,8 +1,10 @@
-import { AppointmentClosureCalendar } from '@/components/admin/appointments/AppointmentClosureCalendar';
-import { StaffServiceAppointmentForm } from '@/components/admin/appointments/StaffServiceAppointmentForm';
+import dynamic from 'next/dynamic';
 import { Button } from '@/components/ui/Button';
 import { ServiceAppointmentsQueryError } from '@/data/appointments/client';
 import type { useStaffServiceAppointmentOptionsQuery } from '@/data/appointments/client';
+
+const AppointmentClosureCalendar = dynamic(() => import('./AppointmentClosureCalendar').then((module) => module.AppointmentClosureCalendar));
+const StaffServiceAppointmentForm = dynamic(() => import('./StaffServiceAppointmentForm').then((module) => module.StaffServiceAppointmentForm));
 
 type OptionsQuery = ReturnType<typeof useStaffServiceAppointmentOptionsQuery>;
 type Branch = { id: string; name: string };
@@ -13,11 +15,13 @@ export function StaffServiceAppointmentManagementTabs({
   branches,
   selectedTab,
   optionsQuery,
+  visitedTabs,
 }: {
   userId: string;
   branches: Branch[];
   selectedTab: Tab;
   optionsQuery: OptionsQuery;
+  visitedTabs: Tab[];
 }) {
   return (
     <>
@@ -42,7 +46,7 @@ export function StaffServiceAppointmentManagementTabs({
             aria-label="Loading appointment setup"
           />
         ) : optionsQuery.data?.branches.length ? (
-          <StaffServiceAppointmentForm userId={userId} branches={optionsQuery.data.branches} />
+          visitedTabs.includes('create') && <StaffServiceAppointmentForm userId={userId} branches={optionsQuery.data.branches} />
         ) : (
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">
@@ -73,7 +77,7 @@ export function StaffServiceAppointmentManagementTabs({
             aria-label="Loading branch schedule"
           />
         ) : optionsQuery.data ? (
-          <AppointmentClosureCalendar userId={userId} branches={branches} />
+          visitedTabs.includes('schedule') && <AppointmentClosureCalendar userId={userId} branches={branches} />
         ) : optionsQuery.isError ? (
           <div className="space-y-3 rounded-xl border bg-card p-5">
             <p className="text-sm text-destructive" role="alert">

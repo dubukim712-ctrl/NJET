@@ -173,6 +173,8 @@ export async function markOrderPhoneManuallyVerifiedAction(
     if (error) throw error;
     revalidatePath('/admin/orders');
     revalidatePath('/orders');
+    revalidatePath('/profile');
+    revalidatePath('/checkout');
     return { success: true, data: undefined };
   } catch (error) {
     console.error('Could not manually verify an order contact number.', error);

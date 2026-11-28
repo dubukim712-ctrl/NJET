@@ -33,7 +33,7 @@ export function NotificationList({
     <ul className="divide-y">
       {visibleNotifications.map((notification) => {
         const link = (
-          <SmartLink
+          <SmartLink prefetch={true}
             href={notification.href}
             onClick={() => {
               if (!notification.read_at) onMarkRead(notification.id);

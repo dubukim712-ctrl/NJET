@@ -3,6 +3,7 @@
 import { useCallback } from 'react';
 import Link from 'next/link';
 import { OrderManager } from '@/components/admin/commerce/OrderManager';
+import { OrdersFilters } from '@/components/admin/commerce/OrdersFilters';
 import { OrdersLoadingSkeleton } from '@/components/admin/commerce/OrdersLoadingSkeleton';
 import { RealtimeStatus } from '@/components/realtime/RealtimeStatus';
 import { Button } from '@/components/ui/Button';
@@ -39,7 +40,7 @@ function OrdersHeaderAction({
     <div className="flex justify-end">
       {canManage ? (
         <Button type="button" asChild>
-          <Link href="/admin/orders/new">Create walk-in sale</Link>
+          <Link prefetch={true} href="/admin/orders/new">Create walk-in sale</Link>
         </Button>
       ) : (
         <RealtimeStatus state={realtimeState} />
@@ -73,12 +74,11 @@ export function OrdersQuery({
 
   if (!query.data && query.isPending) {
     return (
-      <OrdersLoadingSkeleton
-        canManage={canManage}
-        hasFilters={Boolean(
-          filters.q || filters.status || (!branchLocked && filters.branch),
-        )}
-      />
+      <div className="space-y-4">
+        <OrdersHeaderAction canManage={canManage} realtimeState={realtimeState} />
+        <OrdersFilters branches={[]} filters={filters} branchLocked={branchLocked} />
+        <OrdersLoadingSkeleton />
+      </div>
     );
   }
 

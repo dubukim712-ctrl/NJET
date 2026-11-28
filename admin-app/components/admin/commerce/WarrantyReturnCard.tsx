@@ -62,7 +62,7 @@ export function WarrantyReturnCard({ row, onSaved }: {
       {row.recorded_at && <p className="text-sm text-muted-foreground">Updated {formatWarrantyTimestamp(row.recorded_at)}{row.recorded_by && ` by ${row.recorded_by}`}</p>}
       <div className="flex flex-wrap gap-2">
         <Button asChild variant="outline" className="min-h-11">
-          <Link href={`/admin/appointments?q=${encodeURIComponent(row.appointment_number)}`}>{row.appointment_number}</Link>
+          <Link prefetch={true} href={`/admin/appointments?view=history&q=${encodeURIComponent(row.appointment_number)}`}>{row.appointment_number}</Link>
         </Button>
         {!editing && <Button type="button" className="min-h-11" disabled={saving} onClick={() => {
           setPreviousId(row.update_id);

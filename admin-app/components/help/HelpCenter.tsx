@@ -63,7 +63,7 @@ export function HelpCenter({
           <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:flex-wrap">
             {quickLinks.map(({ href, label }, index) => (
               <Button key={href} asChild variant={index === 0 ? 'default' : 'outline'} className="min-h-11">
-                <Link href={href} prefetch={href === '/appointments/new' ? true : undefined}>{href === '/chat' && <MessageCircle aria-hidden="true" />}{label}</Link>
+                <Link href={href} prefetch={href === '/appointments/new' || href.startsWith('/admin/') ? true : undefined}>{href === '/chat' && <MessageCircle aria-hidden="true" />}{label}</Link>
               </Button>
             ))}
           </div>

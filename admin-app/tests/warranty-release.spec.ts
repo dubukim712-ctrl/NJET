@@ -15,7 +15,7 @@ test('disposable release warranty lifecycle and access boundaries', async ({ bro
   if (!baseURL) throw new Error('Release verification needs a browser base URL.');
   const appointmentId = process.env.E2E_RELEASE_APPOINTMENT_ID;
   const customerId = process.env.E2E_RELEASE_CUSTOMER_ID;
-  const appointments = '/admin/appointments?q=SVC-CI-RELEASE';
+  const appointments = '/admin/appointments?view=history&q=SVC-CI-RELEASE';
   const crm = '/admin/crm/' + customerId;
   const details = '/appointments/' + appointmentId;
   const downloadPath = details + '/exchange-record';

@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { revalidateStorefrontCatalog } from '@/data/commerce/revalidate-storefront';
 import { queueOrderStatusEmail } from '@/data/email/order-status-email';
 import * as stockActions from './commerce-stock-admin';
 import type { ActionResult } from '@/data/actions/auth';
@@ -33,6 +34,7 @@ async function updateCommerceOrderStatus(
     queueOrderStatusEmail(parsed.data.orderId, rpc === 'confirm_commerce_order' ? 'confirmed' : 'cancelled');
     revalidatePath('/admin/orders');
     revalidatePath('/orders');
+    revalidateStorefrontCatalog();
     return { success: true, data: undefined };
   } catch (error) {
     return failure(error, 'Could not update the order status.');
@@ -71,6 +73,7 @@ export async function completeHomeCreditCommerceOrderAction(
     queueOrderStatusEmail(parsed.data.orderId, 'completed');
     revalidatePath('/admin/orders');
     revalidatePath('/orders');
+    revalidateStorefrontCatalog();
     return { success: true, data: undefined };
   } catch (error) {
     return failure(error, 'Could not complete the Home Credit order.');
@@ -102,8 +105,7 @@ export async function saveCommerceProductAction(payload: unknown): Promise<Actio
         });
     if (result.error) return failure(result.error, 'Could not save this product.');
     revalidatePath('/admin/products');
-    revalidatePath('/shop');
-    revalidatePath('/shop/view-product/[slug]', 'page');
+    revalidateStorefrontCatalog();
     return { success: true, data: undefined };
   } catch (error) {
     return failure(error, 'Could not save this product.');
@@ -132,8 +134,7 @@ export async function saveProductSubcategoryAction(payload: unknown): Promise<Ac
         });
     if (result.error) return failure(result.error, 'Could not save this subcategory.');
     revalidatePath('/admin/products');
-    revalidatePath('/shop');
-    revalidatePath('/shop/view-product/[slug]', 'page');
+    revalidateStorefrontCatalog();
     return { success: true, data: undefined };
   } catch (error) {
     return failure(error, 'Could not save this subcategory.');
@@ -153,8 +154,7 @@ export async function saveProductCategoryAction(payload: unknown): Promise<Actio
         });
     if (result.error) return failure(result.error, 'Could not save this main category.');
     revalidatePath('/admin/products');
-    revalidatePath('/shop');
-    revalidatePath('/shop/view-product/[slug]', 'page');
+    revalidateStorefrontCatalog();
     return { success: true, data: undefined };
   } catch (error) {
     return failure(error, 'Could not save this main category.');
@@ -197,8 +197,10 @@ export async function saveCommerceBranchAction(payload: unknown): Promise<Action
         });
     if (result.error) return failure(result.error, 'Could not save this branch.');
     revalidatePath('/admin/branches');
+    revalidatePath('/(storefront)', 'layout');
+    revalidatePath('/appointments/new');
     revalidatePath('/admin/products');
-    revalidatePath('/shop');
+    revalidateStorefrontCatalog();
     revalidatePath('/checkout');
     return { success: true, data: undefined };
   } catch (error) {

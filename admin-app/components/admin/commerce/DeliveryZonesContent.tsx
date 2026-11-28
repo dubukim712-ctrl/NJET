@@ -1,16 +1,15 @@
+'use client';
+
+import { useAdminProfile } from '@/components/providers/AdminProvider';
 import { DeliveryZonesQuery } from '@/components/admin/commerce/DeliveryZonesQuery';
-import { requirePermission } from '@/data/auth/guards';
 import { hasPermission, PERMISSIONS } from '@/lib/permissions';
 
-export async function DeliveryZonesContent() {
-  const { user, profile } = await requirePermission(
-    PERMISSIONS.deliveryZonesRead,
-    '/admin/delivery-zones'
-  );
+export function DeliveryZonesContent() {
+  const profile = useAdminProfile();
 
   return (
     <DeliveryZonesQuery
-      userId={user.id}
+      userId={profile.id}
       canManage={hasPermission(profile, PERMISSIONS.deliveryZonesManage)}
     />
   );

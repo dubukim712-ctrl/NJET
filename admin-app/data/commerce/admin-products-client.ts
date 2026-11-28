@@ -32,6 +32,7 @@ export function useCommerceManagementQuery(
       return result.data;
     },
     retry: false,
+    refetchOnMount: 'always',
     staleTime: 30_000,
     gcTime: 5 * 60_000,
   });
@@ -46,6 +47,7 @@ export function useInvalidateAdminProductsQuery() {
         ...(scope === 'inventory' ? [
           queryClient.invalidateQueries({ queryKey: storefrontCatalogQueryKey }),
           queryClient.invalidateQueries({ queryKey: cartVariantsQueryKey }),
+          queryClient.invalidateQueries({ queryKey: ['commerce', 'walk-in-catalog'] }),
         ] : []),
       ]);
     },

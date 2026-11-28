@@ -1,7 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState, useTransition } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useRef, useState } from 'react';
 import { Search } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -29,8 +28,6 @@ export function CrmFilters(props: Props) {
   };
   const { search, status, mine, due, page } = applied;
   const [draft, setDraft] = useState<Selection>(applied);
-  const [isPending, startTransition] = useTransition();
-  const router = useRouter();
   const searchTimer = useRef<number | null>(null);
 
   useEffect(() => () => {
@@ -38,12 +35,12 @@ export function CrmFilters(props: Props) {
   }, []);
 
   useEffect(() => {
-    if (isPending || searchTimer.current !== null) return;
+    if (searchTimer.current !== null) return;
     const timer = window.setTimeout(() => {
       if (searchTimer.current === null) setDraft({ search, status, mine, due });
     }, 0);
     return () => window.clearTimeout(timer);
-  }, [search, status, mine, due, page, isPending]);
+  }, [search, status, mine, due, page]);
 
   function href(selection: Selection, nextPage = 1) {
     return isQueue ? buildCrmFollowUpsHref(selection, nextPage) : buildCrmCustomersHref(selection.search, nextPage);
@@ -55,8 +52,8 @@ export function CrmFilters(props: Props) {
       searchTimer.current = null;
     }
     const nextHref = href(next);
-    if (!isPending && nextHref === href(applied, page)) return;
-    startTransition(() => router.replace(nextHref, { scroll: false }));
+    if (nextHref === href(applied, page)) return;
+    window.history.replaceState(null, '', nextHref);
   }
 
   function change(next: Selection) {
@@ -121,9 +118,6 @@ export function CrmFilters(props: Props) {
           </Button>
         )}
       </form>
-      <p role="status" className={isPending ? 'text-sm text-muted-foreground' : 'sr-only'}>
-        {isPending ? 'Updating results...' : ''}
-      </p>
     </div>
   );
 }

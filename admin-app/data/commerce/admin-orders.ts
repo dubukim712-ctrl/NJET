@@ -1,4 +1,5 @@
 import { getOrderView, ORDER_VIEW_STATUSES } from '@/lib/order-queue';
+import { addCalendarDays, getManilaToday } from '@/lib/reports/order-sales-dates';
 import type { createClient } from '@/data/supabase/server';
 import type { Database } from '@/types/database';
 import type { OrderFilters } from '@/lib/validations/order-filters';
@@ -80,6 +81,11 @@ export async function getCommerceOrders(
     const viewStatuses = ORDER_VIEW_STATUSES[view];
     if (viewStatuses.length) orderQuery = orderQuery.in('status', viewStatuses);
     if (view === 'attention') orderQuery = orderQuery.order('status');
+    if (view === 'today') {
+      const today = getManilaToday();
+      orderQuery = orderQuery.gte('created_at', today + 'T00:00:00+08:00')
+        .lt('created_at', addCalendarDays(today, 1) + 'T00:00:00+08:00');
+    }
     if (filters.status) orderQuery = orderQuery.eq('status', filters.status);
     const branchId = branchScope ?? filters.branch;
     if (branchId) orderQuery = orderQuery.eq('branch_id', branchId);

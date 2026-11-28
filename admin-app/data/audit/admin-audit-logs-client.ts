@@ -1,6 +1,6 @@
 'use client';
 
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   getAdminAuditLogAction,
   getAdminAuditLogsAction,
@@ -27,6 +27,7 @@ export function useAdminAuditLogsQuery(
       table,
       page,
     ],
+    placeholderData: keepPreviousData,
     queryFn: async () => {
       const result = await getAdminAuditLogsAction({ action, table, page });
       if (!result.success) throw new AdminAuditLogsQueryError(result.error);

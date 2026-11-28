@@ -1,6 +1,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { revalidateStorefrontCatalog } from '@/data/commerce/revalidate-storefront';
 import { z } from 'zod';
 import type { ActionResult } from '@/data/actions/auth';
 import { requirePermission } from '@/data/auth/guards';
@@ -53,5 +54,6 @@ export async function manageWarrantyExchangeAction(payload: unknown): Promise<Ac
     return { success: false, error: message };
   }
   revalidatePath('/appointments/' + input.appointmentId);
+  if (input.operation !== 'receive') revalidateStorefrontCatalog();
   return { success: true, data: undefined };
 }
